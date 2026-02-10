@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlinMultiplatform).apply(false)
+    id("multiplatform-base")
 }
 
 allprojects {

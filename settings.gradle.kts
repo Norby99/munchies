@@ -8,17 +8,12 @@
 rootProject.name = "munchies"
 
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
+  includeBuild("build-logic")
 }
 
 dependencyResolutionManagement {
     repositories {
-        google()
-        mavenCentral()
+      mavenCentral()
     }
 }
 
