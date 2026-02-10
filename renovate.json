@@ -1,0 +1,24 @@
+{
+  "extends": [
+    "github>DanySK/renovate-config:develop.json" /* This includes DanySK/renovate-config:default.json */
+  ],
+  "baseBranchPatterns": ["develop"], /* This configuration option was formerly known as baseBranches */
+  "automerge": true,
+  "packageRules": [
+    { /* Automerge all but major dependency updates */
+      "matchUpdateTypes": ["major"],
+      "automerge": false  /* Whether to automerge branches/PRs automatically, without human intervention. */
+    },
+    { /* Apply a special label to major updates */ 
+      "matchUpdateTypes": ["major"],
+      "labels": ["MAJOR"]
+    }
+  ],
+  "dependencyDashboard": true, /* Whether to create a "Dependency Dashboard" issue in the repository. */
+  "major": {
+    "dependencyDashboardApproval": true  /* Require approval for major updates. */
+  },
+  "prConcurrentLimit": 5, /* Limit to a maximum of 5 concurrent branches/PRs. */
+  "prCreation": "immediate", /* Renovate creates PRs immediately after creating the corresponding branch */
+  "prHourlyLimit": 2
+}
