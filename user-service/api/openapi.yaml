@@ -1,0 +1,294 @@
+openapi: 3.0.0
+info:
+  title: Auth & Account Microservice API
+  version: 1.1.0
+  description: Gestione autenticazione e account (Customer / Manager)
+
+servers:
+  - url: https://api.munchies.com/auth
+  - url: http://localhost:8080
+
+tags:
+  - name: Authentication
+  - name: Account
+
+paths:
+
+  /register:
+    post:
+      tags: [Account]
+      summary: Registrazione account (Customer o Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/RegisterCustomerRequest'
+                - $ref: '#/components/schemas/RegisterManagerRequest'
+      responses:
+        "201":
+          description: Account creato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          description: Dati non validi
+        "409":
+          description: Email già registrata
+
+  /login:
+    post:
+      tags: [Authentication]
+      summary: Login utente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login effettuato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "401":
+          description: Credenziali non valide
+
+  /logout:
+    post:
+      tags: [Authentication]
+      summary: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Logout effettuato
+
+  /confirm-email:
+    get:
+      tags: [Account]
+      summary: Conferma email
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Email confermata
+
+  /me:
+    get:
+      tags: [Account]
+      summary: Dati account loggato
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profilo utente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    put:
+      tags: [Account]
+      summary: Aggiorna profilo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/UpdateCustomerRequest'
+                - $ref: '#/components/schemas/UpdateManagerRequest'
+      responses:
+        "200":
+          description: Profilo aggiornato
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # ===== ENUM ROLE =====
+    UserRole:
+      type: string
+      enum: [CUSTOMER, MANAGER]
+
+    # ===== BASE USER =====
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: usr_123
+        role:
+          $ref: '#/components/schemas/UserRole'
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        emailVerified:
+          type: boolean
+
+    # ===== CUSTOMER =====
+    Customer:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            address:
+              $ref: '#/components/schemas/Address'
+
+    # ===== MANAGER =====
+    Manager:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            vatNumber:
+              type: string
+              example: IT12345678901
+            businessName:
+              type: string
+              example: Pizzeria Bella Napoli
+
+    # ===== ADDRESS =====
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+          example: Via Roma 10
+        city:
+          type: string
+          example: Bologna
+        zipCode:
+          type: string
+          example: 40121
+        country:
+          type: string
+          example: Italy
+
+    # ===== REGISTER REQUESTS =====
+    RegisterCustomerRequest:
+      type: object
+      required:
+        - role
+        - firstName
+        - lastName
+        - email
+        - password
+        - address
+      properties:
+        role:
+          type: string
+          enum: [CUSTOMER]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+
+    RegisterManagerRequest:
+      type: object
+      required:
+        - role
+        - firstName
+        - lastName
+        - email
+        - password
+        - vatNumber
+        - businessName
+      properties:
+        role:
+          type: string
+          enum: [MANAGER]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        vatNumber:
+          type: string
+        businessName:
+          type: string
+
+    # ===== LOGIN =====
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    # ===== UPDATE =====
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+
+    UpdateManagerRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        vatNumber:
+          type: string
+        businessName:
+          type: string
+
+    # ===== AUTH RESPONSE =====
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          oneOf:
+            - $ref: '#/components/schemas/Customer'
+            - $ref: '#/components/schemas/Manager'
