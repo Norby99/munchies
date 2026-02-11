@@ -1,5 +1,9 @@
 [versions]
 kotlin = "2.2.10"
+spotless = "6.25.0"
+
+[plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [libraries]
 kotlin-multiplatform-plugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }

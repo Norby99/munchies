@@ -22,6 +22,9 @@ plugins {
 }
 
 gitHooks {
+  preCommit {
+      tasks("spotlessCheck")
+  }
   commitMsg { conventionalCommits() }
   createHooks(overwriteExisting = true)
 }

@@ -1,9 +1,22 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
+import com.diffplug.gradle.spotless.SpotlessPlugin
+
 plugins {
-    id("multiplatform-base")
+    alias    (libs.plugins.spotless)     apply false
 }
 
-allprojects {
-    repositories {
-        mavenCentral()
+subprojects {
+    apply<SpotlessPlugin>()
+    configure<SpotlessExtension>{
+        kotlin {
+            target    ("**/*.kt")
+            targetExclude("**/build/**/*.kt")
+            ktlint()
+        }
+        kotlinGradle {
+            target("**/*.kt")
+            targetExclude("**/build/**/*.kt")
+            ktlint()
+        }
     }
 }
