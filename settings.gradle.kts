@@ -12,9 +12,9 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositories {
-      mavenCentral()
-    }
+  repositories {
+    mavenCentral()
+  }
 }
 
 plugins {
@@ -23,11 +23,10 @@ plugins {
 
 gitHooks {
   preCommit {
-      tasks("spotlessCheck")
+    tasks("spotlessCheck")
   }
   commitMsg { conventionalCommits() }
   createHooks(overwriteExisting = true)
 }
 
 include("commons")
-
