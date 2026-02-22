@@ -2,6 +2,11 @@ plugins {
   kotlin("multiplatform")
 }
 
+val javaVersion: String by project
+kotlin {
+    jvmToolchain(javaVersion.toInt())
+}
+
 kotlin {
   js {
     browser {

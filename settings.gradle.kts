@@ -12,13 +12,16 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-  repositories {
-    mavenCentral()
-  }
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
 
 plugins {
   id("org.danilopianini.gradle-pre-commit-git-hooks") version "2.0.30"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 
 gitHooks {
@@ -30,3 +33,5 @@ gitHooks {
 }
 
 include("commons")
+include("user-service")
+

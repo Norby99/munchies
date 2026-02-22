@@ -6,6 +6,10 @@ plugins {
   id("munchies-subproject") apply false
 }
 
+allprojects {
+    group = "munchies"
+}
+
 fun configureSpotlessForKotlin(project: Project) {
   project.configure<SpotlessExtension> {
     kotlin {
