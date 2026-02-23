@@ -1,9 +1,16 @@
 [versions]
-kotlin = "2.2.10"
+kotlin = "1.9.25"
+micronaut = "4.6.2"
+jakarta-validation = "3.0.2"
 spotless = "6.25.0"
 
 [plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin"}
+micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut" }
+micronaut-openapi = { id = "io.micronaut.openapi", version.ref = "micronaut" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [libraries]
 kotlin-multiplatform-plugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
+jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }

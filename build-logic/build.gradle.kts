@@ -12,9 +12,14 @@ fun fromPluginToDependency(plugin: Provider<PluginDependency>): String =
   "${plugin.get().pluginId}:${plugin.get().pluginId}.gradle.plugin:${plugin.get().version}"
 
 dependencies {
-  implementation(libs.kotlin.multiplatform.plugin)
   // Makes libs.* accessible inside convention plugins
   implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
-  // For a plugin, you pull it in as a classpath dependency like this
-  implementation(fromPluginToDependency(libs.plugins.openapi.generator))
+
+  implementation(fromPluginToDependency(libs.plugins.kotlin.multiplatform))
+  implementation(fromPluginToDependency(libs.plugins.kapt))
+  //implementation(fromPluginToDependency(libs.plugins.micronaut.library))
+  implementation(fromPluginToDependency(libs.plugins.micronaut.application))
+  implementation(fromPluginToDependency(libs.plugins.micronaut.openapi))
+
+
 }
