@@ -3,6 +3,7 @@ import com.diffplug.gradle.spotless.SpotlessPlugin
 
 plugins {
   alias(libs.plugins.spotless) apply false
+  id("munchies-subproject") apply false
 }
 
 fun configureSpotlessForKotlin(project: Project) {
@@ -25,4 +26,6 @@ configureSpotlessForKotlin(rootProject)
 subprojects {
   apply<SpotlessPlugin>()
   configureSpotlessForKotlin(this)
+
+  apply(plugin = "munchies-subproject")
 }
