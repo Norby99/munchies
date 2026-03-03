@@ -14,12 +14,14 @@ fun fromPluginToDependency(plugin: Provider<PluginDependency>): String =
 dependencies {
   // Makes libs.* accessible inside convention plugins
   implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
-
   implementation(fromPluginToDependency(libs.plugins.kotlin.multiplatform))
-  implementation(fromPluginToDependency(libs.plugins.kapt))
-  //implementation(fromPluginToDependency(libs.plugins.micronaut.library))
+  implementation(fromPluginToDependency(libs.plugins.ksp))
+
+  implementation(fromPluginToDependency(libs.plugins.allopen))
+  implementation(fromPluginToDependency(libs.plugins.shadow))
+
   implementation(fromPluginToDependency(libs.plugins.micronaut.application))
   implementation(fromPluginToDependency(libs.plugins.micronaut.openapi))
-
+  implementation(fromPluginToDependency(libs.plugins.micronaut.aot))
 
 }

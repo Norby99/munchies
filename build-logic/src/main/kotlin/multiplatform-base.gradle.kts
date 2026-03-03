@@ -1,5 +1,5 @@
 plugins {
-  kotlin("multiplatform")
+    kotlin("multiplatform")
 }
 
 val javaVersion: String by project
@@ -8,26 +8,30 @@ kotlin {
 }
 
 kotlin {
-  js {
-    browser {
-      testTask {
-        enabled = false
-      }
+    js {
+        browser {
+            testTask {
+                enabled = false
+            }
+        }
+        nodejs()
+        binaries.executable()
     }
-    nodejs()
-    binaries.executable()
-  }
 
-  sourceSets {
-    val commonMain by getting {
-      dependencies {
-      }
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                
+            }
+        }
+        val jsMain by getting {
+        }
+
     }
-    val commonTest by getting {
-      dependencies {
-      }
-    }
-    val jsMain by getting {
-    }
-  }
 }
