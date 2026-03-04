@@ -4,34 +4,36 @@ plugins {
 
 val javaVersion: String by project
 kotlin {
-    jvmToolchain(javaVersion.toInt())
-}
-
-kotlin {
-    js {
-        browser {
+  jvmToolchain(javaVersion.toInt())
+    js (IR) {
+        nodejs{
             testTask {
                 enabled = false
             }
         }
-        nodejs()
         binaries.executable()
     }
 
-
     sourceSets {
-        val commonMain by getting {
-            dependencies {
+        all {
+            languageSettings {
+                optIn("kotlin.js.ExperimentalJsExport")
+            }
+        }
+    }
+    sourceSets {
+      val commonMain by getting {
+        dependencies {
 
-            }
         }
-        val commonTest by getting {
-            dependencies {
-                
-            }
+      }
+      val commonTest by getting {
+        dependencies {
+
         }
-        val jsMain by getting {
-        }
+      }
+      val jsMain by getting {
+      }
 
     }
 }
