@@ -35,6 +35,7 @@ private class Graph(
       .map { it to it.dependencies.withType<ProjectDependency>().ifEmpty { null } }
       .filter { (_, dep) -> dep != null }
       .flatMap { (c, value) -> value!!.map { dep -> c to project.project(dep.path) } }
+      .filter { (c, dep) -> c.toString().contains(regex = Regex(".*(?:implementation|api).*")) }
       .forEach { (configuration: Configuration, projectDependency: Project) ->
         val newPair = (configuration to projectDependency)
         dependencies.compute(project) { _, u -> u.orEmpty() + newPair }
@@ -167,7 +168,7 @@ private abstract class GraphDumpTask : DefaultTask() {
       .forEach { appendLine(it.link(indent = 2)) }
     // Classes
     appendLine()
-    // PluginType.entries.forEach { appendLine(it.classDef()) }
+    appendLine(PluginType.Unknown.classDef())
   }
 
   private class Dependency(val project: String, val configuration: String, val dependency: String)
