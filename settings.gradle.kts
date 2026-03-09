@@ -32,5 +32,5 @@ gitHooks {
   createHooks(overwriteExisting = true)
 }
 
-include("commons")
-include("user-service")
+include(":commons")
+include(":user-service")

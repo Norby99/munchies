@@ -5,6 +5,9 @@ plugins {
 val javaVersion: String by project
 kotlin {
   jvmToolchain(javaVersion.toInt())
+
+  jvm()
+
   js(IR) {
     nodejs {
       testTask {
