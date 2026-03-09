@@ -7,7 +7,7 @@ plugins {
 }
 
 allprojects {
-    group = "munchies"
+  group = "munchies"
 }
 
 fun configureSpotlessForKotlin(project: Project) {

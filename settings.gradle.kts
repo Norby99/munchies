@@ -12,11 +12,11 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
 }
 
 plugins {
@@ -34,4 +34,3 @@ gitHooks {
 
 include("commons")
 include("user-service")
-
