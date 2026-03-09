@@ -1,6 +1,6 @@
 import utils.getServiceName
 import utils.libs
-import utils.munchiesBasePackage
+import utils.MUNCHIES_BASE_PACKAGE
 
 plugins {
     id("kotlin-jvm")
@@ -44,7 +44,7 @@ micronaut {
     }
     openapi {
         server(file("${projectDir}/src/main/yaml/api/openapi.yaml")) {
-            val servicePackage = "$munchiesBasePackage.${getServiceName(project)}"
+            val servicePackage = "$MUNCHIES_BASE_PACKAGE.${getServiceName(project)}"
             apiPackageName = "$servicePackage.api"
             modelPackageName = "$servicePackage.model"
             controllerPackage = "$servicePackage.controller"
@@ -54,5 +54,5 @@ micronaut {
 }
 
 application {
-    mainClass = "$munchiesBasePackage.${getServiceName(project)}.MainKt"
+    mainClass = "$MUNCHIES_BASE_PACKAGE.${getServiceName(project)}.MainKt"
 }
