@@ -167,7 +167,7 @@ private abstract class GraphDumpTask : DefaultTask() {
       .forEach { appendLine(it.link(indent = 2)) }
     // Classes
     appendLine()
-    PluginType.entries.forEach { appendLine(it.classDef()) }
+    // PluginType.entries.forEach { appendLine(it.classDef()) }
   }
 
   private class Dependency(val project: String, val configuration: String, val dependency: String)
