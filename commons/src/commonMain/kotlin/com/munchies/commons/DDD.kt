@@ -35,6 +35,7 @@ open class AggregateRoot<Id : EntityId<*>>(id: Id) : Entity<Id>(id)
 interface Factory<E : Entity<*>>
 
 interface Repository<Id : EntityId<*>, E : AggregateRoot<Id>> {
+  fun findById(id: Id): E?
   fun save(entity: E)
   fun update(entity: E)
   fun delete(entity: E)
