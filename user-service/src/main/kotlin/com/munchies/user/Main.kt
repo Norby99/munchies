@@ -1,7 +1,7 @@
 package com.munchies.user
 
-import io.micronaut.runtime.Micronaut
+import io.micronaut.runtime.Micronaut.run
 
 fun main(args: Array<String>) {
-  Micronaut.run(*args)
+  run(*args)
 }
