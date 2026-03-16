@@ -21,6 +21,5 @@ dependencies {
   implementation(fromPluginToDependency(libs.plugins.shadow))
 
   implementation(fromPluginToDependency(libs.plugins.micronaut.application))
-  implementation(fromPluginToDependency(libs.plugins.micronaut.openapi))
   implementation(fromPluginToDependency(libs.plugins.micronaut.aot))
 }

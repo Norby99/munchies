@@ -12,11 +12,9 @@ allopen = { id= "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut" }
-micronaut-openapi = { id = "io.micronaut.openapi", version.ref = "micronaut" }
 micronaut-aot = { id = "io.micronaut.aot", version.ref = "micronaut" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [libraries]
-kotlin-multiplatform-plugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
 

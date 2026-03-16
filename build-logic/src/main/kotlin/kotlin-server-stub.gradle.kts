@@ -9,7 +9,6 @@ plugins {
   id("com.gradleup.shadow")
   id("io.micronaut.application")
   id("io.micronaut.aot")
-  id("io.micronaut.openapi")
 }
 dependencies {
   ksp("io.micronaut:micronaut-http-validation")
@@ -40,15 +39,6 @@ micronaut {
     optimizeClassLoading = true
     deduceEnvironment = true
     optimizeNetty = true
-  }
-  openapi {
-    server(file("$projectDir/src/main/yaml/api/openapi.yaml")) {
-      val servicePackage = "$MUNCHIES_BASE_PACKAGE.${getServiceName(project)}"
-      apiPackageName = "$servicePackage.api"
-      modelPackageName = "$servicePackage.model"
-      controllerPackage = "$servicePackage.controller"
-      lang.set("kotlin")
-    }
   }
 }
 
