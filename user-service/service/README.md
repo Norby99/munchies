@@ -18,7 +18,6 @@ graph TB
   end
   :commons[commons]:::unknown
 
-  :user-service:api -.->|aotApplicationClasspath| :user-service:api
   :user-service:service -.-> :commons
   :user-service:service -.-> :user-service:api
 
