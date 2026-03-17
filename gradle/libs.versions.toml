@@ -8,6 +8,7 @@ spotless = "6.25.0"
 micronaut-serde    = "2.11.0"
 micronaut-kotlin   = "4.4.0"
 jackson            = "2.17.2"
+detekt = "1.23.1"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -17,6 +18,7 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut" }
 micronaut-aot = { id = "io.micronaut.aot", version.ref = "micronaut" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
