@@ -1,9 +1,9 @@
 package com.munchies.user.controller
 
-import com.munchies.user.UserRepository
 import com.munchies.user.api.UserApi
 import com.munchies.user.domain.User
 import com.munchies.user.domain.UserId
+import com.munchies.user.repository.UserRepository
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 
