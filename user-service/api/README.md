@@ -1,4 +1,4 @@
-# `:user-service`
+# `:user-service:api`
 
 ## Module dependency graph
 
@@ -11,10 +11,12 @@ config:
     nodePlacementStrategy: SIMPLE
 ---
 graph TB
-  :user-service[user-service]:::unknown
-  :commons[commons]:::unknown
+  subgraph :user-service
+    direction TB
+    :user-service:api[api]:::unknown
+  end
 
-  :user-service -.-> :commons
+  :user-service:api -.->|aotApplicationClasspath| :user-service:api
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

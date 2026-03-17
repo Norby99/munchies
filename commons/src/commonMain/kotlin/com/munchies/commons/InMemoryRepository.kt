@@ -1,6 +1,6 @@
 package com.munchies.commons
 
-class InMemoryRepository<Id : EntityId<*>, E : AggregateRoot<Id>>(
+open class InMemoryRepository<Id : EntityId<*>, E : AggregateRoot<Id>>(
   private val repo: MutableMap<Id, E> = mutableMapOf(),
 ) :
   Repository<Id, E> {

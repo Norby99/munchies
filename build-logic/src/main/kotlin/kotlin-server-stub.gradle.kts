@@ -1,5 +1,3 @@
-import utils.MUNCHIES_BASE_PACKAGE
-import utils.getServiceName
 import utils.libs
 
 plugins {
@@ -40,8 +38,4 @@ micronaut {
     deduceEnvironment = true
     optimizeNetty = true
   }
-}
-
-application {
-  mainClass = "$MUNCHIES_BASE_PACKAGE.${getServiceName(project)}.MainKt"
 }
