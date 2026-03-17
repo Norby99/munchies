@@ -1,7 +1,7 @@
 import utils.MUNCHIES_BASE_PACKAGE
 
 plugins {
-  id("kotlin-server-stub")
+  id("micronaut-server")
 }
 
 dependencies {
