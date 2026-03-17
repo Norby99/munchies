@@ -1,4 +1,4 @@
-package com.munchies.user
+package com.munchies.user.repository
 
 import com.munchies.commons.InMemoryRepository
 import com.munchies.user.domain.User
