@@ -5,6 +5,9 @@ jakarta-validation = "3.0.2"
 ksp = "1.9.25-1.0.20"
 shadow = "8.3.9"
 spotless = "6.25.0"
+micronaut-serde    = "2.11.0"
+micronaut-kotlin   = "4.4.0"
+jackson            = "2.17.2"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -17,4 +20,14 @@ spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
+micronaut-kotlin-runtime = { module = "io.micronaut.kotlin:micronaut-kotlin-runtime",   version.ref = "micronaut-kotlin" }
+micronaut-serde-jackson = { module = "io.micronaut.serde:micronaut-serde-jackson",     version.ref = "micronaut-serde" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 
+
+[bundles]
+micronaut-serialization = [
+    "micronaut-kotlin-runtime",
+    "micronaut-serde-jackson",
+    "jackson-module-kotlin",
+]
