@@ -118,6 +118,9 @@ fabric.properties
 # Compiled class file
 *.class
 
+# jenv local java version
+.java-version
+
 # Log file
 *.log
 
