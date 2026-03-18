@@ -10,7 +10,17 @@ val javaVersion: String by project
 kotlin {
   jvmToolchain(javaVersion.toInt())
 }
+
+dependencies {
+  testImplementation(libs().konsist)
+  testImplementation(libs().kotest)
+}
+
 tasks.withType<Detekt>().configureEach {
   jvmTarget = "1.8"
   config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+}
+
+tasks.test {
+  useJUnitPlatform()
 }
