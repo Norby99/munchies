@@ -1,4 +1,4 @@
-# `:user-service:api`
+# `:architecture-rules`
 
 ## Module dependency graph
 
@@ -11,13 +11,7 @@ config:
     nodePlacementStrategy: SIMPLE
 ---
 graph TB
-  subgraph :user-service
-    direction TB
-    :user-service:api[api]:::unknown
-    :user-service:dto[dto]:::unknown
-  end
-
-  :user-service:api -.-> :user-service:dto
+  :architecture-rules[architecture-rules]:::unknown
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

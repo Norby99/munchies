@@ -14,10 +14,12 @@ graph TB
   subgraph :user-service
     direction TB
     :user-service:api[api]:::unknown
+    :user-service:dto[dto]:::unknown
     :user-service:service[service]:::unknown
   end
   :commons[commons]:::unknown
 
+  :user-service:api -.-> :user-service:dto
   :user-service:service -.-> :commons
   :user-service:service -.-> :user-service:api
 
