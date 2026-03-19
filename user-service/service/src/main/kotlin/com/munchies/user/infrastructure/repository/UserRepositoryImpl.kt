@@ -1,0 +1,21 @@
+package com.munchies.user.infrastructure.repository
+
+import com.munchies.commons.repository.InMemoryRepository
+import com.munchies.user.domain.model.User
+import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.port.UserRepository
+import jakarta.inject.Singleton
+
+@Singleton
+class UserRepositoryImpl : UserRepository {
+
+  private val repository = InMemoryRepository<UserId, User>()
+
+  override fun findById(id: UserId): User? = repository.findById(id)
+
+  override fun save(entity: User) = repository.save(entity)
+
+  override fun update(entity: User) = repository.update(entity)
+
+  override fun delete(entity: User) = repository.delete(entity)
+}

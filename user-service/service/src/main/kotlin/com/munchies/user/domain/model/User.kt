@@ -1,4 +1,4 @@
-package com.munchies.user.domain
+package com.munchies.user.domain.model
 
 import com.munchies.commons.AggregateRoot
 
