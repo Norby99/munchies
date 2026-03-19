@@ -7,6 +7,7 @@ plugins {
 dependencies {
   implementation(project(":commons"))
   implementation(project(":user-service:api"))
+  implementation(project(":user-service:dto"))
   testImplementation(testFixtures(project(":architecture-rules")))
 }
 
