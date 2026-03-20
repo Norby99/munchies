@@ -1,25 +1,13 @@
-import utils.libs
 
 plugins {
-  id("kotlin-jvm")
-  id("org.jetbrains.kotlin.plugin.allopen")
-  id("com.google.devtools.ksp")
-  id("com.gradleup.shadow")
+  id("micronaut-base")
   id("io.micronaut.application")
-  id("io.micronaut.aot")
 }
+
 dependencies {
-  ksp("io.micronaut:micronaut-http-validation")
-  ksp("io.micronaut.serde:micronaut-serde-processor")
-  implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
-  implementation("io.micronaut.serde:micronaut-serde-jackson")
-  // implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-  // implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-  compileOnly("io.micronaut:micronaut-http-client")
-  // runtimeOnly("ch.qos.logback:logback-classic")
-  runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation(libs().jakarta.validation.api)
   runtimeOnly("io.micronaut:micronaut-http-server-netty")
+  ksp("io.micronaut.serde:micronaut-serde-processor")
+  ksp("io.micronaut:micronaut-http-validation")
 }
 
 micronaut {

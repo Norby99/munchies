@@ -1,5 +1,5 @@
 plugins {
-  id("micronaut-serdeable")
+  id("micronaut-base")
 }
 
 dependencies {
