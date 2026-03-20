@@ -1,4 +1,4 @@
-package com.munchies.user.dto
+package com.munchies.user.presentation
 
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
