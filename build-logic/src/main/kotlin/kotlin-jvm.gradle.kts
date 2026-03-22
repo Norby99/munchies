@@ -24,7 +24,23 @@ tasks.withType<Detekt>().configureEach {
 tasks.test {
   useJUnitPlatform()
   testLogging {
-    showStandardStreams = System.getenv("TEST_OUTPUT") == "true"
-    events("passed", "skipped", "failed", "standardOut", "standardError")
+    val testOutput = (
+      System.getenv("TEST_OUTPUT")?.lowercase()
+        ?: project.findProperty("testOutput")
+        ?: ""
+      )
+      .toString()
+      .lowercase()
+
+    when (testOutput) {
+      "all" -> {
+        showStandardStreams = true
+        events("passed", "skipped", "failed", "standardOut", "standardError")
+      }
+      "failed" -> {
+        showStandardStreams = true
+        events("failed", "standardOut", "standardError")
+      }
+    }
   }
 }
