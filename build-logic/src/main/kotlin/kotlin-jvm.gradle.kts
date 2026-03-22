@@ -1,9 +1,11 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import utils.MUNCHIES_BASE_PACKAGE
 import utils.libs
 
 plugins {
   kotlin("jvm")
   id("io.gitlab.arturbosch.detekt")
+  id("org.jetbrains.kotlinx.kover")
 }
 
 val javaVersion: String by project
@@ -40,6 +42,26 @@ tasks.test {
       "failed" -> {
         showStandardStreams = true
         events("failed", "standardOut", "standardError")
+      }
+    }
+  }
+}
+
+kover {
+  reports {
+    filters {
+      excludes {
+        classes(
+          "$MUNCHIES_BASE_PACKAGE.*.presentation.*",
+          "$MUNCHIES_BASE_PACKAGE.architecture.*",
+          "$MUNCHIES_BASE_PACKAGE.commons.*",
+        )
+      }
+    }
+
+    verify {
+      rule {
+        minBound(70)
       }
     }
   }

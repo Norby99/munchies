@@ -11,7 +11,7 @@ jackson = "2.17.2"
 konsist = "0.16.1"
 kotest = "5.9.1"
 detekt = "1.23.1"
-
+kover = "0.9.7"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -22,6 +22,7 @@ micronaut-application = { id = "io.micronaut.application", version.ref = "micron
 micronaut-aot = { id = "io.micronaut.aot", version.ref = "micronaut" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
