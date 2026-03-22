@@ -18,6 +18,7 @@ open class ArchitectureKonsistTest(private val service: String) : AnnotationSpec
     Konsist
       .scopeFromProject()
       .assertArchitecture {
+        commonsLayer.dependsOnNothing()
         domainLayer.dependsOn(commonsLayer)
       }
   }
