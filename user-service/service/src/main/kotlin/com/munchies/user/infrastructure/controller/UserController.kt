@@ -1,10 +1,10 @@
 package com.munchies.user.infrastructure.controller
 
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.infrastructure.api.UserClient
-import com.munchies.user.infrastructure.api.dto.UserDTO
 import com.munchies.user.infrastructure.config.UserServiceConfig
 import com.munchies.user.infrastructure.service.Service
+import com.munchies.user.presentation.UserClient
+import com.munchies.user.presentation.dto.UserDTO
 import com.munchies.user.presentation.toDTO
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
