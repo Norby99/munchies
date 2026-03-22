@@ -1,6 +1,6 @@
-package com.munchies.user.infrastructure.api
+package com.munchies.user.presentation
 
-import com.munchies.user.infrastructure.api.dto.UserDTO
+import com.munchies.user.presentation.dto.UserDTO
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.annotation.Client
 
