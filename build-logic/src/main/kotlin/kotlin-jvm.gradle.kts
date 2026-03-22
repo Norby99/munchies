@@ -23,4 +23,8 @@ tasks.withType<Detekt>().configureEach {
 
 tasks.test {
   useJUnitPlatform()
+  testLogging {
+    showStandardStreams = System.getenv("TEST_OUTPUT") == "true"
+    events("passed", "skipped", "failed", "standardOut", "standardError")
+  }
 }
