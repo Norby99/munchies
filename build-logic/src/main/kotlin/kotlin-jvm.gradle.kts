@@ -16,6 +16,7 @@ kotlin {
 dependencies {
   testImplementation(libs().konsist)
   testImplementation(libs().kotest)
+  testImplementation(libs().mockito)
 }
 
 tasks.withType<Detekt>().configureEach {
