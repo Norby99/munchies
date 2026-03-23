@@ -1,5 +1,7 @@
 package com.munchies.order.domain.model
 
+import com.munchies.commons.UUIDEntityId
+
 class Order private constructor(
   val id: OrderId,
   val customerId: CustomerId,
@@ -11,7 +13,7 @@ class Order private constructor(
   var status: OrderStatus = OrderStatus.PENDING,
   var paymentId: UUIDEntityId? = null,
   var paymentStatus: PaymentStatus = PaymentStatus.PENDING,
-  private val domainEvents: MutableList<OrderDomainEvent> = mutableListOf()
+  private val domainEvents: MutableList<OrderDomainEvent> = mutableListOf(),
 ) {
   companion object {
     fun create(
@@ -19,7 +21,7 @@ class Order private constructor(
       restaurantId: RestaurantId,
       items: List<OrderItem>,
       deliveryAddress: DeliveryAddress,
-      deliveryFee: Money
+      deliveryFee: Money,
     ): Order {
       require(items.isNotEmpty()) { "Order must have at least one item" }
       val order = Order(
@@ -29,7 +31,7 @@ class Order private constructor(
         items = items,
         deliveryAddress = deliveryAddress,
         deliveryFee = deliveryFee,
-        createdAt = Instant.now()
+        createdAt = Instant.now(),
       )
       order.domainEvents.add(OrderCreatedEvent(order.id, order.customerId, order.total()))
       return order
@@ -68,8 +70,8 @@ class Order private constructor(
   }
 }
 
-//TODO: Temporary/To be discussed
+// TODO: Temporary/To be discussed
 enum class PaymentStatus { PENDING, PAID, FAILED, REFUNDED }
 
-//TODO: Temporary/To be discussed
+// TODO: Temporary/To be discussed
 enum class CancellationReason { CUSTOMER_REQUEST, RESTAURANT_REJECTED, PAYMENT_FAILED, SYSTEM }
