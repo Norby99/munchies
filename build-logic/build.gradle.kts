@@ -24,4 +24,7 @@ dependencies {
 
   implementation(fromPluginToDependency(libs.plugins.micronaut.application))
   implementation(fromPluginToDependency(libs.plugins.micronaut.aot))
+
+  implementation(libs.micronaut.buildtools)
+  implementation(fromPluginToDependency(libs.plugins.micronaut.testResources))
 }
