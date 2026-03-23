@@ -1,3 +1,3 @@
 package com.munchies.user.presentation.dto
 
-class UserDTO(val id: String)
+data class UserDTO(val id: String)
