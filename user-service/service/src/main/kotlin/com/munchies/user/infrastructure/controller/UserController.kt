@@ -15,12 +15,15 @@ import io.micronaut.serde.annotation.SerdeImport
 import jakarta.inject.Inject
 
 @SerdeImport(UserDTO::class)
-@Controller(port = "${UserServiceConfig.SERVICE_PORT}")
+@Controller(
+  port = UserServiceConfig.SERVICE_PORT.toString(),
+  value = UserServiceConfig.SERVICE_PATH,
+)
 class UserController(
   @Inject
   private val service: Service.ControllerService,
 ) : UserClient {
-  @Get("/users/{id}/")
+  @Get("{id}/")
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
     val user = service.getUser(UserId(id)) ?: throw UserClient.Companion.UserNotFoundException(id)
     return HttpResponse.ok(user.toDTO())
