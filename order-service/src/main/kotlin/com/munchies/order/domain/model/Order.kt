@@ -3,6 +3,7 @@ package com.munchies.order.domain.model
 import com.munchies.commons.UUIDEntityId
 import com.munchies.order.domain.event.OrderDomainEvent
 import java.time.Instant
+
 class Order private constructor(
   val id: OrderId,
   val customerId: CustomerId,
