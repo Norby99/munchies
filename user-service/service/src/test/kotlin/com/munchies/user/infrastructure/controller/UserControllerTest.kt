@@ -2,7 +2,9 @@ package com.munchies.user.infrastructure.controller
 
 import com.munchies.user.infrastructure.config.UserServiceConfig
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
@@ -31,6 +33,8 @@ class UserControllerTest {
 
   @Test
   fun `should return not found for non existing user ids`() {
-    shouldThrow<HttpClientResponseException> { client.toBlocking().retrieve("???") }
+    shouldThrow<HttpClientResponseException> {
+      client.toBlocking().retrieve("???")
+    }.status shouldBe HttpStatus.NOT_FOUND
   }
 }
