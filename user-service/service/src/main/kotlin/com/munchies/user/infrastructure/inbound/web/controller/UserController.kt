@@ -1,14 +1,14 @@
-package com.munchies.user.infrastructure.controller
+package com.munchies.user.infrastructure.inbound.web.controller
 
+import com.munchies.user.application.port.inbound.GetUserQuery
+import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.config.UserServiceConfig
-import com.munchies.user.infrastructure.service.Service
 import com.munchies.user.presentation.UserClient
 import com.munchies.user.presentation.dto.UserDTO
 import com.munchies.user.presentation.toDTO
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Error
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.serde.annotation.SerdeImport
@@ -21,14 +21,13 @@ import jakarta.inject.Inject
 )
 class UserController(
   @Inject
-  private val service: Service.ControllerService,
+  private val getUser: GetUserQuery,
 ) : UserClient {
   @Get("{id}/")
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
-    val user = service.getUser(UserId(id)) ?: throw UserClient.Companion.UserNotFoundException(id)
-    return HttpResponse.ok(user.toDTO())
+    return when (val res = getUser.execute(UserId(id))) {
+      is GetUserResult.Success -> HttpResponse.ok(res.user.toDTO())
+      GetUserResult.NotFound -> HttpResponse.notFound()
+    }
   }
-
-  @Error(exception = UserClient.Companion.UserNotFoundException::class)
-  override fun handleUserNotFound(): HttpResponse<Void> = HttpResponse.notFound()
 }

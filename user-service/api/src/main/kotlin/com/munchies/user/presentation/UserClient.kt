@@ -12,9 +12,4 @@ interface UserClient : UserApi<String, HttpResponse<UserDTO>> {
   @Get("{id}/")
   @SingleResult
   override fun getUser(id: String): HttpResponse<UserDTO>
-
-  fun handleUserNotFound(): HttpResponse<Void>
-  companion object {
-    class UserNotFoundException(id: String) : Exception("User $id not found")
-  }
 }

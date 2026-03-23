@@ -1,12 +1,10 @@
-package com.munchies.user.infrastructure.controller
+package com.munchies.user.infrastructure.inbound.web.controller
 
+import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.config.UserServiceConfig
-import com.munchies.user.infrastructure.service.Service
-import com.munchies.user.presentation.UserClient
 import com.munchies.user.presentation.dto.UserDTO
 import com.munchies.user.presentation.toDomain
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -14,7 +12,6 @@ import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
-import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.runtime.server.EmbeddedServer
 import io.micronaut.serde.annotation.SerdeImport
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -22,10 +19,9 @@ import jakarta.inject.Inject
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 
 @MicronautTest
 class UserControllerTest {
@@ -52,40 +48,36 @@ class UserControllerTest {
   }
 
   @Test
-  fun `controller should throw exception for getUser not found`() {
-    val service: Service.ControllerService = mock()
-    val controller = UserController(service)
+  fun `controller should respond NotFound for getUser not found`() {
+    val userId = UserId("nonexistent")
+    val userUseCase = mock<GetUserQuery> {
+      on { execute(userId) } doReturn GetUserQuery.Companion.GetUserResult.NotFound
+    }
+    val controller = UserController(userUseCase)
 
-    val fakeId = UserId("???")
+    val res = controller.getUser(userId.value)
+    res.status shouldBe HttpStatus.NOT_FOUND
+    verify(userUseCase).execute(userId)
+  }
 
-    whenever(service.getUser(fakeId)).thenReturn(null)
-
-    shouldThrow<UserClient.Companion.UserNotFoundException> {
-      controller.getUser(fakeId.value)
+  @Test
+  fun `controller should return a correct user when getUser`() {
+    val userId = UserId("very-real-id")
+    val userDTO = UserDTO(id = userId.value)
+    val userUseCase = mock<GetUserQuery> {
+      on {
+        execute(
+          userId,
+        )
+      } doReturn GetUserQuery.Companion.GetUserResult.Success(userDTO.toDomain())
     }
 
-    verify(service).getUser(fakeId)
-  }
+    val controller = UserController(userUseCase)
 
-  @Test
-  fun `HttpController should return a correct user when getUser`() {
-    val fakeId = UserId("???")
-    val fakeUserDTO = UserDTO(id = fakeId.value)
-    val service: Service.ControllerService = mock<Service.ControllerService>()
-    val controller = UserController(service)
-
-    whenever(service.getUser(fakeId)).thenReturn(fakeUserDTO.toDomain())
-
-    val response = controller.getUser(fakeId.value)
-    response.status shouldBe HttpStatus.OK
-
-    response.body() shouldBe fakeUserDTO
-  }
-
-  @Test
-  fun `HttpController should return not found for non existing user ids`() {
-    shouldThrow<HttpClientResponseException> {
-      client.toBlocking().retrieve("???")
-    }.status shouldBe HttpStatus.NOT_FOUND
+    val res = controller.getUser(userId.value)
+    res.status shouldBe HttpStatus.OK
+    res.body() shouldNotBe null
+    res.body().id shouldBe userId.value
+    verify(userUseCase).execute(userId)
   }
 }

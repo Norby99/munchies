@@ -1,4 +1,4 @@
-package com.munchies.user.infrastructure.repository
+package com.munchies.user.infrastructure.outbound.memory
 
 import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.User
