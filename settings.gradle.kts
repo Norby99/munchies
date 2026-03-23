@@ -34,3 +34,4 @@ gitHooks {
 
 include(":commons")
 include(":user-service")
+include(":order-service")
