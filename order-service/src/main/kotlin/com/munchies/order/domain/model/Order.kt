@@ -1,6 +1,8 @@
 package com.munchies.order.domain.model
 
 import com.munchies.commons.UUIDEntityId
+import com.munchies.order.domain.event.OrderDomainEvent
+import java.time.Instant
 
 class Order private constructor(
   val id: OrderId,
@@ -25,7 +27,8 @@ class Order private constructor(
     ): Order {
       require(items.isNotEmpty()) { "Order must have at least one item" }
       val order = Order(
-        id = OrderId(UUIDEntityId.randomUUID()),
+        // TODO: This is not good
+        id = OrderId(),
         customerId = customerId,
         restaurantId = restaurantId,
         items = items,

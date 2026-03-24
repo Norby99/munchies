@@ -2,4 +2,4 @@ package com.munchies.order.domain.model
 
 import com.munchies.commons.UUIDEntityId
 
-data class OrderId(override val value: String = newId()) : UUIDEntityId(value)
+data class CustomerId(override val value: String = newId()) : UUIDEntityId(value)
