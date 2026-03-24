@@ -1,9 +1,9 @@
-package com.munchies.user.infrastructure.inbound.web.controller
+package com.munchies.user.adapter.inbound.web.controller
 
+import com.munchies.user.adapter.config.UserServiceConfig
 import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.infrastructure.config.UserServiceConfig
 import com.munchies.user.presentation.UserClient
 import com.munchies.user.presentation.dto.UserDTO
 import com.munchies.user.presentation.toDTO

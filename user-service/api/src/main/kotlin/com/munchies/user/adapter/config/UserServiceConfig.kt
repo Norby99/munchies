@@ -1,4 +1,4 @@
-package com.munchies.user.infrastructure.config
+package com.munchies.user.adapter.config
 
 object UserServiceConfig {
   const val SERVICE_NAME = "user-service"

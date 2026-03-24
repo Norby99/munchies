@@ -1,6 +1,6 @@
 package com.munchies.user.presentation
 
-import com.munchies.user.infrastructure.config.UserServiceConfig
+import com.munchies.user.adapter.config.UserServiceConfig
 import com.munchies.user.presentation.dto.UserDTO
 import io.micronaut.core.async.annotation.SingleResult
 import io.micronaut.http.HttpResponse

@@ -1,9 +1,9 @@
-package com.munchies.user.infrastructure.inbound.web.config
+package com.munchies.user.adapter.inbound.web.config
 
+import com.munchies.user.adapter.outbound.memory.UserRepositoryImpl
 import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.application.usecase.GetUserUseCase
 import com.munchies.user.domain.port.UserRepository
-import com.munchies.user.infrastructure.outbound.memory.UserRepositoryImpl
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
