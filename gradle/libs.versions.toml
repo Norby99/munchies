@@ -14,6 +14,7 @@ detekt = "1.23.1"
 kover = "0.9.7"
 mockito = "5.4.0"
 micronaut-buildtools = "2.5.4"
+snakeyaml = "2.4.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -37,6 +38,7 @@ konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 mockito = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito" }
 micronaut-buildtools = { module = "io.micronaut.testresources:micronaut-test-resources-build-tools", version.ref = "micronaut-buildtools"  }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 
 
 [bundles]

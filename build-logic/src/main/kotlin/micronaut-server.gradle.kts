@@ -16,6 +16,13 @@ dependencies {
   testImplementation("org.testcontainers:junit-jupiter")
   testImplementation("org.testcontainers:testcontainers")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+  implementation("io.micronaut.mongodb:micronaut-mongo-sync")
+  ksp("io.micronaut.data:micronaut-data-document-processor")
+  implementation("io.micronaut.data:micronaut-data-mongodb")
+  runtimeOnly("org.mongodb:mongodb-driver-sync")
+
+  runtimeOnly("org.yaml:snakeyaml")
 }
 
 micronaut {
@@ -40,4 +47,10 @@ micronaut {
 val javaVersion: String by project
 tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
   jdkVersion = javaVersion
+}
+
+tasks.named<JavaExec>("run") {
+  jvmArgs(
+    "-Dmicronaut.environments=dev",
+  )
 }

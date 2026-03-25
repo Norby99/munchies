@@ -1,0 +1,6 @@
+micronaut:
+  application:
+    name: user-service
+
+mongodb:
+  uri: mongodb://localhost:27017/user-service
