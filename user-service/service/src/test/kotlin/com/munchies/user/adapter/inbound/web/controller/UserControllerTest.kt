@@ -1,6 +1,5 @@
 package com.munchies.user.adapter.inbound.web.controller
 
-import com.munchies.user.adapter.config.UserServiceConfig
 import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.presentation.dto.UserDTO
@@ -10,12 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
-import io.micronaut.http.client.HttpClient
-import io.micronaut.http.client.annotation.Client
-import io.micronaut.runtime.server.EmbeddedServer
 import io.micronaut.serde.annotation.SerdeImport
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
@@ -23,15 +17,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 
-@MicronautTest
 class UserControllerTest {
-
-  @Inject
-  lateinit var server: EmbeddedServer
-
-  @Inject
-  @field:Client(UserServiceConfig.SERVICE_PATH)
-  lateinit var client: HttpClient
 
   @Test
   fun `controller is @Controller annotated`() {
