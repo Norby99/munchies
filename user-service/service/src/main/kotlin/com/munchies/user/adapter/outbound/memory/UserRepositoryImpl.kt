@@ -4,9 +4,11 @@ import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
+import io.micronaut.context.annotation.Requires
 import jakarta.inject.Singleton
 
 @Singleton
+@Requires(env = ["dev"])
 class UserRepositoryImpl : UserRepository {
 
   private val repository = InMemoryRepository<UserId, User>()
