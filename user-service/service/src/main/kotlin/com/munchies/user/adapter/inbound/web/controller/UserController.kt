@@ -40,7 +40,7 @@ class UserController(
   @Post("/")
   override fun addUser(): HttpResponse<String> {
     return when (val res = createUser.execute()) {
-      is CreateNewUserResult.Success -> HttpResponse.ok(res.userId.value)
+      is CreateNewUserResult.Success -> HttpResponse.created(res.userId.value)
     }
   }
 }
