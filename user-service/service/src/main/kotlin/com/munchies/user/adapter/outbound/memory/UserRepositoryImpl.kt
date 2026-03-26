@@ -20,4 +20,10 @@ class UserRepositoryImpl : UserRepository {
   override fun update(entity: User) = repository.update(entity)
 
   override fun delete(entity: User) = repository.delete(entity)
+
+  override fun create(): UserId {
+    val userId = UserId()
+    repository.save(User(userId))
+    return userId
+  }
 }

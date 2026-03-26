@@ -39,4 +39,5 @@ interface Repository<Id : EntityId<*>, E : AggregateRoot<Id>> {
   fun save(entity: E)
   fun update(entity: E)
   fun delete(entity: E)
+  fun create(): Id
 }

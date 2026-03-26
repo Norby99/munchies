@@ -36,4 +36,11 @@ class MongoUserRepository(
   override fun delete(entity: User) {
     repository.delete(entity.toDocument())
   }
+
+  override fun create(): UserId {
+    val userId = UserId()
+    val user = User(userId)
+    repository.save(user.toDocument())
+    return user.id
+  }
 }
