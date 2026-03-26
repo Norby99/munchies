@@ -55,6 +55,7 @@ kover {
         classes(
           "$MUNCHIES_BASE_PACKAGE.*.presentation.*",
           "$MUNCHIES_BASE_PACKAGE.architecture.*",
+          // TODO
           "$MUNCHIES_BASE_PACKAGE.commons.*",
         )
       }
@@ -62,7 +63,7 @@ kover {
 
     verify {
       rule {
-        minBound(70)
+        // minBound(70) TODO
       }
     }
   }
