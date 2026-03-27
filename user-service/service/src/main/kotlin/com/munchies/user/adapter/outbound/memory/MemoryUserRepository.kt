@@ -9,9 +9,9 @@ import jakarta.inject.Singleton
 
 @Singleton
 @Requires(env = ["dev"])
-class UserRepositoryImpl : UserRepository {
+interface MemoryUserRepository : UserRepository {
 
-  private val repository = InMemoryRepository<UserId, User>()
+  val repository: InMemoryRepository<UserId, User>
 
   override fun findById(id: UserId): User? = repository.findById(id)
 
