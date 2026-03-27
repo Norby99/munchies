@@ -30,7 +30,6 @@ class UserController(
 ) : UserClient {
   @Get("{id}/")
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
-    println("retrieving user with id: $id")
     return when (val res = getUser.execute(UserId(id))) {
       is GetUserResult.Success -> HttpResponse.ok(res.user.toDTO())
       GetUserResult.NotFound -> HttpResponse.notFound()
