@@ -59,10 +59,4 @@ include(":order-service")
 include(":order-shared")
 
 include(":suggestion-service")
-
-include(":user-service:service")
-include(":user-service:api")
-include(":user-service:dto")
-
 include(":suggestion-shared")
-include(":suggestion-service")
