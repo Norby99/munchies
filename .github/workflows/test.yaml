@@ -20,4 +20,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Check with Gradle
-        run: ./gradlew check -PtestOutput=all
+        run: ./gradlew test -PtestOutput=all
