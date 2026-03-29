@@ -52,3 +52,5 @@ include(":table-reservation-service")
 include(":table-reservation-shared")
 
 include(":order-service")
+
+include(":suggestion-service")
