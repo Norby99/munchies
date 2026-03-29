@@ -8,7 +8,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 
-class CreateNewUserUserCaseTest {
+class CreateNewUserCaseTest {
   @Test
   fun `execute should create a new user and return its id`() {
     val userId = UserId("new-user-id")
