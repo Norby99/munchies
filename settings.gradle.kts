@@ -59,3 +59,5 @@ include(":order-service")
 include(":order-shared")
 
 include(":frontend-service")
+include(":suggestion-service")
+include(":suggestion-shared")
