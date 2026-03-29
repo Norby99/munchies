@@ -1,6 +1,7 @@
 package com.munchies.suggestion.domain.model
 
 import com.munchies.commons.AggregateRoot
+import com.munchies.commons.Entity
 import com.munchies.commons.UUIDEntityId
 
 data class SuggestionRequest(
