@@ -37,7 +37,11 @@ gitHooks {
 
 include(":commons")
 include(":architecture-rules")
+
 include(":user-service:service")
 include(":user-service:api")
 include(":user-service:dto")
-include(":suggestion-service")
+
+include(":suggestion-service:service")
+include(":suggestion-service:api")
+include(":suggestion-service:dto")

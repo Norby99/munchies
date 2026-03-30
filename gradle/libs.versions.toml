@@ -5,7 +5,6 @@ jakarta-validation = "3.0.2"
 ksp = "1.9.25-1.0.20"
 shadow = "8.3.9"
 spotless = "6.25.0"
-arrow = "1.2.4"
 lang4j = "1.11.0"
 micronaut-serde = "2.11.0"
 micronaut-kotlin = "4.4.0"
@@ -35,7 +34,6 @@ jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api",
 lang4j-core = { module = "dev.langchain4j:langchain4j", version.ref = "lang4j" }
 lang4j-ollama = { module = "dev.langchain4j:langchain4j-ollama", version.ref = "lang4j" }
 lang4j-gemini = { module = "dev.langchain4j:langchain4j-google-ai-gemini", version.ref = "lang4j" }
-arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 micronaut-http-client = { module = "io.micronaut:micronaut-http-client", version.ref = "micronaut" }
 micronaut-kotlin-runtime = { module = "io.micronaut.kotlin:micronaut-kotlin-runtime", version.ref = "micronaut-kotlin" }
 micronaut-serde-jackson = { module = "io.micronaut.serde:micronaut-serde-jackson", version.ref = "micronaut-serde" }

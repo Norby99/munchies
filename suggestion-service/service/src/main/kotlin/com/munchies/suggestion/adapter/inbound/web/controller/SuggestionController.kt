@@ -2,6 +2,7 @@ package com.munchies.suggestion.adapter.inbound.web.controller
 
 import com.munchies.commons.Entity
 import com.munchies.commons.UUIDEntityId
+import com.munchies.suggestion.adapter.inbound.web.client.SuggestionClient
 import com.munchies.suggestion.adapter.inbound.web.config.SuggestionServiceConfig
 import com.munchies.suggestion.application.port.inbound.SuggestMenuItem
 import com.munchies.suggestion.domain.model.SuggestionRequest
@@ -17,9 +18,9 @@ import jakarta.inject.Inject
 class SuggestionController(
   @Inject
   private val suggestionService: SuggestMenuItem,
-) {
+) : SuggestionClient {
   @Get("/")
-  fun suggestMenuItem(): String {
+  override fun suggestMenuItem(): String {
     val menus = listOf(object : Entity<UUIDEntityId>(id = UUIDEntityId()) {
       override fun toString(): String {
         return "Menu(id=${id.value}, " +
