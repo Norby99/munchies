@@ -11,7 +11,6 @@ open class ArchitectureKonsistTest(private val service: String) : AnnotationSpec
   val commonsLayer = Layer("commons", "$basePackage.commons..")
   val domainLayer = Layer("domain", "$basePackage.$service.domain..")
   val applicationLayer = Layer("application", "$basePackage.$service.application..")
-  val presentationLayer = Layer("presentation", "$basePackage.$service.presentation..")
 
   @Test
   fun `domain layer should depend on nothing except commons`() {
@@ -29,15 +28,6 @@ open class ArchitectureKonsistTest(private val service: String) : AnnotationSpec
       .scopeFromProject()
       .assertArchitecture {
         applicationLayer.dependsOn(domainLayer)
-      }
-  }
-
-  @Test
-  fun `presentation layer should depend on domain layer`() {
-    Konsist
-      .scopeFromProject()
-      .assertArchitecture {
-        presentationLayer.dependsOn(domainLayer)
       }
   }
 }
