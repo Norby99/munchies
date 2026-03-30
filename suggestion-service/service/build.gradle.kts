@@ -5,8 +5,6 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.arrow.core)
-
   implementation(libs.lang4j.core)
   implementation(libs.lang4j.ollama)
   implementation(libs.lang4j.gemini)
