@@ -1,7 +1,7 @@
 package com.munchies.suggestion.adapter.dto
 
 data class SuggestionResponseDTO(
-  val userId: String,
-  val menu: List<Int>,
-  val userPreferences: List<String>,
+  val rationale: String,
+  val confidence: SuggestionConfidenceDTO,
+  val suggestedMenuItems: List<SuggestedMenuItemDTO>,
 )
