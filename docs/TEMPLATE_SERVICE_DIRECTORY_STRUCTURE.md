@@ -112,10 +112,12 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 - **usecase/** - Implements business flows using domain entities and ports
 - **port/inbound/** - Interfaces exposed to adapters
 - Coordinates between domain and infrastructure
+- Handles failure scenarios and transactions of the business logic
 
 ### Infrastructure Layer (`infrastructure/adapter/`)
 **Technical implementations - DEPENDS on domain and application**
 - **inbound/** - HTTP controllers, message listeners (entry points)
+  - **web/** - REST controllers, request/response mapping to business logic's commands and queries
 - **outbound/** - Database repositories, external API clients (exit points)
 - **dto/** - Data serialization and mapping
 
@@ -156,7 +158,7 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 
 ```gradle
 // settings.gradle.kts
-include(":service", ":shared", ":client")
+include(":[service]-service:service", ":[service]-service:shared", ":[service]-service:client")
 
 // Build dependencies
 service depends on: shared
