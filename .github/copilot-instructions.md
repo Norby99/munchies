@@ -64,3 +64,20 @@ microservices architecture.
 
 - When writing agent-based architectures, refer to standard multi-agent patterns.
 
+## Commenting & Documentation
+- Always provide clear comments and documentation, especially for complex logic or architectural decisions.
+- Never use emojis in code comments or documentation. Keep it professional and clear.
+
+## Development Workflow and Building
+- **Build System:** Gradle multi-project build orchestrating Kotlin across services. Configuration logic is centralized in the `build-logic` directory using Gradle convention plugins.
+- **Git Hooks:** The project uses the `danilopianini.gradle-pre-commit-git-hooks` plugin.
+    - **Pre-commit:** Enforces spotless formatting (`spotlessCheck`) and static analysis (`detekt`).
+    - **Pre-push:** Runs all tests (`test`).
+    - **Conventional Commits:** Commit messages must strictly follow the Conventional Commits specification.
+- **Local Testing:** Docker compose is set up in `config/docker/docker-compose.yml` for standing up local integrations or databases.
+
+## Commands
+- **Formatting:** Run `./gradlew spotlessApply` to fix formatting issues automatically before committing.
+- **Linting:** Run `./gradlew detekt` to perform static code analysis based on rules in `config/detekt/detekt.yml`.
+- **Testing:** Run `./gradlew test` to execute the full unit test suite.
+- **Deployment:** Deployment utilities are available in `scripts/deploy.sh` and `scripts/undeploy.sh`.
