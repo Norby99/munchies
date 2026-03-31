@@ -21,9 +21,6 @@ class LLMSuggestionEngine(
   override fun suggest(request: SuggestionRequest): SuggestionEngine.SuggestionResult {
     val encodedRequest = codec.encode(request)
     val rawResponse = model.chat(encodedRequest)
-    println("request: \n$request\n")
-    println("encoded-request: \n$encodedRequest\n")
-    println("raw: \n$rawResponse\n")
     if (rawResponse.isNullOrEmpty()) return EmptySuggestion
     return try {
       when (val decodedResponse = codec.decode(rawResponse)) {
@@ -32,8 +29,6 @@ class LLMSuggestionEngine(
       }
     } catch (_: Exception) {
       TimeoutSuggestion
-    } finally {
-      println("suggestion-result: ${codec.decode(rawResponse)}")
     }
   }
 }
