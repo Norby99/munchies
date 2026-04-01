@@ -3,6 +3,8 @@ package com.munchies.architecture
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.architecture.KoArchitectureCreator.assertArchitecture
 import com.lemonappdev.konsist.api.architecture.Layer
+import com.lemonappdev.konsist.api.ext.list.withNameEndingWith
+import com.lemonappdev.konsist.api.verify.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 
 open class ArchitectureKonsistTest(private val service: String) : AnnotationSpec() {
@@ -39,5 +41,14 @@ open class ArchitectureKonsistTest(private val service: String) : AnnotationSpec
       .assertArchitecture {
         infrastructureLayer.dependsOn(applicationLayer, domainLayer)
       }
+  }
+
+  @Test
+  fun `classes with 'UseCase' suffix should reside in 'application-usecase' package `() {
+    Konsist
+      .scopeFromProject()
+      .classes()
+      .withNameEndingWith("UseCase")
+      .assertTrue { it.resideInPackage("..application.usecase..") }
   }
 }
