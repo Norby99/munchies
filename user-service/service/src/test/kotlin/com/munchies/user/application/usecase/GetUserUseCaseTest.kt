@@ -4,7 +4,7 @@ import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUser
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
-import com.munchies.user.presentation.toDomain
+import com.munchies.user.infrastructure.adapter.dto.mapper.toDomain
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
