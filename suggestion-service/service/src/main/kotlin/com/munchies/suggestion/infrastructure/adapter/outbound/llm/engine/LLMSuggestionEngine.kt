@@ -20,9 +20,9 @@ class LLMSuggestionEngine(
 
   override fun suggest(request: SuggestionRequest): SuggestionEngine.SuggestionResult {
     val encodedRequest = codec.encode(request)
-    val rawResponse = model.chat(encodedRequest)
-    if (rawResponse.isNullOrEmpty()) return EmptySuggestion
     return try {
+      val rawResponse = model.chat(encodedRequest)
+      if (rawResponse.isNullOrEmpty()) return EmptySuggestion
       when (val decodedResponse = codec.decode(rawResponse)) {
         is MalformedCodecResult -> MalformedSuggestion
         is CodecSuccess -> SuggestionSuccess(decodedResponse.result)

@@ -10,5 +10,5 @@ import io.micronaut.http.client.annotation.Client
 @Client(SuggestionServiceConfig.SERVICE_PATH)
 interface MicronautSuggestionClient : SuggestionAPI<SuggestionRequestDTO, SuggestionResponseDTO> {
   @Get("/")
-  override fun suggestMenuItem(request: SuggestionRequestDTO): SuggestionResponseDTO = TODO()
+  override fun suggestMenuItem(request: SuggestionRequestDTO): SuggestionResponseDTO
 }
