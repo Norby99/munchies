@@ -5,7 +5,8 @@ import com.munchies.user.application.port.inbound.CreateNewUser.Companion.Create
 import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
-import com.munchies.user.presentation.toDomain
+import com.munchies.user.infrastructure.adapter.dto.mapper.toDomain
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

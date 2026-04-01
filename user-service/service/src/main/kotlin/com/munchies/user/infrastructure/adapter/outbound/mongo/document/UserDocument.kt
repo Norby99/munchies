@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.outbound.mongo.document
+package com.munchies.user.infrastructure.adapter.outbound.mongo.document
 
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity

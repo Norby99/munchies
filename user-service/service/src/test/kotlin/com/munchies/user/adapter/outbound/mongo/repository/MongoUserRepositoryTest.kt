@@ -1,8 +1,10 @@
 package com.munchies.user.adapter.outbound.mongo.repository
 
-import com.munchies.user.adapter.outbound.mongo.document.UserDocument
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserDocument
+import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoCrudUserRepository
+import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoUserRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
