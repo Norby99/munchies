@@ -1,4 +1,4 @@
-# `:user-service:dto`
+# `:user-service:api`
 
 ## Module dependency graph
 
@@ -13,8 +13,11 @@ config:
 graph TB
   subgraph :user-service
     direction TB
-    :user-service:dto[dto]:::unknown
+    :user-service:client[client]:::unknown
+    :user-service:shared[shared]:::unknown
   end
+
+  :user-service:client -.-> :user-service:shared
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```
