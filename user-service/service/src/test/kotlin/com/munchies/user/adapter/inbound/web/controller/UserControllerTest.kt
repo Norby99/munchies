@@ -4,7 +4,7 @@ import com.munchies.user.application.port.inbound.CreateNewUser
 import com.munchies.user.application.port.inbound.CreateNewUser.Companion.CreateNewUserResult
 import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.presentation.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.presentation.toDomain
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -15,7 +15,6 @@ import io.micronaut.serde.annotation.SerdeImport
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -25,17 +24,17 @@ class UserControllerTest {
   private fun getController(
     getUserQuery: GetUserQuery = mock(),
     createNewUser: CreateNewUser = mock(),
-  ) = UserController(getUserQuery, createNewUser)
+  ) = MicronautUserController(getUserQuery, createNewUser)
 
   @Test
   fun `controller is @Controller annotated`() {
-    val controller = UserController::class
+    val controller = MicronautUserController::class
     controller.findAnnotation<Controller>() shouldNotBe null
   }
 
   @Test
   fun `controller should have @SerdeImport for DTOs`() {
-    val controller = UserController::class
+    val controller = MicronautUserController::class
     val serdeImport = controller.findAnnotations<SerdeImport>()
     serdeImport shouldNotBe null
     serdeImport.shouldNotBeEmpty()

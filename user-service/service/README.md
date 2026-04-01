@@ -13,15 +13,13 @@ config:
 graph TB
   subgraph :user-service
     direction TB
-    :user-service:api[api]:::unknown
-    :user-service:dto[dto]:::unknown
     :user-service:service[service]:::unknown
+    :user-service:shared[shared]:::unknown
   end
   :commons[commons]:::unknown
 
-  :user-service:api -.-> :user-service:dto
   :user-service:service -.-> :commons
-  :user-service:service -.-> :user-service:api
+  :user-service:service -.-> :user-service:shared
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```
