@@ -3,6 +3,7 @@ package com.munchies.user.adapter.outbound.memory
 import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach

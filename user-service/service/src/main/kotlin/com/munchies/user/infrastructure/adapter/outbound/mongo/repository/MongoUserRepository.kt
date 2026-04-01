@@ -1,11 +1,11 @@
-package com.munchies.user.adapter.outbound.mongo.repository
+package com.munchies.user.infrastructure.adapter.outbound.mongo.repository
 
-import com.munchies.user.adapter.outbound.mongo.document.UserDocument
-import com.munchies.user.adapter.outbound.mongo.mapper.DomainToDocument.toDocument
-import com.munchies.user.adapter.outbound.mongo.mapper.DomainToDocument.toDomain
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
+import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserDocument
+import com.munchies.user.infrastructure.adapter.outbound.mongo.mapper.DomainToDocument.toDocument
+import com.munchies.user.infrastructure.adapter.outbound.mongo.mapper.DomainToDocument.toDomain
 import io.micronaut.context.annotation.Requires
 import io.micronaut.data.mongodb.annotation.MongoRepository
 import io.micronaut.data.repository.CrudRepository

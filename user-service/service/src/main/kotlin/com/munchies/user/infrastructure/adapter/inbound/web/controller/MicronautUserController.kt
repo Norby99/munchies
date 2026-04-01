@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.inbound.web.controller
+package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.CreateNewUser
 import com.munchies.user.application.port.inbound.CreateNewUser.Companion.CreateNewUserResult
@@ -6,10 +6,10 @@ import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.dto.mapper.toDTO
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.AddUser
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUser
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
-import com.munchies.user.presentation.toDTO
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get

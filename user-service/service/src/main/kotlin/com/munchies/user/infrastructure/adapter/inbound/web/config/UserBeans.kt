@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.inbound.web.config
+package com.munchies.user.infrastructure.adapter.inbound.web.config
 
 import com.munchies.user.application.port.inbound.CreateNewUser
 import com.munchies.user.application.port.inbound.GetUserQuery
