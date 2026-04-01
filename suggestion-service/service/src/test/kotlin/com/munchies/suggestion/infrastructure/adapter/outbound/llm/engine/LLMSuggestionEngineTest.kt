@@ -2,6 +2,7 @@ package com.munchies.suggestion.infrastructure.adapter.outbound.llm.engine
 
 import com.munchies.suggestion.domain.model.MenuItem
 import com.munchies.suggestion.domain.model.MenuItemId
+import com.munchies.suggestion.domain.model.SuggestedMenuItem
 import com.munchies.suggestion.domain.model.SuggestionConfidence
 import com.munchies.suggestion.domain.model.SuggestionRequest
 import com.munchies.suggestion.domain.model.SuggestionRequestId
@@ -92,14 +93,24 @@ class LLMSuggestionEngineTest {
       {
         "rationale": "Because it's a good idea",
         "confidence": "HIGH",
-        "suggestedMenuItems": []
+        "suggestedMenuItems": [
+          {
+            "itemId": "test-item-id",
+            "reason": "Pizza is gud"
+          }
+        ]
       }
     """.trimIndent()
 
     val suggestionResponse = SuggestionResponse(
       rationale = "Because it's a good idea",
       confidence = SuggestionConfidence.HIGH,
-      suggestedMenuItems = listOf(),
+      suggestedMenuItems = listOf(
+        SuggestedMenuItem(
+          itemId = "test-item-id",
+          reason = "Pizza is gud",
+        ),
+      ),
     )
 
     val model = mock<ChatModel> {
