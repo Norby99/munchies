@@ -1,13 +1,14 @@
 package com.munchies.user.adapter.inbound.web.controller
 
-import com.munchies.user.adapter.config.UserServiceConfig
 import com.munchies.user.application.port.inbound.CreateNewUser
 import com.munchies.user.application.port.inbound.CreateNewUser.Companion.CreateNewUserResult
 import com.munchies.user.application.port.inbound.GetUserQuery
 import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.presentation.UserClient
-import com.munchies.user.presentation.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.AddUser
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUser
+import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.presentation.toDTO
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -22,12 +23,12 @@ import jakarta.inject.Inject
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
 )
-class UserController(
+class MicronautUserController(
   @Inject
   private val getUser: GetUserQuery,
   @Inject
   private val createUser: CreateNewUser,
-) : UserClient {
+) : GetUser<String, HttpResponse<UserDTO>>, AddUser<HttpResponse<String>> {
   @Get("{id}/")
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
     return when (val res = getUser.execute(UserId(id))) {

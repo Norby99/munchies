@@ -3,7 +3,7 @@ package com.munchies.user.application.usecase
 import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
-import com.munchies.user.presentation.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.presentation.toDomain
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

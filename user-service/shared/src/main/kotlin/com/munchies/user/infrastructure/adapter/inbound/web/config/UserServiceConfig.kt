@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.config
+package com.munchies.user.infrastructure.adapter.inbound.web.config
 
 object UserServiceConfig {
   const val SERVICE_NAME = "user-service"
