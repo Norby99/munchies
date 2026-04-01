@@ -16,15 +16,16 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 │   ├── build.gradle.kts
 │   ├── README.md
 │   └── src/main/kotlin/com/munchies/<service>/
-│       └── infrastructure/adapter/
+│       └── infrastructure/adapter/inbound/web/
+│           └── Micronaut[Service]Client.kt     # Client adapter for external service consumption
 │
 ├── service/                                   # Main service module
 │   ├── build.gradle.kts
 │   ├── README.md
-│   ├── Main.kt                                # Application entry point
-│   │
 │   └── src/
 │       ├── main/kotlin/com/munchies/<service>/
+│       │   ├── Main.kt                                # Application entry point
+│       │   │ 
 │       │   ├── application/                   # Application/Orchestration layer
 │       │   │   ├── usecase/                   # Use case implementations
 │       │   │   │   ├── Primary[Action]UseCase.kt
@@ -51,6 +52,7 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 │       │       │       │   └── [Service]Beans.kt
 │       │       │       └── controller/
 │       │       │           └── [Resource]Controller.kt
+│       │       │
 │       │       └── outbound/                  # Outbound adapters
 │       │           ├── memory/           # InMemory Database adapters
 │       │           │   └── Memory[Entity]Repository.kt
@@ -85,19 +87,18 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 │                       └── external/
 │                           └── [Service]ClientTest.kt
 │
-├── shared/                                    # Shared module (inter-service communication)
-│   ├── build.gradle.kts
-│   ├── README.md
-│   └── src/main/kotlin/com/munchies/<service>/infrastructure/adapter/
-│       ├── dto/                               # Data Transfer Objects
-│       │   ├── [Entity]DTO.kt
-│       │   └── ...
-│       └── inbound/                           # Public interfaces
-│           ├── [Service]API.kt                # Main API interface
-│           └── web/config/
-│               └── [Service]ServiceConfig.kt
-│
-└── build/                                     # Build artifacts
+└── shared/                                    # Shared module (inter-service communication)
+    ├── build.gradle.kts
+    ├── README.md
+    └── src/main/kotlin/com/munchies/<service>/infrastructure/adapter/
+        ├── dto/                               # Data Transfer Objects
+        │   ├── [Entity]DTO.kt
+        │   └── ...
+        └── inbound/                           # Public interfaces
+            ├── [Service]API.kt                # Main API interface
+            └── web/config/
+                └── [Service]ServiceConfig.kt
+
 ```
 
 ## Layer Descriptions
