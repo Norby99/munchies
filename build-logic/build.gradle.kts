@@ -18,6 +18,7 @@ dependencies {
   implementation(fromPluginToDependency(libs.plugins.ksp))
   implementation(fromPluginToDependency(libs.plugins.detekt))
   implementation(fromPluginToDependency(libs.plugins.kover))
+  implementation(fromPluginToDependency(libs.plugins.dokka))
 
   implementation(fromPluginToDependency(libs.plugins.allopen))
   implementation(fromPluginToDependency(libs.plugins.shadow))
