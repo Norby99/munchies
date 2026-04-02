@@ -15,6 +15,7 @@ kover = "0.9.7"
 mockito = "5.4.0"
 micronaut-buildtools = "2.5.4"
 snakeyaml = "2.4.0"
+dokka = "1.9.20"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -27,6 +28,7 @@ spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 micronaut-testResources = { id = "io.micronaut.test-resources", version.ref = "micronaut" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
