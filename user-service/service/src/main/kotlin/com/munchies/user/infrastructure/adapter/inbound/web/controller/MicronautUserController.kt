@@ -16,6 +16,8 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.serde.annotation.SerdeImport
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.inject.Inject
 
 /**
@@ -59,6 +61,12 @@ class MicronautUserController(
    * @return an HTTP response containing the user DTO or a not-found status
    */
   @Get("{id}/")
+  @Operation(
+    summary = "Get user by id",
+    description = "Retrieves a user by their unique identifier.",
+  )
+  @ApiResponse(responseCode = "200", description = "Found")
+  @ApiResponse(responseCode = "404", description = "Not Found")
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
     return when (val res = getUser.execute(UserId(id))) {
       is GetUserResult.Success -> HttpResponse.ok(res.user.toDTO())
@@ -75,6 +83,11 @@ class MicronautUserController(
    * @return an HTTP response containing the created user identifier
    */
   @Post("/")
+  @Operation(
+    summary = "Create a new user",
+    description = "Creates a new user and returns their unique identifier.",
+  )
+  @ApiResponse(responseCode = "201", description = "Created")
   override fun addUser(): HttpResponse<String> {
     return when (val res = createUser.execute()) {
       is CreateNewUserResult.Success -> HttpResponse.created(res.userId.value)
