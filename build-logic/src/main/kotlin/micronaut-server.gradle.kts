@@ -23,6 +23,9 @@ dependencies {
   runtimeOnly("org.mongodb:mongodb-driver-sync")
 
   runtimeOnly("org.yaml:snakeyaml")
+  ksp("io.micronaut.openapi:micronaut-openapi")
+  compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
+  implementation("io.swagger.core.v3:swagger-annotations")
 }
 
 micronaut {
