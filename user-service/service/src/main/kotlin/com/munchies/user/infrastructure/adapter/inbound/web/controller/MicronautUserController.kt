@@ -18,17 +18,46 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.serde.annotation.SerdeImport
 import jakarta.inject.Inject
 
+/**
+ * Micronaut HTTP controller for the user-service inbound web adapter.
+ *
+ * This controller exposes the user-related HTTP endpoints and delegates the
+ * actual business logic to inbound application ports:
+ * - [GetUserQuery] for fetching a user by id
+ * - [CreateNewUser] for creating a new user
+ *
+ * The controller is kept thin on purpose so that the domain and application
+ * layers remain independent from HTTP-specific concerns.
+ */
 @SerdeImport(UserDTO::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
 )
 class MicronautUserController(
+  /**
+   * Use case for retrieving a user from the application layer.
+   */
   @Inject
   private val getUser: GetUserQuery,
+
+  /**
+   * Use case for creating a new user from the application layer.
+   */
   @Inject
   private val createUser: CreateNewUser,
 ) : GetUser<String, HttpResponse<UserDTO>>, AddUser<HttpResponse<String>> {
+
+  /**
+   * Handles `GET /users/{id}/`.
+   *
+   * Translates the application-layer result into an HTTP response:
+   * - `200 OK` with the user DTO if the user is found
+   * - `404 Not Found` if the user does not exist
+   *
+   * @param id the user identifier received from the path
+   * @return an HTTP response containing the user DTO or a not-found status
+   */
   @Get("{id}/")
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
     return when (val res = getUser.execute(UserId(id))) {
@@ -37,6 +66,14 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles `POST /users/`.
+   *
+   * Delegates user creation to the application layer and returns:
+   * - `201 Created` with the newly created user id on success
+   *
+   * @return an HTTP response containing the created user identifier
+   */
   @Post("/")
   override fun addUser(): HttpResponse<String> {
     return when (val res = createUser.execute()) {
