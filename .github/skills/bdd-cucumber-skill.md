@@ -48,7 +48,7 @@ This skill defines how to write BDD tests in Munchies.
 @SelectClasspathResource("features")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.munchies.<context>.bdd")
 @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty")
-class ServiceCucumberTest
+class <ServiceName>CucumberTest
 ```
 
 ### Feature (`service/src/test/resources/features/<bounded-context>.feature`)

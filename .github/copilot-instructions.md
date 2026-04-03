@@ -1,4 +1,4 @@
-# Copilot Instructions for Muchies Project
+# Copilot Instructions for Munchies Project
 
 ## Project Overview
 
@@ -44,7 +44,7 @@ microservices architecture.
 - Use the Composition API.
 - Keep components small and focused.
 
-## Communicatio
+## Communication
 
 - Kafka is used for inter-service communication. Ensure proper topic naming conventions and message schemas.
 - Use OpenAPI for defining RESTful APIs, ensuring clear documentation and consistency across services.
