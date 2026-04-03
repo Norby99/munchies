@@ -3,35 +3,48 @@
 # Usage: ./scripts/k8s-undeploy.sh <service-name | all>
 # Example for a single service: ./scripts/k8s-undeploy.sh order-service
 # Example for all services: ./scripts/k8s-undeploy.sh all
+# Example wiping data: ./scripts/k8s-undeploy.sh order-service wipe-data
 
 SERVICE=$1
+WIPE_DATA=${2:-false}
 
 if [ -z "$SERVICE" ]; then
     echo "Error: You must specify the service name or 'all'."
-    echo "Usage: ./scripts/k8s-undeploy.sh <service-name|all>"
+    echo "Usage: ./scripts/k8s-undeploy.sh <service-name|all> [wipe-data]"
     exit 1
 fi
 
 if [ "$SERVICE" == "all" ]; then
-    echo "🗑️  Removing ALL Kubernetes resources and databases..."
-    minikube kubectl -- delete -f k8s/
+    SERVICES="order-service" # keep in sync with k8s-deploy.sh
 else
-    echo "🗑️  Removing resources for application $SERVICE..."
-    if [ -f "k8s/${SERVICE}.yml" ]; then
-        minikube kubectl -- delete -f k8s/${SERVICE}.yml
-    else
-        echo "⚠️  The manifest file k8s/${SERVICE}.yml does not exist."
-    fi
-
-    # Automatically removes the isolated database if it exists
-    if [ -f "k8s/${SERVICE:0:10}mongodb.yml" ] || [ -f "k8s/order-mongodb.yml" ]; then
-       # Let's simplify by checking if there's an associated db with the known pattern
-       DB_FILE="k8s/$(echo $SERVICE | cut -d'-' -f1)-mongodb.yml"
-       if [ -f "$DB_FILE" ]; then
-           echo "🗑️  Removing associated database ($DB_FILE)..."
-           minikube kubectl -- delete -f $DB_FILE
-       fi
-    fi
+    SERVICES=$SERVICE
 fi
 
-echo "✅ Undeploy completed!"
+for srv in $SERVICES; do
+    echo "==========================================="
+    echo "Undeploying: $srv"
+    echo "==========================================="
+
+    if [ -f "k8s/${srv}.yml" ]; then
+        echo "Deleting resources from k8s/${srv}.yml..."
+        minikube kubectl -- delete -f k8s/${srv}.yml --ignore-not-found
+    elif [ -d "k8s/${srv}" ]; then
+        echo "Deleting resources from k8s/${srv}/..."
+        minikube kubectl -- delete -f k8s/${srv}/ --ignore-not-found
+    else
+        echo "Warning: No manifest found for $srv. Attempting namespace deletion anyway..."
+    fi
+
+    if [ "$WIPE_DATA" == "wipe-data" ]; then
+        echo "Wiping PersistentVolumeClaims for $srv..."
+        minikube kubectl -- delete pvc --all -n $srv --ignore-not-found
+        echo "Deleting namespace $srv..."
+        minikube kubectl -- delete namespace $srv --ignore-not-found
+    else
+        echo "Keeping PersistentVolumeClaims (pass 'wipe-data' to delete them)."
+    fi
+
+    echo ""
+done
+
+echo "Undeploy Completed!"

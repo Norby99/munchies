@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Usage: ./scripts/k8s-deploy.sh <service-name | all>
-# Example for a single service: ./scripts/k8s-deploy.sh order-service
-# Example for all services: ./scripts/k8s-deploy.sh all
-
 SERVICE=$1
 
 if [ -z "$SERVICE" ]; then
@@ -12,34 +8,43 @@ if [ -z "$SERVICE" ]; then
     exit 1
 fi
 
-echo "🔄 Connecting to Minikube's Docker environment..."
+echo "Connecting to Minikube's Docker environment..."
 eval $(minikube docker-env)
 
 if [ "$SERVICE" == "all" ]; then
-    # Base list of your services. You can add or remove them based on your needs
-    SERVICES="order-service" # add the other ones here separated by spaces when you have them with Docker
+    SERVICES="order-service"
 else
     SERVICES=$SERVICE
 fi
 
 for srv in $SERVICES; do
     echo "==========================================="
-    echo "🚀 Processing: $srv"
+    echo "Processing: $srv"
     echo "==========================================="
 
-    echo "📦 1/3 Building Docker image for $srv using Gradle..."
+    echo "Building Docker image for $srv using Gradle..."
     ./gradlew :${srv}:dockerBuild
 
+    # Supports both a single file (k8s/[service].yml)
+    # and a folder (k8s/[service]/)
     if [ -f "k8s/${srv}.yml" ]; then
-        echo "☸️  2/3 Applying Kubernetes manifest in k8s/${srv}.yml..."
-        minikube kubectl -- apply -f k8s/${srv}.yml
-
-        echo "🔄 3/3 Restarting deployment to pick up the new image..."
-        minikube kubectl -- rollout restart deployment $srv || true
+        MANIFEST="k8s/${srv}.yml"
+        echo "Applying Kubernetes manifest $MANIFEST..."
+        minikube kubectl -- apply -f $MANIFEST
+    elif [ -d "k8s/${srv}" ]; then
+        echo "Applying namespace first, then full manifest in k8s/${srv}/..."
+        minikube kubectl -- apply -f k8s/${srv}/namespace.yml
+        minikube kubectl -- apply -f k8s/${srv}/
     else
-        echo "⚠️  Warning: The manifest file k8s/${srv}.yml does not exist. Make sure you created it."
+        echo "Warning: No manifest found for $srv (checked k8s/${srv}.yml and k8s/${srv}/)."
+        continue
     fi
+
+    echo "Restarting deployments and statefulsets..."
+    minikube kubectl -- rollout restart deployment -n $srv || true
+    minikube kubectl -- rollout restart statefulset -n $srv || true
+
     echo ""
 done
 
-echo "✅ Deployment Completed!"
+echo "Deployment Completed!"
