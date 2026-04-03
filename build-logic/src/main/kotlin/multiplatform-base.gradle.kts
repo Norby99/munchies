@@ -1,5 +1,6 @@
 plugins {
   kotlin("multiplatform")
+  id("dokka-convention")
 }
 
 val javaVersion: String by project
