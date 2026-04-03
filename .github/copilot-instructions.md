@@ -67,6 +67,7 @@ microservices architecture.
 ## Commenting & Documentation
 - Always provide clear comments and documentation, especially for complex logic or architectural decisions.
 - Never use emojis in code comments or documentation. Keep it professional and clear.
+- Always write comments and logging in English, regardless of the developer's native language, to maintain consistency across the codebase.
 
 ## Development Workflow and Building
 - **Build System:** Gradle multi-project build orchestrating Kotlin across services. Configuration logic is centralized in the `build-logic` directory using Gradle convention plugins.
