@@ -5,8 +5,7 @@
 # ==========================================
 
 COMMAND=$1
-ARG1=$2
-ARG2=$3
+shift
 
 function show_help {
     echo "Usage: ./munchies.sh <command> [args...]"
@@ -30,25 +29,13 @@ fi
 
 case "$COMMAND" in
     deploy)
-        if [ -z "$ARG1" ]; then
-            echo "Error: You must specify the service name or 'all'."
-            exit 1
-        fi
-        ./scripts/k8s-deploy.sh "$ARG1"
+        ./scripts/k8s-deploy.sh "$@"
         ;;
     undeploy)
-        if [ -z "$ARG1" ]; then
-            echo "Error: You must specify the service name or 'all'."
-            exit 1
-        fi
-        ./scripts/k8s-undeploy.sh "$ARG1" "$ARG2"
+        ./scripts/k8s-undeploy.sh "$@"
         ;;
     show-db)
-        if [ -z "$ARG1" ]; then
-            echo "Error: You must specify the service name."
-            exit 1
-        fi
-        ./scripts/k8s-show-db.sh "$ARG1" "$ARG2"
+        ./scripts/k8s-show-db.sh "$@"
         ;;
     help)
         show_help
