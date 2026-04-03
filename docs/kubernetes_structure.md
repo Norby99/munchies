@@ -1,10 +1,10 @@
 # Build setup
 
-Every service must include a yaml file in the `/k8s/` folder named with its own service name. This could be a single file (es. `/k8s/order-service.yml`) or a directory containing multiple yaml files (es. `/k8s/order-service/*.yml`).
+Every service must include a YAML file in the `/k8s/` folder named with its own service name. This could be a single file (es. `/k8s/order-service.yml`) or a directory containing multiple YAML files (es. `/k8s/order-service/*.yml`).
 
-# Helpful scritps
+# Helpful scripts
 
-There is a bash file in the root directory called `munchies.sh` it is a simple wrapper for all the scripts contained in the `/scripts/` folder.
+There is a bash file in the root directory called `munchies.sh`. It is a simple wrapper for all the scripts contained in the `/scripts/` folder.
 
 ## Deploy
 
