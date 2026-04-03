@@ -4,6 +4,7 @@ import utils.getServiceName
 
 plugins {
   alias(libs.plugins.spotless) apply false
+  alias(libs.plugins.dokka)
   id("munchies-subproject") apply false
 }
 
@@ -28,9 +29,26 @@ fun configureSpotlessForKotlin(project: Project) {
 apply<SpotlessPlugin>()
 configureSpotlessForKotlin(rootProject)
 
+dokka {
+  dokkaPublications.html {
+    outputDirectory.set(
+      rootProject.layout.buildDirectory
+        .dir("docs/html"),
+    )
+  }
+}
+
 subprojects {
   apply<SpotlessPlugin>()
   configureSpotlessForKotlin(this)
+
+  plugins.withId("org.jetbrains.dokka") {
+    rootProject.dependencies {
+      "dokka"(project(this@subprojects.path))
+    }
+  }
+
+  apply(plugin = "munchies-subproject")
 }
 
 tasks.register("prepareOpenApiSpecs") {
