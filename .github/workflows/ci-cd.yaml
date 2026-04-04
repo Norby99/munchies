@@ -35,6 +35,7 @@ jobs:
   deploy-docs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
     permissions:
+      contents: read
       pages: write
       id-token: write
     uses: ./.github/workflows/deploy-docs.yaml
