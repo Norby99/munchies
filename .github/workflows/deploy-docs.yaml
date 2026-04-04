@@ -9,5 +9,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Deploy docs
-        run: echo "deploy docs"
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '25'
+
+      - name: Npm install
+        run: npm install
+
+      - name: Prepare OpenAPI docs
+        run: bash ./gradlew prepareOpenApiSpecs
+
+      - name: Generate OpenAPI docs
+        run: bash ./scripts/generate-openapi-docs.sh
+
+      - name: Generate Kotlin docs
+        run: bash ./gradlew dokkaGenerateHtml
+
+      - name: Move Dokka docs
+        run: mv build/docs/html/ docs/pages/kotlin/
+
+      # TODO build typescript typedoc docs
+      # TODO move generated docs to docs/pages/typescript/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs/pages/'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
