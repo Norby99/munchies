@@ -4,6 +4,7 @@ import com.munchies.restaurant.application.usecases.CreateRestaurantCommand
 import com.munchies.restaurant.application.usecases.CreateRestaurantResult
 import com.munchies.restaurant.application.usecases.CreateRestaurantUseCase
 import com.munchies.restaurant.application.usecases.DeleteRestaurantCommand
+import com.munchies.restaurant.application.usecases.DeleteRestaurantResult
 import com.munchies.restaurant.application.usecases.DeleteRestaurantUseCase
 import com.munchies.restaurant.application.usecases.GetRestaurantDetailsQuery
 import com.munchies.restaurant.application.usecases.GetRestaurantDetailsUseCase
@@ -35,7 +36,7 @@ class RestaurantApplicationService(
     return getRestaurantDetailsUseCase(query)
   }
 
-  override suspend fun deleteRestaurant(command: DeleteRestaurantCommand): Boolean {
+  override suspend fun deleteRestaurant(command: DeleteRestaurantCommand): DeleteRestaurantResult {
     return deleteRestaurantUseCase(command)
   }
 }
