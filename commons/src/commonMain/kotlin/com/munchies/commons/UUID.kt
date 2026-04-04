@@ -1,5 +1,5 @@
 package com.munchies.commons
-/***
+/**
  * A common EntityId implementation that uses UUID strings as identifiers.
  * This class can be extended by entities that require a unique identifier.
  *
