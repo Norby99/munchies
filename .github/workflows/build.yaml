@@ -21,4 +21,4 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      # TODO Upload the build artifacts
+      # TODO Upload the build artifactss

@@ -30,7 +30,12 @@ jobs:
       needs.build.result == 'success' &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     uses: ./.github/workflows/publish.yaml
+    secrets: inherit
 
   deploy-docs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
