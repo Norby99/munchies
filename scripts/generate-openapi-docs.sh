@@ -10,7 +10,6 @@ for file in $(cd ./build/openapi/ && find .  -name "*.yml"); do
 done
 
 printf '# OpenAPI Specs \n' > ./docs/pages/openapi/index.md
-
 for spec in "${SPEC_NAMES[@]}"; do
   printf '\n' >> ./docs/pages/openapi/index.md
   echo "- [$spec-service]($spec/index.html)" >> ./docs/pages/openapi/index.md
