@@ -9,7 +9,9 @@ for file in $(cd ./build/openapi/ && find .  -name "*.yml"); do
   SPEC_NAMES+=("$spec_name")
 done
 
+printf '# OpenAPI Specs \n' > ./docs/pages/openapi/index.md
+
 for spec in "${SPEC_NAMES[@]}"; do
   printf '\n' >> ./docs/pages/openapi/index.md
-  echo "- [$spec-service](/docs/pages/openapi/$spec/index.html)" >> ./docs/pages/openapi/index.md
+  echo "- [$spec-service]($spec/index.html)" >> ./docs/pages/openapi/index.md
 done
