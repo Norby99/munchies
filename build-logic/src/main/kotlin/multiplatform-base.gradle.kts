@@ -1,32 +1,40 @@
 plugins {
-    kotlin("multiplatform")
+  kotlin("multiplatform")
+  id("dokka-convention")
 }
 
+val javaVersion: String by project
 kotlin {
-    js {
-        browser {
-            testTask {
-                enabled = false
-            }
-        }
-        nodejs()
-        binaries.executable()
+  jvmToolchain(javaVersion.toInt())
+
+  jvm()
+
+  js(IR) {
+    nodejs {
+      testTask {
+        enabled = false
+      }
     }
+    binaries.executable()
+  }
 
-
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-
-            }
-        }
-        val commonTest by getting {
-            dependencies {
-                
-            }
-        }
-        val jsMain by getting {
-        }
-
+  sourceSets {
+    all {
+      languageSettings {
+        optIn("kotlin.js.ExperimentalJsExport")
+      }
     }
+  }
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+      }
+    }
+    val commonTest by getting {
+      dependencies {
+      }
+    }
+    val jsMain by getting {
+    }
+  }
 }

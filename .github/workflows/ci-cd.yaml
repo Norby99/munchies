@@ -1,0 +1,58 @@
+on:
+  push:
+    branches:
+      - master # Build site and publish artifacts
+  pull_request:
+    branches:
+      - master # Run tests and validations before merging to main and deploying
+      - develop # Run tests for contributors and for bots
+  workflow_dispatch:
+
+jobs:
+  test: # Always run test, gatekeeper for build and publish
+    uses: ./.github/workflows/test.yaml
+
+  build:
+    needs:
+      - test
+    if: |
+      always() && 
+      needs.test.result == 'success' &&
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/build.yaml
+
+  publish:
+    needs:
+      - build
+    if: |
+      always() &&
+      needs.build.result == 'success' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/publish.yaml
+    secrets: inherit
+
+  deploy-docs:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-docs.yaml
+
+  success:
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - build
+      - publish
+      - deploy-docs
+    if: always()
+    steps:
+      - name: Check for no failed jobs
+        run: ${{ !contains(join(needs.*.result, ','), 'failure') }}

@@ -12,19 +12,31 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositories {
-      mavenCentral()
-    }
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
 }
 
 plugins {
   id("org.danilopianini.gradle-pre-commit-git-hooks") version "2.0.30"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 
 gitHooks {
+  preCommit {
+    tasks("spotlessCheck", "detekt")
+  }
+  hook("pre-push") {
+    tasks("test")
+  }
   commitMsg { conventionalCommits() }
   createHooks(overwriteExisting = true)
 }
 
-include("commons")
-
+include(":commons")
+include(":architecture-rules")
+include(":user-service:service")
+include(":user-service:shared")
+include(":user-service:client")

@@ -1,5 +1,51 @@
 [versions]
-kotlin = "2.2.10"
+kotlin = "1.9.25"
+micronaut = "4.6.2"
+jakarta-validation = "3.0.2"
+ksp = "1.9.25-1.0.20"
+shadow = "8.3.9"
+spotless = "6.25.0"
+micronaut-serde = "2.11.0"
+micronaut-kotlin = "4.4.0"
+jackson = "2.17.2"
+konsist = "0.16.1"
+kotest = "5.9.1"
+detekt = "1.23.1"
+kover = "0.9.7"
+mockito = "5.4.0"
+micronaut-buildtools = "2.5.4"
+snakeyaml = "2.4.0"
+dokka = "2.2.0"
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+allopen = { id= "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut" }
+micronaut-aot = { id = "io.micronaut.aot", version.ref = "micronaut" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+micronaut-testResources = { id = "io.micronaut.test-resources", version.ref = "micronaut" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 
 [libraries]
-kotlin-multiplatform-plugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
+jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
+micronaut-http-client = { module = "io.micronaut:micronaut-http-client", version.ref = "micronaut" }
+micronaut-kotlin-runtime = { module = "io.micronaut.kotlin:micronaut-kotlin-runtime", version.ref = "micronaut-kotlin" }
+micronaut-serde-jackson = { module = "io.micronaut.serde:micronaut-serde-jackson", version.ref = "micronaut-serde" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+kotest = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+mockito = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito" }
+micronaut-buildtools = { module = "io.micronaut.testresources:micronaut-test-resources-build-tools", version.ref = "micronaut-buildtools"  }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+
+
+[bundles]
+micronaut-serialization = [
+    "micronaut-kotlin-runtime",
+    "micronaut-serde-jackson",
+    "jackson-module-kotlin",
+]
