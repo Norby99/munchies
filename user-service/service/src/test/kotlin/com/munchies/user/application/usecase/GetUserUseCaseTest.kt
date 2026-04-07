@@ -1,10 +1,9 @@
 package com.munchies.user.application.usecase
 
-import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
+import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult
+import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
-import com.munchies.user.infrastructure.adapter.dto.UserDTO
-import com.munchies.user.infrastructure.adapter.dto.mapper.toDomain
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -32,7 +31,7 @@ class GetUserUseCaseTest {
   fun `execute should return Success with user when user is found`() {
     val userId = UserId("real-id")
     val repository = mock<UserRepository> {
-      on { findById(any()) } doReturn UserDTO(id = userId.value).toDomain()
+      on { findById(any()) } doReturn MockUserFactory().create(userId.value)
     }
     val useCase = GetUserUseCase(repository)
 

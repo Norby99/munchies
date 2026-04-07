@@ -22,7 +22,7 @@ dependencies {
 
 tasks.withType<Detekt>().configureEach {
   jvmTarget = "1.8"
-  config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+  config.setFrom(files("${rootDir.path}/config/detekt/detekt.yml"))
 }
 
 tasks.test {

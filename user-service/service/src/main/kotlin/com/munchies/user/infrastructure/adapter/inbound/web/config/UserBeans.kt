@@ -1,9 +1,10 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.config
 
-import com.munchies.user.application.port.inbound.CreateNewUser
-import com.munchies.user.application.port.inbound.GetUserQuery
-import com.munchies.user.application.usecase.CreateNewUserUseCase
+import com.munchies.user.application.port.inbound.GetUser
+import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.application.usecase.GetUserUseCase
+import com.munchies.user.application.usecase.RegisterUserUseCase
+import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
@@ -12,8 +13,11 @@ import jakarta.inject.Singleton
 class UserBeans {
 
   @Singleton
-  fun getUserQuery(repo: UserRepository): GetUserQuery = GetUserUseCase(repo)
+  fun getUser(repo: UserRepository): GetUser = GetUserUseCase(repo)
 
   @Singleton
-  fun createNewUser(repo: UserRepository): CreateNewUser = CreateNewUserUseCase(repo)
+  fun registerUser(
+    userRepository: UserRepository,
+    userCredentialsRepository: UserCredentialsRepository,
+  ): RegisterUser = RegisterUserUseCase(userRepository, userCredentialsRepository)
 }
