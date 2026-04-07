@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  mongo-user:
+    image: mongo:7.0
+    container_name: mongo-user
+    ports: ["27017:27017"]
+    volumes: [mongo_user_data:/data/db]
+
+volumes:
+  mongo_user_data:

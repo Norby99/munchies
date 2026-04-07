@@ -21,4 +21,8 @@ open class InMemoryRepository<Id : EntityId<*>, E : AggregateRoot<Id>>(
   override fun delete(entity: E) {
     repo.remove(entity.id)
   }
+
+  override fun create(): Id {
+    TODO()
+  }
 }

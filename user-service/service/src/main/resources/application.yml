@@ -1,0 +1,8 @@
+micronaut:
+  application:
+    name: user-service
+  openapi:
+    enabled: true
+
+mongodb:
+  uri: mongodb://localhost:27017/user-service
