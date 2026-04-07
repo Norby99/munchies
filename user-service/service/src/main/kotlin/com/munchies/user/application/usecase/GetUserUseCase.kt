@@ -1,9 +1,9 @@
 package com.munchies.user.application.usecase
 
-import com.munchies.user.application.port.inbound.GetUserQuery
-import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult
-import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult.NotFound
-import com.munchies.user.application.port.inbound.GetUserQuery.Companion.GetUserResult.Success
+import com.munchies.user.application.port.inbound.GetUser
+import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult
+import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.NotFound
+import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
 
@@ -15,7 +15,7 @@ import com.munchies.user.domain.port.UserRepository
  *
  * @property repository repository used to lookup users by [UserId].
  */
-class GetUserUseCase(private val repository: UserRepository) : GetUserQuery {
+class GetUserUseCase(private val repository: UserRepository) : GetUser {
   /**
    * Executes the user lookup use case.
    *

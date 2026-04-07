@@ -74,8 +74,7 @@ open class Entity<Id : EntityId<*>>(open val id: Id) {
  * Base class for aggregate roots in Domain-Driven Design.
  *
  * An aggregate root is the entry point to an aggregate cluster and is responsible for
- * maintaining invariants within its aggregate boundary. Aggregate roots are responsible
- * for their own persistence through repositories.
+ * maintaining invariants within its aggregate boundary.
  *
  * @param Id the type of the aggregate root identifier (must extend [EntityId]).
  * @param id the unique domain identifier.
@@ -92,48 +91,41 @@ open class AggregateRoot<Id : EntityId<*>>(id: Id) : Entity<Id>(id)
 interface Factory<E : Entity<*>>
 
 /**
- * Repository interface for persisting and retrieving aggregate roots.
+ * Repository interface for persisting and retrieving entities.
  *
- * Acts as an in-memory collection abstraction over aggregate root storage, providing
- * CRUD operations and factory-like creation capabilities.
+ * Acts as a collection-like abstraction over entity storage, providing CRUD operations
+ * and factory-like creation capabilities.
  *
- * @param Id the type of aggregate root identifier (must extend [EntityId]).
- * @param E the type of aggregate root being managed (must extend [AggregateRoot]).
+ * @param Id the type of entity identifier (must extend [EntityId]).
+ * @param E the type of entity being managed (must extend [Entity]).
  */
-interface Repository<Id : EntityId<*>, E : AggregateRoot<Id>> {
+interface Repository<Id : EntityId<*>, E : Entity<Id>> {
   /**
-   * Retrieves an aggregate root by its identifier.
+   * Retrieves an entity by its identifier.
    *
-   * @param id the unique identifier of the aggregate root.
-   * @return the aggregate root if found, or `null` if not found.
+   * @param id the unique identifier of the entity.
+   * @return the entity if found, or `null` if not found.
    */
   fun findById(id: Id): E?
 
   /**
-   * Persists a new aggregate root.
+   * Persists a new entity.
    *
-   * @param entity the aggregate root to persist.
+   * @param entity the entity to persist.
    */
   fun save(entity: E)
 
   /**
-   * Updates an existing aggregate root.
+   * Updates an existing entity.
    *
-   * @param entity the aggregate root with updated state.
+   * @param entity the entity with updated state.
    */
   fun update(entity: E)
 
   /**
-   * Deletes an existing aggregate root.
+   * Deletes an existing entity.
    *
-   * @param entity the aggregate root to delete.
+   * @param entity the entity to delete.
    */
   fun delete(entity: E)
-
-  /**
-   * Creates and persists a new aggregate root, generating a unique identifier.
-   *
-   * @return the generated identifier of the newly created aggregate root.
-   */
-  fun create(): Id
 }

@@ -4,10 +4,12 @@ import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
 
 @MappedEntity
-data class UserDocument(
+data class UserCredentialsDocument(
   @field:Id
   val id: String,
-  val username: String,
-  val email: String,
-  val role: String,
+  val passwordHash: String,
+  val salt: String,
+  val loginAttempts: Int,
+  val lockedUntil: Long,
+  val lastLogin: Long,
 )

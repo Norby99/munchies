@@ -13,16 +13,12 @@ sealed interface UserAPI {
      * @param UserId The type of the user ID.
      * @param User The type of the user object.
      */
-    interface GetUser<UserId, User> : UserAPI {
+    interface GetUserAPI<UserId, User> : UserAPI {
       fun getUser(id: UserId): User
     }
 
-    /**
-     * The AddUser interface defines a method to add a new user and return their ID.
-     * @param UserId The type of the user ID.
-     */
-    interface AddUser<UserId> : UserAPI {
-      fun addUser(): UserId
+    interface RegisterUserAPI<UserView, Response> : UserAPI {
+      fun registerUser(userInfo: UserView, hashedPassword: String, saltValue: String): Response
     }
   }
 }

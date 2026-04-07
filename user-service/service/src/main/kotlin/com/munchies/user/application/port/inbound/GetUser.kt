@@ -9,7 +9,7 @@ import com.munchies.user.domain.model.UserId
  * This interface defines the use-case contract exposed to inbound adapters
  * (for example, REST controllers) in the Application layer.
  */
-interface GetUserQuery {
+interface GetUser {
 
   /**
    * Retrieves a user by its domain identifier.

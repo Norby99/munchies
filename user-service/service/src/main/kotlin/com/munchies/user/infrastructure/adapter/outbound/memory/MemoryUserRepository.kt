@@ -50,15 +50,4 @@ interface MemoryUserRepository : UserRepository {
    * @param entity user entity to remove.
    */
   override fun delete(entity: User) = repository.delete(entity)
-
-  /**
-   * Creates and stores a new user with a generated [UserId].
-   *
-   * @return the generated identifier of the newly created user.
-   */
-  override fun create(): UserId {
-    val userId = UserId()
-    repository.save(User(userId))
-    return userId
-  }
 }

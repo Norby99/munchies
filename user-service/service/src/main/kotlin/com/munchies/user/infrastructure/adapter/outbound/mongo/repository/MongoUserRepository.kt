@@ -4,8 +4,7 @@ import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserDocument
-import com.munchies.user.infrastructure.adapter.outbound.mongo.mapper.DomainToDocument.toDocument
-import com.munchies.user.infrastructure.adapter.outbound.mongo.mapper.DomainToDocument.toDomain
+import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserDocumentFactory
 import io.micronaut.context.annotation.Requires
 import io.micronaut.data.mongodb.annotation.MongoRepository
 import io.micronaut.data.repository.CrudRepository
@@ -32,6 +31,7 @@ sealed interface MongoCrudUserRepository : CrudRepository<UserDocument, String>
 @Requires(env = ["prod"])
 class MongoUserRepository(
   private val repository: MongoCrudUserRepository,
+  private val documentFactory: UserDocumentFactory = UserDocumentFactory.default,
 ) : UserRepository {
 
   /**
@@ -41,7 +41,7 @@ class MongoUserRepository(
    * @return the mapped domain [User] when found, or `null` otherwise.
    */
   override fun findById(id: UserId): User? = repository.findById(id.value).map {
-    it.toDomain()
+    documentFactory.run { it.toDomain() }
   }.getOrNull()
 
   /**
@@ -50,7 +50,7 @@ class MongoUserRepository(
    * @param entity domain user to be stored.
    */
   override fun save(entity: User) {
-    repository.save(entity.toDocument())
+    repository.save(documentFactory.run { entity.toDocument() })
   }
 
   /**
@@ -59,7 +59,7 @@ class MongoUserRepository(
    * @param entity domain user with updated state.
    */
   override fun update(entity: User) {
-    repository.update(entity.toDocument())
+    repository.update(documentFactory.run { entity.toDocument() })
   }
 
   /**
@@ -68,18 +68,6 @@ class MongoUserRepository(
    * @param entity domain user to remove.
    */
   override fun delete(entity: User) {
-    repository.delete(entity.toDocument())
-  }
-
-  /**
-   * Creates and stores a new [User] with a generated [UserId].
-   *
-   * @return the generated identifier for the newly created user.
-   */
-  override fun create(): UserId {
-    val userId = UserId()
-    val user = User(userId)
-    repository.save(user.toDocument())
-    return user.id
+    repository.delete(documentFactory.run { entity.toDocument() })
   }
 }
