@@ -29,14 +29,14 @@ sealed interface UpdateRestaurantResult {
 }
 
 class UpdateRestaurantUseCase(
-  private val restaurantRepository: RestaurantRepository,
+  private val repository: RestaurantRepository,
 ) : UseCase<UpdateRestaurantCommand, UpdateRestaurantResult> {
 
   override suspend operator fun invoke(command: UpdateRestaurantCommand): UpdateRestaurantResult {
     return try {
       val restaurantId = RestaurantId.of(command.restaurantId)
       val managerId = UserId.of(command.managerId)
-      val restaurant = restaurantRepository.findByIdSuspend(restaurantId)
+      val restaurant = repository.findByIdSuspend(restaurantId)
         ?: return UpdateRestaurantResult.NotFound
 
       performUpdateIfAuthorized(command, restaurant, managerId)
@@ -62,37 +62,20 @@ class UpdateRestaurantUseCase(
     restaurant: Restaurant,
     managerId: UserId,
   ): UpdateRestaurantResult {
+    val nameAlreadyTaken = repository.findByManagerId(managerId)
+      .any { it.id != restaurant.id && it.details.name == RestaurantName.of(command.name) }
+    if (nameAlreadyTaken) {
+      return UpdateRestaurantResult.NameAlreadyExists
+    }
+
     val newDetails = RestaurantDetails(
       name = RestaurantName.of(command.name),
       address = Address.of(command.address),
       phone = Phone.of(command.phone),
       email = Email.of(command.email),
     )
-
-    val validationResult = validateNameUniqueness(command, restaurant, managerId, newDetails)
-
-    return if (validationResult != null) {
-      validationResult
-    } else {
-      restaurant.updateDetails(newDetails)
-      restaurantRepository.save(restaurant)
-      UpdateRestaurantResult.Success(restaurantId = restaurant.id.value)
-    }
-  }
-
-  private suspend fun validateNameUniqueness(
-    command: UpdateRestaurantCommand,
-    restaurant: Restaurant,
-    managerId: UserId,
-    newDetails: RestaurantDetails,
-  ): UpdateRestaurantResult? {
-    if (command.name == restaurant.name.value) {
-      return null
-    }
-
-    val duplicateExists = restaurantRepository.findByManagerId(managerId)
-      .any { it.id != restaurant.id && it.details.name == newDetails.name }
-
-    return if (duplicateExists) UpdateRestaurantResult.NameAlreadyExists else null
+    restaurant.updateDetails(newDetails)
+    repository.save(restaurant)
+    return UpdateRestaurantResult.Success(restaurantId = restaurant.id.value)
   }
 }
