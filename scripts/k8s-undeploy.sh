@@ -18,7 +18,14 @@ if [ -z "$SERVICE" ]; then
 fi
 
 if [ "$SERVICE" == "all" ]; then
-    SERVICES="order-service" # keep in sync with k8s-deploy.sh
+    SERVICES=""
+    for item in k8s/*; do
+        if [ -d "$item" ]; then
+            SERVICES="$SERVICES $(basename "$item")"
+        elif [[ "$item" == *.yml ]]; then
+            SERVICES="$SERVICES $(basename "$item" .yml)"
+        fi
+    done
 else
     SERVICES=$SERVICE
 fi

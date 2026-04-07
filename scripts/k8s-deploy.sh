@@ -15,7 +15,14 @@ echo "Connecting to Minikube's Docker environment..."
 eval $(minikube docker-env)
 
 if [ "$SERVICE" == "all" ]; then
-    SERVICES="order-service"
+    SERVICES=""
+    for item in k8s/*; do
+        if [ -d "$item" ]; then
+            SERVICES="$SERVICES $(basename "$item")"
+        elif [[ "$item" == *.yml ]]; then
+            SERVICES="$SERVICES $(basename "$item" .yml)"
+        fi
+    done
 else
     SERVICES=$SERVICE
 fi
