@@ -6,3 +6,8 @@ micronaut:
 
 mongodb:
   uri: mongodb://localhost:27017/user-service
+
+endpoints:
+  health:
+    enabled: true
+    sensitive: false
