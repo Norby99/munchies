@@ -46,3 +46,10 @@ jobs:
           if [ -n "$GIT_VERSION" ]; then
             echo "version=$(echo $GIT_VERSION | sed 's/^v//')" >> "$GITHUB_OUTPUT"
           fi
+
+      # TODO maybe push to npm
+      # TODO maybe publish to maven central
+      # TODO maybe push to docker hub
+
+
+      # TODO include the deploy script to release files
