@@ -6,6 +6,7 @@ plugins {
   alias(libs.plugins.spotless) apply false
   alias(libs.plugins.dokka)
   id("munchies-subproject") apply false
+  id("kubernetes-tasks")
 }
 
 allprojects {
