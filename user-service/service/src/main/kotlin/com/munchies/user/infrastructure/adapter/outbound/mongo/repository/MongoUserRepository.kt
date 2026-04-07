@@ -12,31 +12,70 @@ import io.micronaut.data.repository.CrudRepository
 import jakarta.inject.Singleton
 import kotlin.jvm.optionals.getOrNull
 
+/**
+ * Micronaut Data Mongo repository contract for low-level CRUD operations on [UserDocument].
+ *
+ * This interface is used by [MongoUserRepository] as the infrastructure persistence gateway.
+ */
 @MongoRepository
-interface MongoCrudUserRepository : CrudRepository<UserDocument, String>
+sealed interface MongoCrudUserRepository : CrudRepository<UserDocument, String>
 
+/**
+ * Production-only MongoDB-backed implementation of the domain [UserRepository].
+ *
+ * This adapter maps domain entities to Mongo documents and delegates persistence
+ * to [MongoCrudUserRepository].
+ *
+ * @property repository low-level CRUD repository for [UserDocument] entities.
+ */
 @Singleton
 @Requires(env = ["prod"])
 class MongoUserRepository(
   private val repository: MongoCrudUserRepository,
 ) : UserRepository {
 
+  /**
+   * Retrieves a [User] by its domain identifier.
+   *
+   * @param id domain identifier of the user.
+   * @return the mapped domain [User] when found, or `null` otherwise.
+   */
   override fun findById(id: UserId): User? = repository.findById(id.value).map {
     it.toDomain()
   }.getOrNull()
 
+  /**
+   * Persists a new [User] entity.
+   *
+   * @param entity domain user to be stored.
+   */
   override fun save(entity: User) {
     repository.save(entity.toDocument())
   }
 
+  /**
+   * Updates an existing [User] entity.
+   *
+   * @param entity domain user with updated state.
+   */
   override fun update(entity: User) {
     repository.update(entity.toDocument())
   }
 
+  /**
+   * Deletes an existing [User] entity.
+   *
+   * @param entity domain user to remove.
+   */
   override fun delete(entity: User) {
     repository.delete(entity.toDocument())
   }
 
+  /**
+   * Creates and stores a new [User] with a generated [UserId].
+   *
+   * @return the generated identifier for the newly created user.
+   */
   override fun create(): UserId {
     val userId = UserId()
     val user = User(userId)
