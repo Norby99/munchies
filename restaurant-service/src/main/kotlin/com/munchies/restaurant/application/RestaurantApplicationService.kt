@@ -6,12 +6,12 @@ import com.munchies.restaurant.application.usecases.CreateRestaurantUseCase
 import com.munchies.restaurant.application.usecases.DeleteRestaurantCommand
 import com.munchies.restaurant.application.usecases.DeleteRestaurantResult
 import com.munchies.restaurant.application.usecases.DeleteRestaurantUseCase
-import com.munchies.restaurant.application.usecases.GetRestaurantDetailsQuery
-import com.munchies.restaurant.application.usecases.GetRestaurantDetailsUseCase
+import com.munchies.restaurant.application.usecases.GetRestaurantCommand
+import com.munchies.restaurant.application.usecases.GetRestaurantResult
+import com.munchies.restaurant.application.usecases.GetRestaurantUseCase
 import com.munchies.restaurant.application.usecases.UpdateRestaurantCommand
 import com.munchies.restaurant.application.usecases.UpdateRestaurantResult
 import com.munchies.restaurant.application.usecases.UpdateRestaurantUseCase
-import com.munchies.restaurant.domain.entity.Restaurant
 
 /**
  * Application Service for Restaurant management
@@ -20,7 +20,7 @@ import com.munchies.restaurant.domain.entity.Restaurant
 class RestaurantApplicationService(
   private val createRestaurantUseCase: CreateRestaurantUseCase,
   private val updateRestaurantUseCase: UpdateRestaurantUseCase,
-  private val getRestaurantDetailsUseCase: GetRestaurantDetailsUseCase,
+  private val getRestaurantUseCase: GetRestaurantUseCase,
   private val deleteRestaurantUseCase: DeleteRestaurantUseCase,
 ) : RestaurantService {
 
@@ -32,8 +32,8 @@ class RestaurantApplicationService(
     return updateRestaurantUseCase(command)
   }
 
-  override suspend fun getRestaurantDetails(query: GetRestaurantDetailsQuery): Restaurant? {
-    return getRestaurantDetailsUseCase(query)
+  override suspend fun getRestaurantDetails(command: GetRestaurantCommand): GetRestaurantResult {
+    return getRestaurantUseCase(command)
   }
 
   override suspend fun deleteRestaurant(command: DeleteRestaurantCommand): DeleteRestaurantResult {

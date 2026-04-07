@@ -5,14 +5,21 @@ import com.munchies.restaurant.domain.entity.Restaurant
 import com.munchies.restaurant.domain.repository.RestaurantRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 
-data class GetRestaurantDetailsQuery(
+data class GetRestaurantCommand(
   val restaurantId: String,
 )
 
-class GetRestaurantDetailsUseCase(
+sealed interface GetRestaurantResult {
+  data class Success(val restaurant: Restaurant) : GetRestaurantResult
+  data object NotFound : GetRestaurantResult
+}
+
+class GetRestaurantUseCase(
   private val restaurantRepository: RestaurantRepository,
-) : UseCase<GetRestaurantDetailsQuery, Restaurant?> {
-  override suspend operator fun invoke(command: GetRestaurantDetailsQuery): Restaurant? {
+) : UseCase<GetRestaurantCommand, GetRestaurantResult> {
+  override suspend operator fun invoke(command: GetRestaurantCommand): GetRestaurantResult {
     return restaurantRepository.findByIdSuspend(RestaurantId.of(command.restaurantId))
+      ?.let { GetRestaurantResult.Success(it) }
+      ?: GetRestaurantResult.NotFound
   }
 }
