@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+trap 'if [ $? -ne 0 ]; then echo "Deployment failed!"; fi' EXIT
+
 SERVICE=$1
 
 if [ -z "$SERVICE" ]; then
