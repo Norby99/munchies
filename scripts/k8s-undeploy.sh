@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+trap 'if [ $? -ne 0 ]; then echo "Undeployment failed!"; fi' EXIT
+
 # Usage: ./scripts/k8s-undeploy.sh <service-name | all> [--wipe-data]
 # Example for a single service: ./scripts/k8s-undeploy.sh order-service
 # Example for all services: ./scripts/k8s-undeploy.sh all
