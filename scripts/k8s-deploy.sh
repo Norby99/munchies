@@ -25,8 +25,16 @@ for srv in $SERVICES; do
     echo "Processing: $srv"
     echo "==========================================="
 
-    echo "Building Docker image for $srv using Gradle..."
-    ./gradlew :${srv}:dockerBuild
+    if [ -f "${srv}/service/build.gradle.kts" ]; then
+        echo "Building Docker image for $srv (using :${srv}:service)..."
+        ./gradlew :${srv}:service:dockerBuild
+        # Micronaut calls the image 'service:latest' by default for a module named 'service'
+        # We retag it with the root project name so deployment.yml can find it
+        docker tag service:latest ${srv}:latest || true
+    else
+        echo "Building Docker image for $srv using Gradle..."
+        ./gradlew :${srv}:dockerBuild
+    fi
 
     # Supports both a single file (k8s/[service].yml)
     # and a folder (k8s/[service]/)
