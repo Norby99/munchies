@@ -9,7 +9,6 @@ import com.munchies.restaurant.domain.valueobject.Phone
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-@MicronautTest
 @DisplayName("UpdateRestaurant Tests")
 class UpdateRestaurantTest {
 
