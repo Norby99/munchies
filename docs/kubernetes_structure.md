@@ -4,14 +4,16 @@ Every service must include a YAML file in the `/k8s/` folder named with its own 
 
 # Helpful scripts
 
-There is a bash file in the root directory called `munchies.sh`. It is a simple wrapper for all the scripts contained in the `/scripts/` folder.
+There are some helpful scripts to deploy/undeploy the services and also some utility functions
+inside the `scripts` folder.
+This scripts can be executed via gradle:
 
 ## Deploy
 
 To deploy a service or all of them:
 
 ```bash
-./munchies.sh deploy [service/all]
+./gradlew deploy -Pservice=<name|all>
 ```
 
 ## Undeploy
@@ -19,13 +21,13 @@ To deploy a service or all of them:
 To undeploy a service or all of them:
 
 ```bash
-./munchies.sh undeploy [service/all]
+./gradlew undeploy -Pservice=<service|all>
 ```
 
 To undeploy a service and also wipe all the statefulsets (es. DBs):
 
 ```bash
-./munchies.sh undeploy [service/all] --wipe-data
+./gradlew undeploy -Pservice=<service|all> [-PwipeData=true]
 ```
 
 ## Debug
@@ -33,13 +35,13 @@ To undeploy a service and also wipe all the statefulsets (es. DBs):
 To show all the collections of a service:
 
 ```bash
-./munchies.sh show-db [service]
+./gradlew showDb -Pservice=<service>
 ```
 
 To only show one specific collection:
 
 ```bash
-./munchies.sh show-db [service] [collection-name]
+./gradlew showDb -Pservice=<service> [-Pcollection=<collection>]
 ```
 
 <aside>
