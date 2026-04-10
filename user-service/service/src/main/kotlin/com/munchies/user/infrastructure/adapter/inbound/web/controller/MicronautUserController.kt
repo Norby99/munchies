@@ -26,6 +26,7 @@ import jakarta.inject.Inject
  * This controller exposes the user-related HTTP endpoints and delegates the
  * actual business logic to inbound application ports:
  * - [GetUser] for fetching a user by id
+ * - [RegisterUser] for registering a new user
  *
  * The controller is kept thin on purpose so that the domain and application
  * layers remain independent from HTTP-specific concerns.
@@ -42,9 +43,15 @@ class MicronautUserController(
   @Inject
   private val getUser: GetUser,
 
+  /**
+   * Use case for registering a new user in the application layer.
+   */
   @Inject
   private val registerUser: RegisterUser,
 
+  /**
+   * Factory for converting between User domain models and UserDTOs.
+   */
   private val dtoFactory: UserDTOFactory = UserDTOFactory.default,
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
@@ -57,8 +64,8 @@ class MicronautUserController(
    * - `200 OK` with the user DTO if the user is found
    * - `404 Not Found` if the user does not exist
    *
-   * @param id the user identifier received from the path
-   * @return an HTTP response containing the user DTO or a not-found status
+   * @param id The user identifier received from the path.
+   * @return An HTTP response containing the user DTO or a not-found status.
    */
   @Get("{id}/")
   @Operation(
@@ -74,6 +81,20 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles `POST /register/`.
+   *
+   * Registers a new user with the provided information and credentials.
+   * Translates the application-layer result into an HTTP response:
+   * - `200 OK` if the user is successfully registered
+   * - `400 Bad Request` if the user is already registered
+   * - `500 Internal Server Error` if the registration fails
+   *
+   * @param userInfo The user information received in the request body.
+   * @param hashedPassword The hashed password for the user.
+   * @param saltValue The cryptographic salt used for hashing the password.
+   * @return An HTTP response indicating the result of the registration process.
+   */
   @Post("/register/")
   @Operation(
     summary = "Register a new user",
