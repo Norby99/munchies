@@ -2,6 +2,7 @@ package com.munchies.user.infrastructure.adapter.inbound.web.client
 
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.core.async.annotation.SingleResult
@@ -49,6 +50,19 @@ sealed interface MicronautUserClient {
         hashedPassword: String,
         saltValue: String,
       ): HttpResponse<String>
+    }
+
+    interface MicronautLoginUser : LoginUserAPI<String, HttpResponse<String>>, MicronautUserClient {
+      /**
+       * Authenticates a user based on the provided credentials.
+       *
+       * @param user The unique identifier of the user attempting to log in.
+       * @param providedPassword The password provided for authentication.
+       * @return An [HttpResponse] indicating the result of the login attempt.
+       */
+      @Post("/login")
+      @SingleResult
+      override fun loginUser(user: String, providedPassword: String): HttpResponse<String>
     }
   }
 }

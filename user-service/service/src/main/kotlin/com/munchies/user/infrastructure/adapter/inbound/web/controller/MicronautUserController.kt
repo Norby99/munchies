@@ -2,12 +2,15 @@ package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.GetUser
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult
+import com.munchies.user.application.port.inbound.LoginUser
+import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.http.HttpResponse
@@ -50,12 +53,19 @@ class MicronautUserController(
   private val registerUser: RegisterUser,
 
   /**
+   * Use case for authenticating a user in the application layer.
+   */
+  @Inject
+  private val loginUser: LoginUser,
+
+  /**
    * Factory for converting between User domain models and UserDTOs.
    */
   private val dtoFactory: UserDTOFactory = UserDTOFactory.default,
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
-  RegisterUserAPI<UserDTO, HttpResponse<String>> {
+  RegisterUserAPI<UserDTO, HttpResponse<String>>,
+  LoginUserAPI<UserDTO, HttpResponse<String>> {
 
   /**
    * Handles `GET /users/{id}/`.
@@ -120,6 +130,20 @@ class MicronautUserController(
       is RegisterUser.Companion.RegisterUserResult.Failure ->
         HttpResponse
           .serverError("Failed to register user: ${registerUser.execute(user, userCredentials)}")
+    }
+  }
+
+  @Get("/login/")
+  @Operation(
+    summary = "Login a user",
+    description = "Authenticates a user with the provided email and password.",
+  )
+  @ApiResponse(responseCode = "200", description = "User logged in successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid email or password")
+  override fun loginUser(user: UserDTO, providedPassword: String): HttpResponse<String> {
+    return when (loginUser.execute(user.email, user.username, providedPassword)) {
+      is LoginResult.Success -> HttpResponse.ok("Login successful")
+      else -> HttpResponse.badRequest("Invalid email or password")
     }
   }
 }

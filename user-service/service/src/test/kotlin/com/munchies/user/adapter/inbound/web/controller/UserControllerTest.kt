@@ -2,6 +2,7 @@ package com.munchies.user.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.GetUser
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
+import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.User
@@ -29,8 +30,9 @@ class UserControllerTest {
   private fun getController(
     getUser: GetUser = mock(),
     registerUser: RegisterUser = mock(),
+    loginUser: LoginUser = mock(),
     dtoFactory: UserDTOFactory = UserDTOFactory.default,
-  ) = MicronautUserController(getUser, registerUser, dtoFactory)
+  ) = MicronautUserController(getUser, registerUser, loginUser, dtoFactory)
 
   private val dtoFactory = UserDTOFactory.default
 
