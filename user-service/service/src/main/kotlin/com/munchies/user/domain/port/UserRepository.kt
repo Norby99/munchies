@@ -12,4 +12,20 @@ import com.munchies.user.domain.model.UserId
  *
  * @see com.munchies.commons.Repository
  */
-interface UserRepository : Repository<UserId, User>
+interface UserRepository : Repository<UserId, User> {
+  /**
+   * Finds a user by their email address.
+   *
+   * @param email the email address to search for.
+   * @return the user associated with the given email, or null if no such user exists.
+   */
+  fun findByEmail(email: String): User?
+
+  /**
+   * Finds a user by their username.
+   *
+   * @param username the username to search for.
+   * @return the user associated with the given username, or null if no such user exists.
+   */
+  fun findByUsername(username: String): User?
+}

@@ -60,6 +60,11 @@ class MongoUserCredentialsRepository(
     documentFactory.run { it.toDomain() }
   }.orElse(null)
 
+  override fun findByPredicate(predicate: (UserCredentials) -> Boolean): UserCredentials? =
+    repository.findAll().asSequence()
+      .map { documentFactory.run { it.toDomain() } }
+      .firstOrNull(predicate)
+
   /**
    * Saves a new UserCredentials entity to the MongoDB database.
    *

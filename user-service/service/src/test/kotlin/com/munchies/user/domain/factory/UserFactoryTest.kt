@@ -2,6 +2,7 @@ package com.munchies.user.domain.factory
 
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.model.UserRole
+import com.munchies.user.domain.model.UserRole.Companion.toUserRole
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
@@ -20,7 +21,7 @@ class UserFactoryTest {
   @Test
   fun `create should use provided id when id is not empty`() {
     val id = "specific-id"
-    val profile = UserProfile("username", "email@example.com", UserRole.CUSTOMER)
+    val profile = UserProfile("username", "email@example.com", "MANAGER".toUserRole())
 
     val user = UserFactory.default.create(id, profile)
 
@@ -29,9 +30,8 @@ class UserFactoryTest {
   }
 
   @Test
-  fun createShouldUseEmptyProfileWhenProfileIsNotProvided() {
+  fun `create should use empty profile when profile is not provided`() {
     val id = "specific-id"
-
     val user = UserFactory.default.create(id)
 
     id shouldBeEqual user.id.value

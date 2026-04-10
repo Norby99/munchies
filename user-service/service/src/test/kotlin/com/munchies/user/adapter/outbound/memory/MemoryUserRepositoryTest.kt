@@ -14,9 +14,17 @@ class MemoryUserRepositoryTest {
 
   fun createMemoryUserRepository(): MemoryUserRepository {
     return object : MemoryUserRepository {
+      val map = mutableMapOf<UserId, User>()
       override val repository: InMemoryRepository<UserId, User>
-        get() = object : InMemoryRepository<UserId, User>() {
+        get() = object : InMemoryRepository<UserId, User>(map) {
         }
+
+      override fun findByEmail(email: String): User? = map.values.find { it.profile.email == email }
+
+      override fun findByUsername(username: String): User? =
+        map.values.find { it.profile.username == username }
+
+      override fun findByPredicate(predicate: (User) -> Boolean): User? = map.values.find(predicate)
     }
   }
 
