@@ -44,6 +44,11 @@ class MongoUserRepository(
     documentFactory.run { it.toDomain() }
   }.getOrNull()
 
+  override fun findByPredicate(predicate: (User) -> Boolean): User? =
+    repository.findAll().asSequence().map {
+      documentFactory.run { it.toDomain() }
+    }.firstOrNull(predicate)
+
   /**
    * Persists a new [User] entity.
    *
@@ -70,4 +75,12 @@ class MongoUserRepository(
   override fun delete(entity: User) {
     repository.delete(documentFactory.run { entity.toDocument() })
   }
+
+  override fun findByEmail(email: String): User? = repository.findAll().asSequence().map {
+    documentFactory.run { it.toDomain() }
+  }.firstOrNull { it.profile.email == email }
+
+  override fun findByUsername(username: String): User? = repository.findAll().asSequence().map {
+    documentFactory.run { it.toDomain() }
+  }.firstOrNull { it.profile.username == username }
 }
