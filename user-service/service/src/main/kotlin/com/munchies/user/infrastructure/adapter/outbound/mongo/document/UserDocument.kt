@@ -17,8 +17,8 @@ import io.micronaut.data.annotation.MappedEntity
 @MappedEntity
 data class UserDocument(
   @field:Id
-  val id: String, // Primary key for the document
-  val username: String, // The username of the user
-  val email: String, // The email address of the user
-  val role: String, // The role of the user in the system
+  val id: String,
+  val username: String,
+  val email: String,
+  val role: String,
 )
