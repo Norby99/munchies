@@ -1,5 +1,3 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
-import com.diffplug.gradle.spotless.SpotlessPlugin
 import utils.getServiceName
 
 plugins {
@@ -13,36 +11,9 @@ allprojects {
   group = "munchies"
 }
 
-fun configureSpotlessForKotlin(project: Project) {
-  project.configure<SpotlessExtension> {
-    kotlin {
-      target("**/*.kt")
-      targetExclude("**/build/**/*.kt")
-      ktlint()
-    }
-    kotlinGradle {
-      target("**/*.kts")
-      targetExclude("**/build/**/*.kts")
-      ktlint()
-    }
-  }
-}
-apply<SpotlessPlugin>()
-configureSpotlessForKotlin(rootProject)
-
-dokka {
-  dokkaPublications.html {
-    outputDirectory.set(
-      rootProject.layout.buildDirectory
-        .dir("docs/html"),
-    )
-  }
-}
+apply(plugin = "linter-convention")
 
 subprojects {
-  apply<SpotlessPlugin>()
-  configureSpotlessForKotlin(this)
-
   plugins.withId("org.jetbrains.dokka") {
     rootProject.dependencies {
       "dokka"(project(this@subprojects.path))
@@ -50,6 +21,7 @@ subprojects {
   }
 
   apply(plugin = "munchies-subproject")
+  apply(plugin = "linter-convention")
 }
 
 tasks.register("prepareOpenApiSpecs") {
