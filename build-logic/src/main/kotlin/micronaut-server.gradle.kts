@@ -1,4 +1,3 @@
-
 plugins {
   id("micronaut-base")
   id("io.micronaut.application")
@@ -9,6 +8,8 @@ dependencies {
   runtimeOnly("io.micronaut:micronaut-http-server-netty")
   ksp("io.micronaut.serde:micronaut-serde-processor")
   ksp("io.micronaut:micronaut-http-validation")
+
+  implementation("io.micronaut:micronaut-management")
 
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("org.junit.platform:junit-platform-suite-engine")

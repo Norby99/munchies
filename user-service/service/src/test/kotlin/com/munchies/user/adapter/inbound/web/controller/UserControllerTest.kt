@@ -1,11 +1,13 @@
 package com.munchies.user.adapter.inbound.web.controller
 
-import com.munchies.user.application.port.inbound.CreateNewUser
-import com.munchies.user.application.port.inbound.CreateNewUser.Companion.CreateNewUserResult
-import com.munchies.user.application.port.inbound.GetUserQuery
+import com.munchies.user.application.port.inbound.GetUser
+import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
+import com.munchies.user.application.port.inbound.RegisterUser
+import com.munchies.user.domain.factory.MockUserFactory
+import com.munchies.user.domain.model.User
+import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.infrastructure.adapter.dto.UserDTO
-import com.munchies.user.infrastructure.adapter.dto.mapper.toDomain
+import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -16,6 +18,8 @@ import io.micronaut.serde.annotation.SerdeImport
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -23,9 +27,12 @@ import org.mockito.kotlin.verify
 class UserControllerTest {
 
   private fun getController(
-    getUserQuery: GetUserQuery = mock(),
-    createNewUser: CreateNewUser = mock(),
-  ) = MicronautUserController(getUserQuery, createNewUser)
+    getUser: GetUser = mock(),
+    registerUser: RegisterUser = mock(),
+    dtoFactory: UserDTOFactory = UserDTOFactory.default,
+  ) = MicronautUserController(getUser, registerUser, dtoFactory)
+
+  private val dtoFactory = UserDTOFactory.default
 
   @Test
   fun `controller is @Controller annotated`() {
@@ -44,10 +51,10 @@ class UserControllerTest {
   @Test
   fun `controller should respond NotFound for getUser not found`() {
     val userId = UserId("nonexistent")
-    val userUseCase = mock<GetUserQuery> {
-      on { execute(userId) } doReturn GetUserQuery.Companion.GetUserResult.NotFound
+    val userUseCase = mock<GetUser> {
+      on { execute(userId) } doReturn GetUser.Companion.GetUserResult.NotFound
     }
-    val controller = getController(getUserQuery = userUseCase)
+    val controller = getController(getUser = userUseCase)
 
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.NOT_FOUND
@@ -57,16 +64,16 @@ class UserControllerTest {
   @Test
   fun `controller should return a correct user when getUser`() {
     val userId = UserId("very-real-id")
-    val userDTO = UserDTO(id = userId.value)
-    val userUseCase = mock<GetUserQuery> {
+    val userDTO = dtoFactory.run { MockUserFactory().create(userId.value).fromDomain() }
+    val userUseCase = mock<GetUser> {
       on {
         execute(
           userId,
         )
-      } doReturn GetUserQuery.Companion.GetUserResult.Success(userDTO.toDomain())
+      } doReturn Success(dtoFactory.run { userDTO.fromDTO() })
     }
 
-    val controller = getController(getUserQuery = userUseCase)
+    val controller = getController(getUser = userUseCase)
 
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.OK
@@ -76,44 +83,71 @@ class UserControllerTest {
   }
 
   @Test
-  fun `controller should create a new user and return its id`() {
-    val newUserId = UserId("new-user-id")
-    val createNewUser = mock<CreateNewUser> {
-      on { execute() } doReturn CreateNewUserResult.Success(newUserId)
+  fun `controller should return ok when registerUser succeeds`() {
+    val user = MockUserFactory().create("new-user-id")
+    val userDTO = dtoFactory.run { user.fromDomain() }
+    val registerUseCase = mock<RegisterUser> {
+      on { execute(any(), any()) } doReturn RegisterUser.Companion.RegisterUserResult.Success(user)
     }
-    val controller = getController(createNewUser = createNewUser)
+    val controller = getController(registerUser = registerUseCase)
 
-    val res = controller.addUser()
-    res.status shouldBe HttpStatus.CREATED
-    res.body() shouldBe newUserId.value
-    verify(createNewUser).execute()
+    val response = controller.registerUser(
+      userInfo = userDTO,
+      hashedPassword = "hashed-password",
+      saltValue = "salt-value",
+    )
+
+    response.status shouldBe HttpStatus.OK
+    response.body() shouldBe "User registered successfully"
+
+    val userCaptor = argumentCaptor<User>()
+    val credentialsCaptor = argumentCaptor<UserCredentials>()
+    verify(registerUseCase).execute(userCaptor.capture(), credentialsCaptor.capture())
+    userCaptor.firstValue shouldBe dtoFactory.run { userDTO.fromDTO() }
+    credentialsCaptor.firstValue shouldBe UserCredentials(
+      id = user.id,
+      passwordHash = "hashed-password",
+      salt = "salt-value",
+    )
   }
 
   @Test
-  fun `controller should create a new user and be able to get it`() {
-    val newUserId = UserId("new-user-id")
-    val userDTO = UserDTO(id = newUserId.value)
-    val createNewUser = mock<CreateNewUser> {
-      on { execute() } doReturn CreateNewUserResult.Success(newUserId)
-    }
-
-    val getUserQuery = mock<GetUserQuery> {
+  fun `controller should return bad request when registerUser reports user already registered`() {
+    val userDTO = dtoFactory.run { MockUserFactory().create("existing-user-id").fromDomain() }
+    val registerUseCase = mock<RegisterUser> {
       on {
-        execute(
-          newUserId,
-        )
-      } doReturn GetUserQuery.Companion.GetUserResult.Success(userDTO.toDomain())
+        execute(any(), any())
+      } doReturn RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered
     }
+    val controller = getController(registerUser = registerUseCase)
 
-    val controller = getController(createNewUser = createNewUser, getUserQuery = getUserQuery)
+    val response = controller.registerUser(
+      userInfo = userDTO,
+      hashedPassword = "hashed-password",
+      saltValue = "salt-value",
+    )
 
-    val createRes = controller.addUser()
-    createRes.status shouldBe HttpStatus.CREATED
-    createRes.body() shouldBe newUserId.value
+    response.status shouldBe HttpStatus.BAD_REQUEST
+    response.body() shouldBe "User is already registered"
+  }
 
-    val getRes = controller.getUser(newUserId.value)
-    getRes.status shouldBe HttpStatus.OK
-    getRes.body() shouldNotBe null
-    getRes.body().id shouldBe newUserId.value
+  @Test
+  fun `controller should return server error when registerUser fails`() {
+    val userDTO = dtoFactory.run { MockUserFactory().create("failing-user-id").fromDomain() }
+    val registerUseCase = mock<RegisterUser> {
+      on {
+        execute(any(), any())
+      } doReturn RegisterUser.Companion.RegisterUserResult.Failure("persistence unavailable")
+    }
+    val controller = getController(registerUser = registerUseCase)
+
+    val response = controller.registerUser(
+      userInfo = userDTO,
+      hashedPassword = "hashed-password",
+      saltValue = "salt-value",
+    )
+
+    response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
+    response.body() shouldBe "Failed to register user: Failure(reason=persistence unavailable)"
   }
 }

@@ -1,6 +1,7 @@
 package com.munchies.user.adapter.outbound.memory
 
 import com.munchies.commons.repository.InMemoryRepository
+import com.munchies.user.domain.factory.UserFactory
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepository
@@ -15,11 +16,6 @@ class MemoryUserRepositoryTest {
     return object : MemoryUserRepository {
       override val repository: InMemoryRepository<UserId, User>
         get() = object : InMemoryRepository<UserId, User>() {
-          override fun create(): UserId {
-            val id = UserId()
-            this.save(User(id))
-            return id
-          }
         }
     }
   }
@@ -38,33 +34,35 @@ class MemoryUserRepositoryTest {
 
   @Test
   fun `repository correctly finds existing id`() {
-    val id = repository.create()
-    repository.findById(id)?.shouldBeEqual(User(id))
+    val id = UserId()
+
+    repository.save(UserFactory.default.create(id.value))
+    repository.findById(id)?.shouldBeEqual(UserFactory.default.create(id.value))
   }
 
   @Test
   fun save() {
-    val user = User(UserId())
+    val user = UserFactory.default.create(UserId().value)
     repository.save(user)
     repository.findById(user.id)?.shouldBeEqual(user)
   }
 
   @Test
   fun update() {
-    // TODO
+    val user = UserFactory.default.create(UserId().value)
+    repository.save(user)
+
+    val updatedUser = user.copy(profile = user.profile.copy(username = "Updated Name"))
+    repository.update(updatedUser)
+
+    repository.findById(user.id)?.shouldBeEqual(updatedUser)
   }
 
   @Test
   fun delete() {
-    val user = User(UserId())
+    val user = UserFactory.default.create(UserId().value)
     repository.save(user)
     repository.delete(user)
     repository.findById(user.id) shouldBe null
-  }
-
-  @Test
-  fun create() {
-    val id = repository.create()
-    repository.findById(id)?.shouldBeEqual(User(id))
   }
 }
