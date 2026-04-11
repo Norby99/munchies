@@ -140,9 +140,14 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "User logged in successfully")
   @ApiResponse(responseCode = "400", description = "Invalid email or password")
+  @ApiResponse(
+    responseCode = "401",
+    description = "User is locked out due to too many failed login attempts",
+  )
   override fun loginUser(user: UserDTO, providedPassword: String): HttpResponse<String> {
     return when (loginUser.execute(user.email, user.username, providedPassword)) {
       is LoginResult.Success -> HttpResponse.ok("Login successful")
+      is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
       else -> HttpResponse.badRequest("Invalid email or password")
     }
   }

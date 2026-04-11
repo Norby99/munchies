@@ -15,6 +15,7 @@ interface LoginUser {
     sealed interface LoginResult {
       data class Success(val userId: String) : LoginResult
       data object Failure : LoginResult
+      data object BlockedLogin : LoginResult
     }
   }
 }

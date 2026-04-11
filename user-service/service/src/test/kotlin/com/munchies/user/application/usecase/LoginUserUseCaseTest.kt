@@ -111,6 +111,18 @@ class LoginUserUseCaseTest {
 
   @Test
   fun `login should fail when user is locked`() {
-    // TODO
+    val now = System.currentTimeMillis()
+    val useCase = fakeLoginUserUserUseCase(
+      credentialsRepository = mock {
+        on { findById(any()) } doReturn UserCredentials(
+          validUserId,
+          hashedValidPassword,
+          validSalt,
+          lockedUntil = now + 1000L,
+        )
+      },
+    )
+    val result = useCase.execute(validEmail, "", validPassword)
+    result shouldBe LoginResult.BlockedLogin
   }
 }
