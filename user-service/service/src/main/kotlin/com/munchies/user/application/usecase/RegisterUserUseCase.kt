@@ -21,6 +21,15 @@ class RegisterUserUseCase(
   private val credentialsRepository: UserCredentialsRepository,
 ) : RegisterUser {
 
+  private fun findUser(user: User): User? = userRepository.findById(user.id)
+    ?: if (user.profile.email.isNotEmpty()) {
+      userRepository.findByEmail(user.profile.email)
+    } else if (user.profile.username.isNotEmpty()) {
+      userRepository.findByUsername(user.profile.username)
+    } else {
+      null
+    }
+
   /**
    * Executes the user registration process.
    *
@@ -36,8 +45,7 @@ class RegisterUserUseCase(
    * - `Failure` if an error occurs during the process.
    */
   override fun execute(user: User, credentials: UserCredentials): RegisterUserResult {
-    return userRepository
-      .findById(user.id)
+    return findUser(user)
       ?.let { RegisterUserResult.UserIsAlreadyRegistered }
       ?: try {
         userRepository.save(user)
