@@ -9,9 +9,9 @@ import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.infrastructure.adapter.dto.LoginUserRequest
-import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe

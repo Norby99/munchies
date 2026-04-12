@@ -8,14 +8,14 @@ import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.infrastructure.adapter.dto.LoginUserRequest
-import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
+import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
