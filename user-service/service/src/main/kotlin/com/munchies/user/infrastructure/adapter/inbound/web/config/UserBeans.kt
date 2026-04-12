@@ -29,5 +29,10 @@ class UserBeans {
     userRepository: UserRepository,
     userCredentialsRepository: UserCredentialsRepository,
     passwordHasher: PasswordHasher,
-  ): LoginUser = LoginUserUseCase(userRepository, userCredentialsRepository, passwordHasher)
+  ): LoginUser = LoginUserUseCase(
+    userRepository,
+    userCredentialsRepository,
+    passwordHasher,
+    System::currentTimeMillis,
+  )
 }

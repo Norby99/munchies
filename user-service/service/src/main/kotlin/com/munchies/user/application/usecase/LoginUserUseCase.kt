@@ -15,7 +15,7 @@ class LoginUserUseCase(
   private val userRepository: UserRepository,
   private val credentialsRepository: UserCredentialsRepository,
   private val passwordHasher: PasswordHasher,
-  private val timeProvider: () -> Long = { System.currentTimeMillis() },
+  private val timeProvider: () -> Long,
 ) : LoginUser {
 
   private fun findUser(email: String, username: String): User? = when {
