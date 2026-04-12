@@ -17,8 +17,8 @@ sealed interface UserAPI {
       fun getUser(id: UserId): User
     }
 
-    interface RegisterUserAPI<UserView, Response> : UserAPI {
-      fun registerUser(userInfo: UserView, hashedPassword: String, saltValue: String): Response
+    interface RegisterUserAPI<Request, Response> : UserAPI {
+      fun registerUser(request: Request): Response
     }
 
     interface LoginUserAPI<UserIdentifier, Response> : UserAPI {

@@ -9,6 +9,7 @@ import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -102,9 +103,11 @@ class UserControllerTest {
     val controller = getController(registerUser = registerUseCase)
 
     val response = controller.registerUser(
-      userInfo = userDTO,
-      hashedPassword = "hashed-password",
-      saltValue = "salt-value",
+      RegisterUserRequest(
+        user = userDTO,
+        hashedPassword = "hashed-password",
+        saltValue = "salt-value",
+      ),
     )
 
     response.status shouldBe HttpStatus.OK
@@ -132,9 +135,12 @@ class UserControllerTest {
     val controller = getController(registerUser = registerUseCase)
 
     val response = controller.registerUser(
-      userInfo = userDTO,
-      hashedPassword = "hashed-password",
-      saltValue = "salt-value",
+
+      RegisterUserRequest(
+        user = userDTO,
+        hashedPassword = "hashed-password",
+        saltValue = "salt-value",
+      ),
     )
 
     response.status shouldBe HttpStatus.BAD_REQUEST
@@ -152,9 +158,11 @@ class UserControllerTest {
     val controller = getController(registerUser = registerUseCase)
 
     val response = controller.registerUser(
-      userInfo = userDTO,
-      hashedPassword = "hashed-password",
-      saltValue = "salt-value",
+      RegisterUserRequest(
+        user = userDTO,
+        hashedPassword = "hashed-password",
+        saltValue = "salt-value",
+      ),
     )
 
     response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR

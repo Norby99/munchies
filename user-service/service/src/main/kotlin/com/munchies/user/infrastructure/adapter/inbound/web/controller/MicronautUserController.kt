@@ -8,6 +8,7 @@ import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
@@ -16,6 +17,7 @@ import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.Regist
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -37,6 +39,7 @@ import jakarta.inject.Inject
  * layers remain independent from HTTP-specific concerns.
  */
 @SerdeImport(UserDTO::class)
+@SerdeImport(RegisterUserRequest::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
@@ -69,7 +72,7 @@ class MicronautUserController(
   private val dtoFactory: UserDTOFactory = UserDTOFactory.default,
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
-  RegisterUserAPI<UserDTO, HttpResponse<String>>,
+  RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
   LoginUserAPI<UserDTO, HttpResponse<String>>,
   UpdateUserPasswordAPI<UserDTO, HttpResponse<String>> {
 
@@ -106,9 +109,7 @@ class MicronautUserController(
    * - `400 Bad Request` if the user is already registered
    * - `500 Internal Server Error` if the registration fails
    *
-   * @param userInfo The user information received in the request body.
-   * @param hashedPassword The hashed password for the user.
-   * @param saltValue The cryptographic salt used for hashing the password.
+   * @param request The DTO containing the post info.
    * @return An HTTP response indicating the result of the registration process.
    */
   @Post("/register/")
@@ -119,14 +120,10 @@ class MicronautUserController(
   @ApiResponse(responseCode = "200", description = "User registered successfully")
   @ApiResponse(responseCode = "400", description = "User is already registered")
   @ApiResponse(responseCode = "500", description = "Failed to register user")
-  override fun registerUser(
-    userInfo: UserDTO,
-    hashedPassword: String,
-    saltValue: String,
-  ): HttpResponse<String> {
-    val user = dtoFactory.run { userInfo.fromDTO() }
+  override fun registerUser(@Body request: RegisterUserRequest): HttpResponse<String> {
+    val user = dtoFactory.run { request.user.fromDTO() }
     val userCredentials =
-      UserCredentials(id = user.id, passwordHash = hashedPassword, salt = saltValue)
+      UserCredentials(id = user.id, passwordHash = request.hashedPassword, salt = request.saltValue)
 
     return when (registerUser.execute(user, userCredentials)) {
       is RegisterUser.Companion.RegisterUserResult.Success ->
