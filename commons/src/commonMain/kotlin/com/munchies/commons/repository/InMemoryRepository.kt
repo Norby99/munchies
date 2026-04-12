@@ -10,6 +10,8 @@ open class InMemoryRepository<Id : EntityId<*>, E : Entity<Id>>(
   Repository<Id, E> {
   override fun findById(id: Id): E? = repo[id]
 
+  override fun findByPredicate(predicate: (E) -> Boolean): E? = repo.values.firstOrNull(predicate)
+
   override fun save(entity: E) {
     repo[entity.id] = entity
   }

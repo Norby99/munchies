@@ -109,6 +109,14 @@ interface Repository<Id : EntityId<*>, E : Entity<Id>> {
   fun findById(id: Id): E?
 
   /**
+   * Retrieves an entity matching a given predicate.
+   *
+   * @param predicate a function that takes an entity and returns `true` if it matches the criteria.
+   * @return the first entity that matches the predicate, or `null` if no match is found.
+   */
+  fun findByPredicate(predicate: (E) -> Boolean): E?
+
+  /**
    * Persists a new entity.
    *
    * @param entity the entity to persist.

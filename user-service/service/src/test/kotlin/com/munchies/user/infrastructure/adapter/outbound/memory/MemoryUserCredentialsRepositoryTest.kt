@@ -4,6 +4,7 @@ import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import io.kotest.matchers.shouldBe
+import kotlin.compareTo
 import org.junit.jupiter.api.Test
 
 class MemoryUserCredentialsRepositoryTest {
@@ -147,9 +148,49 @@ class MemoryUserCredentialsRepositoryTest {
     memoryRepository.findById(missingCredentials.id) shouldBe null
   }
 
+  @Test
+  fun `findByPredicate should return null when no credentials match the predicate`() {
+    val memoryRepository = createMemoryUserCredentialsRepository()
+    val credentials = UserCredentials(
+      id = UserId("non-matching-id"),
+      passwordHash = "hash",
+      salt = "salt",
+      loginAttempts = 1,
+    )
+    memoryRepository.save(credentials)
+
+    val result = memoryRepository.findByPredicate { it.loginAttempts > 10 }
+
+    result shouldBe null
+  }
+
+  @Test
+  fun `delete should not remove credentials when id does not match`() {
+    val memoryRepository = createMemoryUserCredentialsRepository()
+    val credentials = UserCredentials(
+      id = UserId("existing-id"),
+      passwordHash = "hash",
+      salt = "salt",
+    )
+    memoryRepository.save(credentials)
+
+    memoryRepository.delete(
+      UserCredentials(
+        id = UserId("non-existing-id"),
+        passwordHash = "hash",
+        salt = "salt",
+      ),
+    )
+
+    memoryRepository.findById(credentials.id) shouldBe credentials
+  }
+
   private fun createMemoryUserCredentialsRepository(): MemoryUserCredentialsRepository =
     object : MemoryUserCredentialsRepository {
       override val repository: InMemoryRepository<UserId, UserCredentials> =
         object : InMemoryRepository<UserId, UserCredentials>() {}
+
+      override fun findByPredicate(predicate: (UserCredentials) -> Boolean): UserCredentials? =
+        repository.findByPredicate { predicate(it) }
     }
 }

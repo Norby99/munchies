@@ -2,6 +2,7 @@ package com.munchies.user.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.GetUser
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
+import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.User
@@ -29,8 +30,9 @@ class UserControllerTest {
   private fun getController(
     getUser: GetUser = mock(),
     registerUser: RegisterUser = mock(),
+    loginUser: LoginUser = mock(),
     dtoFactory: UserDTOFactory = UserDTOFactory.default,
-  ) = MicronautUserController(getUser, registerUser, dtoFactory)
+  ) = MicronautUserController(getUser, registerUser, loginUser, dtoFactory)
 
   private val dtoFactory = UserDTOFactory.default
 
@@ -149,5 +151,50 @@ class UserControllerTest {
 
     response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
     response.body() shouldBe "Failed to register user: Failure(reason=persistence unavailable)"
+  }
+
+  @Test
+  fun `controller should return ok when loginUser succeeds`() {
+    val userDTO = dtoFactory.run { MockUserFactory().create("login-success-id").fromDomain() }
+    val loginUseCase = mock<LoginUser> {
+      on { execute(userDTO.email, userDTO.username, "valid-password") } doReturn
+        LoginUser.Companion.LoginResult.Success("login-success-id")
+    }
+    val controller = getController(loginUser = loginUseCase)
+
+    val response = controller.loginUser(userDTO, "valid-password")
+
+    response.status shouldBe HttpStatus.OK
+    verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
+  }
+
+  @Test
+  fun `controller should return bad request when loginUser fails`() {
+    val userDTO = dtoFactory.run { MockUserFactory().create("login-failure-id").fromDomain() }
+    val loginUseCase = mock<LoginUser> {
+      on { execute(userDTO.email, userDTO.username, "invalid-password") } doReturn
+        LoginUser.Companion.LoginResult.Failure
+    }
+    val controller = getController(loginUser = loginUseCase)
+
+    val response = controller.loginUser(userDTO, "invalid-password")
+
+    response.status shouldBe HttpStatus.BAD_REQUEST
+    verify(loginUseCase).execute(userDTO.email, userDTO.username, "invalid-password")
+  }
+
+  @Test
+  fun `controller should return bad request when loginUser is blocked`() {
+    val userDTO = dtoFactory.run { MockUserFactory().create("login-blocked-id").fromDomain() }
+    val loginUseCase = mock<LoginUser> {
+      on { execute(userDTO.email, userDTO.username, "blocked-password") } doReturn
+        LoginUser.Companion.LoginResult.BlockedLogin
+    }
+    val controller = getController(loginUser = loginUseCase)
+
+    val response = controller.loginUser(userDTO, "blocked-password")
+
+    response.status shouldBe HttpStatus.UNAUTHORIZED
+    verify(loginUseCase).execute(userDTO.email, userDTO.username, "blocked-password")
   }
 }

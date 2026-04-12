@@ -56,4 +56,10 @@ interface MemoryUserRepository : UserRepository {
    * @param entity The [User] entity to remove.
    */
   override fun delete(entity: User) = repository.delete(entity)
+
+  override fun findByEmail(email: String): User? =
+    repository.findByPredicate { it.profile.email == email }
+
+  override fun findByUsername(username: String): User? =
+    repository.findByPredicate { it.profile.username == username }
 }
