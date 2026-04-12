@@ -20,8 +20,8 @@ class LoginUserUseCase(
 ) : LoginUser {
 
   private fun findUser(email: String, username: String): User? = when {
-    email.isNotBlank() && username.isBlank() -> userRepository.findByEmail(email)
-    username.isNotBlank() && email.isBlank() -> userRepository.findByUsername(username)
+    email.isNotBlank() -> userRepository.findByEmail(email)
+    username.isNotBlank() -> userRepository.findByUsername(username)
     else -> null
   }
 
