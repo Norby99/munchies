@@ -25,12 +25,8 @@ sealed interface UserAPI {
       fun loginUser(request: Request): Response
     }
 
-    interface UpdateUserPasswordAPI<UserIdentifier, Response> : UserAPI {
-      fun updateUserPassword(
-        user: UserIdentifier,
-        oldHashedPassword: String,
-        newPassword: String,
-      ): Response
+    interface UpdateUserPasswordAPI<Request, Response> : UserAPI {
+      fun updateUserPassword(request: Request): Response
     }
   }
 }
