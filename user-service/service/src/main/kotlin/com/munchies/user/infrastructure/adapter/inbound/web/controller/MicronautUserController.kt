@@ -8,6 +8,7 @@ import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.infrastructure.adapter.dto.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
@@ -40,6 +41,7 @@ import jakarta.inject.Inject
  */
 @SerdeImport(UserDTO::class)
 @SerdeImport(RegisterUserRequest::class)
+@SerdeImport(LoginUserRequest::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
@@ -73,7 +75,7 @@ class MicronautUserController(
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
   RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
-  LoginUserAPI<UserDTO, HttpResponse<String>>,
+  LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
   UpdateUserPasswordAPI<UserDTO, HttpResponse<String>> {
 
   /**
@@ -147,8 +149,8 @@ class MicronautUserController(
     responseCode = "401",
     description = "User is locked out due to too many failed login attempts",
   )
-  override fun loginUser(user: UserDTO, providedPassword: String): HttpResponse<String> {
-    return when (loginUser.execute(user.email, user.username, providedPassword)) {
+  override fun loginUser(@Body request: LoginUserRequest): HttpResponse<String> {
+    return when (loginUser.execute(request.email, request.username, request.password)) {
       is LoginResult.Success -> HttpResponse.ok("Login successful")
       is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
       else -> HttpResponse.badRequest("Invalid email or password")

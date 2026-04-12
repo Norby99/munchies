@@ -21,8 +21,8 @@ sealed interface UserAPI {
       fun registerUser(request: Request): Response
     }
 
-    interface LoginUserAPI<UserIdentifier, Response> : UserAPI {
-      fun loginUser(user: UserIdentifier, providedPassword: String): Response
+    interface LoginUserAPI<Request, Response> : UserAPI {
+      fun loginUser(request: Request): Response
     }
 
     interface UpdateUserPasswordAPI<UserIdentifier, Response> : UserAPI {

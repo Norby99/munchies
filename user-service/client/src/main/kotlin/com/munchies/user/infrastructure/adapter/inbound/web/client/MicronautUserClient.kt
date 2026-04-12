@@ -48,17 +48,17 @@ sealed interface MicronautUserClient {
       override fun registerUser(request: RegisterUserRequest): HttpResponse<String>
     }
 
-    interface MicronautLoginUser : LoginUserAPI<String, HttpResponse<String>>, MicronautUserClient {
+    interface MicronautLoginUser :
+      LoginUserAPI<RegisterUserRequest, HttpResponse<String>>, MicronautUserClient {
       /**
        * Authenticates a user based on the provided credentials.
        *
-       * @param user The unique identifier of the user attempting to log in.
-       * @param providedPassword The password provided for authentication.
+       * @param request The DTO containing the post info.
        * @return An [HttpResponse] indicating the result of the login attempt.
        */
       @Post("/login")
       @SingleResult
-      override fun loginUser(user: String, providedPassword: String): HttpResponse<String>
+      override fun loginUser(request: RegisterUserRequest): HttpResponse<String>
     }
 
     interface MicronautUpdateUserPassword :

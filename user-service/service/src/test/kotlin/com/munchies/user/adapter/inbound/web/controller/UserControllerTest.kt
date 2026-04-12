@@ -9,6 +9,7 @@ import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.infrastructure.adapter.dto.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
@@ -178,7 +179,8 @@ class UserControllerTest {
     }
     val controller = getController(loginUser = loginUseCase)
 
-    val response = controller.loginUser(userDTO, "valid-password")
+    val response = controller
+      .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "valid-password"))
 
     response.status shouldBe HttpStatus.OK
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
@@ -193,7 +195,8 @@ class UserControllerTest {
     }
     val controller = getController(loginUser = loginUseCase)
 
-    val response = controller.loginUser(userDTO, "invalid-password")
+    val response = controller
+      .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "invalid-password"))
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "invalid-password")
@@ -208,7 +211,8 @@ class UserControllerTest {
     }
     val controller = getController(loginUser = loginUseCase)
 
-    val response = controller.loginUser(userDTO, "blocked-password")
+    val response = controller
+      .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "blocked-password"))
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "blocked-password")
