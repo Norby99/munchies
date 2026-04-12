@@ -12,6 +12,7 @@ import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -229,7 +230,9 @@ class UserControllerTest {
     val controller = getController(updateUserPassword = updatePasswordUseCase)
 
     val response = controller
-      .updateUserPassword(userDTO, "old-password", "new-password")
+      .updateUserPassword(
+        UpdateUserPasswordRequest(userDTO, "old-password", "new-password"),
+      )
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
     verify(updatePasswordUseCase)
@@ -252,7 +255,13 @@ class UserControllerTest {
     val controller = getController(updateUserPassword = updatePasswordUseCase)
 
     val response = controller
-      .updateUserPassword(userDTO, "old-password", "new-password")
+      .updateUserPassword(
+        UpdateUserPasswordRequest(
+          userDTO,
+          "old-password",
+          "new-password",
+        ),
+      )
 
     response.status shouldBe HttpStatus.NOT_FOUND
     verify(updatePasswordUseCase)

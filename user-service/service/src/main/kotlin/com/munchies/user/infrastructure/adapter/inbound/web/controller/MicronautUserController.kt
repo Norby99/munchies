@@ -16,6 +16,7 @@ import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.Regist
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
@@ -76,7 +77,7 @@ class MicronautUserController(
   GetUserAPI<String, HttpResponse<UserDTO>>,
   RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
   LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
-  UpdateUserPasswordAPI<UserDTO, HttpResponse<String>> {
+  UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>> {
 
   /**
    * Handles `GET /users/{id}/`.
@@ -166,16 +167,12 @@ class MicronautUserController(
   @ApiResponse(responseCode = "400", description = "Invalid old password")
   @ApiResponse(responseCode = "401", description = "User is locked out")
   @ApiResponse(responseCode = "404", description = "User not found")
-  override fun updateUserPassword(
-    user: UserDTO,
-    oldHashedPassword: String,
-    newPassword: String,
-  ): HttpResponse<String> {
+  override fun updateUserPassword(@Body request: UpdateUserPasswordRequest): HttpResponse<String> {
     return when (
       updateUserPassword.execute(
-        dtoFactory.run { user.fromDTO() },
-        oldHashedPassword,
-        newPassword,
+        dtoFactory.run { request.user.fromDTO() },
+        request.oldHashedPassword,
+        request.newPassword,
       )
     ) {
       is UpdateUserPassword.Companion.UpdateUserPasswordResult.Success ->
