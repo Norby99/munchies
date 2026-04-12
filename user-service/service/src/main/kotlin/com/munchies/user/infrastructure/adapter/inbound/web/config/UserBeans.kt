@@ -9,6 +9,7 @@ import com.munchies.user.application.usecase.RegisterUserUseCase
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
+import com.munchies.user.domain.port.defaultTimeProvider
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
@@ -33,6 +34,6 @@ class UserBeans {
     userRepository,
     userCredentialsRepository,
     passwordHasher,
-    System::currentTimeMillis,
+    defaultTimeProvider(),
   )
 }
