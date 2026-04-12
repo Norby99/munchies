@@ -4,6 +4,7 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.core.async.annotation.SingleResult
 import io.micronaut.http.HttpResponse
@@ -63,6 +64,25 @@ sealed interface MicronautUserClient {
       @Post("/login")
       @SingleResult
       override fun loginUser(user: String, providedPassword: String): HttpResponse<String>
+    }
+
+    interface MicronautUpdateUserPassword :
+      UpdateUserPasswordAPI<String, HttpResponse<String>>, MicronautUserClient {
+      /**
+       * Updates the password for a user.
+       *
+       * @param user The unique identifier of the user whose password is to be updated.
+       * @param oldHashedPassword The new hashed password for the user.
+       * @param newPassword The new salt value used for hashing the password.
+       * @return An [HttpResponse] indicating the result of the password update attempt.
+       */
+      @Post("/update-password")
+      @SingleResult
+      override fun updateUserPassword(
+        user: String,
+        oldHashedPassword: String,
+        newPassword: String,
+      ): HttpResponse<String>
     }
   }
 }
