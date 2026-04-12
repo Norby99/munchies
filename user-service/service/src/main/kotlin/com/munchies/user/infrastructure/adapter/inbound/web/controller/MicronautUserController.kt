@@ -133,7 +133,7 @@ class MicronautUserController(
     }
   }
 
-  @Get("/login/")
+  @Post("/login/")
   @Operation(
     summary = "Login a user",
     description = "Authenticates a user with the provided email and password.",
