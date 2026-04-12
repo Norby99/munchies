@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.client
 
+import com.munchies.user.infrastructure.adapter.dto.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
@@ -35,22 +36,16 @@ sealed interface MicronautUserClient {
     }
 
     interface MicronautRegisterUser :
-      RegisterUserAPI<UserDTO, HttpResponse<String>>, MicronautUserClient {
+      RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>, MicronautUserClient {
       /**
        * Registers a new user with the provided information.
        *
-       * @param userInfo The [UserDTO] containing the user's information.
-       * @param hashedPassword The hashed password for the user.
-       * @param saltValue The salt value used for hashing the password.
+       * @param request The DTO containing the post info.
        * @return An [HttpResponse] containing the unique identifier of the newly registered user.
        */
       @Post("/register")
       @SingleResult
-      override fun registerUser(
-        userInfo: UserDTO,
-        hashedPassword: String,
-        saltValue: String,
-      ): HttpResponse<String>
+      override fun registerUser(request: RegisterUserRequest): HttpResponse<String>
     }
 
     interface MicronautLoginUser : LoginUserAPI<String, HttpResponse<String>>, MicronautUserClient {
