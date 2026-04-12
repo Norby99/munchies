@@ -3,9 +3,11 @@ package com.munchies.user.infrastructure.adapter.inbound.web.config
 import com.munchies.user.application.port.inbound.GetUser
 import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.RegisterUser
+import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.application.usecase.GetUserUseCase
 import com.munchies.user.application.usecase.LoginUserUseCase
 import com.munchies.user.application.usecase.RegisterUserUseCase
+import com.munchies.user.application.usecase.UpdateUserPasswordUseCase
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
@@ -31,6 +33,18 @@ class UserBeans {
     userCredentialsRepository: UserCredentialsRepository,
     passwordHasher: PasswordHasher,
   ): LoginUser = LoginUserUseCase(
+    userRepository,
+    userCredentialsRepository,
+    passwordHasher,
+    defaultTimeProvider(),
+  )
+
+  @Singleton
+  fun updateUserPassword(
+    userRepository: UserRepository,
+    userCredentialsRepository: UserCredentialsRepository,
+    passwordHasher: PasswordHasher,
+  ): UpdateUserPassword = UpdateUserPasswordUseCase(
     userRepository,
     userCredentialsRepository,
     passwordHasher,

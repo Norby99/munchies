@@ -4,6 +4,7 @@ import com.munchies.user.application.port.inbound.GetUser
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.RegisterUser
+import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
@@ -31,8 +32,15 @@ class UserControllerTest {
     getUser: GetUser = mock(),
     registerUser: RegisterUser = mock(),
     loginUser: LoginUser = mock(),
+    updateUserPassword: UpdateUserPassword = mock(),
     dtoFactory: UserDTOFactory = UserDTOFactory.default,
-  ) = MicronautUserController(getUser, registerUser, loginUser, dtoFactory)
+  ) = MicronautUserController(
+    getUser,
+    registerUser,
+    loginUser,
+    updateUserPassword,
+    dtoFactory,
+  )
 
   private val dtoFactory = UserDTOFactory.default
 
@@ -196,5 +204,51 @@ class UserControllerTest {
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "blocked-password")
+  }
+
+  @Test
+  fun `controller should return unauthorized when updateUserPassword user is locked`() {
+    val userDTO = dtoFactory
+      .run { MockUserFactory().create("update-password-locked-id").fromDomain() }
+    val updatePasswordUseCase = mock<UpdateUserPassword> {
+      on { execute(any(), any(), any()) } doReturn
+        UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser
+    }
+    val controller = getController(updateUserPassword = updatePasswordUseCase)
+
+    val response = controller
+      .updateUserPassword(userDTO, "old-password", "new-password")
+
+    response.status shouldBe HttpStatus.UNAUTHORIZED
+    verify(updatePasswordUseCase)
+      .execute(
+        dtoFactory
+          .run { userDTO.fromDTO() },
+        "old-password",
+        "new-password",
+      )
+  }
+
+  @Test
+  fun `controller should return not found when updateUserPassword user not found`() {
+    val userDTO = dtoFactory
+      .run { MockUserFactory().create("update-password-not-found-id").fromDomain() }
+    val updatePasswordUseCase = mock<UpdateUserPassword> {
+      on { execute(any(), any(), any()) } doReturn
+        UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound
+    }
+    val controller = getController(updateUserPassword = updatePasswordUseCase)
+
+    val response = controller
+      .updateUserPassword(userDTO, "old-password", "new-password")
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+    verify(updatePasswordUseCase)
+      .execute(
+        dtoFactory
+          .run { userDTO.fromDTO() },
+        "old-password",
+        "new-password",
+      )
   }
 }

@@ -5,6 +5,7 @@ import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResul
 import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.application.port.inbound.RegisterUser
+import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
@@ -12,6 +13,7 @@ import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -58,6 +60,9 @@ class MicronautUserController(
   @Inject
   private val loginUser: LoginUser,
 
+  @Inject
+  private val updateUserPassword: UpdateUserPassword,
+
   /**
    * Factory for converting between User domain models and UserDTOs.
    */
@@ -65,7 +70,8 @@ class MicronautUserController(
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
   RegisterUserAPI<UserDTO, HttpResponse<String>>,
-  LoginUserAPI<UserDTO, HttpResponse<String>> {
+  LoginUserAPI<UserDTO, HttpResponse<String>>,
+  UpdateUserPasswordAPI<UserDTO, HttpResponse<String>> {
 
   /**
    * Handles `GET /users/{id}/`.
@@ -149,6 +155,38 @@ class MicronautUserController(
       is LoginResult.Success -> HttpResponse.ok("Login successful")
       is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
       else -> HttpResponse.badRequest("Invalid email or password")
+    }
+  }
+
+  @Post("/update-password/")
+  @Operation(
+    summary = "Update user password",
+    description = "Updates the password for a user with the provided old and new passwords.",
+  )
+  @ApiResponse(responseCode = "200", description = "Password updated successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid old password")
+  @ApiResponse(responseCode = "401", description = "User is locked out")
+  @ApiResponse(responseCode = "404", description = "User not found")
+  override fun updateUserPassword(
+    user: UserDTO,
+    oldHashedPassword: String,
+    newPassword: String,
+  ): HttpResponse<String> {
+    return when (
+      updateUserPassword.execute(
+        dtoFactory.run { user.fromDTO() },
+        oldHashedPassword,
+        newPassword,
+      )
+    ) {
+      is UpdateUserPassword.Companion.UpdateUserPasswordResult.Success ->
+        HttpResponse.ok("Password updated successfully")
+      UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
+        HttpResponse.badRequest("Invalid old password")
+      is UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser ->
+        HttpResponse.unauthorized()
+      is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
+        HttpResponse.notFound()
     }
   }
 }
