@@ -40,6 +40,7 @@ class LoginUserUseCaseTest {
     userRepository = userRepository,
     credentialsRepository = credentialsRepository,
     passwordHasher = hasher,
+    timeProvider = { System.currentTimeMillis() },
   )
 
   val validId = "userId"

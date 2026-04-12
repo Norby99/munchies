@@ -5,6 +5,7 @@ import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResul
 import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.application.port.inbound.RegisterUser
+import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
@@ -12,8 +13,13 @@ import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
+import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -35,6 +41,8 @@ import jakarta.inject.Inject
  * layers remain independent from HTTP-specific concerns.
  */
 @SerdeImport(UserDTO::class)
+@SerdeImport(RegisterUserRequest::class)
+@SerdeImport(LoginUserRequest::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
@@ -58,14 +66,18 @@ class MicronautUserController(
   @Inject
   private val loginUser: LoginUser,
 
+  @Inject
+  private val updateUserPassword: UpdateUserPassword,
+
   /**
    * Factory for converting between User domain models and UserDTOs.
    */
   private val dtoFactory: UserDTOFactory = UserDTOFactory.default,
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
-  RegisterUserAPI<UserDTO, HttpResponse<String>>,
-  LoginUserAPI<UserDTO, HttpResponse<String>> {
+  RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
+  LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
+  UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>> {
 
   /**
    * Handles `GET /users/{id}/`.
@@ -100,9 +112,7 @@ class MicronautUserController(
    * - `400 Bad Request` if the user is already registered
    * - `500 Internal Server Error` if the registration fails
    *
-   * @param userInfo The user information received in the request body.
-   * @param hashedPassword The hashed password for the user.
-   * @param saltValue The cryptographic salt used for hashing the password.
+   * @param request The DTO containing the post info.
    * @return An HTTP response indicating the result of the registration process.
    */
   @Post("/register/")
@@ -113,14 +123,10 @@ class MicronautUserController(
   @ApiResponse(responseCode = "200", description = "User registered successfully")
   @ApiResponse(responseCode = "400", description = "User is already registered")
   @ApiResponse(responseCode = "500", description = "Failed to register user")
-  override fun registerUser(
-    userInfo: UserDTO,
-    hashedPassword: String,
-    saltValue: String,
-  ): HttpResponse<String> {
-    val user = dtoFactory.run { userInfo.fromDTO() }
+  override fun registerUser(@Body request: RegisterUserRequest): HttpResponse<String> {
+    val user = dtoFactory.run { request.user.fromDTO() }
     val userCredentials =
-      UserCredentials(id = user.id, passwordHash = hashedPassword, salt = saltValue)
+      UserCredentials(id = user.id, passwordHash = request.hashedPassword, salt = request.saltValue)
 
     return when (registerUser.execute(user, userCredentials)) {
       is RegisterUser.Companion.RegisterUserResult.Success ->
@@ -133,7 +139,7 @@ class MicronautUserController(
     }
   }
 
-  @Get("/login/")
+  @Post("/login/")
   @Operation(
     summary = "Login a user",
     description = "Authenticates a user with the provided email and password.",
@@ -144,11 +150,39 @@ class MicronautUserController(
     responseCode = "401",
     description = "User is locked out due to too many failed login attempts",
   )
-  override fun loginUser(user: UserDTO, providedPassword: String): HttpResponse<String> {
-    return when (loginUser.execute(user.email, user.username, providedPassword)) {
+  override fun loginUser(@Body request: LoginUserRequest): HttpResponse<String> {
+    return when (loginUser.execute(request.email, request.username, request.password)) {
       is LoginResult.Success -> HttpResponse.ok("Login successful")
       is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
       else -> HttpResponse.badRequest("Invalid email or password")
+    }
+  }
+
+  @Post("/update-password/")
+  @Operation(
+    summary = "Update user password",
+    description = "Updates the password for a user with the provided old and new passwords.",
+  )
+  @ApiResponse(responseCode = "200", description = "Password updated successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid old password")
+  @ApiResponse(responseCode = "401", description = "User is locked out")
+  @ApiResponse(responseCode = "404", description = "User not found")
+  override fun updateUserPassword(@Body request: UpdateUserPasswordRequest): HttpResponse<String> {
+    return when (
+      updateUserPassword.execute(
+        dtoFactory.run { request.user.fromDTO() },
+        request.oldHashedPassword,
+        request.newPassword,
+      )
+    ) {
+      is UpdateUserPassword.Companion.UpdateUserPasswordResult.Success ->
+        HttpResponse.ok("Password updated successfully")
+      UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
+        HttpResponse.badRequest("Invalid old password")
+      is UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser ->
+        HttpResponse.unauthorized()
+      is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
+        HttpResponse.notFound()
     }
   }
 }

@@ -8,6 +8,7 @@ import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResul
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.port.PasswordHasher
+import com.munchies.user.domain.port.TimeProvider
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
 
@@ -15,12 +16,12 @@ class LoginUserUseCase(
   private val userRepository: UserRepository,
   private val credentialsRepository: UserCredentialsRepository,
   private val passwordHasher: PasswordHasher,
-  private val timeProvider: () -> Long = { System.currentTimeMillis() },
+  private val timeProvider: TimeProvider,
 ) : LoginUser {
 
   private fun findUser(email: String, username: String): User? = when {
-    email.isNotBlank() && username.isBlank() -> userRepository.findByEmail(email)
-    username.isNotBlank() && email.isBlank() -> userRepository.findByUsername(username)
+    email.isNotBlank() -> userRepository.findByEmail(email)
+    username.isNotBlank() -> userRepository.findByUsername(username)
     else -> null
   }
 

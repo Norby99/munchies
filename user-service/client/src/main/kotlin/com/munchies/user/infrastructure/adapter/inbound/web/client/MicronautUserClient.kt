@@ -4,6 +4,9 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
+import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.core.async.annotation.SingleResult
 import io.micronaut.http.HttpResponse
@@ -34,35 +37,42 @@ sealed interface MicronautUserClient {
     }
 
     interface MicronautRegisterUser :
-      RegisterUserAPI<UserDTO, HttpResponse<String>>, MicronautUserClient {
+      RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>, MicronautUserClient {
       /**
        * Registers a new user with the provided information.
        *
-       * @param userInfo The [UserDTO] containing the user's information.
-       * @param hashedPassword The hashed password for the user.
-       * @param saltValue The salt value used for hashing the password.
+       * @param request The DTO containing the post info.
        * @return An [HttpResponse] containing the unique identifier of the newly registered user.
        */
       @Post("/register")
       @SingleResult
-      override fun registerUser(
-        userInfo: UserDTO,
-        hashedPassword: String,
-        saltValue: String,
-      ): HttpResponse<String>
+      override fun registerUser(request: RegisterUserRequest): HttpResponse<String>
     }
 
-    interface MicronautLoginUser : LoginUserAPI<String, HttpResponse<String>>, MicronautUserClient {
+    interface MicronautLoginUser :
+      LoginUserAPI<RegisterUserRequest, HttpResponse<String>>, MicronautUserClient {
       /**
        * Authenticates a user based on the provided credentials.
        *
-       * @param user The unique identifier of the user attempting to log in.
-       * @param providedPassword The password provided for authentication.
+       * @param request The DTO containing the post info.
        * @return An [HttpResponse] indicating the result of the login attempt.
        */
       @Post("/login")
       @SingleResult
-      override fun loginUser(user: String, providedPassword: String): HttpResponse<String>
+      override fun loginUser(request: RegisterUserRequest): HttpResponse<String>
+    }
+
+    interface MicronautUpdateUserPassword :
+      UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>, MicronautUserClient {
+      /**
+       * Updates the password for a user.
+       *
+       * @param request The dto containing the post info.
+       * @return An [HttpResponse] indicating the result of the password update attempt.
+       */
+      @Post("/update-password")
+      @SingleResult
+      override fun updateUserPassword(request: UpdateUserPasswordRequest): HttpResponse<String>
     }
   }
 }

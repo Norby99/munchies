@@ -56,4 +56,12 @@ class KotlinPasswordHasherTest {
     val hash = hasher.hash(password, salt)
     hash.length shouldBe 64
   }
+
+  @Test
+  fun `generateSalt should return a 16 character hexadecimal string`() {
+    val salt = hasher.generateSalt()
+
+    salt.length shouldBe KotlinPasswordHasher.SALT_LENGTH
+    salt.matches(Regex("^[0-9a-f]{32}$")) shouldBe true
+  }
 }
