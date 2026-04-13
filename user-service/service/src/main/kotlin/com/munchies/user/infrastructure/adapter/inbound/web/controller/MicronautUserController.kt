@@ -5,6 +5,7 @@ import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResul
 import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.application.port.inbound.RegisterUser
+import com.munchies.user.application.port.inbound.UpdateUserInfo
 import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
@@ -13,15 +14,19 @@ import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserInfoAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
+import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
+import io.micronaut.http.annotation.Patch
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.serde.annotation.SerdeImport
@@ -52,22 +57,7 @@ class MicronautUserController(
    * Use case for retrieving a user from the application layer.
    */
   @Inject
-  private val getUser: GetUser,
-
-  /**
-   * Use case for registering a new user in the application layer.
-   */
-  @Inject
-  private val registerUser: RegisterUser,
-
-  /**
-   * Use case for authenticating a user in the application layer.
-   */
-  @Inject
-  private val loginUser: LoginUser,
-
-  @Inject
-  private val updateUserPassword: UpdateUserPassword,
+  private val services: UserServices,
 
   /**
    * Factory for converting between User domain models and UserDTOs.
@@ -77,7 +67,13 @@ class MicronautUserController(
   GetUserAPI<String, HttpResponse<UserDTO>>,
   RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
   LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
-  UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>> {
+  UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
+  UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>> {
+  private val getUser: GetUser = services.getUser
+  private val registerUser: RegisterUser = services.registerUser
+  private val loginUser: LoginUser = services.loginUser
+  private val updateUserPassword: UpdateUserPassword = services.updateUserPassword
+  private val updateUserInfo: UpdateUserInfo = services.updateUserInfo
 
   /**
    * Handles `GET /users/{id}/`.
@@ -212,6 +208,33 @@ class MicronautUserController(
       is UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser ->
         HttpResponse.unauthorized()
       is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
+        HttpResponse.notFound()
+    }
+  }
+
+  @Patch("/update-info/")
+  @Operation(
+    summary = "Update user info",
+    description = "Updates the profile information for a user.",
+  )
+  @ApiResponse(responseCode = "200", description = "User info updated successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid request data")
+  @ApiResponse(responseCode = "404", description = "User not found")
+  override fun updateUserInfo(request: UpdateUserInfoRequest): HttpResponse<String> {
+    try {
+      UpdateUserInfoRequest.validate(request)
+    } catch (e: IllegalArgumentException) {
+      return HttpResponse.badRequest(e.message ?: "Invalid request data")
+    }
+
+    return when (
+      updateUserInfo.execute(
+        user = dtoFactory.run { request.user.fromDTO() },
+      )
+    ) {
+      is UpdateUserInfo.Companion.UpdateUserInfoResult.Success ->
+        HttpResponse.ok("User info updated successfully")
+      UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
         HttpResponse.notFound()
     }
   }
