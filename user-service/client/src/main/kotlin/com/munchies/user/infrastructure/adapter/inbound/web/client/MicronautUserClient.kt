@@ -4,8 +4,10 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserInfoAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import io.micronaut.core.async.annotation.SingleResult
@@ -38,7 +40,7 @@ sealed interface MicronautUserClient {
        * @param id unique user identifier.
        * @return HTTP response containing the user payload when found.
        */
-      @Get("{id}/")
+      @Get(UserServiceConfig.GET_USER_PATH)
       @SingleResult
       override fun getUser(id: String): HttpResponse<UserDTO>
     }
@@ -54,7 +56,7 @@ sealed interface MicronautUserClient {
        * @param request registration payload as defined by the shared API contract.
        * @return HTTP response describing the registration outcome.
        */
-      @Post("/register")
+      @Post(UserServiceConfig.REGISTER_USER_PATH)
       @SingleResult
       override fun registerUser(request: RegisterUserRequest): HttpResponse<String>
     }
@@ -70,7 +72,7 @@ sealed interface MicronautUserClient {
        * @param request authentication payload as defined by the shared API contract.
        * @return HTTP response describing the authentication outcome.
        */
-      @Post("/login")
+      @Post(UserServiceConfig.LOGIN_USER_PATH)
       @SingleResult
       override fun loginUser(request: RegisterUserRequest): HttpResponse<String>
     }
@@ -86,7 +88,7 @@ sealed interface MicronautUserClient {
        * @param request payload containing user identification and password data.
        * @return HTTP response describing the password update outcome.
        */
-      @Post("/update-password")
+      @Post(UserServiceConfig.UPDATE_USER_PASSWORD_PATH)
       @SingleResult
       override fun updateUserPassword(request: UpdateUserPasswordRequest): HttpResponse<String>
     }
@@ -98,7 +100,7 @@ sealed interface MicronautUserClient {
      * signature in the project contract.
      */
     interface MicronautUpdateUserInfo :
-      UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
+      UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
       MicronautUserClient {
       /**
        * Requests an update of user information using the update-info endpoint.
@@ -106,9 +108,9 @@ sealed interface MicronautUserClient {
        * @param request payload as declared by the shared API contract.
        * @return HTTP response describing the update outcome.
        */
-      @Patch("/update-info")
+      @Patch(UserServiceConfig.UPDATE_USER_INFO_PATH)
       @SingleResult
-      override fun updateUserPassword(request: UpdateUserPasswordRequest): HttpResponse<String>
+      override fun updateUserInfo(request: UpdateUserInfoRequest): HttpResponse<String>
     }
   }
 }

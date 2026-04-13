@@ -77,7 +77,7 @@ class MicronautUserController(
   private val updateUserInfo: UpdateUserInfo = services.updateUserInfo
 
   /**
-   * Handles `GET /users/{id}/`.
+   * Handles `GET users/{id}/`.
    *
    * Translates the application-layer result into an HTTP response:
    * - `200 OK` with the user DTO if the user is found
@@ -86,7 +86,7 @@ class MicronautUserController(
    * @param id The user identifier received from the path.
    * @return An HTTP response containing the user DTO or a not-found status.
    */
-  @Get("{id}/")
+  @Get(UserServiceConfig.GET_USER_PATH)
   @Operation(
     summary = "Get user by id",
     description = "Retrieves a user by their unique identifier.",
@@ -101,7 +101,7 @@ class MicronautUserController(
   }
 
   /**
-   * Handles `POST /register/`.
+   * Handles `POST users/register/`.
    *
    * Validates input data, maps incoming DTOs to domain entities, and delegates
    * registration to the application layer.
@@ -115,7 +115,7 @@ class MicronautUserController(
    * @param request Registration payload containing user data and credentials data.
    * @return An HTTP response representing the registration outcome.
    */
-  @Post("/register/")
+  @Post(UserServiceConfig.REGISTER_USER_PATH)
   @Operation(
     summary = "Register a new user",
     description = "Registers a new user with the provided information and credentials.",
@@ -152,7 +152,7 @@ class MicronautUserController(
   }
 
   /**
-   * Handles `POST /login/`.
+   * Handles `POST users/login/`.
    *
    * Validates request payload and delegates authentication to [LoginUser].
    * The endpoint supports either email or username as identifier.
@@ -165,7 +165,7 @@ class MicronautUserController(
    * @param request Login payload containing identifier (`email` or `username`) and `password`.
    * @return An HTTP response indicating authentication success or failure.
    */
-  @Post("/login/")
+  @Post(UserServiceConfig.LOGIN_USER_PATH)
   @Operation(
     summary = "Login a user",
     description = "Authenticates a user with the provided email and password.",
@@ -197,7 +197,7 @@ class MicronautUserController(
   }
 
   /**
-   * Handles `POST /update-password/`.
+   * Handles `POST users/update-password/`.
    *
    * Validates the payload and delegates password update workflow to
    * [UpdateUserPassword], including old-password verification and account lock checks.
@@ -211,7 +211,7 @@ class MicronautUserController(
    * @param request Password update payload containing user, old password, and new password.
    * @return An HTTP response representing the update result.
    */
-  @Post("/update-password/")
+  @Post(UserServiceConfig.UPDATE_USER_PASSWORD_PATH)
   @Operation(
     summary = "Update user password",
     description = "Updates the password for a user with the provided old and new passwords.",
@@ -246,7 +246,7 @@ class MicronautUserController(
   }
 
   /**
-   * Handles `PATCH /update-info/`.
+   * Handles `PATCH users/update-info/`.
    *
    * Validates request data and delegates user profile updates to [UpdateUserInfo].
    *
@@ -258,7 +258,7 @@ class MicronautUserController(
    * @param request Payload containing the updated user profile information.
    * @return An HTTP response representing the update result.
    */
-  @Patch("/update-info/")
+  @Patch(UserServiceConfig.UPDATE_USER_INFO_PATH)
   @Operation(
     summary = "Update user info",
     description = "Updates the profile information for a user.",
