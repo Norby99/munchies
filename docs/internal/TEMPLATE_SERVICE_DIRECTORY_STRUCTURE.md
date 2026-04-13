@@ -174,6 +174,13 @@ service depends on: shared
 client depends on: shared
 ```
 
+```yml
+// k8s/[service]-deployment.yml
+// k8s/[service]-mongodb-pvc.yml
+// k8s/[service]-mongodb-statefulset.yml
+// k8s/[service]-namespace.yml
+```
+
 ---
 
 **Note:** This template ensures **clean architecture**, **testability**, and **maintainability** across all microservices.
