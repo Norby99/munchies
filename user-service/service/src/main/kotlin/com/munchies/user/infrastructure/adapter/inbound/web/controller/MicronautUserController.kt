@@ -128,7 +128,12 @@ class MicronautUserController(
     val userCredentials =
       UserCredentials(id = user.id, passwordHash = request.hashedPassword, salt = request.saltValue)
 
-    return when (registerUser.execute(user, userCredentials)) {
+    return when (
+      registerUser.execute(
+        user = user,
+        credentials = userCredentials,
+      )
+    ) {
       is RegisterUser.Companion.RegisterUserResult.Success ->
         HttpResponse.ok("User registered successfully")
       RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
@@ -151,7 +156,13 @@ class MicronautUserController(
     description = "User is locked out due to too many failed login attempts",
   )
   override fun loginUser(@Body request: LoginUserRequest): HttpResponse<String> {
-    return when (loginUser.execute(request.email, request.username, request.password)) {
+    return when (
+      loginUser.execute(
+        email = request.email,
+        username = request.username,
+        password = request.password,
+      )
+    ) {
       is LoginResult.Success -> HttpResponse.ok("Login successful")
       is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
       else -> HttpResponse.badRequest("Invalid email or password")
@@ -170,9 +181,9 @@ class MicronautUserController(
   override fun updateUserPassword(@Body request: UpdateUserPasswordRequest): HttpResponse<String> {
     return when (
       updateUserPassword.execute(
-        dtoFactory.run { request.user.fromDTO() },
-        request.oldHashedPassword,
-        request.newPassword,
+        user = dtoFactory.run { request.user.fromDTO() },
+        oldPassword = request.oldHashedPassword,
+        newPassword = request.newPassword,
       )
     ) {
       is UpdateUserPassword.Companion.UpdateUserPasswordResult.Success ->
