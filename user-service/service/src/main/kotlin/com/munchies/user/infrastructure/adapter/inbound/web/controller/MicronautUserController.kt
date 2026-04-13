@@ -37,13 +37,14 @@ import jakarta.inject.Inject
 /**
  * Micronaut HTTP controller for the user-service inbound web adapter.
  *
- * This controller exposes the user-related HTTP endpoints and delegates the
- * actual business logic to inbound application ports:
- * - [GetUser] for fetching a user by id
- * - [RegisterUser] for registering a new user
+ * This controller exposes user-related HTTP endpoints and delegates business
+ * operations to application inbound ports. It is responsible for:
+ * - validating incoming request payloads at the HTTP boundary
+ * - mapping DTOs to domain objects via [UserDTOFactory]
+ * - translating use-case results into HTTP response codes and messages
  *
- * The controller is kept thin on purpose so that the domain and application
- * layers remain independent from HTTP-specific concerns.
+ * The controller intentionally avoids domain logic so the application and domain
+ * layers remain independent from transport concerns.
  */
 @SerdeImport(UserDTO::class)
 @SerdeImport(RegisterUserRequest::class)
@@ -54,13 +55,13 @@ import jakarta.inject.Inject
 )
 class MicronautUserController(
   /**
-   * Use case for retrieving a user from the application layer.
+   * Aggregated application services exposing user-related use cases.
    */
   @Inject
   private val services: UserServices,
 
   /**
-   * Factory for converting between User domain models and UserDTOs.
+   * Mapper/factory used to convert between transport DTOs and domain models.
    */
   private val dtoFactory: UserDTOFactory = UserDTOFactory.default,
 ) :
@@ -102,14 +103,17 @@ class MicronautUserController(
   /**
    * Handles `POST /register/`.
    *
-   * Registers a new user with the provided information and credentials.
-   * Translates the application-layer result into an HTTP response:
-   * - `200 OK` if the user is successfully registered
-   * - `400 Bad Request` if the user is already registered
-   * - `500 Internal Server Error` if the registration fails
+   * Validates input data, maps incoming DTOs to domain entities, and delegates
+   * registration to the application layer.
    *
-   * @param request The DTO containing the post info.
-   * @return An HTTP response indicating the result of the registration process.
+   * Response mapping:
+   * - `200 OK` when registration succeeds
+   * - `400 Bad Request` when payload validation fails
+   * - `401 Unauthorized` when the user is already registered
+   * - `500 Internal Server Error` when the registration use case reports a failure
+   *
+   * @param request Registration payload containing user data and credentials data.
+   * @return An HTTP response representing the registration outcome.
    */
   @Post("/register/")
   @Operation(
@@ -147,6 +151,20 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles `POST /login/`.
+   *
+   * Validates request payload and delegates authentication to [LoginUser].
+   * The endpoint supports either email or username as identifier.
+   *
+   * Response mapping:
+   * - `200 OK` when authentication succeeds
+   * - `400 Bad Request` when payload validation fails or credentials are invalid
+   * - `401 Unauthorized` when login is blocked (for example, due to lockout rules)
+   *
+   * @param request Login payload containing identifier (`email` or `username`) and `password`.
+   * @return An HTTP response indicating authentication success or failure.
+   */
   @Post("/login/")
   @Operation(
     summary = "Login a user",
@@ -178,6 +196,21 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles `POST /update-password/`.
+   *
+   * Validates the payload and delegates password update workflow to
+   * [UpdateUserPassword], including old-password verification and account lock checks.
+   *
+   * Response mapping:
+   * - `200 OK` when password is updated
+   * - `400 Bad Request` for invalid payload or wrong old password
+   * - `401 Unauthorized` when user is currently locked
+   * - `404 Not Found` when user or credentials cannot be found
+   *
+   * @param request Password update payload containing user, old password, and new password.
+   * @return An HTTP response representing the update result.
+   */
   @Post("/update-password/")
   @Operation(
     summary = "Update user password",
@@ -212,6 +245,19 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles `PATCH /update-info/`.
+   *
+   * Validates request data and delegates user profile updates to [UpdateUserInfo].
+   *
+   * Response mapping:
+   * - `200 OK` when user info is updated
+   * - `400 Bad Request` when payload validation fails
+   * - `404 Not Found` when the target user does not exist
+   *
+   * @param request Payload containing the updated user profile information.
+   * @return An HTTP response representing the update result.
+   */
   @Patch("/update-info/")
   @Operation(
     summary = "Update user info",
