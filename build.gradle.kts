@@ -1,3 +1,5 @@
+import utils.KOTLIN_TYPE
+import utils.getProjectType
 import utils.getServiceName
 
 plugins {
@@ -7,16 +9,14 @@ plugins {
   id("kubernetes-tasks")
 }
 
-allprojects {
-  group = "munchies"
-}
-
 apply(plugin = "linter-convention")
 
 subprojects {
-  plugins.withId("org.jetbrains.dokka") {
-    rootProject.dependencies {
-      "dokka"(project(this@subprojects.path))
+  if (this@subprojects.getProjectType() == KOTLIN_TYPE) {
+    plugins.withId("org.jetbrains.dokka") {
+      rootProject.dependencies {
+        "dokka"(project(this@subprojects.path))
+      }
     }
   }
 
@@ -26,10 +26,13 @@ subprojects {
 
 tasks.register("prepareOpenApiSpecs") {
   val serviceProjects = subprojects.filter { it.name.matches(Regex("service")) }
-
   dependsOn(serviceProjects.map { "${it.path}:build" })
 
-  val specSources = serviceProjects.map { subproject ->
+  // TODO fix when api specs are available to js services
+  val specSources = serviceProjects.filter {
+    it.getProjectType() == KOTLIN_TYPE
+  }.map { subproject ->
+    println(subproject.path)
     val sourcePath = subproject.layout.buildDirectory
       .dir("generated/ksp/main/resources/META-INF/swagger")
       .get().asFile
