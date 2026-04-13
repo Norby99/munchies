@@ -121,9 +121,16 @@ class MicronautUserController(
     description = "Registers a new user with the provided information and credentials.",
   )
   @ApiResponse(responseCode = "200", description = "User registered successfully")
-  @ApiResponse(responseCode = "400", description = "User is already registered")
+  @ApiResponse(responseCode = "400", description = "Invalid user data or missing fields")
+  @ApiResponse(responseCode = "401", description = "User is already registered")
   @ApiResponse(responseCode = "500", description = "Failed to register user")
   override fun registerUser(@Body request: RegisterUserRequest): HttpResponse<String> {
+    try {
+      RegisterUserRequest.validate(request)
+    } catch (e: IllegalArgumentException) {
+      return HttpResponse.badRequest(e.message ?: "Invalid user data")
+    }
+
     val user = dtoFactory.run { request.user.fromDTO() }
     val userCredentials =
       UserCredentials(id = user.id, passwordHash = request.hashedPassword, salt = request.saltValue)
@@ -137,7 +144,7 @@ class MicronautUserController(
       is RegisterUser.Companion.RegisterUserResult.Success ->
         HttpResponse.ok("User registered successfully")
       RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
-        HttpResponse.badRequest("User is already registered")
+        HttpResponse.unauthorized()
       is RegisterUser.Companion.RegisterUserResult.Failure ->
         HttpResponse
           .serverError("Failed to register user: ${registerUser.execute(user, userCredentials)}")
@@ -156,6 +163,12 @@ class MicronautUserController(
     description = "User is locked out due to too many failed login attempts",
   )
   override fun loginUser(@Body request: LoginUserRequest): HttpResponse<String> {
+    try {
+      LoginUserRequest.validate(request)
+    } catch (e: IllegalArgumentException) {
+      return HttpResponse.badRequest(e.message ?: "Invalid login data")
+    }
+
     return when (
       loginUser.execute(
         email = request.email,
@@ -175,10 +188,16 @@ class MicronautUserController(
     description = "Updates the password for a user with the provided old and new passwords.",
   )
   @ApiResponse(responseCode = "200", description = "Password updated successfully")
-  @ApiResponse(responseCode = "400", description = "Invalid old password")
+  @ApiResponse(responseCode = "400", description = "Invalid request data or wrong old password")
   @ApiResponse(responseCode = "401", description = "User is locked out")
   @ApiResponse(responseCode = "404", description = "User not found")
   override fun updateUserPassword(@Body request: UpdateUserPasswordRequest): HttpResponse<String> {
+    try {
+      UpdateUserPasswordRequest.validate(request)
+    } catch (e: IllegalArgumentException) {
+      return HttpResponse.badRequest(e.message ?: "Invalid request data")
+    }
+
     return when (
       updateUserPassword.execute(
         user = dtoFactory.run { request.user.fromDTO() },
