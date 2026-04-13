@@ -21,14 +21,13 @@ class RegisterUserUseCase(
   private val credentialsRepository: UserCredentialsRepository,
 ) : RegisterUser {
 
-  private fun findUser(user: User): User? = userRepository.findById(user.id)
-    ?: if (user.profile.email.isNotEmpty()) {
-      userRepository.findByEmail(user.profile.email)
-    } else if (user.profile.username.isNotEmpty()) {
-      userRepository.findByUsername(user.profile.username)
-    } else {
-      null
-    }
+  private fun findUser(user: User): User? = if (user.profile.email.isNotEmpty()) {
+    userRepository.findByEmail(user.profile.email)
+  } else if (user.profile.username.isNotEmpty()) {
+    userRepository.findByUsername(user.profile.username)
+  } else {
+    null
+  }
 
   /**
    * Executes the user registration process.
