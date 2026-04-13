@@ -28,5 +28,9 @@ sealed interface UserAPI {
     interface UpdateUserPasswordAPI<Request, Response> : UserAPI {
       fun updateUserPassword(request: Request): Response
     }
+
+    interface UpdateUserInfoAPI<Request, Response> : UserAPI {
+      fun updateUserInfo(request: Request): Response
+    }
   }
 }

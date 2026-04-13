@@ -4,8 +4,10 @@ import com.munchies.user.application.port.inbound.RegisterUser.Companion.Registe
 import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
+import io.kotest.matchers.equals.shouldBeEqual
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -49,7 +51,13 @@ class RegisterUserUseCaseTest {
 
   @Test
   fun `execute should return UserIsAlreadyRegistered when user already exists`() {
-    val user = MockUserFactory().create("existing-user-id")
+    val user = MockUserFactory().create(
+      "existing-user-id",
+      profile = UserProfile.empty.copy(
+        username = "existing-username",
+        email = "existing-email",
+      ),
+    )
     val credentials = UserCredentials(
       id = UserId("irrelevant-id"),
       passwordHash = "hashed-password",
@@ -57,13 +65,16 @@ class RegisterUserUseCaseTest {
     )
 
     val userRepository = mock<UserRepository> {
-      on { findById(any()) } doReturn user
+      on { findByEmail(any()) } doReturn user
+      on { findByUsername(any()) } doReturn user
     }
     val credentialsRepository = mock<UserCredentialsRepository>()
     val useCase = RegisterUserUseCase(userRepository, credentialsRepository)
 
     val result = useCase.execute(user, credentials)
+    val result2 = useCase.execute(user.copy(profile = user.profile.copy(email = "")), credentials)
 
+    result shouldBeEqual result2
     assertTrue(result is RegisterUserResult.UserIsAlreadyRegistered)
     verify(userRepository, never()).save(any())
     verifyNoInteractions(credentialsRepository)

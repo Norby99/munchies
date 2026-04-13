@@ -11,6 +11,7 @@ import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceCo
 import io.micronaut.core.async.annotation.SingleResult
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Get
+import io.micronaut.http.annotation.Patch
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.client.annotation.Client
 
@@ -71,6 +72,20 @@ sealed interface MicronautUserClient {
        * @return An [HttpResponse] indicating the result of the password update attempt.
        */
       @Post("/update-password")
+      @SingleResult
+      override fun updateUserPassword(request: UpdateUserPasswordRequest): HttpResponse<String>
+    }
+
+    interface MicronautUpdateUserInfo :
+      UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
+      MicronautUserClient {
+      /**
+       * Updates the password for a user.
+       *
+       * @param request The dto containing the post info.
+       * @return An [HttpResponse] indicating the result of the password update attempt.
+       */
+      @Patch("/update-info")
       @SingleResult
       override fun updateUserPassword(request: UpdateUserPasswordRequest): HttpResponse<String>
     }
