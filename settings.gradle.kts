@@ -40,3 +40,7 @@ include(":architecture-rules")
 include(":user-service:service")
 include(":user-service:shared")
 include(":user-service:client")
+
+include(":payment-service:service")
+include(":payment-service:shared")
+include(":payment-service:client")
