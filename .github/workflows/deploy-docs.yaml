@@ -44,7 +44,7 @@ jobs:
         run: bash ./gradlew dokkaGenerateHtml
 
       - name: Move Dokka docs
-        run: mv build/docs/html/ docs/pages/kotlin/
+        run: mv build/dokka/html/ docs/pages/kotlin/
 
       # TODO build typescript typedoc docs
       # TODO move generated docs to docs/pages/typescript/index.html
