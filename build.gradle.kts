@@ -1,4 +1,4 @@
-import utils.KOTLIN_TYPE
+import utils.ProjectType
 import utils.getProjectType
 import utils.getServiceName
 
@@ -12,7 +12,7 @@ plugins {
 apply(plugin = "linter-convention")
 
 subprojects {
-  if (this@subprojects.getProjectType() == KOTLIN_TYPE) {
+  if (this@subprojects.getProjectType() == ProjectType.KOTLIN) {
     plugins.withId("org.jetbrains.dokka") {
       rootProject.dependencies {
         "dokka"(project(this@subprojects.path))
@@ -30,7 +30,7 @@ tasks.register("prepareOpenApiSpecs") {
 
   // TODO fix when api specs are available to js services
   val specSources = serviceProjects.filter {
-    it.getProjectType() == KOTLIN_TYPE
+    it.getProjectType() == ProjectType.KOTLIN
   }.map { subproject ->
     println(subproject.path)
     val sourcePath = subproject.layout.buildDirectory
