@@ -35,7 +35,13 @@ private class Graph(
       .map { it to it.dependencies.withType<ProjectDependency>().ifEmpty { null } }
       .filter { (_, dep) -> dep != null }
       .flatMap { (c, value) -> value!!.map { dep -> c to project.project(dep.path) } }
-      .filter { (c, _) -> c.toString().contains(regex = Regex(".*.mplementation.*")) }
+      .filter { (c, _) ->
+        c.toString().contains(
+          regex = Regex(
+            ".*(?:implementation|commonMainImplementation).*",
+          ),
+        )
+      }
       .forEach { (configuration: Configuration, projectDependency: Project) ->
         val newPair = (configuration to projectDependency)
         dependencies.compute(project) { _, u -> u.orEmpty() + newPair }
