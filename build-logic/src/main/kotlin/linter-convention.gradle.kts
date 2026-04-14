@@ -1,7 +1,6 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.diffplug.gradle.spotless.SpotlessPlugin
-import utils.JS_TYPE
-import utils.KOTLIN_TYPE
+import utils.ProjectType
 import utils.getProjectType
 
 
@@ -42,6 +41,6 @@ fun configureSpotlessForJs(project: Project) {
 apply<SpotlessPlugin>()
 
 when (project.getProjectType()) {
-  KOTLIN_TYPE -> configureSpotlessForKotlin(project)
-  JS_TYPE -> configureSpotlessForJs(project)
+  ProjectType.KOTLIN -> configureSpotlessForKotlin(project)
+  ProjectType.JS -> configureSpotlessForJs(project)
 }

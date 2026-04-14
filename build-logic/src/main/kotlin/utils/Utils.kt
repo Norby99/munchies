@@ -12,10 +12,10 @@ fun getMunchiesServerPackage(service: String): String =
 
 fun Project.libs() = the<org.gradle.accessors.dm.LibrariesForLibs>()
 
-typealias ProjectType = String
-
-const val KOTLIN_TYPE: ProjectType = "KOTLIN"
-const val JS_TYPE: ProjectType = "JS"
+enum class ProjectType {
+  KOTLIN,
+  JS,
+}
 
 fun Project.getProjectType(): ProjectType {
   return when (
@@ -25,10 +25,10 @@ fun Project.getProjectType(): ProjectType {
       ?.replace("service", "")
       ?.replace("shared", "")
   ) {
-    null -> KOTLIN_TYPE
-    "munchies" -> KOTLIN_TYPE
-    in stringKotlinProjects -> KOTLIN_TYPE
-    in stringExpressProjects -> JS_TYPE
+    null -> ProjectType.KOTLIN
+    "munchies" -> ProjectType.JS
+    in stringKotlinProjects -> ProjectType.KOTLIN
+    in stringExpressProjects -> ProjectType.JS
     else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
   }
 }
