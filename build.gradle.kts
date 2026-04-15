@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.dokka)
   id("munchies-subproject") apply false
   id("kubernetes-tasks")
+  id("kubernetes-info")
 }
 
 apply(plugin = "linter-convention")
