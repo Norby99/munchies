@@ -29,4 +29,6 @@ dependencies {
 
   implementation(libs.micronaut.buildtools)
   implementation(fromPluginToDependency(libs.plugins.micronaut.testResources))
+
+  implementation(fromPluginToDependency(libs.plugins.node))
 }
