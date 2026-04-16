@@ -1,5 +1,7 @@
 package com.munchies.commons
 
+import kotlin.js.JsExport
+
 /**
  * Base value object for entity identifiers.
  *
@@ -9,6 +11,7 @@ package com.munchies.commons
  * @param Id the type of the underlying identifier (e.g., String, UUID).
  * @property value the unique identifier.
  */
+@JsExport
 open class EntityId<Id>(open val value: Id) {
   /**
    * Compares two [EntityId] instances based on their underlying values.
@@ -44,6 +47,7 @@ open class EntityId<Id>(open val value: Id) {
  * @param Id the type of the entity identifier (must extend [EntityId]).
  * @property id the unique domain identifier of this entity.
  */
+@JsExport
 open class Entity<Id : EntityId<*>>(open val id: Id) {
   /**
    * Compares two [Entity] instances based on their identifiers.
