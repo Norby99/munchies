@@ -3,7 +3,20 @@ tasks.register<Exec>("deploy") {
   description = "Deploys a service to Minikube. Usage: ./gradlew deploy -Pservice=<name|all>"
 
   val serviceName = project.findProperty("service") as? String ?: "all"
-  commandLine("bash", "${rootProject.rootDir}/scripts/k8s-deploy.sh", serviceName)
+
+  doFirst {
+    require(serviceName != "kafka") {
+      "You cannot deploy only the kafka service."
+    }
+  }
+
+  val servicesToDeploy = if (serviceName != "all") {
+    "kafka $serviceName"
+  } else {
+    serviceName
+  }
+
+  commandLine("bash", "${rootProject.rootDir}/scripts/k8s-deploy.sh", servicesToDeploy)
 }
 
 tasks.register<Exec>("undeploy") {
@@ -14,7 +27,20 @@ tasks.register<Exec>("undeploy") {
   val serviceName = project.findProperty("service") as? String ?: "all"
   val wipeData = (project.findProperty("wipeData") as? String)?.toBoolean() ?: false
 
-  val args = mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s-undeploy.sh", serviceName)
+  doFirst {
+    require(serviceName != "kafka") {
+      "You cannot undeploy only the kafka service."
+    }
+  }
+
+  val servicesToUndeploy = if (serviceName != "all") {
+    "$serviceName kafka"
+  } else {
+    serviceName
+  }
+
+  val args =
+    mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s-undeploy.sh", servicesToUndeploy)
   if (wipeData) args.add("--wipe-data")
 
   commandLine(args)
@@ -42,4 +68,20 @@ tasks.register<Exec>("showDb") {
   if (collection != null) args.add(collection)
 
   commandLine(args)
+}
+
+tasks.register<Exec>("showKf") {
+  group = "kubernetes"
+  description = "Tails a Kafka topic from Minikube. " +
+    "Usage: ./gradlew showKf -Ptopic=<name>"
+
+  val topic = project.findProperty("topic") as? String
+
+  doFirst {
+    requireNotNull(topic) {
+      "You must specify a topic name: ./gradlew showKf -Ptopic=<name>"
+    }
+  }
+
+  commandLine("bash", "${rootProject.rootDir}/scripts/k8s-show-kf.sh", topic ?: "")
 }
