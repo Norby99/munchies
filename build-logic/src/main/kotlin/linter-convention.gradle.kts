@@ -27,12 +27,12 @@ fun configureSpotlessForJs(project: Project) {
   project.configure<SpotlessExtension> {
     typescript {
       target("**/*.ts")
-      targetExclude("**/build/**/*.ts")
+      targetExclude("**/build/**/*.ts", "**/node_modules/**/*.ts", "**/dist/**/*.ts")
       prettier()
     }
     javascript {
       target("**/*.js")
-      targetExclude("**/build/**/*.js")
+      targetExclude("**/build/**/*.js", "**/node_modules/**/*.js", "**/dist/**/*.js")
       prettier()
     }
   }
