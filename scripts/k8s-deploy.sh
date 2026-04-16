@@ -15,12 +15,18 @@ echo "Connecting to Minikube's Docker environment..."
 eval $(minikube docker-env)
 
 if [ "$SERVICE" == "all" ]; then
-    SERVICES=""
+    SERVICES="kafka"
     for item in k8s/*; do
         if [ -d "$item" ]; then
-            SERVICES="$SERVICES $(basename "$item")"
+            srv_name=$(basename "$item")
+            if [ "$srv_name" != "kafka" ]; then
+                SERVICES="$SERVICES $srv_name"
+            fi
         elif [[ "$item" == *.yml ]]; then
-            SERVICES="$SERVICES $(basename "$item" .yml)"
+            srv_name=$(basename "$item" .yml)
+            if [ "$srv_name" != "kafka" ]; then
+                SERVICES="$SERVICES $srv_name"
+            fi
         fi
     done
 else
@@ -32,7 +38,9 @@ for srv in $SERVICES; do
     echo "Processing: $srv"
     echo "==========================================="
 
-    if [ -f "${srv}/service/build.gradle.kts" ]; then
+    if [ ! -d "$srv" ]; then
+        echo "Skipping Docker image build for $srv..."
+    elif [ -f "${srv}/service/build.gradle.kts" ]; then
         echo "Building Docker image for $srv (using :${srv}:service)..."
         ./gradlew :${srv}:service:dockerBuild
         # Micronaut calls the image 'service:latest' by default for a module named 'service'
@@ -52,7 +60,11 @@ for srv in $SERVICES; do
     elif [ -d "k8s/${srv}" ]; then
         echo "Applying namespace first, then full manifest in k8s/${srv}/..."
         minikube kubectl -- apply -f k8s/${srv}/namespace.yml
-        minikube kubectl -- apply -f k8s/${srv}/
+        if [ "$srv" == "kafka" ]; then
+            minikube kubectl -- apply -f k8s/${srv}/strimzi-operator.yml -n $srv
+            minikube kubectl -- wait deployment/strimzi-cluster-operator --for=condition=Available=True --timeout=300s -n $srv
+        fi
+        minikube kubectl -- apply -f k8s/${srv}/ -n $srv
     else
         echo "Warning: No manifest found for $srv (checked k8s/${srv}.yml and k8s/${srv}/)."
         continue
