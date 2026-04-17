@@ -17,6 +17,7 @@ micronaut-buildtools = "2.5.4"
 snakeyaml = "2.4.0"
 dokka = "2.2.0"
 node = "7.1.0"
+docker = "9.4.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -31,6 +32,7 @@ kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 micronaut-testResources = { id = "io.micronaut.test-resources", version.ref = "micronaut" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 node = { id = "com.github.node-gradle.node", version.ref  = "node" }
+docker = { id = "com.bmuschko.docker-remote-api", version.ref = "docker" }
 
 
 [libraries]
