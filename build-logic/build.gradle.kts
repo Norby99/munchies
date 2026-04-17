@@ -31,4 +31,5 @@ dependencies {
   implementation(fromPluginToDependency(libs.plugins.micronaut.testResources))
 
   implementation(fromPluginToDependency(libs.plugins.node))
+  implementation(fromPluginToDependency(libs.plugins.docker))
 }
