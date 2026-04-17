@@ -1,15 +1,28 @@
-const c = require("munchies-commons");
-const commons = c.com.munchies.commons as {
-  getUUID: () => string;
-  UUIDEntityId: new (value?: string) => unknown;
-};
+import type * as CommonsModule from "munchies-commons";
+import type * as SharedModule from "munchies-payment-service-shared";
+
+const commonsModule = require("munchies-commons") as typeof CommonsModule;
+const sharedModule =
+  require("munchies-payment-service-shared") as typeof SharedModule;
+
+const commons = commonsModule.com.munchies.commons;
+const paymentShared =
+  sharedModule.com.munchies.payment.infrastructure.adapter.dto;
 
 console.log("Starting payment service...");
+
 console.log(commons);
-console.log(commons.getUUID());
+console.log(paymentShared);
 
-const exp1 = new commons.UUIDEntityId();
-console.log(exp1);
+const paymentId = commons.newUUIDEntityId(null);
+const command = new paymentShared.PaymentCommand(
+  "order-1",
+  2590,
+  paymentShared.PaymentMethod.CARD
+);
+const result = new paymentShared.PaymentResult(
+  commons.getIdFromEntityId(paymentId),
+  true
+);
 
-const exp2 = new commons.UUIDEntityId("prova");
-console.log(exp2);
+console.log({ command, result });
