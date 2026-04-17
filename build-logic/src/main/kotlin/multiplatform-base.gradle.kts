@@ -16,6 +16,8 @@ kotlin {
       }
     }
     binaries.executable()
+
+    generateTypeScriptDefinitions()
   }
 
   sourceSets {

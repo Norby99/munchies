@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "munchies-commons": "file:../../build/js/packages/munchies-commons",
+    "munchies-payment-service-shared": "file:../../build/js/packages/munchies-payment-service-shared",
     "express": "^4.18.2"
   },
   "devDependencies": {
