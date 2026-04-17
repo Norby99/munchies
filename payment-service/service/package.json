@@ -13,8 +13,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "munchies-commons": "file:../../build/js/packages/munchies-commons",
-    "munchies-payment-service-shared": "file:../../build/js/packages/munchies-payment-service-shared",
+    "munchies-commons": "file:../../build/js/packages/munchies-commons/munchies-commons-0.1.0.tgz",
+    "munchies-payment-service-shared": "file:../../build/js/packages/munchies-payment-service-shared/munchies-payment-service-shared-0.1.0.tgz",
     "express": "^4.18.2"
   },
   "devDependencies": {
