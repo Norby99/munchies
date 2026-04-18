@@ -41,10 +41,13 @@ tasks.register("packAllJsPackages") {
   dependsOn(packageDependencies.map { "pack_$it" })
 }
 tasks.named("build") {
+  println("before build")
   dependsOn(
     "packAllJsPackages",
     "npmInstall",
     "npm_run_build",
+    "npm_run_routes",
+    "npm_run_specs",
   )
 }
 
