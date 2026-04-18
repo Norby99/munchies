@@ -7,7 +7,9 @@
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/main/ts/**/*.ts", "src/main/ts/types/**/*.d.ts"]
 }
