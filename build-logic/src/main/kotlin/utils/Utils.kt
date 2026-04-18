@@ -36,9 +36,10 @@ fun Project.getProjectType(): ProjectType {
       ?.replace("client", "")
       ?.replace("service", "")
       ?.replace("shared", "")
+      ?.replace(":", "")
   ) {
     null -> ProjectType.KOTLIN
-    "munchies" -> ProjectType.JS
+    "munchies" -> ProjectType.KOTLIN
     in stringKotlinProjects -> ProjectType.KOTLIN
     in stringExpressProjects -> ProjectType.JS
     else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
