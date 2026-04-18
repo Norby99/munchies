@@ -43,7 +43,6 @@ tasks.register("prepareOpenApiSpecs") {
   }
   val outputDir = rootProject.layout.buildDirectory.dir("openapi/").get().asFile
 
-  println("Spec sources: $specSources")
   inputs.files(specSources.map { (dir, _) -> dir })
   outputs.dir(outputDir)
 
@@ -54,6 +53,32 @@ tasks.register("prepareOpenApiSpecs") {
         ?.forEach { file ->
           file.copyTo(outputDir.resolve(targetName), overwrite = true)
         }
+    }
+  }
+}
+
+tasks.register("prepareTypeDocs") {
+  val typeDocsProjects = subprojects
+    .filter { it.name.matches(Regex("service")) }
+    .filter { it.getProjectType() == ProjectType.JS }
+  dependsOn(typeDocsProjects.map { "${it.path}:typeDocs" })
+
+  val docSources = typeDocsProjects.map { subproject ->
+    val sourcePath = subproject.layout.buildDirectory
+      .dir("typedoc/").get().asFile
+    val targetName = "${getServiceName(subproject.parent!!)}-docs"
+    sourcePath to targetName
+  }
+
+  inputs.files(docSources.map { (dir, _) -> dir })
+
+  val outputDir = rootProject.layout.buildDirectory.dir("typeDocs/").get().asFile
+  outputs.dir(outputDir)
+
+  copy {
+    docSources.forEach { (sourceDir, targetName) ->
+      from(sourceDir)
+      into(outputDir.resolve(targetName))
     }
   }
 }

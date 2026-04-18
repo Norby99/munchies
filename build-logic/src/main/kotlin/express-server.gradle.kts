@@ -1,6 +1,7 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.gradle.node.npm.task.NpmTask
+import com.github.gradle.node.npm.task.NpxTask
 import com.github.gradle.node.task.NodeTask
 import utils.getServiceName
 
@@ -41,7 +42,6 @@ tasks.register("packAllJsPackages") {
   dependsOn(packageDependencies.map { "pack_$it" })
 }
 tasks.named("build") {
-  println("before build")
   dependsOn(
     "packAllJsPackages",
     "npmInstall",
@@ -101,4 +101,21 @@ tasks.register<DockerBuildImage>("dockerBuild") {
   dependsOn("dockerCreate")
   inputDir.set(project.layout.buildDirectory.dir("docker/"))
   images.set(listOf("munchies/$serviceName-service:latest"))
+}
+
+tasks.register<NpxTask>("typeDocs") {
+  dependsOn(project.tasks.named("build"))
+  command.set("typedoc")
+  workingDir.set(project.projectDir.resolve("src"))
+  args.set(
+    listOf(
+      "--entryPointStrategy",
+      "expand",
+      "main",
+      "--readme",
+      "none",
+      "--out",
+      project.layout.buildDirectory.dir("typedoc/").get().asFile.path,
+    ),
+  )
 }

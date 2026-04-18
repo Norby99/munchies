@@ -24,6 +24,7 @@
     "@types/node": "^20.14.12",
     "tsoa": "^7.0.0-alpha.0",
     "tsx": "^4.16.2",
+    "typedoc": "^0.28.19",
     "typescript": "^5.5.4"
   }
 }
