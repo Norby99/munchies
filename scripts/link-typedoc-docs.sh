@@ -2,7 +2,7 @@
 
 SPEC_NAMES=()
 
-for file in $(cd ./build/typedocs/ && find . -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
+for file in $(cd ./build/typescript/ && find . -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
   echo "$file"
   SPEC_NAMES+=("$file")
 done

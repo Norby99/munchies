@@ -73,5 +73,5 @@ tasks.register<Sync>("prepareTypeDocs") {
     }
   }
 
-  into(rootProject.layout.buildDirectory.dir("typedocs/"))
+  into(rootProject.layout.buildDirectory.dir("typescript/"))
 }
