@@ -51,6 +51,10 @@ tasks.named("build") {
   )
 }
 
+tasks.named("npmInstall") {
+  mustRunAfter("packAllJsPackages")
+}
+
 tasks.register<NodeTask>("run") {
   dependsOn(
     project.tasks.named("build"),
