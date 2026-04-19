@@ -57,28 +57,21 @@ tasks.register("prepareOpenApiSpecs") {
   }
 }
 
-tasks.register("prepareTypeDocs") {
+tasks.register<Sync>("prepareTypeDocs") {
   val typeDocsProjects = subprojects
     .filter { it.name.matches(Regex("service")) }
     .filter { it.getProjectType() == ProjectType.JS }
   dependsOn(typeDocsProjects.map { "${it.path}:typeDocs" })
 
-  val docSources = typeDocsProjects.map { subproject ->
+  typeDocsProjects.forEach { subproject ->
     val sourcePath = subproject.layout.buildDirectory
       .dir("typedoc/").get().asFile
-    val targetName = "${getServiceName(subproject.parent!!)}-docs"
-    sourcePath to targetName
-  }
+    val targetName = "${getServiceName(subproject.parent!!)}-service"
 
-  inputs.files(docSources.map { (dir, _) -> dir })
-
-  val outputDir = rootProject.layout.buildDirectory.dir("typeDocs/").get().asFile
-  outputs.dir(outputDir)
-
-  copy {
-    docSources.forEach { (sourceDir, targetName) ->
-      from(sourceDir)
-      into(outputDir.resolve(targetName))
+    from(sourcePath) {
+      into(targetName)
     }
   }
+
+  into(rootProject.layout.buildDirectory.dir("typedocs/"))
 }
