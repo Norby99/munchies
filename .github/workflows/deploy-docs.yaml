@@ -46,8 +46,14 @@ jobs:
       - name: Move Dokka docs
         run: mv build/dokka/html/ docs/pages/kotlin/
 
-      # TODO build typescript typedoc docs
-      # TODO move generated docs to docs/pages/typescript/index.html
+      - name: Generate Typescript docs
+        run: bash ./gradlew prepareTypeDocs
+
+      - name: Link Typescript docs
+        run: bash ./scripts/link-typedoc-docs.sh
+
+      - name: Move Typescript docs
+        run: mv build/typedocs/ docs/pages/typescript/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
