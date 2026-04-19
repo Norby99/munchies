@@ -53,7 +53,7 @@ jobs:
         run: bash ./scripts/link-typedoc-docs.sh
 
       - name: Move Typescript docs
-        run: mv build/typedocs/ docs/pages/typescript/
+        run: cp -r build/typescript/ docs/pages/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
