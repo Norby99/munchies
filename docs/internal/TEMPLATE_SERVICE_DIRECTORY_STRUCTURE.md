@@ -39,17 +39,20 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 │       │   │   │   ├── [Entity].kt
 │       │   │   │   ├── [EntityId].kt          # Value object for IDs
 │       │   │   │   └── ...
+│       │   │   ├── factory/                   # Domain factories
+│       │   │   │   └── [Entity]Factory.kt
 │       │   │   └── port/                      # Domain ports (abstractions)
 │       │   │       ├── [Technology]Port.kt    # e.g., DatabasePort, CachePort
 │       │   │       └── ...
 │       │   │
 │       │   └── infrastructure/adapter/        # Infrastructure/Technical layer
-│       │       ├── dto/mapper/                # DTO mappers
-│       │       │   └── [Domain]To[DTO]Mapper.kt
+│       │       ├── dto/factory/               # DTO factories for mapping between domain and external representations
+│       │       │   └── [Domain]DTOFactory.kt
 │       │       ├── inbound/                   # Inbound adapters
 │       │       │   └── web/                   # HTTP/Web adapters
 │       │       │       ├── config/
-│       │       │       │   └── [Service]Beans.kt
+│       │       │       │   ├── [Service]Beans.kt   # Bean definitions and dependency injection
+│       │       │       │   └── OpenApi.kt          # OpenAPI configuration
 │       │       │       └── controller/
 │       │       │           └── [Resource]Controller.kt
 │       │       │
@@ -62,8 +65,10 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
 │       │           │   │   └── ...    
 │       │           │   ├── mapper/     # Domain entities mapped to MongoDB documents
 │       │           │   │   └── DomainToDocument.kt     
-│       │           │   └── repository/    # MongoDB repository implementation
-│       │           │       └── Mongo[Service]Repository.kt      
+│       │           │   ├── repository/    # MongoDB repository implementation
+│       │           │   │   └── Mongo[Service]Repository.kt
+│       │           │   └── factory/           # Factory implementations for technical components
+│       │           │       └── [Entity]Factory.kt      
 │       │           └── external/              # External service adapters
 │       │               └── [Service]Client.kt
 │       │
@@ -96,8 +101,11 @@ Each service follows a **Hexagonal Architecture** pattern organized into three m
         │   └── ...
         └── inbound/                           # Public interfaces
             ├── [Service]API.kt                # Main API interface
+            ├── request/                       # Request DTOs for API
+            │   ├── [Action]Request.kt
+            │   └── ...          
             └── web/config/
-                └── [Service]ServiceConfig.kt
+                └── [Service]ServiceConfig.kt  # Ports and paths
 
 ```
 
@@ -164,6 +172,13 @@ include(":[service]-service:service", ":[service]-service:shared", ":[service]-s
 // Build dependencies
 service depends on: shared
 client depends on: shared
+```
+
+```yml
+// k8s/[service]-deployment.yml
+// k8s/[service]-mongodb-pvc.yml
+// k8s/[service]-mongodb-statefulset.yml
+// k8s/[service]-namespace.yml
 ```
 
 ---

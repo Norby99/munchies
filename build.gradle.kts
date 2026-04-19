@@ -1,3 +1,5 @@
+import utils.ProjectType
+import utils.getProjectType
 import utils.getServiceName
 
 plugins {
@@ -7,16 +9,14 @@ plugins {
   id("kubernetes-tasks")
 }
 
-allprojects {
-  group = "munchies"
-}
-
 apply(plugin = "linter-convention")
 
 subprojects {
-  plugins.withId("org.jetbrains.dokka") {
-    rootProject.dependencies {
-      "dokka"(project(this@subprojects.path))
+  if (this@subprojects.getProjectType() == ProjectType.KOTLIN) {
+    plugins.withId("org.jetbrains.dokka") {
+      rootProject.dependencies {
+        "dokka"(project(this@subprojects.path))
+      }
     }
   }
 
@@ -26,13 +26,18 @@ subprojects {
 
 tasks.register("prepareOpenApiSpecs") {
   val serviceProjects = subprojects.filter { it.name.matches(Regex("service")) }
-
   dependsOn(serviceProjects.map { "${it.path}:build" })
 
   val specSources = serviceProjects.map { subproject ->
-    val sourcePath = subproject.layout.buildDirectory
-      .dir("generated/ksp/main/resources/META-INF/swagger")
-      .get().asFile
+    val sourcePath =
+      subproject.layout.buildDirectory
+        .dir(
+          if (subproject.getProjectType() == ProjectType.KOTLIN) {
+            "generated/ksp/main/resources/META-INF/swagger"
+          } else {
+            "openapi/"
+          },
+        ).get().asFile
     val targetName = "${getServiceName(subproject.parent!!)}.yml"
     sourcePath to targetName
   }
@@ -44,10 +49,29 @@ tasks.register("prepareOpenApiSpecs") {
   doLast {
     if (outputDir.exists().not()) outputDir.mkdir()
     specSources.forEach { (sourceDir, targetName) ->
-      sourceDir.listFiles { f -> f.extension == "yml" }
+      sourceDir.listFiles { f -> f.extension == "yml" || f.extension == "yaml" }
         ?.forEach { file ->
           file.copyTo(outputDir.resolve(targetName), overwrite = true)
         }
     }
   }
+}
+
+tasks.register<Sync>("prepareTypeDocs") {
+  val typeDocsProjects = subprojects
+    .filter { it.name.matches(Regex("service")) }
+    .filter { it.getProjectType() == ProjectType.JS }
+  dependsOn(typeDocsProjects.map { "${it.path}:typeDocs" })
+
+  typeDocsProjects.forEach { subproject ->
+    val sourcePath = subproject.layout.buildDirectory
+      .dir("typedoc/").get().asFile
+    val targetName = "${getServiceName(subproject.parent!!)}-service"
+
+    from(sourcePath) {
+      into(targetName)
+    }
+  }
+
+  into(rootProject.layout.buildDirectory.dir("typedocs/"))
 }

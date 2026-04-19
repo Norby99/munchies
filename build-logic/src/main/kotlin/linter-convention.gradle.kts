@@ -1,5 +1,7 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.diffplug.gradle.spotless.SpotlessPlugin
+import utils.ProjectType
+import utils.getProjectType
 
 
 plugins {
@@ -21,5 +23,24 @@ fun configureSpotlessForKotlin(project: Project) {
   }
 }
 
+fun configureSpotlessForJs(project: Project) {
+  project.configure<SpotlessExtension> {
+    typescript {
+      target("**/*.ts")
+      targetExclude("**/build/**/*.ts", "**/node_modules/**/*.ts", "**/dist/**/*.ts")
+      prettier()
+    }
+    javascript {
+      target("**/*.js")
+      targetExclude("**/build/**/*.js", "**/node_modules/**/*.js", "**/dist/**/*.js")
+      prettier()
+    }
+  }
+}
+
 apply<SpotlessPlugin>()
-configureSpotlessForKotlin(project)
+
+when (project.getProjectType()) {
+  ProjectType.KOTLIN -> configureSpotlessForKotlin(project)
+  ProjectType.JS -> configureSpotlessForJs(project)
+}
