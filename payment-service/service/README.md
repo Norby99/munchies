@@ -14,7 +14,13 @@ graph TB
   subgraph :payment-service
     direction TB
     :payment-service:service[service]:::unknown
+    :payment-service:shared[shared]:::unknown
   end
+  :commons[commons]:::unknown
+
+  :payment-service:service -.->|jsImplementation| :commons
+  :payment-service:service -.->|jsImplementation| :payment-service:shared
+  :payment-service:shared -.->|commonMainImplementation| :commons
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

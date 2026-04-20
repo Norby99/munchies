@@ -10,6 +10,11 @@ plugins {
   id("com.bmuschko.docker-remote-api")
 }
 
+val jsImplementation = configurations.create("jsImplementation") {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+}
+
 val nodeVersion = "24.0.0"
 val nodePackageVersion = "11.0.0"
 
