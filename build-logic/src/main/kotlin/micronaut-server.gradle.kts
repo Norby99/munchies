@@ -23,6 +23,7 @@ dependencies {
   implementation("io.micronaut.data:micronaut-data-mongodb")
   runtimeOnly("org.mongodb:mongodb-driver-sync")
 
+  runtimeOnly("ch.qos.logback:logback-classic")
   runtimeOnly("org.yaml:snakeyaml")
   ksp("io.micronaut.openapi:micronaut-openapi")
   compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
@@ -151,7 +152,7 @@ if (rootProject.tasks.findByName("composeUp") == null) {
         portOffset++
       }
 
-      // Finally, append all the existing app services blocks from config/service
+      // Finally, append all the existing app services
       if (appServicesBuilder.isNotBlank()) {
         builder.append(appServicesBuilder.toString())
       }

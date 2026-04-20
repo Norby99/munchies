@@ -24,6 +24,8 @@ spec:
           env:
             - name: MICRONAUT_ENVIRONMENTS
               value: "k8s,prod"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "munchies-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
             - name: MONGODB_URI
               value: "mongodb://order-mongodb:27017/order-service"
           resources:

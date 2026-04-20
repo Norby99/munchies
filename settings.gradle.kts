@@ -44,3 +44,5 @@ include(":user-service:client")
 include(":payment-service:service")
 include(":payment-service:shared")
 include(":payment-service:client")
+
+include(":order-service")
