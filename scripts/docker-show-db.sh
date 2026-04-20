@@ -22,10 +22,10 @@ echo "Found database container: $CONTAINER_NAME"
 echo "==========================================="
 echo "Databases available on the server:"
 echo "==========================================="
-docker exec -t "$CONTAINER_NAME" mongosh --quiet --eval "show dbs"
+docker exec "$CONTAINER_NAME" mongosh --quiet --eval "show dbs"
 
 # Retrieve all db names, ignoring system ones
-DBS=$(docker exec -t "$CONTAINER_NAME" mongosh --quiet --eval "db.adminCommand('listDatabases').databases.map(d => d.name).join(' ')" | tr -d '\r')
+DBS=$(docker exec "$CONTAINER_NAME" mongosh --quiet --eval "db.adminCommand('listDatabases').databases.map(d => d.name).join(' ')" | tr -d '\r')
 
 for dbName in $DBS; do
     if [[ "$dbName" == "admin" || "$dbName" == "config" || "$dbName" == "local" ]]; then
@@ -37,7 +37,7 @@ for dbName in $DBS; do
     echo "Processing Database: '$dbName'"
     echo "==========================================="
     echo "Collections:"
-    docker exec -t "$CONTAINER_NAME" mongosh "$dbName" --quiet --eval "show collections"
+    docker exec "$CONTAINER_NAME" mongosh "$dbName" --quiet --eval "show collections"
 
     echo ""
     if [ -n "$TARGET_COLLECTION" ]; then
@@ -46,7 +46,7 @@ for dbName in $DBS; do
         echo "Documents within each collection in '$dbName':"
     fi
     echo "-------------------------------------------"
-    COLLECTIONS=$(docker exec -t "$CONTAINER_NAME" mongosh "$dbName" --quiet --eval "db.getCollectionNames().join(' ')" | tr -d '\r')
+    COLLECTIONS=$(docker exec "$CONTAINER_NAME" mongosh "$dbName" --quiet --eval "db.getCollectionNames().join(' ')" | tr -d '\r')
 
     for coll in $COLLECTIONS; do
         if [ -n "$TARGET_COLLECTION" ] && [ "$coll" != "$TARGET_COLLECTION" ]; then
@@ -55,7 +55,7 @@ for dbName in $DBS; do
 
         if [ -n "$coll" ]; then
             echo "--> Collection: $coll"
-            docker exec -t "$CONTAINER_NAME" mongosh "$dbName" --quiet --eval "db.$coll.find().pretty()"
+            docker exec "$CONTAINER_NAME" mongosh "$dbName" --quiet --eval "db.$coll.find().pretty()"
             echo ""
         fi
     done
