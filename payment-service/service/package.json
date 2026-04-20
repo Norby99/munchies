@@ -9,8 +9,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "dev": "tsx src/main/ts/index.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "specs": "tsoa spec",
     "routes": "tsoa routes",
     "test": "vitest run"
