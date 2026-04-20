@@ -51,6 +51,11 @@ tasks.named("build") {
   )
 }
 
+tasks.register("test") {
+  dependsOn(project.tasks.named("build"))
+  dependsOn("npm_run_test")
+}
+
 tasks.named("npmInstall") {
   mustRunAfter("packAllJsPackages")
 }
