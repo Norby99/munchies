@@ -23,7 +23,6 @@ dependencies {
   implementation("io.micronaut.data:micronaut-data-mongodb")
   runtimeOnly("org.mongodb:mongodb-driver-sync")
 
-  runtimeOnly("ch.qos.logback:logback-classic")
   runtimeOnly("org.yaml:snakeyaml")
   ksp("io.micronaut.openapi:micronaut-openapi")
   compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
