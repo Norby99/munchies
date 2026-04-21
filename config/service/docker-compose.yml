@@ -8,6 +8,9 @@ services:
     ports: ["8081:8080"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      kafka:
+        condition: service_healthy
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-order-service:27017/order-service
@@ -19,6 +22,9 @@ services:
     ports: ["8082:8080"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      kafka:
+        condition: service_healthy
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-user-service:27017/user-service
