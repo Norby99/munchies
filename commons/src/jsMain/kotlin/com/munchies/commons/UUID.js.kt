@@ -15,5 +15,5 @@ fun newUUIDEntityId(value: String?): UUIDEntityId =
 fun getIdFromEntityId(entityId: UUIDEntityId): String = entityId.value
 
 @JsExport
-@JsName("Entity")
+@JsName("JsEntity")
 class JsEntity(id: UUIDEntityId)
