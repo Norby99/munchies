@@ -77,3 +77,7 @@ tasks.register<Sync>("prepareTypeDocs") {
 
   into(rootProject.layout.buildDirectory.dir("typescript/"))
 }
+
+tasks.clean {
+  delete(rootProject.projectDir.resolve("node_modules"))
+}
