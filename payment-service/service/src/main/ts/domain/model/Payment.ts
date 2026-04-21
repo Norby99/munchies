@@ -1,12 +1,12 @@
 import {
-  Entity,
+  JsEntity,
   UUIDEntityId,
   PaymentStatus,
   Currency,
 } from "../external-modules";
 import { PaymentId } from "./PaymentId";
 
-class _Payment implements Entity {
+class _Payment implements JsEntity {
   constructor(
     id: PaymentId,
     status: PaymentStatus,
