@@ -161,7 +161,7 @@ if (rootProject.tasks.findByName("generateComposeFile") == null) {
 
     val args = mutableListOf(
       "bash",
-      "${rootProject.rootDir}/scripts/docker-show-db.sh",
+      "${rootProject.rootDir}/scripts/compose/docker-show-db.sh",
       serviceName ?: "",
     )
     if (collection != null) args.add(collection)
