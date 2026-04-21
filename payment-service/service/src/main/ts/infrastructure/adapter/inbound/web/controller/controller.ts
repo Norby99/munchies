@@ -1,41 +1,24 @@
 import { Body, Post, Route, Tags } from "tsoa";
 
-/**
- * Represents the payload required to create a payment.
- */
-interface PaymentRequest {
-  /**
-   * Unique identifier of the order to be paid.
-   */
-  orderId: string;
-
-  /**
-   * Payment amount expressed in cents.
-   */
-  amountCents: number;
-}
-
-/**
- * Represents the result of a payment creation request.
- */
-interface PaymentResponse {
-  /**
-   * Unique identifier assigned to the created payment.
-   */
-  paymentId: string;
-
-  /**
-   * Indicates whether the payment was accepted.
-   */
-  accepted: boolean;
-}
+import {
+  newUUIDEntityId,
+  PaymentStatus,
+  Currency,
+  PaymentResponse,
+  PaymentRequest,
+  PaymentAPI,
+} from "../../../../../domain/external-modules";
 
 /**
  * HTTP controller exposing payment endpoints.
  */
 @Route("payments")
 @Tags("Payments")
-export class PaymentController {
+export class PaymentController implements PaymentAPI {
+  constructor() {
+    console.log("PaymentService constructor called");
+  }
+
   /**
    * Creates a payment for the provided order.
    *
@@ -43,9 +26,15 @@ export class PaymentController {
    * @returns The created payment details and acceptance status.
    */
   @Post()
-  public async createPayment(
-    @Body() body: PaymentRequest
-  ): Promise<PaymentResponse> {
-    return { paymentId: "p-123", accepted: true };
+  public processPayment(
+    @Body()
+    request: PaymentRequest
+  ): PaymentResponse {
+    return new PaymentResponse(
+      newUUIDEntityId(null),
+      PaymentStatus.CANCELLED,
+      10,
+      Currency.AUD
+    );
   }
 }
