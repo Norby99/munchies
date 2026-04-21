@@ -15,9 +15,6 @@ graph TB
     direction TB
     :payment-service:shared[shared]:::unknown
   end
-  :commons[commons]:::unknown
-
-  :payment-service:shared -.->|commonMainImplementation| :commons
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

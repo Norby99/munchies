@@ -20,7 +20,6 @@ graph TB
 
   :payment-service:service -.->|jsImplementation| :commons
   :payment-service:service -.->|jsImplementation| :payment-service:shared
-  :payment-service:shared -.->|commonMainImplementation| :commons
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```
