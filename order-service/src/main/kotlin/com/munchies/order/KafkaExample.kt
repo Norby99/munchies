@@ -7,6 +7,7 @@ import io.micronaut.configuration.kafka.annotation.Topic
 import io.micronaut.context.event.ApplicationEventListener
 import io.micronaut.context.event.StartupEvent
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 
 @KafkaClient
 interface OrderClient {
@@ -16,10 +17,12 @@ interface OrderClient {
 
 @KafkaListener(offsetReset = OffsetReset.EARLIEST)
 class OrderConsumer {
+  private val logger = LoggerFactory.getLogger(OrderConsumer::class.java)
+
   @Topic("temp-orders")
   fun receiveOrder(order: String) {
-    println("\n+++ CONSUMED MESSAGE FROM KAFKA TOPIC 'temp-orders' +++")
-    println("Payload: $order\n")
+    logger.info("\n+++ CONSUMED MESSAGE FROM KAFKA TOPIC 'temp-orders' +++")
+    logger.info("Payload: {}\n", order)
   }
 }
 
@@ -27,15 +30,18 @@ class OrderConsumer {
 class StartupProducer(
   private val orderClient: OrderClient,
 ) : ApplicationEventListener<StartupEvent> {
+  private val logger = LoggerFactory.getLogger(StartupProducer::class.java)
+
   override fun onApplicationEvent(event: StartupEvent) {
-    println("Sending temporary order to Kafka...")
+    logger.info("Sending temporary order to Kafka...")
+    @Suppress("TooGenericExceptionCaught")
     try {
       orderClient.sendOrder(
         "Test order from order-service prototype: ${System.currentTimeMillis()}",
       )
-      println("Order sent successfully!")
-    } catch (_: Exception) {
-      println("Failed to write to Kafka. Please check connection.")
+      logger.info("Order sent successfully!")
+    } catch (e: Exception) {
+      logger.error("Failed to send order to Kafka: ${e.message}", e)
     }
   }
 }
