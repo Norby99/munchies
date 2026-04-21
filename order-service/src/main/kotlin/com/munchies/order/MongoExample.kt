@@ -8,6 +8,7 @@ import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.mongodb.annotation.MongoRepository
 import io.micronaut.data.repository.CrudRepository
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 
 @MappedEntity
 data class TestDocument(
@@ -25,20 +26,23 @@ interface TestDocumentRepository : CrudRepository<TestDocument, String>
 class MongoStartupWriter(
   private val repository: TestDocumentRepository,
 ) : ApplicationEventListener<StartupEvent> {
+  private val logger = LoggerFactory.getLogger(MongoStartupWriter::class.java)
+
   override fun onApplicationEvent(event: StartupEvent) {
-    println("Writing temporary document to MongoDB...")
+    logger.info("Writing temporary document to MongoDB...")
+    @Suppress("TooGenericExceptionCaught")
     try {
       val doc = TestDocument(
         message = "Hello from MongoExample at startup!",
         timestamp = System.currentTimeMillis(),
       )
       val saved = repository.save(doc)
-      println("Document written successfully to MongoDB with ID: ${saved.id}")
+      logger.info("Document written successfully to MongoDB with ID: ${saved.id}")
 
       val count = repository.count()
-      println("Total documents in DB: $count")
-    } catch (_: Exception) {
-      println("Failed to write to MongoDB: Please check the MongoDB connection.")
+      logger.info("Total documents in DB: $count")
+    } catch (e: Exception) {
+      logger.error("Failed to write to MongoDB: ${e.message}", e)
     }
   }
 }
