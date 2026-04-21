@@ -70,7 +70,7 @@ tasks.register<NodeTask>("run") {
     project.tasks.named("build"),
   )
 
-  script = file(project.projectDir.resolve("dist/index.js").path)
+  script = file(project.projectDir.resolve("dist/main/ts/index.js").path)
 }
 
 tasks.named("clean") {
