@@ -1,4 +1,4 @@
-package com.munchies.payment.infrastructure.adapter.inbound.response
+package com.munchies.payment.infrastructure.adapter.dto
 
 import kotlin.js.JsExport
 
