@@ -1,7 +1,7 @@
 import { Body, Post, Route, Tags } from "tsoa";
 
 import {
-  newUUIDEntityId,
+  newId,
   PaymentStatus,
   Currency,
   PaymentResponse,
@@ -31,7 +31,7 @@ export class PaymentController implements PaymentAPI {
     request: PaymentRequest
   ): PaymentResponse {
     return new PaymentResponse(
-      newUUIDEntityId(null),
+      newId(),
       PaymentStatus.CANCELLED,
       10,
       Currency.AUD
