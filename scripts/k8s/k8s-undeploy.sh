@@ -13,7 +13,12 @@ WIPE_DATA=${2:-false}
 
 if [ -z "$SERVICE" ]; then
     echo "Error: You must specify the service name or 'all'."
-    echo "Usage: ./scripts/k8s-undeploy.sh <service-name|all> [--wipe-data]"
+    echo "Usage: ./scripts/k8s/k8s-undeploy.sh <service-name|all> [--wipe-data]"
+    exit 1
+fi
+
+if ! minikube status >/dev/null 2>&1; then
+    echo "Error: Minikube is not running. Please start it with 'minikube start'."
     exit 1
 fi
 
