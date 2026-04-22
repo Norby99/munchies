@@ -6,8 +6,8 @@ plugins {
   alias(libs.plugins.spotless) apply false
   alias(libs.plugins.dokka)
   id("munchies-subproject") apply false
-  id("kubernetes-tasks")
-  id("kubernetes-info")
+  id("k8s.kubernetes-deploy")
+  id("k8s.kubernetes-info")
 }
 
 apply(plugin = "linter-convention")

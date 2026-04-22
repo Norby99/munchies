@@ -1,3 +1,5 @@
+package k8s
+
 tasks.register<Exec>("k8sInfo") {
   group = "kubernetes"
   description = "Prints the current pods and deployments across all namespaces in Minikube."

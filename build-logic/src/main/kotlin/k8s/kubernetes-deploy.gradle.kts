@@ -1,3 +1,5 @@
+package k8s
+
 tasks.register<Exec>("deploy") {
   group = "kubernetes"
   description = "Deploys a service to Minikube. Usage: ./gradlew deploy -Pservice=<name|all>"
@@ -16,7 +18,7 @@ tasks.register<Exec>("deploy") {
     serviceName
   }
 
-  commandLine("bash", "${rootProject.rootDir}/scripts/k8s-deploy.sh", servicesToDeploy)
+  commandLine("bash", "${rootProject.rootDir}/scripts/k8s/k8s-deploy.sh", servicesToDeploy)
 }
 
 tasks.register<Exec>("undeploy") {
@@ -40,7 +42,7 @@ tasks.register<Exec>("undeploy") {
   }
 
   val args =
-    mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s-undeploy.sh", servicesToUndeploy)
+    mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s/k8s-undeploy.sh", servicesToUndeploy)
   if (wipeData) args.add("--wipe-data")
 
   commandLine(args)
@@ -62,7 +64,7 @@ tasks.register<Exec>("showDb") {
 
   val args = mutableListOf(
     "bash",
-    "${rootProject.rootDir}/scripts/k8s-show-db.sh",
+    "${rootProject.rootDir}/scripts/k8s/k8s-show-db.sh",
     serviceName ?: "",
   )
   if (collection != null) args.add(collection)
@@ -83,5 +85,5 @@ tasks.register<Exec>("showKf") {
     }
   }
 
-  commandLine("bash", "${rootProject.rootDir}/scripts/k8s-show-kf.sh", topic ?: "")
+  commandLine("bash", "${rootProject.rootDir}/scripts/k8s/k8s-show-kf.sh", topic ?: "")
 }
