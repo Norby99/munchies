@@ -2,47 +2,20 @@ package k8s
 
 tasks.register<Exec>("deploy") {
   group = "kubernetes"
-  description = "Deploys a service to Minikube. Usage: ./gradlew deploy -Pservice=<name|all>"
+  description = "Deploys all services to Minikube. Usage: ./gradlew deploy"
 
-  val serviceName = project.findProperty("service") as? String ?: "all"
-
-  doFirst {
-    require(serviceName != "kafka") {
-      "You cannot deploy only the kafka service."
-    }
-  }
-
-  val servicesToDeploy = if (serviceName != "all") {
-    "kafka $serviceName"
-  } else {
-    serviceName
-  }
-
-  commandLine("bash", "${rootProject.rootDir}/scripts/k8s/k8s-deploy.sh", servicesToDeploy)
+  commandLine("bash", "${rootProject.rootDir}/scripts/k8s/k8s-deploy.sh", "all")
 }
 
 tasks.register<Exec>("undeploy") {
   group = "kubernetes"
-  description = "Undeploys a service from Minikube. " +
-    "Usage: ./gradlew undeploy -Pservice=<name|all> [-PwipeData=true]"
+  description = "Undeploys all services from Minikube. " +
+    "Usage: ./gradlew undeploy [-PwipeData=true]"
 
-  val serviceName = project.findProperty("service") as? String ?: "all"
   val wipeData = (project.findProperty("wipeData") as? String)?.toBoolean() ?: false
 
-  doFirst {
-    require(serviceName != "kafka") {
-      "You cannot undeploy only the kafka service."
-    }
-  }
-
-  val servicesToUndeploy = if (serviceName != "all") {
-    "$serviceName kafka"
-  } else {
-    serviceName
-  }
-
   val args =
-    mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s/k8s-undeploy.sh", servicesToUndeploy)
+    mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s/k8s-undeploy.sh", "all")
   if (wipeData) args.add("--wipe-data")
 
   commandLine(args)
