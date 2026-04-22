@@ -86,7 +86,9 @@ tasks.register("dockerCreate", Dockerfile::class) {
   copyFile("./", "/app/")
   runCommand("npm install")
   exposePort(3000)
-  defaultCommand("node", "dist/index.js")
+  defaultCommand("npm", "start")
+
+  destFile = project.layout.buildDirectory.dir("docker/main/Dockerfile").get().asFile
 
   val sources = listOf(
     project.projectDir.resolve("dist"),
@@ -97,7 +99,7 @@ tasks.register("dockerCreate", Dockerfile::class) {
   )
 
   inputs.files(sources)
-  val outputDir = project.layout.buildDirectory.dir("docker/").get().asFile
+  val outputDir = project.layout.buildDirectory.dir("docker/main/").get().asFile
   outputs.dir(outputDir)
 
   doLast {
@@ -113,8 +115,8 @@ tasks.register("dockerCreate", Dockerfile::class) {
 
 tasks.register<DockerBuildImage>("dockerBuild") {
   dependsOn("dockerCreate")
-  inputDir.set(project.layout.buildDirectory.dir("docker/"))
-  images.set(listOf("munchies/$serviceName-service:latest"))
+  inputDir.set(project.layout.buildDirectory.dir("docker/main/"))
+  images.set(listOf("$serviceName-service:latest"))
 }
 
 tasks.register<NpxTask>("typeDocs") {
