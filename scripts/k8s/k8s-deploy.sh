@@ -65,10 +65,6 @@ for srv in $SERVICES; do
     elif [ -d "k8s/${srv}" ]; then
         echo "Applying namespace first, then full manifest in k8s/${srv}/..."
         minikube kubectl -- apply -f k8s/${srv}/namespace.yml
-        if [ "$srv" == "kafka" ]; then
-            minikube kubectl -- apply -f k8s/${srv}/strimzi-operator.yml -n $srv
-            minikube kubectl -- wait deployment/strimzi-cluster-operator --for=condition=Available=True --timeout=300s -n $srv
-        fi
         minikube kubectl -- apply -f k8s/${srv}/ -n $srv
     else
         echo "Warning: No manifest found for $srv (checked k8s/${srv}.yml and k8s/${srv}/)."

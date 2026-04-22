@@ -12,9 +12,9 @@ echo "Connecting to Kafka to tail topic: $TOPIC..."
 echo "Press Ctrl+C to stop."
 
 # Using a temporary pod to consume messages
-minikube kubectl -- run kafka-tail-$$ --rm -i --image=quay.io/strimzi/kafka:0.51.0-kafka-4.2.0 --restart=Never --namespace kafka -- \
-    bin/kafka-console-consumer.sh \
-    --bootstrap-server munchies-kafka-kafka-bootstrap:9092 \
-    --topic "$TOPIC" \
-    --from-beginning
-
+minikube kubectl -- run kafka-client --restart='Never' -n kafka --image docker.io/bitnami/kafka:3.8.0-debian-12-r14 --command -- sleep infinity
+minikube kubectl -- wait --for=condition=ready pod/kafka-client -n kafka
+minikube kubectl -- exec -n kafka -it kafka-client -- \
+  kafka-topics.sh \
+    --bootstrap-server kafka:9092 \
+    --list
