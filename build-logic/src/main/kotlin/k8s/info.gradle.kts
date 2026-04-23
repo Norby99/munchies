@@ -2,7 +2,8 @@ package k8s
 
 tasks.register<Exec>("k8sInfo") {
   group = "kubernetes"
-  description = "Prints the current pods and deployments across all namespaces in Minikube."
+  description = "Prints the current pods and deployments across all namespaces in Minikube " +
+    "(except for kubernetes' pods)."
 
   commandLine(
     "bash",
@@ -11,12 +12,12 @@ tasks.register<Exec>("k8sInfo") {
         echo "==========================================="
         echo "                   PODS                    "
         echo "==========================================="
-        minikube kubectl -- get pods -A
+        minikube kubectl -- get pods -A | grep -v "kube-system"
         echo ""
         echo "==========================================="
         echo "               DEPLOYMENTS                 "
         echo "==========================================="
-        minikube kubectl -- get deployments -A
+        minikube kubectl -- get deployments -A | grep -v "kube-system"
     """.trimIndent(),
   )
 }
