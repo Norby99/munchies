@@ -10,24 +10,24 @@ This scripts can be executed via gradle:
 
 ## Deploy
 
-To deploy a service or all of them:
+To deploy the services:
 
 ```bash
-./gradlew deploy -Pservice=<name|all>
+./gradlew deploy
 ```
 
 ## Undeploy
 
-To undeploy a service or all of them:
+To undeploy the services:
 
 ```bash
-./gradlew undeploy -Pservice=<service|all>
+./gradlew undeploy
 ```
 
-To undeploy a service and also wipe all the statefulsets (es. DBs):
+To undeploy the services and also wipe all the statefulsets (es. DBs):
 
 ```bash
-./gradlew undeploy -Pservice=<service|all> [-PwipeData=true]
+./gradlew undeploy [-PwipeData=true]
 ```
 
 ## Debug
@@ -44,8 +44,19 @@ To only show one specific collection:
 ./gradlew showDb -Pservice=<service> [-Pcollection=<collection>]
 ```
 
+To show data relative to Kafka:
+
+```bash
+./gradlew showKf [-Ptopic=<topic>]
+```
+
+To show pods and deployments:
+
+```bash
+./gradlew k8sInfo
+```
+
 <aside>
-💡
 
 NOTE: If you have just deployed a service and your PC is slow, the show-db command will return you no collections.
 
