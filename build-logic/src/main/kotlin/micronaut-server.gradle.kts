@@ -3,7 +3,8 @@ plugins {
   id("io.micronaut.application")
   id("io.micronaut.test-resources")
 
-  id("compose.build-compose")
+  id("compose.task")
+  id("compose.info")
 }
 
 dependencies {
