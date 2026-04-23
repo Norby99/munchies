@@ -2,8 +2,11 @@ import { getIdFromEntityId } from "@main/domain/external-modules";
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import { PaymentRepository } from "@main/domain/port/payment-repository";
-import { PaymentDocument, PaymentModel } from "../document/payment-document";
-import { PaymentFactory } from "../factory/payment-factory";
+import {
+  PaymentDocument,
+  PaymentModel,
+} from "@main/infrastructure/adapter/outbound/mongo/document/payment-document";
+import { PaymentFactory } from "@main/infrastructure/adapter/outbound/mongo/factory/payment-factory";
 
 export class PaymentMongoRepository implements PaymentRepository {
   async findById(id: PaymentId): Promise<Payment | null> {

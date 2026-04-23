@@ -27,8 +27,10 @@ const _PaymentAPI = _inbound.PaymentAPI;
 export type JsEntity = InstanceType<typeof JsEntity>;
 export type UUIDEntityId = InstanceType<typeof _commons.UUIDEntityId>;
 
-export type PaymentStatus = typeof PaymentStatus;
-export type Currency = typeof Currency;
+export type PaymentStatus =
+  (typeof _adapter.dto.PaymentStatus)[keyof typeof _adapter.dto.PaymentStatus];
+export type Currency =
+  (typeof _adapter.dto.Currency)[keyof typeof _adapter.dto.Currency];
 
 export type PaymentResponse = InstanceType<typeof PaymentResponse>;
 export type PaymentRequest = InstanceType<typeof PaymentRequest>;
