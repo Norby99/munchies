@@ -122,6 +122,10 @@ if (rootProject.tasks.findByName("generateComposeFile") == null) {
         dependsOn("${proj.path}:dockerfile")
         dependsOn("${proj.path}:buildLayers")
       }
+
+      if (proj.plugins.hasPlugin("express-server")) {
+        dependsOn("${proj.path}:dockerCreate")
+      }
     }
 
     workingDir(generatedComposeDir.get().asFile)

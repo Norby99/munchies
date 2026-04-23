@@ -96,6 +96,7 @@ tasks.register("dockerCreate", Dockerfile::class) {
     project.projectDir.resolve("package.json"),
     project.projectDir.resolve("package-lock.json"),
     project.projectDir.resolve("tsconfig.json"),
+    project.projectDir.resolve(".env"),
   )
 
   inputs.files(sources)
