@@ -44,6 +44,8 @@ abstract class DeployServicesTask @Inject constructor(
         }
       }
 
+      loadImageIntoMinikube(srv)
+
       val singleManifest = root.resolve("k8s/$srv.yml")
       val manifestDir = root.resolve("k8s/$srv")
       when {
@@ -85,5 +87,12 @@ abstract class DeployServicesTask @Inject constructor(
       }
     }
     println("Deployment Completed!")
+  }
+
+  private fun loadImageIntoMinikube(srv: String) {
+    println("Pushing $srv:latest to Minikube...")
+    execOps.exec {
+      commandLine("minikube", "image", "load", "$srv:latest")
+    }
   }
 }
