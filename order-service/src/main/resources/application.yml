@@ -1,6 +1,8 @@
 micronaut:
   application:
     name: order-service
+mongodb:
+  uri: ${MONGODB_URI:mongodb://localhost:27017/orders}
 kafka:
   bootstrap:
     servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}

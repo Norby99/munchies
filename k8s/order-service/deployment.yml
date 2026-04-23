@@ -26,8 +26,8 @@ spec:
               value: "k8s,prod"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
-            - name: SPRING_DATA_MONGODB_URI
-              value: "mongodb://order-db-0.order-db-hl.order-service.svc.cluster.local:27017/orders?replicaSet=rs0"
+            - name: MONGODB_URI
+              value: "mongodb://order-mongodb.order-service.svc.cluster.local:27017/orders"
           resources:
             requests:
               memory: "128Mi"
