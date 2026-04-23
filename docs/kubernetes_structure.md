@@ -50,6 +50,12 @@ To show data relative to Kafka:
 ./gradlew showKf [-Ptopic=<topic>]
 ```
 
+To debug a specific service:
+
+```bash
+minikube kubectl -- logs -f deploy/<service-name> -n <service-name> --since=5m
+```
+
 To show pods and deployments:
 
 ```bash
