@@ -1,24 +1,24 @@
 package k8s
 
-tasks.register<Exec>("deploy") {
+tasks.register<Exec>("k8sInfo") {
   group = "kubernetes"
-  description = "Deploys all services to Minikube. Usage: ./gradlew deploy"
+  description = "Prints the current pods and deployments across all namespaces in Minikube."
 
-  commandLine("bash", "${rootProject.rootDir}/scripts/k8s/k8s-deploy.sh", "all")
-}
-
-tasks.register<Exec>("undeploy") {
-  group = "kubernetes"
-  description = "Undeploys all services from Minikube. " +
-    "Usage: ./gradlew undeploy [-PwipeData=true]"
-
-  val wipeData = (project.findProperty("wipeData") as? String)?.toBoolean() ?: false
-
-  val args =
-    mutableListOf("bash", "${rootProject.rootDir}/scripts/k8s/k8s-undeploy.sh", "all")
-  if (wipeData) args.add("--wipe-data")
-
-  commandLine(args)
+  commandLine(
+    "bash",
+    "-c",
+    """
+        echo "==========================================="
+        echo "                   PODS                    "
+        echo "==========================================="
+        minikube kubectl -- get pods -A
+        echo ""
+        echo "==========================================="
+        echo "               DEPLOYMENTS                 "
+        echo "==========================================="
+        minikube kubectl -- get deployments -A
+    """.trimIndent(),
+  )
 }
 
 tasks.register<Exec>("showDb") {
