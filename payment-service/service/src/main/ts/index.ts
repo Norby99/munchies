@@ -3,13 +3,12 @@ import {
   getIdFromEntityId,
   newId,
   PaymentStatus,
+  newUUIDEntityId,
 } from "@main/domain/external-modules";
 import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { PaymentId } from "@main/domain/model/PaymentId";
 
 new PaymentController();
-
-console.log(getIdFromEntityId(new PaymentId(null)._id));
 
 import "dotenv/config";
 import {
@@ -34,18 +33,19 @@ async function main(): Promise<void> {
 
     console.log("new id :" + id);
 
-    repository.save(
+    await repository.save(
       new Payment(
         new PaymentId(id),
         PaymentStatus.PENDING,
         10,
-        newId(),
+        newUUIDEntityId(newId()),
         Currency.AUD,
         null
       )
     );
 
-    console.log("found: " + repository.findById(new PaymentId(id)));
+    const found = await repository.findById(new PaymentId(id));
+    console.log("found: " + found);
   } catch (error) {
     console.error("Mongo query check failed:", error);
     process.exitCode = 1;

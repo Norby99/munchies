@@ -1,11 +1,9 @@
 import { newUUIDEntityId, UUIDEntityId } from "../external-modules";
 
-export class _PaymentId implements UUIDEntityId {
-  constructor(id: string | null) {
-    this._id = newUUIDEntityId(id);
-  }
-  readonly _id: UUIDEntityId;
-}
+export type PaymentId = UUIDEntityId;
 
-export type PaymentId = InstanceType<typeof _PaymentId>;
-export const PaymentId = _PaymentId;
+export const PaymentId = new Proxy(class {}, {
+  construct(target, args) {
+    return newUUIDEntityId(args[0]);
+  },
+}) as unknown as new (id: string | null) => PaymentId;
