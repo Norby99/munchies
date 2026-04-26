@@ -49,6 +49,10 @@ jobs:
             echo "version=$(echo $GIT_VERSION | sed 's/^v//')" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Computed version for release
+        run: |
+          echo "Computed version for release: ${{ steps.check-version.outputs.version }}"
+
       - name: Prepare to publish to npm
         if: steps.check-version.outputs.version != ''
         run: |
