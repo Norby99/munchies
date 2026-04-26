@@ -1,6 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.npm.task.NpxTask
 import com.github.gradle.node.task.NodeTask
 import utils.getServiceName
@@ -25,44 +24,21 @@ node {
 
 val serviceName = getServiceName(project.parent!!)
 
-val packageDependencies = listOf(
-  "munchies-commons",
-  "munchies-$serviceName-service-shared",
-)
-
-packageDependencies.forEach { pkgName ->
-  tasks.register<NpmTask>("pack_$pkgName") {
-    dependsOn(
-      project(":commons").tasks.named("build"),
-      project(":$serviceName-service:shared").tasks.named("build"),
-    )
-    workingDir.set(
-      rootProject.layout.buildDirectory.file("js/packages/$pkgName"),
-    )
-    args.set(listOf("pack"))
-  }
-}
-
-tasks.register("packAllJsPackages") {
-  dependsOn(packageDependencies.map { "pack_$it" })
-}
 tasks.named("build") {
+
   dependsOn(
-    "packAllJsPackages",
     "npmInstall",
     "npm_run_build",
-    "npm_run_routes",
-    "npm_run_specs",
   )
+}
+
+tasks.named("npm_run_build") {
+  mustRunAfter("npmInstall")
 }
 
 tasks.register("test") {
   dependsOn(project.tasks.named("build"))
   dependsOn("npm_run_test")
-}
-
-tasks.named("npmInstall") {
-  mustRunAfter("packAllJsPackages")
 }
 
 tasks.register<NodeTask>("run") {
@@ -80,19 +56,17 @@ tasks.named("clean") {
 }
 
 tasks.register("dockerCreate", Dockerfile::class) {
-  dependsOn(project.tasks.named("build"))
   from("node:$nodeVersion-alpine")
   workingDir("/app")
   copyFile("./", "/app/")
-  runCommand("npm install")
+  runCommand("npm install && npm run build")
   exposePort(3000)
   defaultCommand("npm", "start")
 
   destFile = project.layout.buildDirectory.dir("docker/main/Dockerfile").get().asFile
 
   val sources = listOf(
-    project.projectDir.resolve("dist"),
-    project.projectDir.resolve("node_modules"),
+    project.projectDir.resolve("src/"),
     project.projectDir.resolve("package.json"),
     project.projectDir.resolve("package-lock.json"),
     project.projectDir.resolve("tsconfig.json"),
@@ -122,6 +96,10 @@ tasks.register<DockerBuildImage>("dockerBuild") {
 
 tasks.register<NpxTask>("typeDocs") {
   dependsOn(project.tasks.named("build"))
+  dependsOn(
+    "npm_run_routes",
+    "npm_run_specs",
+  )
   command.set("typedoc")
   workingDir.set(project.projectDir.resolve("src"))
   args.set(
