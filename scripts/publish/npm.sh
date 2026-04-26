@@ -8,10 +8,13 @@ if [ -z "$VERSION" ]; then
 fi
 
 for file in $(cd ./build/js/packages/ && find . -maxdepth 1 -mindepth 1 -type d | grep -v '\-test$'); do
-  (
-  cd ./build/js/packages/"$file" &&
-  npm version --no-git-tag-version "$VERSION" &&
-  npm pkg fix &&
-  npm publish --access public
-  )
+  if ! (
+    cd ./build/js/packages/"$file" &&
+    npm version "$VERSION" &&
+    npm pkg fix &&
+    npm publish --access public
+  ); then
+    echo "Failed to publish package: $file" >&2
+    exit 1
+  fi
 done
