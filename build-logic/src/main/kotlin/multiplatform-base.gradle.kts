@@ -16,7 +16,7 @@ kotlin {
     useCommonJs()
 
     compilations["main"].packageJson {
-      customField("files", "kotlin/")
+      customField("files", listOf("kotlin/"))
       customField("license", "Apache-2.0")
       customField(
         "repository",
