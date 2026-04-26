@@ -2,6 +2,9 @@ plugins {
   id("micronaut-base")
   id("io.micronaut.application")
   id("io.micronaut.test-resources")
+
+  id("compose.task")
+  id("compose.info")
 }
 
 dependencies {
@@ -51,10 +54,4 @@ micronaut {
 val javaVersion: String by project
 tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
   jdkVersion = javaVersion
-}
-
-tasks.named<JavaExec>("run") {
-  jvmArgs(
-    "-Dmicronaut.environments=dev",
-  )
 }

@@ -1,28 +1,57 @@
-import type * as CommonsModule from "munchies-commons";
-import type * as SharedModule from "munchies-payment-service-shared";
+import {
+  Currency,
+  getIdFromEntityId,
+  newId,
+  PaymentStatus,
+  newUUIDEntityId,
+} from "@main/domain/external-modules";
+import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import { PaymentId } from "@main/domain/model/PaymentId";
 
-const commonsModule = require("munchies-commons") as typeof CommonsModule;
-const sharedModule =
-  require("munchies-payment-service-shared") as typeof SharedModule;
+new PaymentController();
 
-const commons = commonsModule.com.munchies.commons;
-const paymentShared =
-  sharedModule.com.munchies.payment.infrastructure.adapter.dto;
+import "dotenv/config";
+import {
+  connectDB,
+  disconnectDB,
+} from "@main/infrastructure/adapter/outbound/mongo/config/db";
+import { PaymentModel } from "@main/infrastructure/adapter/outbound/mongo/document/payment-document";
+import { PaymentMongoRepository } from "@main/infrastructure/adapter/outbound/mongo/repository/payment-mongo-repository";
+import { Payment } from "@main/domain/model/Payment";
 
-console.log("Starting payment service...");
+async function main(): Promise<void> {
+  try {
+    console.log("await connection");
 
-console.log(commons);
-console.log(paymentShared);
+    await connectDB();
 
-const paymentId = commons.newUUIDEntityId(null);
-const command = new paymentShared.PaymentCommand(
-  "order-1",
-  2590,
-  paymentShared.PaymentMethod.CARD
-);
-const result = new paymentShared.PaymentResult(
-  commons.getIdFromEntityId(paymentId),
-  true
-);
+    console.log("connected");
 
-console.log({ command, result });
+    const repository = new PaymentMongoRepository();
+
+    const id = newId();
+
+    console.log("new id :" + id);
+
+    await repository.save(
+      new Payment(
+        new PaymentId(id),
+        PaymentStatus.PENDING,
+        10,
+        newUUIDEntityId(newId()),
+        Currency.AUD,
+        null
+      )
+    );
+
+    const found = await repository.findById(new PaymentId(id));
+    console.log("found: " + found);
+  } catch (error) {
+    console.error("Mongo query check failed:", error);
+    process.exitCode = 1;
+  } finally {
+    await disconnectDB();
+  }
+}
+
+void main();

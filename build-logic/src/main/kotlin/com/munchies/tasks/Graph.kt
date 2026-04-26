@@ -36,9 +36,10 @@ private class Graph(
       .filter { (_, dep) -> dep != null }
       .flatMap { (c, value) -> value!!.map { dep -> c to project.project(dep.path) } }
       .filter { (c, _) ->
+        println("Checking ${project.path} -> ${c.name}")
         c.toString().contains(
           regex = Regex(
-            ".*(?:implementation|commonMainImplementation).*",
+            ".*(?:implementation|commonMainImplementation|jsImplementation).*",
           ),
         )
       }

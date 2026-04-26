@@ -6,7 +6,9 @@ plugins {
   alias(libs.plugins.spotless) apply false
   alias(libs.plugins.dokka)
   id("munchies-subproject") apply false
-  id("kubernetes-tasks")
+
+  id("k8s.task")
+  id("k8s.info")
 }
 
 apply(plugin = "linter-convention")
@@ -74,4 +76,8 @@ tasks.register<Sync>("prepareTypeDocs") {
   }
 
   into(rootProject.layout.buildDirectory.dir("typescript/"))
+}
+
+tasks.clean {
+  delete(rootProject.projectDir.resolve("node_modules"))
 }

@@ -24,8 +24,10 @@ spec:
           env:
             - name: MICRONAUT_ENVIRONMENTS
               value: "k8s,prod"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
             - name: MONGODB_URI
-              value: "mongodb://order-mongodb:27017/order-service"
+              value: "mongodb://order-mongodb.order-service.svc.cluster.local:27017/orders"
           resources:
             requests:
               memory: "128Mi"

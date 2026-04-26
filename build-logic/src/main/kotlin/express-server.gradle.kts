@@ -10,6 +10,11 @@ plugins {
   id("com.bmuschko.docker-remote-api")
 }
 
+val jsImplementation = configurations.create("jsImplementation") {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+}
+
 val nodeVersion = "24.0.0"
 val nodePackageVersion = "11.0.0"
 
@@ -51,6 +56,11 @@ tasks.named("build") {
   )
 }
 
+tasks.register("test") {
+  dependsOn(project.tasks.named("build"))
+  dependsOn("npm_run_test")
+}
+
 tasks.named("npmInstall") {
   mustRunAfter("packAllJsPackages")
 }
@@ -60,7 +70,7 @@ tasks.register<NodeTask>("run") {
     project.tasks.named("build"),
   )
 
-  script = file(project.projectDir.resolve("dist/index.js").path)
+  script = file(project.projectDir.resolve("dist/main/ts/index.js").path)
 }
 
 tasks.named("clean") {
@@ -76,7 +86,9 @@ tasks.register("dockerCreate", Dockerfile::class) {
   copyFile("./", "/app/")
   runCommand("npm install")
   exposePort(3000)
-  defaultCommand("node", "dist/index.js")
+  defaultCommand("npm", "start")
+
+  destFile = project.layout.buildDirectory.dir("docker/main/Dockerfile").get().asFile
 
   val sources = listOf(
     project.projectDir.resolve("dist"),
@@ -84,10 +96,11 @@ tasks.register("dockerCreate", Dockerfile::class) {
     project.projectDir.resolve("package.json"),
     project.projectDir.resolve("package-lock.json"),
     project.projectDir.resolve("tsconfig.json"),
+    project.projectDir.resolve(".env"),
   )
 
   inputs.files(sources)
-  val outputDir = project.layout.buildDirectory.dir("docker/").get().asFile
+  val outputDir = project.layout.buildDirectory.dir("docker/main/").get().asFile
   outputs.dir(outputDir)
 
   doLast {
@@ -103,8 +116,8 @@ tasks.register("dockerCreate", Dockerfile::class) {
 
 tasks.register<DockerBuildImage>("dockerBuild") {
   dependsOn("dockerCreate")
-  inputDir.set(project.layout.buildDirectory.dir("docker/"))
-  images.set(listOf("munchies/$serviceName-service:latest"))
+  inputDir.set(project.layout.buildDirectory.dir("docker/main/"))
+  images.set(listOf("$serviceName-service:latest"))
 }
 
 tasks.register<NpxTask>("typeDocs") {
