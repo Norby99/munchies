@@ -10,7 +10,7 @@ fi
 for file in $(cd ./build/js/packages/ && find . -maxdepth 1 -mindepth 1 -type d | grep -v '\-test$'); do
   (
   cd ./build/js/packages/"$file" &&
-  npm version "$VERSION" &&
+  npm version --no-git-tag-version "$VERSION" &&
   npm pkg fix &&
   npm publish --access public
   )
