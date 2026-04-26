@@ -6,6 +6,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write  # Required for OIDC
 
 jobs:
   deploy:
@@ -29,6 +30,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Npm install
         run: npm install
@@ -46,6 +48,18 @@ jobs:
           if [ -n "$GIT_VERSION" ]; then
             echo "version=$(echo $GIT_VERSION | sed 's/^v//')" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Prepare to publish to npm
+        if: steps.check-version.outputs.version != ''
+        run: |
+          bash ./gradlew clean jsNodeProductionLibraryDistribution
+
+      - name: Publish to npm
+        if: steps.check-version.outputs.version != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          bash ./scripts/publish/npm.sh
 
       # TODO maybe push to npm
       # TODO maybe publish to maven central
