@@ -49,6 +49,10 @@ jobs:
             echo "version=$(echo $GIT_VERSION | sed 's/^v//')" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Computed version for release
+        run: |
+          echo "Computed version for release: ${{ steps.check-version.outputs.version }}"
+
       - name: Prepare to publish to npm
         if: steps.check-version.outputs.version != ''
         run: |
@@ -57,7 +61,7 @@ jobs:
       - name: Publish to npm
         if: steps.check-version.outputs.version != ''
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.MUNCHIES_NPM_TOKEN }}
         run: |
           bash ./scripts/publish/npm.sh "${{ steps.check-version.outputs.version }}"
 
