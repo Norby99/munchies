@@ -65,9 +65,20 @@ jobs:
         run: |
           bash ./scripts/publish/npm.sh "${{ steps.check-version.outputs.version }}"
 
-      # TODO maybe push to npm
+      - name: Prepare to publish to docker hub
+        if: steps.check-version.outputs.version != ''
+        run: |
+          bash ./gradlew clean dockerBuild
+
+      - name: Publish to docker hub
+        if: steps.check-version.outputs.version != ''
+        env:
+          DOCKER_USERNAME: ${{ secrets.MUNCHIES_DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.MUNCHIES_DOCKER_TOKEN }}
+        run: |
+          bash ./scripts/publish/docker.sh "${{ steps.check-version.outputs.version }}"
+
       # TODO maybe publish to maven central
-      # TODO maybe push to docker hub
 
 
       # TODO include the deploy script to release files
