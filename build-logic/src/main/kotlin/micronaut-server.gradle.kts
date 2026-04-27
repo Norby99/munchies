@@ -59,6 +59,6 @@ tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative"
   jdkVersion = javaVersion
 }
 
-tasks.named("dockerBuild", DockerBuildImage::class) {
+tasks.named<DockerBuildImage>("dockerBuild") {
   images.set(listOf("${getServiceName(project)}-service:latest"))
 }

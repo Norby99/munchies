@@ -2,19 +2,18 @@
 
 set -euo pipefail
 
-VERSION=$1
-
-if [ -z "$VERSION" ]; then
+if [ "$#" -lt 1 ]; then
   echo "Usage: $0 <version>"
   exit 1
 fi
+
+VERSION=$1
 
 echo "$DOCKER_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
 
 services=(
 user-service
 restaurant-service
-order-service
 payment-service
 gateway-service
 order-service
