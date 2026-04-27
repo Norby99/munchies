@@ -4,7 +4,7 @@ import { Schema, model, HydratedDocument } from "mongoose";
 interface _PaymentDocument {
   _id: string;
   status: PaymentStatus;
-  amount: number;
+  amount: Number;
   orderId: string;
   currency: Currency;
   payedAt: Date | null;
