@@ -5,7 +5,13 @@ import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
 
 fun getProjectName(project: Project): String = project.name
-fun getServiceName(project: Project): String = project.name.removeSuffixIfPresent("-service")
+fun getServiceName(project: Project): String {
+  if (project.name in listOf("client", "shared", "service")) {
+    return getServiceName(project.parent!!)
+  }
+  return project.name.removeSuffixIfPresent("-service")
+}
+
 const val MUNCHIES_BASE_PACKAGE = "com.munchies"
 
 fun Project.libs() = the<org.gradle.accessors.dm.LibrariesForLibs>()
