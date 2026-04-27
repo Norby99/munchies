@@ -11,7 +11,8 @@
     "start": "node dist/main/ts/index.js",
     "specs": "tsoa spec",
     "routes": "tsoa routes",
-    "test": "vitest run"
+    "test": "vitest run",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.19.39",
+    "@vitest/coverage-v8": "^4.1.4",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "tsoa": "^7.0.0-alpha.0",
