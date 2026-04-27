@@ -73,7 +73,7 @@ jobs:
       - name: Publish to docker hub
         if: steps.check-version.outputs.version != ''
         env:
-          DOCKER_USERNAME: ${{ secrets.MUNCHIES_DOCKER_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ secrets.MUNCHIES_DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.MUNCHIES_DOCKER_TOKEN }}
         run: |
           bash ./scripts/publish/docker.sh "${{ steps.check-version.outputs.version }}"
