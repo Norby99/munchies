@@ -1,3 +1,6 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import utils.getServiceName
+
 plugins {
   id("micronaut-base")
   id("io.micronaut.application")
@@ -54,4 +57,8 @@ micronaut {
 val javaVersion: String by project
 tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
   jdkVersion = javaVersion
+}
+
+tasks.named<DockerBuildImage>("dockerBuild") {
+  images.set(listOf("${getServiceName(project)}-service:latest"))
 }
