@@ -54,9 +54,7 @@ kover {
     filters {
       excludes {
         classes(
-          "$MUNCHIES_BASE_PACKAGE.*.presentation.*",
           "$MUNCHIES_BASE_PACKAGE.architecture.*",
-          // TODO
           "$MUNCHIES_BASE_PACKAGE.commons.*",
         )
       }
