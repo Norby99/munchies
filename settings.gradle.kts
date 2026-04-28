@@ -37,6 +37,7 @@ gitHooks {
 
 include(":commons")
 include(":architecture-rules")
+
 include(":user-service:service")
 include(":user-service:shared")
 include(":user-service:client")
@@ -44,5 +45,9 @@ include(":user-service:client")
 include(":payment-service:service")
 include(":payment-service:shared")
 include(":payment-service:client")
+
+include(":notification-service:service")
+include(":notification-service:shared")
+include(":notification-service:client")
 
 include(":order-service")
