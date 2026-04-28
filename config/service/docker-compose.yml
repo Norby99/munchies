@@ -42,3 +42,33 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-payment-service:27017/payment-service
+
+  notification-service:
+    container_name: munchies-notification-service
+    build:
+      context: ../../notification-service/service/build/docker/main
+    image: munchies-notification-service:latest
+    ports: ["8084:8080"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
+      - MONGODB_URI=mongodb://munchies-mongo-notification-service:27017/notification-service
+
+  table-reservation-service:
+    container_name: munchies-table-reservation-service
+    build:
+      context: ../../table-reservation-service/service/build/docker/main
+    image: munchies-table-reservation-service:latest
+    ports: ["8085:8080"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
+      - MONGODB_URI=mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
