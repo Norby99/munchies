@@ -11,7 +11,6 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/main/ts/domain/external-modules.{ts,tsx}"],
       all: true,
-      reporter: ["text", "lcov", "json"],
       // thresholds: { lines: 80, functions: 80, branches: 75, statements: 80},
     },
   },
