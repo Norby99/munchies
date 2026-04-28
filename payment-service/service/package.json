@@ -1,11 +1,11 @@
 {
-  "name": "service",
+  "name": "payment-service",
   "version": "1.0.0",
   "description": "",
   "license": "Apache-2.0",
   "author": "",
   "type": "commonjs",
-  "main": "src/main/ts/index.js",
+  "main": "src/main/ts/index.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias",
     "start": "node dist/main/ts/index.js",
