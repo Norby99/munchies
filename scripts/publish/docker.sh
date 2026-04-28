@@ -17,7 +17,7 @@ restaurant-service
 payment-service
 gateway-service
 order-service
-table-service
+table-reservation-service
 notification-service
 )
 

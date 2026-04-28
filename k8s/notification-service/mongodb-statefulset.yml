@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: notification-mongodb
+  namespace: notification-service
+spec:
+  serviceName: notification-mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-mongodb
+  template:
+    metadata:
+      labels:
+        app: notification-mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_DATABASE
+              value: notification-service
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command: ["mongosh", "--eval", "db.adminCommand('ping')"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: notification-mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: notification-mongo-data
+          persistentVolumeClaim:
+            claimName: notification-mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-mongodb
+  namespace: notification-service
+spec:
+  selector:
+    app: notification-mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
