@@ -50,4 +50,8 @@ include(":notification-service:service")
 include(":notification-service:shared")
 include(":notification-service:client")
 
+include(":table-reservation-service:service")
+include(":table-reservation-service:shared")
+include(":table-reservation-service:client")
+
 include(":order-service")

@@ -1,0 +1,13 @@
+{
+  "entryFile": "src/main/ts/index.ts",
+  "controllerPathGlobs": ["src/main/ts/**/controller.ts"],
+  "spec": {
+    "outputDirectory": "build/openapi",
+    "specVersion": 3,
+    "specFileBaseName": "openapi",
+    "yaml": true
+  },
+  "routes": {
+    "routesDir": "build/generated/routes/"
+  }
+}
