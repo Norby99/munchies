@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "rootDir": "src/",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@main/*": ["src/main/ts/*"],
+      "@test/*": ["src/test/ts/*"]
+    }
+  },
+  "include": ["src/main/ts/**/*.ts", "src/main/ts/types/**/*.d.ts", "src/test/ts/**/*.ts"]
+}
