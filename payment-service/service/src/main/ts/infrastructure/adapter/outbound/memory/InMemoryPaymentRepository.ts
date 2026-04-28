@@ -4,7 +4,7 @@ import { PaymentId } from "@main/domain/model/PaymentId";
 import { PaymentRepository } from "@main/domain/port/payment-repository";
 
 export class InMemoryPaymentRepository implements PaymentRepository {
-  private map: Map<string, Payment> = new Map(); // 👈 string key, not PaymentId
+  private map: Map<string, Payment> = new Map();
 
   findById(id: PaymentId): Promise<Payment | null> {
     const payment = this.map.get(getIdFromEntityId(id)) ?? null;

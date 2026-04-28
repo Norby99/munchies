@@ -114,3 +114,7 @@ tasks.register<NpxTask>("typeDocs") {
     ),
   )
 }
+tasks.register("vitestCoverageVerify") {
+  mustRunAfter(project.tasks.named("test"))
+  dependsOn("npm_run_coverage")
+}
