@@ -33,7 +33,7 @@ fun Project.getProjectType(): ProjectType {
     "payment",
     "gateway",
     "order",
-    "table",
+    "table-reservation",
     "notification",
   )
   return when (
