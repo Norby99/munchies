@@ -29,7 +29,12 @@ tasks.named("build") {
   dependsOn(
     "npmInstall",
     "npm_run_build",
+    "npm_run_specs",
   )
+}
+
+tasks.named("npm_run_specs") {
+  mustRunAfter("npm_run_build")
 }
 
 tasks.named("npm_run_build") {
@@ -96,10 +101,6 @@ tasks.register<DockerBuildImage>("dockerBuild") {
 
 tasks.register<NpxTask>("typeDocs") {
   dependsOn(project.tasks.named("build"))
-  dependsOn(
-    "npm_run_routes",
-    "npm_run_specs",
-  )
   command.set("typedoc")
   workingDir.set(project.projectDir.resolve("src"))
   args.set(
