@@ -2,24 +2,20 @@ package com.munchies.restaurant.domain.valueobject
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-@DisplayName("Restaurant id value objects")
 class RestaurantIdTest {
 
   @Test
-  @DisplayName("should create restaurant id with factory method")
-  fun shouldCreateRestaurantIdWithFactoryMethod() {
+  fun `should create restaurant id with factory method`() {
     val id = RestaurantId.of("test-restaurant-id-123")
 
     assertEquals("test-restaurant-id-123", id.value)
   }
 
   @Test
-  @DisplayName("should generate unique id when created without parameter")
-  fun shouldGenerateUniqueIdWhenCreatedWithoutParameter() {
+  fun `should generate unique id when created without parameter`() {
     val id1 = RestaurantId()
     val id2 = RestaurantId()
 
@@ -27,24 +23,21 @@ class RestaurantIdTest {
   }
 
   @Test
-  @DisplayName("should throw exception when id is blank")
-  fun shouldThrowExceptionWhenIdIsBlank() {
+  fun `should throw exception when id is blank`() {
     assertThrows<IllegalArgumentException> {
       RestaurantId.of("")
     }
   }
 
   @Test
-  @DisplayName("should throw exception when id is only whitespace")
-  fun shouldThrowExceptionWhenIdIsOnlyWhitespace() {
+  fun `should throw exception when id is only whitespace`() {
     assertThrows<IllegalArgumentException> {
       RestaurantId.of("   ")
     }
   }
 
   @Test
-  @DisplayName("should preserve id value after creation")
-  fun shouldPreserveIdValueAfterCreation() {
+  fun `should preserve id value after creation`() {
     val originalId = "restaurant-12345"
     val id = RestaurantId.of(originalId)
 
@@ -52,8 +45,7 @@ class RestaurantIdTest {
   }
 
   @Test
-  @DisplayName("should create two ids with same value equal")
-  fun shouldCreateTwoIdsWithSameValueEqual() {
+  fun `should create two ids with same value equal`() {
     val id1 = RestaurantId.of("same-id")
     val id2 = RestaurantId.of("same-id")
 
@@ -61,8 +53,7 @@ class RestaurantIdTest {
   }
 
   @Test
-  @DisplayName("should create ids with UUID format")
-  fun shouldCreateIdsWithUUIDFormat() {
+  fun `should create ids with UUID format`() {
     val id1 = RestaurantId()
     val id2 = RestaurantId()
 

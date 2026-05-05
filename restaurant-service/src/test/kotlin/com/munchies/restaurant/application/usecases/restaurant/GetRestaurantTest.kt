@@ -1,23 +1,21 @@
-package com.munchies.restaurant.application.usecases
+package com.munchies.restaurant.application.usecases.restaurant
 
 import com.munchies.restaurant.domain.entity.Restaurant
 import com.munchies.restaurant.domain.entity.RestaurantDetails
 import com.munchies.restaurant.domain.repository.RestaurantRepository
-import com.munchies.restaurant.domain.valueobject.Address
-import com.munchies.restaurant.domain.valueobject.Email
-import com.munchies.restaurant.domain.valueobject.Phone
 import com.munchies.restaurant.domain.valueobject.RestaurantId
-import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-@DisplayName("GetRestaurant Tests")
 class GetRestaurantTest {
 
   private lateinit var restaurantRepository: RestaurantRepository
@@ -30,8 +28,7 @@ class GetRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should return Success with restaurant when restaurant exists")
-  fun shouldReturnSuccessWhenRestaurantExists() = runBlocking {
+  fun `Should return Success with restaurant when restaurant exists`() = runBlocking {
     val restaurantId = RestaurantId()
     val managerId = UserId.of("user-123")
     val restaurant = Restaurant.fromDatabase(
@@ -56,8 +53,7 @@ class GetRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should return NotFound when restaurant does not exist")
-  fun shouldReturnNotFoundWhenRestaurantNotFound() = runBlocking {
+  fun `Should return NotFound when restaurant does not exist`() = runBlocking {
     val restaurantId = RestaurantId()
     val command = GetRestaurantCommand(restaurantId.value)
     coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns null
@@ -68,8 +64,7 @@ class GetRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should return Success with all restaurant properties correctly")
-  fun shouldReturnSuccessWithAllRestaurantProperties() = runBlocking {
+  fun `Should return Success with all restaurant properties correctly`() = runBlocking {
     val restaurantId = RestaurantId()
     val managerId = UserId.of("manager-456")
     val createdAtTime = java.time.LocalDateTime.of(2026, 1, 15, 10, 30)

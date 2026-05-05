@@ -1,19 +1,17 @@
 package com.munchies.restaurant.domain.entity
 
-import com.munchies.restaurant.domain.valueobject.Address
-import com.munchies.restaurant.domain.valueobject.Email
-import com.munchies.restaurant.domain.valueobject.Phone
 import com.munchies.restaurant.domain.valueobject.RestaurantId
-import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-@DisplayName("Restaurant entity")
 class RestaurantTest {
 
   private fun createValidRestaurant(): Restaurant {
@@ -29,8 +27,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should create restaurant with valid data using factory method")
-  fun shouldCreateRestaurantWithValidData() {
+  fun `should create restaurant with valid data using factory method`() {
     val restaurant = createValidRestaurant()
 
     assertNotNull(restaurant.id)
@@ -45,8 +42,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should generate unique IDs for different restaurants")
-  fun shouldGenerateUniqueIds() {
+  fun `should generate unique IDs for different restaurants`() {
     val restaurant1 = createValidRestaurant()
     val restaurant2 = createValidRestaurant()
 
@@ -56,16 +52,14 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should set createdAt and updatedAt to same timestamp on creation")
-  fun shouldSetCreatedAndUpdatedAtToSameTimestamp() {
+  fun `should set createdAt and updatedAt to same timestamp on creation`() {
     val restaurant = createValidRestaurant()
 
     assertEquals(restaurant.createdAt, restaurant.updatedAt)
   }
 
   @Test
-  @DisplayName("should recreate restaurant from database with all properties preserved")
-  fun shouldRecreateRestaurantFromDatabase() {
+  fun `should recreate restaurant from database with all properties preserved`() {
     val restaurantId = RestaurantId.of("test-id-123")
     val restaurantName = RestaurantName.of("Restored Restaurant")
     val address = Address.of("456 Oak Avenue")
@@ -99,8 +93,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should update only name when provided")
-  fun shouldUpdateOnlyName() {
+  fun `should update only name when provided`() {
     val restaurant = createValidRestaurant()
     val originalAddress = restaurant.details.address
     val originalPhone = restaurant.details.phone
@@ -119,8 +112,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should update only address when provided")
-  fun shouldUpdateOnlyAddress() {
+  fun `should update only address when provided`() {
     val restaurant = createValidRestaurant()
     val originalName = restaurant.details.name
     val originalPhone = restaurant.details.phone
@@ -139,8 +131,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should update only phone when provided")
-  fun shouldUpdateOnlyPhone() {
+  fun `should update only phone when provided`() {
     val restaurant = createValidRestaurant()
     val originalName = restaurant.details.name
     val originalAddress = restaurant.details.address
@@ -159,8 +150,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should update only email when provided")
-  fun shouldUpdateOnlyEmail() {
+  fun `should update only email when provided`() {
     val restaurant = createValidRestaurant()
     val originalName = restaurant.details.name
     val originalAddress = restaurant.details.address
@@ -179,8 +169,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should update multiple properties at once")
-  fun shouldUpdateMultiplePropertiesAtOnce() {
+  fun `should update multiple properties at once`() {
     val restaurant = createValidRestaurant()
     val originalUpdatedAt = restaurant.updatedAt
     val newDetails = RestaurantDetails(
@@ -201,8 +190,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should preserve createdAt timestamp across updates")
-  fun shouldPreserveCreatedAtTimestamp() {
+  fun `should preserve createdAt timestamp across updates`() {
     val restaurant = createValidRestaurant()
     val originalCreatedAt = restaurant.createdAt
 
@@ -213,8 +201,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should have AggregateRoot identity")
-  fun shouldHaveAggregateRootIdentity() {
+  fun `should have AggregateRoot identity`() {
     val restaurant = createValidRestaurant()
 
     assertEquals(restaurant.id.value, restaurant.id.value)
@@ -222,8 +209,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should allow multiple sequential updates")
-  fun shouldAllowMultipleSequentialUpdates() {
+  fun `should allow multiple sequential updates`() {
     val restaurant = createValidRestaurant()
 
     Thread.sleep(10)
@@ -245,8 +231,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should handle updating all properties individually in sequence")
-  fun shouldHandleUpdatingAllPropertiesIndividually() {
+  fun `should handle updating all properties individually in sequence`() {
     val restaurant = createValidRestaurant()
 
     restaurant.updateName(RestaurantName.of("Name1"))
@@ -266,8 +251,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should persist createdAt even after multiple updates")
-  fun shouldPersistCreatedAtEvenAfterMultipleUpdates() {
+  fun `should persist createdAt even after multiple updates`() {
     val restaurant = createValidRestaurant()
     val originalCreatedAt = restaurant.createdAt
 
@@ -283,8 +267,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should have unique restaurant ID for each created restaurant")
-  fun shouldHaveUniqueRestaurantIdForEach() {
+  fun `should have unique restaurant ID for each created restaurant`() {
     val restaurant1 = Restaurant.create(
       managerId = UserId("manager-1"),
       details = RestaurantDetails(
@@ -308,8 +291,7 @@ class RestaurantTest {
   }
 
   @Test
-  @DisplayName("should maintain immutable manager ID after creation")
-  fun shouldMaintainImmutableManagerId() {
+  fun `should maintain immutable manager ID after creation`() {
     val expectedManagerId = UserId("manager-xyz")
     val restaurant = Restaurant.create(
       managerId = expectedManagerId,

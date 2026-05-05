@@ -1,13 +1,13 @@
-package com.munchies.restaurant.application.usecases
+package com.munchies.restaurant.application.usecases.restaurant
 
 import com.munchies.restaurant.domain.entity.Restaurant
 import com.munchies.restaurant.domain.entity.RestaurantDetails
 import com.munchies.restaurant.domain.repository.RestaurantRepository
-import com.munchies.restaurant.domain.valueobject.Address
-import com.munchies.restaurant.domain.valueobject.Email
-import com.munchies.restaurant.domain.valueobject.Phone
-import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -15,10 +15,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-@DisplayName("CreateRestaurant Tests")
 class CreateRestaurantTest {
 
   private lateinit var restaurantRepository: RestaurantRepository
@@ -31,8 +29,7 @@ class CreateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should create restaurant successfully when name does not exist")
-  fun shouldCreateRestaurantSuccessfullyWhenNameDoesNotExist() = runBlocking {
+  fun `Should create restaurant successfully when name does not exist`() = runBlocking {
     val command = validCommand()
     coEvery { restaurantRepository.findByManagerId(any()) } returns emptyList()
     coEvery { restaurantRepository.save(any()) } returns Unit
@@ -49,10 +46,7 @@ class CreateRestaurantTest {
   }
 
   @Test
-  @DisplayName(
-    "Should fail with NameAlreadyExists when manager already has a restaurant with the same name",
-  )
-  fun shouldFailWhenManagerAlreadyHasRestaurantWithSameName() = runBlocking {
+  fun `Should fail if manager already has a restaurant with the same name`() = runBlocking {
     val command = validCommand()
     val existingRestaurant = Restaurant.create(
       UserId.of(command.managerId),
@@ -76,8 +70,7 @@ class CreateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with invalid email")
-  fun shouldFailWithInvalidEmail() = runBlocking {
+  fun `Should fail with invalid email`() = runBlocking {
     val command = CreateRestaurantCommand(
       managerId = "user-123",
       name = "Pizza Palace",
@@ -90,8 +83,7 @@ class CreateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with invalid phone")
-  fun shouldFailWithInvalidPhone() = runBlocking {
+  fun `Should fail with invalid phone`() = runBlocking {
     val command = CreateRestaurantCommand(
       managerId = "user-123",
       name = "Pizza Palace",
@@ -104,8 +96,7 @@ class CreateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with empty name")
-  fun shouldFailWithEmptyName() = runBlocking {
+  fun `Should fail with empty name`() = runBlocking {
     val command = CreateRestaurantCommand(
       managerId = "user-123",
       name = "   ",
