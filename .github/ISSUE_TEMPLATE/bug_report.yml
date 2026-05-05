@@ -1,0 +1,76 @@
+name: "Bug report"
+description: Create a bug report to help us improve our project
+title: "[BUG]"
+labels: ["bug"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Summary title
+    validations:
+      required: true
+  - type: input
+    id: problem-details
+    attributes:
+      label: Where was this bug encountered
+      placeholder: I was clicking X, expecting Y but Z happened
+    validations:
+      required: true
+  - type: input
+    id: user-action
+    attributes:
+      label: What were you doing?
+      placeholder: I was clicking X
+    validations:
+      required: true
+  - type: input
+    id: user-expectation
+    attributes:
+      label: What were you expecting?
+      placeholder: I was expecting Y
+    validations:
+      required: true
+  - type: input
+    id: user-consequences
+    attributes:
+      label: What happened instead?
+      placeholder: Z happened instead of Y
+  - type: dropdown
+    id: severity
+    attributes:
+      label: What is the severity of this bug?
+      multiple: false
+      options:
+        - Critical: The bug causes a complete system crash, data loss, or renders the application unusable (e.g., login failure, app freezes).
+        - Major: A core feature is broken with no viable workaround (e.g., checkout fails, search returns no results).
+        - Minor: The bug affects functionality but the system remains usable; a workaround exists (e.g., date format error, minor UI misalignment).
+        - Cosmetic: No functional impact; issues are visual (e.g., typos, color mismatches, button alignment).
+        - Low/Trivial: Minimal or no impact; often minor enhancements or style issues.
+    validations:
+      required: true
+  - type: textarea
+    id: severity-explanation
+    attributes:
+      label: Describe the severity/severities in relation to the bug
+      description: A clear and concise description of what the bug is and its severity.
+    validations:
+      required: true
+  - type: textarea
+    id: user-logs
+    attributes:
+      label: Application logs
+      description: Provide any application logs if available
+      render: shell
+    validations:
+      required: false
+  - type: dropdown
+    id: system
+    attributes:
+      label: What system are you running?
+      multiple: false
+      options:
+        - Linux
+        - Windows
+        - MacOS
+    validations:
+      required: false
