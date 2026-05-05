@@ -1,5 +1,8 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.config
 
+import kotlin.js.JsExport
+
+@JsExport
 object UserServiceConfig {
   const val SERVICE_NAME = "user-service"
   const val SERVICE_PATH = "/users/"
