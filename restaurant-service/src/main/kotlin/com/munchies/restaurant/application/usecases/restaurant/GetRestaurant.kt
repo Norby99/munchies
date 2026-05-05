@@ -1,4 +1,4 @@
-package com.munchies.restaurant.application.usecases
+package com.munchies.restaurant.application.usecases.restaurant
 
 import com.munchies.restaurant.application.UseCase
 import com.munchies.restaurant.domain.entity.Restaurant

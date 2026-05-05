@@ -1,4 +1,4 @@
-package com.munchies.restaurant.domain.valueobject
+package com.munchies.restaurant.domain.valueobject.restaurant
 
 @JvmInline
 value class Email private constructor(val value: String) {

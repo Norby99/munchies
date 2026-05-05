@@ -1,15 +1,15 @@
-package com.munchies.restaurant.application.usecases
+package com.munchies.restaurant.application.usecases.restaurant
 
 import com.munchies.restaurant.application.UseCase
 import com.munchies.restaurant.domain.entity.Restaurant
 import com.munchies.restaurant.domain.entity.RestaurantDetails
 import com.munchies.restaurant.domain.repository.RestaurantRepository
-import com.munchies.restaurant.domain.valueobject.Address
-import com.munchies.restaurant.domain.valueobject.Email
-import com.munchies.restaurant.domain.valueobject.Phone
 import com.munchies.restaurant.domain.valueobject.RestaurantId
-import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 
 data class UpdateRestaurantCommand(
   val restaurantId: String,

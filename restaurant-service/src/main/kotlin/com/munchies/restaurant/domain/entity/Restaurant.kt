@@ -1,12 +1,12 @@
 package com.munchies.restaurant.domain.entity
 
 import com.munchies.commons.AggregateRoot
-import com.munchies.restaurant.domain.valueobject.Address
-import com.munchies.restaurant.domain.valueobject.Email
-import com.munchies.restaurant.domain.valueobject.Phone
 import com.munchies.restaurant.domain.valueobject.RestaurantId
-import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import java.time.LocalDateTime
 
 data class RestaurantDetails(
