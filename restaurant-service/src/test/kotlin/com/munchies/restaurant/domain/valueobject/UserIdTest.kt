@@ -2,24 +2,20 @@ package com.munchies.restaurant.domain.valueobject
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-@DisplayName("Used id value objects")
 class UserIdTest {
 
   @Test
-  @DisplayName("should create user id with factory method")
-  fun shouldCreateUserIdWithFactoryMethod() {
+  fun `should create user id with factory method`() {
     val id = UserId.of("test-user-id-456")
 
     assertEquals("test-user-id-456", id.value)
   }
 
   @Test
-  @DisplayName("should generate unique id when created without parameter")
-  fun shouldGenerateUniqueIdWhenCreatedWithoutParameter() {
+  fun `should generate unique id when created without parameter`() {
     val id1 = UserId()
     val id2 = UserId()
 
@@ -27,24 +23,21 @@ class UserIdTest {
   }
 
   @Test
-  @DisplayName("should throw exception when id is blank")
-  fun shouldThrowExceptionWhenIdIsBlank() {
+  fun `should throw exception when id is blank`() {
     assertThrows<IllegalArgumentException> {
       UserId.of("")
     }
   }
 
   @Test
-  @DisplayName("should throw exception when id is only whitespace")
-  fun shouldThrowExceptionWhenIdIsOnlyWhitespace() {
+  fun `should throw exception when id is only whitespace`() {
     assertThrows<IllegalArgumentException> {
       UserId.of("   ")
     }
   }
 
   @Test
-  @DisplayName("should preserve id value after creation")
-  fun shouldPreserveIdValueAfterCreation() {
+  fun `should preserve id value after creation`() {
     val originalId = "user-67890"
     val id = UserId.of(originalId)
 
@@ -52,8 +45,7 @@ class UserIdTest {
   }
 
   @Test
-  @DisplayName("should create two ids with same value equal")
-  fun shouldCreateTwoIdsWithSameValueEqual() {
+  fun `should create two ids with same value equal`() {
     val id1 = UserId.of("same-user-id")
     val id2 = UserId.of("same-user-id")
 
@@ -61,8 +53,7 @@ class UserIdTest {
   }
 
   @Test
-  @DisplayName("should create ids with UUID format")
-  fun shouldCreateIdsWithUUIDFormat() {
+  fun `should create ids with UUID format`() {
     val id1 = UserId()
     val id2 = UserId()
 

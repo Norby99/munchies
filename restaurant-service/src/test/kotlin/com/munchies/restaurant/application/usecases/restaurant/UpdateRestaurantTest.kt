@@ -1,14 +1,14 @@
-package com.munchies.restaurant.application.usecases
+package com.munchies.restaurant.application.usecases.restaurant
 
 import com.munchies.restaurant.domain.entity.Restaurant
 import com.munchies.restaurant.domain.entity.RestaurantDetails
 import com.munchies.restaurant.domain.repository.RestaurantRepository
-import com.munchies.restaurant.domain.valueobject.Address
-import com.munchies.restaurant.domain.valueobject.Email
-import com.munchies.restaurant.domain.valueobject.Phone
 import com.munchies.restaurant.domain.valueobject.RestaurantId
-import com.munchies.restaurant.domain.valueobject.RestaurantName
 import com.munchies.restaurant.domain.valueobject.UserId
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -16,10 +16,8 @@ import java.time.LocalDateTime
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-@DisplayName("UpdateRestaurant Tests")
 class UpdateRestaurantTest {
 
   private lateinit var restaurantRepository: RestaurantRepository
@@ -32,8 +30,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should update restaurant successfully with all valid details")
-  fun shouldUpdateRestaurantSuccessfully() = runBlocking {
+  fun `Should update restaurant successfully with all valid details`() = runBlocking {
     val existing: Restaurant = validRestaurant()
 
     val command = UpdateRestaurantCommand(
@@ -61,8 +58,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with NotFound when restaurant does not exist")
-  fun shouldFailWhenRestaurantNotFound() = runBlocking {
+  fun `Should fail with NotFound when restaurant does not exist`() = runBlocking {
     val command = validUpdateCommand()
     coEvery { restaurantRepository.findByIdSuspend(any()) } returns null
 
@@ -77,8 +73,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with Unauthorized when user is not the restaurant manager")
-  fun shouldFailWhenUserIsNotManager() = runBlocking {
+  fun `Should fail with Unauthorized when user is not the restaurant manager`() = runBlocking {
     val existing: Restaurant = validRestaurant()
 
     val command = UpdateRestaurantCommand(
@@ -144,8 +139,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should allow updating with same name when it is the current restaurant")
-  fun shouldAllowUpdatingWithSameName() = runBlocking {
+  fun `Should allow updating with same name when it is the current restaurant`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -172,8 +166,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with ValidationError when email format is invalid")
-  fun shouldFailWithInvalidEmail() = runBlocking {
+  fun `Should fail with ValidationError when email format is invalid`() = runBlocking {
     val existing = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -195,8 +188,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with ValidationError when phone format is invalid")
-  fun shouldFailWithInvalidPhone() = runBlocking {
+  fun `Should fail with ValidationError when phone format is invalid`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -218,8 +210,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with ValidationError when name is empty")
-  fun shouldFailWithEmptyName() = runBlocking {
+  fun `Should fail with ValidationError when name is empty`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -241,8 +232,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  @DisplayName("Should fail with ValidationError when address is empty")
-  fun shouldFailWithEmptyAddress() = runBlocking {
+  fun `Should fail with ValidationError when address is empty`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
