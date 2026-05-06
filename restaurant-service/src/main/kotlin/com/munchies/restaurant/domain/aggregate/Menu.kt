@@ -1,4 +1,4 @@
-package com.munchies.restaurant.domain.entity
+package com.munchies.restaurant.domain.aggregate
 
 import com.munchies.commons.AggregateRoot
 import com.munchies.commons.Entity
@@ -12,7 +12,7 @@ import com.munchies.restaurant.domain.valueobject.menu.MenuName
 import com.munchies.restaurant.domain.valueobject.menu.Validity
 import com.munchies.restaurant.domain.valueobject.menu.VariationName
 import com.munchies.restaurant.domain.valueobject.menu.VariationOptionName
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class VariationOption(
   val name: VariationOptionName,
@@ -40,7 +40,7 @@ class MenuItem internal constructor(
   var description: MenuItemDescription,
   var price: Money,
   val variations: MutableList<Variation> = mutableListOf(),
-  var validity: Validity = Validity.Always,
+  var validity: Validity = Validity.always,
 ) : Entity<MenuItemId>(id) {
   fun update(name: MenuItemName, description: MenuItemDescription, price: Money) {
     this.name = name
@@ -68,7 +68,7 @@ class MenuItem internal constructor(
     variations.removeIf { it.id == variationId }
   }
 
-  fun isValid(date: LocalDate): Boolean {
+  fun isValid(date: LocalDateTime): Boolean {
     return validity.isValid(date)
   }
 
@@ -139,7 +139,7 @@ class Menu internal constructor(
   val restaurantId: RestaurantId,
   var name: MenuName = MenuName.of("Menu Default"),
   categories: List<Category> = emptyList(),
-  var validity: Validity = Validity.Always,
+  var validity: Validity = Validity.always,
 ) : AggregateRoot<MenuId>(id) {
   private val _categories = categories.toMutableList()
 
@@ -170,7 +170,7 @@ class Menu internal constructor(
     return _categories.find { it.id == categoryId }
   }
 
-  fun isValid(date: LocalDate): Boolean {
+  fun isValid(date: LocalDateTime): Boolean {
     return validity.isValid(date)
   }
 

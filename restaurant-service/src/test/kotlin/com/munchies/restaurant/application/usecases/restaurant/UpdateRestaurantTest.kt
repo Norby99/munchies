@@ -1,7 +1,7 @@
 package com.munchies.restaurant.application.usecases.restaurant
 
-import com.munchies.restaurant.domain.entity.Restaurant
-import com.munchies.restaurant.domain.entity.RestaurantDetails
+import com.munchies.restaurant.domain.aggregate.Restaurant
+import com.munchies.restaurant.domain.aggregate.RestaurantDetails
 import com.munchies.restaurant.domain.repository.RestaurantRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 class UpdateRestaurantTest {

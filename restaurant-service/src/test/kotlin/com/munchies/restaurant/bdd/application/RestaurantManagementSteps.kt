@@ -13,7 +13,7 @@ import com.munchies.restaurant.application.usecases.restaurant.GetRestaurantUseC
 import com.munchies.restaurant.application.usecases.restaurant.UpdateRestaurantCommand
 import com.munchies.restaurant.application.usecases.restaurant.UpdateRestaurantResult
 import com.munchies.restaurant.application.usecases.restaurant.UpdateRestaurantUseCase
-import com.munchies.restaurant.domain.entity.Restaurant
+import com.munchies.restaurant.domain.aggregate.Restaurant
 import com.munchies.restaurant.domain.repository.RestaurantRepository
 import com.munchies.restaurant.infrastructure.persistence.InMemoryRestaurantRepository
 import io.cucumber.java.en.And

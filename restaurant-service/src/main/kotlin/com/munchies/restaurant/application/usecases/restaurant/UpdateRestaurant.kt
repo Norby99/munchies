@@ -1,8 +1,8 @@
 package com.munchies.restaurant.application.usecases.restaurant
 
 import com.munchies.restaurant.application.UseCase
-import com.munchies.restaurant.domain.entity.Restaurant
-import com.munchies.restaurant.domain.entity.RestaurantDetails
+import com.munchies.restaurant.domain.aggregate.Restaurant
+import com.munchies.restaurant.domain.aggregate.RestaurantDetails
 import com.munchies.restaurant.domain.repository.RestaurantRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId

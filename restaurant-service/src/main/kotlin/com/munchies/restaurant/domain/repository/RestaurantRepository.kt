@@ -1,7 +1,7 @@
 package com.munchies.restaurant.domain.repository
 
 import com.munchies.commons.Repository
-import com.munchies.restaurant.domain.entity.Restaurant
+import com.munchies.restaurant.domain.aggregate.Restaurant
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
 

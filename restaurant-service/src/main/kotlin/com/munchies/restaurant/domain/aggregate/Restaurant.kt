@@ -1,4 +1,4 @@
-package com.munchies.restaurant.domain.entity
+package com.munchies.restaurant.domain.aggregate
 
 import com.munchies.commons.AggregateRoot
 import com.munchies.restaurant.domain.valueobject.RestaurantId
