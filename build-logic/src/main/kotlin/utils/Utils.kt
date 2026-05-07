@@ -47,7 +47,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
   ) {
     in stringKotlinProjects -> ProjectLanguage.KOTLIN
     in stringExpressProjects -> ProjectLanguage.JS
-    else -> ProjectLanguage.KOTLIN
+    else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
   }
 }
 
