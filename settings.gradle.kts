@@ -51,4 +51,6 @@ include(":notification-shared")
 include(":table-reservation-service")
 include(":table-reservation-shared")
 
+include(":gateway-service")
+
 include(":order-service")
