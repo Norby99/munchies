@@ -28,14 +28,15 @@ class RemoveMenuTest {
   @Test
   fun `Should remove menu successfully when menu exists`() = runBlocking {
     val menu = spyk(Menu.create(RestaurantId(), MenuName.of("Main Menu"), Validity.always))
-    val command = RemoveMenuCommand(menu.id.value)
+    val menuId = menu.id
+    val command = RemoveMenuCommand(menuId.value)
 
     coEvery { menuRepository.findById(any()) } returns menu
     coEvery { menuRepository.delete(any()) } returns Unit
 
     when (val result = removeMenuUseCase(command)) {
       is RemoveMenuResult.Success -> {
-        coVerify(exactly = 1) { menuRepository.delete(menu.id) }
+        coVerify(exactly = 1) { menuRepository.delete(menuId) }
       }
       else -> assert(false) { "Expected Success, but got $result" }
     }

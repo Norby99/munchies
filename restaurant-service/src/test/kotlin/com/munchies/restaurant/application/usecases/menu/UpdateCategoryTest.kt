@@ -49,7 +49,7 @@ class UpdateCategoryTest {
     when (val result = updateCategoryUseCase(command)) {
       is UpdateCategoryResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
-        assertEquals("New Name", category.name)
+        assertEquals("New Name", category.name.value)
       }
       else -> {
         assert(false) { "Expected Success, but got $result" }

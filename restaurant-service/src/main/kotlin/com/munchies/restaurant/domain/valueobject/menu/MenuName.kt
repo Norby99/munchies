@@ -10,6 +10,9 @@ value class MenuName private constructor(val value: String) {
   companion object {
     private const val MAX_NAME_LENGTH = 50
 
-    fun of(value: String): MenuName = MenuName(value)
+    fun of(value: String): MenuName {
+      val normalized = value.trim()
+      return MenuName(normalized)
+    }
   }
 }

@@ -63,7 +63,13 @@ class AddCategoryTest {
 
   @Test
   fun `Should map IllegalArgumentException to Error`() = runBlocking {
-    val command = AddCategoryCommand("invalid-uuid", "Desserts")
+    val menuId = MenuId()
+    val menu =
+      spyk(Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList()))
+
+    val command = AddCategoryCommand(menuId.value, "    ")
+
+    coEvery { menuRepository.findById(any()) } returns menu
 
     when (val result = addCategoryUseCase(command)) {
       is AddCategoryResult.InvalidCategory -> {

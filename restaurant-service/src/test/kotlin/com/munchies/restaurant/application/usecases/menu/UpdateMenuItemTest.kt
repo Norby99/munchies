@@ -35,27 +35,26 @@ class UpdateMenuItemTest {
 
   @Test
   fun `Should update menu item successfully when menu and category exist`() = runBlocking {
-    val itemId = MenuItemId()
     val item =
       MenuItem(
-        id = itemId,
+        id = MenuItemId(),
         name = MenuItemName.of("Old Name"),
         description = MenuItemDescription.of("Old Desc"),
         price = Money(BigDecimal("10.0")),
       )
-    val categoryId = CategoryId()
     val category =
-      spyk(Category(id = categoryId, name = CategoryName.of("Mains"), items = mutableListOf(item)))
-    val menuId = MenuId()
+      spyk(
+        Category(id = CategoryId(), name = CategoryName.of("Mains"), items = mutableListOf(item)),
+      )
     val menu =
       spyk(
-        Menu(id = menuId, restaurantId = RestaurantId(), categories = listOf(category)),
+        Menu(id = MenuId(), restaurantId = RestaurantId(), categories = listOf(category)),
       )
 
     val command = UpdateMenuItemCommand(
-      menuId = menuId.value,
-      categoryId = categoryId.value,
-      itemId = itemId.value,
+      menuId = menu.id.value,
+      categoryId = category.id.value,
+      itemId = item.id.value,
       name = "New Name",
       description = "New Desc",
       price = BigDecimal("15.00"),
@@ -67,8 +66,8 @@ class UpdateMenuItemTest {
     when (val result = updateMenuItemUseCase(command)) {
       is UpdateMenuItemResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
-        assertEquals("New Name", item.name)
-        assertEquals("New Desc", item.description)
+        assertEquals("New Name", item.name.value)
+        assertEquals("New Desc", item.description.value)
         assertEquals(BigDecimal("15.00"), item.price.amount)
       }
       else -> {
