@@ -1,26 +1,26 @@
 package com.munchies.restaurant.application
 
-import com.munchies.restaurant.application.usecases.menu.AddCategoryCommand
-import com.munchies.restaurant.application.usecases.menu.AddCategoryResult
-import com.munchies.restaurant.application.usecases.menu.AddMenuItemCommand
-import com.munchies.restaurant.application.usecases.menu.AddMenuItemResult
-import com.munchies.restaurant.application.usecases.menu.AddVariationCommand
-import com.munchies.restaurant.application.usecases.menu.AddVariationResult
-import com.munchies.restaurant.application.usecases.menu.CategoryUseCases
-import com.munchies.restaurant.application.usecases.menu.MenuItemUseCases
-import com.munchies.restaurant.application.usecases.menu.RemoveCategoryCommand
-import com.munchies.restaurant.application.usecases.menu.RemoveCategoryResult
-import com.munchies.restaurant.application.usecases.menu.RemoveMenuItemCommand
-import com.munchies.restaurant.application.usecases.menu.RemoveMenuItemResult
-import com.munchies.restaurant.application.usecases.menu.RemoveVariationCommand
-import com.munchies.restaurant.application.usecases.menu.RemoveVariationResult
-import com.munchies.restaurant.application.usecases.menu.UpdateCategoryCommand
-import com.munchies.restaurant.application.usecases.menu.UpdateCategoryResult
-import com.munchies.restaurant.application.usecases.menu.UpdateMenuItemCommand
-import com.munchies.restaurant.application.usecases.menu.UpdateMenuItemResult
-import com.munchies.restaurant.application.usecases.menu.UpdateVariationCommand
-import com.munchies.restaurant.application.usecases.menu.UpdateVariationResult
-import com.munchies.restaurant.application.usecases.menu.VariationUseCases
+import com.munchies.restaurant.application.usecase.menu.AddCategoryCommand
+import com.munchies.restaurant.application.usecase.menu.AddCategoryResult
+import com.munchies.restaurant.application.usecase.menu.AddMenuItemCommand
+import com.munchies.restaurant.application.usecase.menu.AddMenuItemResult
+import com.munchies.restaurant.application.usecase.menu.AddVariationCommand
+import com.munchies.restaurant.application.usecase.menu.AddVariationResult
+import com.munchies.restaurant.application.usecase.menu.CategoryUseCases
+import com.munchies.restaurant.application.usecase.menu.MenuItemUseCases
+import com.munchies.restaurant.application.usecase.menu.RemoveCategoryCommand
+import com.munchies.restaurant.application.usecase.menu.RemoveCategoryResult
+import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemCommand
+import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemResult
+import com.munchies.restaurant.application.usecase.menu.RemoveVariationCommand
+import com.munchies.restaurant.application.usecase.menu.RemoveVariationResult
+import com.munchies.restaurant.application.usecase.menu.UpdateCategoryCommand
+import com.munchies.restaurant.application.usecase.menu.UpdateCategoryResult
+import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemCommand
+import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemResult
+import com.munchies.restaurant.application.usecase.menu.UpdateVariationCommand
+import com.munchies.restaurant.application.usecase.menu.UpdateVariationResult
+import com.munchies.restaurant.application.usecase.menu.VariationUseCases
 
 interface MenuService {
   suspend fun addCategory(command: AddCategoryCommand): AddCategoryResult

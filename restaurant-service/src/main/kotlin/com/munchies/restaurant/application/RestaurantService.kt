@@ -1,17 +1,17 @@
 package com.munchies.restaurant.application
 
-import com.munchies.restaurant.application.usecases.restaurant.CreateRestaurantCommand
-import com.munchies.restaurant.application.usecases.restaurant.CreateRestaurantResult
-import com.munchies.restaurant.application.usecases.restaurant.CreateRestaurantUseCase
-import com.munchies.restaurant.application.usecases.restaurant.DeleteRestaurantCommand
-import com.munchies.restaurant.application.usecases.restaurant.DeleteRestaurantResult
-import com.munchies.restaurant.application.usecases.restaurant.DeleteRestaurantUseCase
-import com.munchies.restaurant.application.usecases.restaurant.GetRestaurantCommand
-import com.munchies.restaurant.application.usecases.restaurant.GetRestaurantResult
-import com.munchies.restaurant.application.usecases.restaurant.GetRestaurantUseCase
-import com.munchies.restaurant.application.usecases.restaurant.UpdateRestaurantCommand
-import com.munchies.restaurant.application.usecases.restaurant.UpdateRestaurantResult
-import com.munchies.restaurant.application.usecases.restaurant.UpdateRestaurantUseCase
+import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantCommand
+import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantUseCase
+import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantCommand
+import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantUseCase
+import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantCommand
+import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantUseCase
+import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantCommand
+import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantUseCase
 import jakarta.inject.Singleton
 
 interface RestaurantService {
