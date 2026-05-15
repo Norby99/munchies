@@ -10,12 +10,22 @@ kotlin {
   jvm()
 
   js(IR) {
-    nodejs {
-      testTask {
-        enabled = false
-      }
+    binaries.library()
+    generateTypeScriptDefinitions()
+    nodejs()
+    useCommonJs()
+
+    compilations["main"].packageJson {
+      customField("files", listOf("kotlin/"))
+      customField("license", "Apache-2.0")
+      customField(
+        "repository",
+        mapOf(
+          "type" to "git",
+          "url" to "git+https://github.com/Norby99/munchies",
+        ),
+      )
     }
-    binaries.executable()
   }
 
   sourceSets {

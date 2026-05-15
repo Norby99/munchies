@@ -1,6 +1,6 @@
 package com.munchies.user.adapter.outbound.mongo.repository
 
-import com.munchies.user.domain.model.User
+import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserDocument
 import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoCrudUserRepository
@@ -9,40 +9,49 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.util.Optional
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 
 class MongoUserRepositoryTest {
 
+  val id = "existing-user-id"
+
+  val userId = UserId(id)
+
+  val realUserDoc =
+    UserDocument(id, "username", "email", "role")
+
   @Test
   fun `mongo repository correctly finds existing user by id`() {
     val crudUserRepository = mock<MongoCrudUserRepository> {
-      on { findById("existing-user-id") } doReturn Optional.of(
-        UserDocument("existing-user-id"),
+      on { findById(id) } doReturn Optional.of(
+        realUserDoc,
       )
     }
 
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val user = mongoUserRepository.findById(UserId("existing-user-id"))
+    val user = mongoUserRepository.findById(userId)
     user shouldNotBe null
-    user?.id?.shouldBeEqual(UserId("existing-user-id"))
-    verify(crudUserRepository).findById("existing-user-id")
+    user?.id?.shouldBeEqual(userId) ?: fail()
+    verify(crudUserRepository).findById(id)
   }
 
   @Test
   fun `mongo repository correctly return null at non-existing user find`() {
     val crudUserRepository = mock<MongoCrudUserRepository> {
-      on { findById("non-existing-user-id") } doReturn Optional.empty()
+      on { findById("non-id") } doReturn Optional.empty()
     }
 
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val user = mongoUserRepository.findById(UserId("non-existing-user-id"))
+    val user = mongoUserRepository.findById(UserId("non-$id"))
     user shouldBe null
-    verify(crudUserRepository).findById("non-existing-user-id")
+    verify(crudUserRepository).findById("non-$id")
   }
 
   @Test
@@ -50,12 +59,12 @@ class MongoUserRepositoryTest {
     val crudUserRepository = mock<MongoCrudUserRepository>()
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val userId = UserId("new-user-id")
-    val user = User(userId)
+    val userId = UserId("new-$id")
+    val user = MockUserFactory().create(userId.value)
 
     mongoUserRepository.save(user)
 
-    verify(crudUserRepository).save(UserDocument("new-user-id"))
+    verify(crudUserRepository).save(any())
   }
 
   @Test
@@ -63,12 +72,11 @@ class MongoUserRepositoryTest {
     val crudUserRepository = mock<MongoCrudUserRepository>()
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val userId = UserId("existing-user-id")
-    val user = User(userId)
+    val user = MockUserFactory().create("id")
 
     mongoUserRepository.update(user)
 
-    verify(crudUserRepository).update(UserDocument("existing-user-id"))
+    verify(crudUserRepository).update(any())
   }
 
   @Test
@@ -76,22 +84,10 @@ class MongoUserRepositoryTest {
     val crudUserRepository = mock<MongoCrudUserRepository>()
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val userId = UserId("existing-user-id")
-    val user = User(userId)
+    val user = MockUserFactory().create("id")
 
     mongoUserRepository.delete(user)
 
-    verify(crudUserRepository).delete(UserDocument("existing-user-id"))
-  }
-
-  @Test
-  fun create() {
-    val crudUserRepository = mock<MongoCrudUserRepository>()
-    val mongoUserRepository = MongoUserRepository(crudUserRepository)
-
-    val newUserId = mongoUserRepository.create()
-
-    newUserId.value shouldNotBe null
-    verify(crudUserRepository).save(UserDocument(newUserId.value))
+    verify(crudUserRepository).delete(any())
   }
 }

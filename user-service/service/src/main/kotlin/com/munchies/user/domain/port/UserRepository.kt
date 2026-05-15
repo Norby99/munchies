@@ -4,4 +4,28 @@ import com.munchies.commons.Repository
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 
-interface UserRepository : Repository<UserId, User>
+/**
+ * Repository interface for managing User entities.
+ *
+ * This interface extends the generic Repository interface, providing CRUD operations
+ * for User entities identified by a UserId.
+ *
+ * @see com.munchies.commons.Repository
+ */
+interface UserRepository : Repository<UserId, User> {
+  /**
+   * Finds a user by their email address.
+   *
+   * @param email the email address to search for.
+   * @return the user associated with the given email, or null if no such user exists.
+   */
+  fun findByEmail(email: String): User?
+
+  /**
+   * Finds a user by their username.
+   *
+   * @param username the username to search for.
+   * @return the user associated with the given username, or null if no such user exists.
+   */
+  fun findByUsername(username: String): User?
+}

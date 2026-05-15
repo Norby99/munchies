@@ -34,6 +34,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      id-token: write
     uses: ./.github/workflows/publish.yaml
     secrets: inherit
 

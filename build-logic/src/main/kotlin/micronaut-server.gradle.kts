@@ -1,14 +1,21 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import utils.getServiceName
 
 plugins {
   id("micronaut-base")
   id("io.micronaut.application")
   id("io.micronaut.test-resources")
+
+  id("compose.task")
+  id("compose.info")
 }
 
 dependencies {
   runtimeOnly("io.micronaut:micronaut-http-server-netty")
   ksp("io.micronaut.serde:micronaut-serde-processor")
   ksp("io.micronaut:micronaut-http-validation")
+
+  implementation("io.micronaut:micronaut-management")
 
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("org.junit.platform:junit-platform-suite-engine")
@@ -52,8 +59,6 @@ tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative"
   jdkVersion = javaVersion
 }
 
-tasks.named<JavaExec>("run") {
-  jvmArgs(
-    "-Dmicronaut.environments=dev",
-  )
+tasks.named<DockerBuildImage>("dockerBuild") {
+  images.set(listOf("${getServiceName(project)}-service:latest"))
 }

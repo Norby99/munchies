@@ -12,15 +12,22 @@ done
 printf '<!DOCTYPE html>
         <html lang="en">
         <head>
-            <title>Munchies OpenAPI</title>
+            <title>Munchies OpenAPI</title><meta name="viewport" content="width=device-width,initial-scale=1">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         </head>
-        <body>
-        <ul>' > ./docs/pages/openapi/index.html
+        <body class="bg-light">
+        <main class="container py-5">
+            <h1 class="h4 mb-3">Munchies OpenAPI</h1>
+            <ul class="list-group shadow-sm">' > ./docs/pages/openapi/index.html
 
 for spec in "${SPEC_NAMES[@]}"; do
-  echo "<li><a href=\"$spec/index.html\">$spec-service</a></li> " >> ./docs/pages/openapi/index.html
+  #printf '<li><a href="%s/index.html">%s-service</a></li>' "$spec" "$spec" >> ./docs/pages/openapi/index.html
+
+  printf '<li class="list-group-item"><a class="text-decoration-none fw-medium" href="%s/index.html">%s-service</a></li>' "$spec" "$spec" >> ./docs/pages/openapi/index.html
+
 done
 
 printf '</ul>
+        </main>
         </body>
         </html>' >> ./docs/pages/openapi/index.html

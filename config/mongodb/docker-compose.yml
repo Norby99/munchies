@@ -1,0 +1,9 @@
+services:
+  {{MONGO_SERVICE_NAME}}:
+    image: mongo:7.0
+    container_name: {{MONGO_SERVICE_NAME}}
+    ports: ["{{MONGO_PORT}}:27017"]
+    volumes: [{{MONGO_VOLUME_NAME}}:/data/db]
+
+volumes:
+  {{MONGO_VOLUME_NAME}}:

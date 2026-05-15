@@ -51,13 +51,17 @@ class InMemoryRestaurantRepository : RestaurantRepository {
     restaurants.remove(entity.id.value)
   }
 
-  override fun create(): RestaurantId {
+  fun create(): RestaurantId {
     return RestaurantId()
   }
 
   override fun findById(id: RestaurantId): Restaurant? {
     val entity = restaurants[id.value] ?: return null
     return entity.toDomain()
+  }
+
+  override fun findByPredicate(predicate: (Restaurant) -> Boolean): Restaurant? {
+    TODO("Not yet implemented")
   }
 
   override suspend fun findByIdSuspend(id: RestaurantId): Restaurant? {

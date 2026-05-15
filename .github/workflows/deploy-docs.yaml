@@ -44,10 +44,16 @@ jobs:
         run: bash ./gradlew dokkaGenerateHtml
 
       - name: Move Dokka docs
-        run: mv build/docs/html/ docs/pages/kotlin/
+        run: mv build/dokka/html/ docs/pages/kotlin/
 
-      # TODO build typescript typedoc docs
-      # TODO move generated docs to docs/pages/typescript/index.html
+      - name: Generate Typescript docs
+        run: bash ./gradlew prepareTypeDocs
+
+      - name: Link Typescript docs
+        run: bash ./scripts/link-typedoc-docs.sh
+
+      - name: Move Typescript docs
+        run: cp -r build/typescript/ docs/pages/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
