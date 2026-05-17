@@ -32,8 +32,20 @@ fun configureSpotlessForJs(project: Project) {
     }
     javascript {
       target("**/*.js")
-      targetExclude("**/build/**/*.js", "**/node_modules/**/*.js", "**/dist/**/*.js")
+      targetExclude(
+        "**/build/**/*.js",
+        "**/node_modules/**/*.js",
+        "**/dist/**/*.js",
+        "**/*.cjs.js",
+        "**/*.min.js",
+      )
       prettier()
+    }
+  }
+
+  project.pluginManager.withPlugin("com.github.node-gradle.node") {
+    project.tasks.matching { it.name.startsWith("spotless") }.configureEach {
+      mustRunAfter(project.tasks.matching { it.name == "npmInstall" })
     }
   }
 }

@@ -36,6 +36,7 @@ gitHooks {
 }
 
 include(":commons")
+include(":restaurant-service")
 include(":architecture-rules")
 
 include(":user-service:service")
