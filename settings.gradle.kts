@@ -55,4 +55,4 @@ include(":table-reservation-service:service")
 include(":table-reservation-service:shared")
 include(":table-reservation-service:client")
 
-include(":order-service")
+include(":order-service:service")
