@@ -117,6 +117,7 @@ fabric.properties
 ### Java ###
 # Compiled class file
 *.class
+.java-version
 
 # Log file
 *.log
@@ -419,3 +420,6 @@ build
 # Remove all of IntelliJ's files
 
 .idea
+
+# Remove micronaut generated files
+*.micronaut
