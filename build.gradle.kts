@@ -1,9 +1,5 @@
 
-import utils.ProjectLanguage
-import utils.ProjectType
-import utils.getProjectLanguage
-import utils.getProjectType
-import utils.getServiceName
+import utils.*
 
 plugins {
   alias(libs.plugins.spotless) apply false
@@ -71,7 +67,7 @@ tasks.register<Sync>("prepareTypeDocs") {
   typeDocsProjects.forEach { subproject ->
     val sourcePath = subproject.layout.buildDirectory
       .dir("typedoc/").get().asFile
-    val targetName = "${getServiceName(subproject.parent!!)}-service"
+    val targetName = "${getServiceName(subproject)}-service"
 
     from(sourcePath) {
       into(targetName)
