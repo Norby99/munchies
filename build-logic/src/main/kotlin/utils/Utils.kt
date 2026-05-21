@@ -6,22 +6,23 @@ import org.jetbrains.kotlin.util.removeSuffixIfPresent
 
 fun getProjectName(project: Project): String = project.name
 fun getServiceName(project: Project): String {
-  if (project.name in listOf("client", "shared", "service")) {
-    return getServiceName(project.parent!!)
-  }
-  return project.name.removeSuffixIfPresent("-service")
+  val projectName = getProjectName(project)
+  return projectName
+    .removeSuffixIfPresent("-service")
+    .removeSuffixIfPresent("-client")
+    .removeSuffixIfPresent("-shared")
 }
 
 const val MUNCHIES_BASE_PACKAGE = "com.munchies"
 
 fun Project.libs() = the<org.gradle.accessors.dm.LibrariesForLibs>()
 
-enum class ProjectType {
+enum class ProjectLanguage {
   KOTLIN,
   JS,
 }
 
-fun Project.getProjectType(): ProjectType {
+fun Project.getProjectLanguage(): ProjectLanguage {
   val stringKotlinProjects = listOf(
     "commons",
     "architecture-rules",
@@ -39,15 +40,37 @@ fun Project.getProjectType(): ProjectType {
   return when (
     this.parent?.name
       ?.replace("-service", "")
-      ?.replace("client", "")
-      ?.replace("service", "")
-      ?.replace("shared", "")
+      ?.replace("-client", "")
+      ?.replace("-service", "")
+      ?.replace("-shared", "")
       ?.replace(":", "")
   ) {
-    null -> ProjectType.KOTLIN
-    "munchies" -> ProjectType.KOTLIN
-    in stringKotlinProjects -> ProjectType.KOTLIN
-    in stringExpressProjects -> ProjectType.JS
+    null -> ProjectLanguage.KOTLIN
+    "munchies" -> ProjectLanguage.KOTLIN
+    in stringKotlinProjects -> ProjectLanguage.KOTLIN
+    in stringExpressProjects -> ProjectLanguage.JS
+    else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
+  }
+}
+
+enum class ProjectType {
+  SERVICE,
+  SHARED,
+  CLIENT,
+  UTILS,
+}
+
+fun Project.getProjectType(): ProjectType {
+  val exlcuded = listOf(
+    "commons",
+    "architecture-rules",
+  )
+
+  return when {
+    name.endsWith("-service") -> ProjectType.SERVICE
+    name.endsWith("-shared") -> ProjectType.SHARED
+    name.endsWith("-client") -> ProjectType.CLIENT
+    name in exlcuded -> ProjectType.UTILS
     else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
   }
 }

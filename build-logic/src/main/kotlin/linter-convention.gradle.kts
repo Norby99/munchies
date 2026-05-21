@@ -1,11 +1,27 @@
+import com.diffplug.gradle.spotless.KotlinExtension
+import com.diffplug.gradle.spotless.KotlinGradleExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.diffplug.gradle.spotless.SpotlessPlugin
-import utils.ProjectType
-import utils.getProjectType
+import utils.ProjectLanguage
+import utils.getProjectLanguage
 
 
 plugins {
   id("com.diffplug.spotless")
+}
+private fun KotlinExtension.applyKtlintConfig() {
+  ktlint().editorConfigOverride(
+    mapOf(
+      "ktlint_standard_no-wildcard-imports" to "disabled",
+    ),
+  )
+}
+private fun KotlinGradleExtension.applyKtlintConfig() {
+  ktlint().editorConfigOverride(
+    mapOf(
+      "ktlint_standard_no-wildcard-imports" to "disabled",
+    ),
+  )
 }
 
 fun configureSpotlessForKotlin(project: Project) {
@@ -13,12 +29,12 @@ fun configureSpotlessForKotlin(project: Project) {
     kotlin {
       target("**/*.kt")
       targetExclude("**/build/**/*.kt")
-      ktlint()
+      applyKtlintConfig()
     }
     kotlinGradle {
       target("**/*.kts")
       targetExclude("**/build/**/*.kts")
-      ktlint()
+      applyKtlintConfig()
     }
   }
 }
@@ -52,7 +68,7 @@ fun configureSpotlessForJs(project: Project) {
 
 apply<SpotlessPlugin>()
 
-when (project.getProjectType()) {
-  ProjectType.KOTLIN -> configureSpotlessForKotlin(project)
-  ProjectType.JS -> configureSpotlessForJs(project)
+when (project.getProjectLanguage()) {
+  ProjectLanguage.KOTLIN -> configureSpotlessForKotlin(project)
+  ProjectLanguage.JS -> configureSpotlessForJs(project)
 }

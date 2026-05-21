@@ -1,4 +1,7 @@
+
+import utils.ProjectLanguage
 import utils.ProjectType
+import utils.getProjectLanguage
 import utils.getProjectType
 import utils.getServiceName
 
@@ -14,7 +17,7 @@ plugins {
 apply(plugin = "linter-convention")
 
 subprojects {
-  if (this@subprojects.getProjectType() == ProjectType.KOTLIN) {
+  if (this@subprojects.getProjectLanguage() == ProjectLanguage.KOTLIN) {
     plugins.withId("org.jetbrains.dokka") {
       rootProject.dependencies {
         "dokka"(project(this@subprojects.path))
@@ -27,14 +30,14 @@ subprojects {
 }
 
 tasks.register("prepareOpenApiSpecs") {
-  val serviceProjects = subprojects.filter { it.name.matches(Regex("service")) }
+  val serviceProjects = subprojects.filter { it.getProjectType() == ProjectType.SERVICE }
   dependsOn(serviceProjects.map { "${it.path}:build" })
 
   val specSources = serviceProjects.map { subproject ->
     val sourcePath =
       subproject.layout.buildDirectory
         .dir(
-          if (subproject.getProjectType() == ProjectType.KOTLIN) {
+          if (subproject.getProjectLanguage() == ProjectLanguage.KOTLIN) {
             "generated/ksp/main/resources/META-INF/swagger"
           } else {
             "openapi/"
@@ -61,8 +64,8 @@ tasks.register("prepareOpenApiSpecs") {
 
 tasks.register<Sync>("prepareTypeDocs") {
   val typeDocsProjects = subprojects
-    .filter { it.name.matches(Regex("service")) }
-    .filter { it.getProjectType() == ProjectType.JS }
+    .filter { it.getProjectType() == ProjectType.SERVICE }
+    .filter { it.getProjectLanguage() == ProjectLanguage.JS }
   dependsOn(typeDocsProjects.map { "${it.path}:typeDocs" })
 
   typeDocsProjects.forEach { subproject ->
