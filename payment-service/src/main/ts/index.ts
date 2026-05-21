@@ -74,7 +74,13 @@ async function main(): Promise<void> {
 
     const response: PaymentResponse = controller.processPayment(request);
 
+    console.log(response);
+
+    console.log(JSON.stringify(response));
+
     const json_response = JSON.parse(JSON.stringify(response));
+
+    console.log(json_response);
 
     json_response["status"] = json_response["status"]["a_1"];
     json_response["currency"] = json_response["currency"]["a_1"];
