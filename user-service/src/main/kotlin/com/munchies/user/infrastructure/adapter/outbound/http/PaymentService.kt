@@ -27,7 +27,6 @@ class PaymentService(
     println("response" + response.body())
     println("prova")
     println("esempio" + com.munchies.user.infrastructure.adapter.dto.UserDTO::class)
-    println("esempio" + com.munchies.user.infrastructure.adapter.inbound.request.Prova.Palle)
     println("enum1" + com.munchies.payment.infrastructure.adapter.dto.Currency.AUD)
     return objectMapper
       .readValue(response.body(), ProcessPaymentResponse::class.java)
