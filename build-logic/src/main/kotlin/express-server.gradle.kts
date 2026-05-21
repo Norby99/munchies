@@ -61,11 +61,13 @@ tasks.named("clean") {
 }
 
 tasks.register("dockerCreate", Dockerfile::class) {
+  mustRunAfter(project.tasks.named("build"))
+
   from("node:$nodeVersion-alpine")
   workingDir("/app")
   copyFile("./", "/app/")
   runCommand("npm install && npm run build")
-  exposePort(3000)
+
   defaultCommand("npm", "start")
 
   destFile = project.layout.buildDirectory.dir("docker/main/Dockerfile").get().asFile
