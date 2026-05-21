@@ -27,13 +27,13 @@ fun Project.getProjectLanguage(): ProjectLanguage {
     "commons",
     "architecture-rules",
     "user",
+    "order",
     "restaurant",
     "scheduler",
   )
   val stringExpressProjects = listOf(
     "payment",
     "gateway",
-    "order",
     "table-reservation",
     "notification",
   )
