@@ -8,4 +8,7 @@ enum class PaymentStatus {
   COMPLETED,
   FAILED,
   CANCELLED,
+  ;
+
+  override fun toString(): String = name
 }

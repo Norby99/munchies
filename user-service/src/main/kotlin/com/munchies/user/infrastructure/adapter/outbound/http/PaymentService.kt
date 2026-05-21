@@ -28,6 +28,14 @@ class PaymentService(
     println("prova")
     println("esempio" + com.munchies.user.infrastructure.adapter.dto.UserDTO::class)
     println("enum1" + com.munchies.payment.infrastructure.adapter.dto.Currency.AUD)
+
+    ProcessPaymentResponse(
+      paymentId = "12345",
+      status = PaymentStatus.COMPLETED,
+      amount = 100,
+      currency = Currency.USD,
+    )
+
     return objectMapper
       .readValue(response.body(), ProcessPaymentResponse::class.java)
   }
