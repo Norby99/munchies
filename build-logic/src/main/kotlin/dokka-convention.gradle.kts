@@ -1,21 +1,23 @@
-import org.gradle.kotlin.dsl.project
+import utils.ProjectType
+import utils.getProjectType
 import utils.getServiceName
 
 plugins {
   id("org.jetbrains.dokka")
 }
 
-dokka {
-  if (project.parent?.name?.matches(Regex(".*-service")) ?: false) {
-    moduleName = getServiceName(project.parent!!) + "-" + project.name
-  }
-}
+if (project.getProjectType() != ProjectType.UTILS) {
 
-dokka {
-  dokkaPublications.html {
-    outputDirectory.set(
-      rootProject.layout.buildDirectory
-        .dir("docs/html"),
-    )
+  dokka {
+    moduleName = getServiceName(project) + "-" + project.getProjectType().toString().lowercase()
+  }
+
+  dokka {
+    dokkaPublications.html {
+      outputDirectory.set(
+        rootProject.layout.buildDirectory
+          .dir("docs/html"),
+      )
+    }
   }
 }

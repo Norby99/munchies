@@ -1,5 +1,10 @@
 package compose
 
+import utils.ProjectLanguage
+import utils.ProjectType
+import utils.getProjectLanguage
+import utils.getProjectType
+
 if (rootProject.tasks.findByName("generateComposeFile") == null) {
   val generatedComposeDir = rootProject.layout.buildDirectory.dir("docker")
 
@@ -118,12 +123,18 @@ if (rootProject.tasks.findByName("generateComposeFile") == null) {
 
     // Depend on buildLayers & dockerfile based on projects containing Micronaut server plugin
     rootProject.subprojects.forEach { proj ->
-      if (proj.plugins.hasPlugin("io.micronaut.application")) {
+      if (
+        proj.getProjectType() == ProjectType.SERVICE &&
+        proj.getProjectLanguage() == ProjectLanguage.KOTLIN
+      ) {
         dependsOn("${proj.path}:dockerfile")
         dependsOn("${proj.path}:buildLayers")
       }
 
-      if (proj.plugins.hasPlugin("express-server")) {
+      if (
+        proj.getProjectType() == ProjectType.SERVICE &&
+        proj.getProjectLanguage() == ProjectLanguage.JS
+      ) {
         dependsOn("${proj.path}:dockerCreate")
       }
     }
