@@ -38,18 +38,16 @@ fun Project.getProjectLanguage(): ProjectLanguage {
     "notification",
   )
   return when (
-    this.parent?.name
-      ?.replace("-service", "")
-      ?.replace("-client", "")
-      ?.replace("-service", "")
-      ?.replace("-shared", "")
-      ?.replace(":", "")
+    this.name
+      .replace("-service", "")
+      .replace("-client", "")
+      .replace("-service", "")
+      .replace("-shared", "")
+      .replace(":", "")
   ) {
-    null -> ProjectLanguage.KOTLIN
-    "munchies" -> ProjectLanguage.KOTLIN
     in stringKotlinProjects -> ProjectLanguage.KOTLIN
     in stringExpressProjects -> ProjectLanguage.JS
-    else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
+    else -> ProjectLanguage.KOTLIN
   }
 }
 
