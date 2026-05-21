@@ -19,7 +19,7 @@ services:
   user-service:
     container_name: munchies-user-service
     build:
-      context: ../../user-service/service/build/docker/main
+      context: ../../user-service/build/docker/main
     image: munchies-user-service:latest
     ports: ["8082:8080"]
     extra_hosts:
@@ -37,7 +37,7 @@ services:
   payment-service:
     container_name: munchies-payment-service
     build:
-      context: ../../payment-service/service/build/docker/main
+      context: ../../payment-service/build/docker/main
     image: munchies-payment-service:latest
     ports: ["8083:8080"]
     extra_hosts:
@@ -54,7 +54,7 @@ services:
   notification-service:
     container_name: munchies-notification-service
     build:
-      context: ../../notification-service/service/build/docker/main
+      context: ../../notification-service/build/docker/main
     image: munchies-notification-service:latest
     ports: ["8084:8080"]
     extra_hosts:
@@ -71,7 +71,7 @@ services:
   table-reservation-service:
     container_name: munchies-table-reservation-service
     build:
-      context: ../../table-reservation-service/service/build/docker/main
+      context: ../../table-reservation-service/build/docker/main
     image: munchies-table-reservation-service:latest
     ports: ["8085:8080"]
     extra_hosts:
