@@ -54,6 +54,10 @@ micronaut {
   }
 }
 
+tasks.named<io.micronaut.gradle.docker.tasks.BuildLayersTask>("buildLayers") {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 val javaVersion: String by project
 tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
   jdkVersion = javaVersion

@@ -39,20 +39,16 @@ include(":commons")
 include(":restaurant-service")
 include(":architecture-rules")
 
-include(":user-service:service")
-include(":user-service:shared")
-include(":user-service:client")
+include(":user-service")
+include(":user-shared")
 
-include(":payment-service:service")
-include(":payment-service:shared")
-include(":payment-service:client")
+include(":payment-service")
+include(":payment-shared")
 
-include(":notification-service:service")
-include(":notification-service:shared")
-include(":notification-service:client")
+include(":notification-service")
+include(":notification-shared")
 
-include(":table-reservation-service:service")
-include(":table-reservation-service:shared")
-include(":table-reservation-service:client")
+include(":table-reservation-service")
+include(":table-reservation-shared")
 
 include(":order-service")

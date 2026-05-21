@@ -11,6 +11,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    networks:
+      - default
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-order-service:27017/order-service
@@ -25,7 +27,11 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    networks:
+      - default
     environment:
+      - MICRONAUT_ENVIRONMENTS=prod
+      - PAYMENT_SERVICE_URL=http://payment-service:8080
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-user-service:27017/user-service
   payment-service:
@@ -39,6 +45,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    networks:
+      - default
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-payment-service:27017/payment-service
@@ -54,6 +62,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    networks:
+      - default
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-notification-service:27017/notification-service
@@ -72,3 +82,5 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
+    networks:
+      - default

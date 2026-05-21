@@ -44,6 +44,10 @@ kotlin {
       dependencies {
       }
     }
+    val jvmMain by getting {
+      dependencies {
+      }
+    }
     val jsMain by getting {
     }
   }
