@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-  add("jsImplementation", project(":commons"))
-  add("jsImplementation", project(":payment-shared"))
+  jsImplementation(project(":commons"))
+  jsImplementation(project(":payment-shared"))
 }
