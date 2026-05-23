@@ -1,4 +1,3 @@
-
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.gradle.node.npm.task.NpxTask
@@ -41,10 +40,6 @@ afterEvaluate {
   }
 
   tasks.register("moveJsDeps") {
-    println("dependencies: $input")
-    println("packs: $packTasks")
-
-    // TODO gradlew clean spotlessApply build
 
     dependsOn(packTasks)
 
@@ -63,7 +58,7 @@ afterEvaluate {
       sources.forEach { (sourceDir, targetName) ->
         sourceDir.listFiles { f ->
           println(f.name)
-          f.isFile && f.extension != "json"
+          f.isFile && f.extension != "json" // .tgz conflicted
         }?.forEach { file ->
           println("Copying ${file.name} to ${output.resolve(targetName).path}")
           file.copyTo(output.resolve(targetName), overwrite = true)
@@ -115,7 +110,7 @@ tasks.named("clean") {
 }
 
 tasks.register("dockerCreate", Dockerfile::class) {
-  mustRunAfter(project.tasks.named("build"))
+  dependsOn(project.tasks.named("build"))
 
   from("node:$nodeVersion-alpine")
   workingDir("/app")
@@ -128,24 +123,34 @@ tasks.register("dockerCreate", Dockerfile::class) {
 
   val sources = listOf(
     project.projectDir.resolve("src/"),
-    project.projectDir.resolve("build/"),
     project.projectDir.resolve("package.json"),
     project.projectDir.resolve("package-lock.json"),
     project.projectDir.resolve("tsconfig.json"),
     project.projectDir.resolve(".env"),
   )
+  val libsDir = project.layout.buildDirectory.dir("libs").get().asFile
 
   inputs.files(sources)
+  inputs.dir(libsDir)
   val outputDir = project.layout.buildDirectory.dir("docker/main/").get().asFile
   outputs.dir(outputDir)
 
   doLast {
     sources.forEach { source ->
-      source.copyRecursively(
-        outputDir
-          .resolve(source.name),
-        overwrite = true,
-      )
+      if (source.exists()) {
+        source.copyRecursively(
+          outputDir.resolve(source.name),
+          overwrite = true,
+        )
+      }
+    }
+
+    val targetLibsDir = outputDir.resolve("build/libs")
+    if (!libsDir.exists()) {
+      targetLibsDir.mkdirs()
+    }
+    libsDir.listFiles { f -> f.isFile && f.extension == "tgz" }?.forEach { tgz ->
+      tgz.copyTo(targetLibsDir.resolve(tgz.name), overwrite = true)
     }
   }
 }
