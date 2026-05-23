@@ -1,3 +1,4 @@
+
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.gradle.node.npm.task.NpxTask
@@ -24,21 +25,74 @@ node {
 
 val serviceName = getServiceName(project.parent!!)
 
-tasks.named("build") {
+afterEvaluate {
+  val input = project.configurations["jsImplementation"]
+    .dependencies
+    .map { it.name }
 
+  tasks.register("printJsDeps") {
+    doLast {
+      println(input)
+    }
+  }
+
+  val packTasks = input.map { jsDep ->
+    ":$jsDep:pack_$jsDep"
+  }
+
+  tasks.register("moveJsDeps") {
+    println("dependencies: $input")
+    println("packs: $packTasks")
+
+    // TODO gradlew clean spotlessApply build
+
+    dependsOn(packTasks)
+
+    val sources = input.map { jsDep ->
+      rootProject.layout.buildDirectory
+        .file("js/packages/munchies-$jsDep/")
+        .get().asFile to "munchies-$jsDep.tgz"
+    }
+    val output = project.layout.buildDirectory.dir("libs/").get().asFile
+
+    inputs.files(sources.map { (f, _) -> f })
+    outputs.dir(output)
+
+    doLast {
+      if (!output.exists()) output.mkdirs()
+      sources.forEach { (sourceDir, targetName) ->
+        sourceDir.listFiles { f ->
+          println(f.name)
+          f.isFile && f.extension != "json"
+        }?.forEach { file ->
+          println("Copying ${file.name} to ${output.resolve(targetName).path}")
+          file.copyTo(output.resolve(targetName), overwrite = true)
+        }
+      }
+    }
+  }
+
+  tasks.named("npmInstall") {
+    dependsOn("moveJsDeps")
+    // dependsOn("addNpmLocalPaths")
+    // mustRunAfter("addNpmLocalPaths")
+  }
+
+  tasks.named("npm_run_build") {
+    mustRunAfter("npmInstall")
+  }
+  tasks.named("npm_run_specs") {
+    mustRunAfter("npm_run_build")
+  }
+}
+
+tasks.named("build") {
   dependsOn(
+    "moveJsDeps",
     "npmInstall",
     "npm_run_build",
     "npm_run_specs",
   )
-}
-
-tasks.named("npm_run_specs") {
-  mustRunAfter("npm_run_build")
-}
-
-tasks.named("npm_run_build") {
-  mustRunAfter("npmInstall")
 }
 
 tasks.register("test") {
@@ -74,6 +128,7 @@ tasks.register("dockerCreate", Dockerfile::class) {
 
   val sources = listOf(
     project.projectDir.resolve("src/"),
+    project.projectDir.resolve("build/"),
     project.projectDir.resolve("package.json"),
     project.projectDir.resolve("package-lock.json"),
     project.projectDir.resolve("tsconfig.json"),

@@ -1,5 +1,8 @@
+import com.github.gradle.node.npm.task.NpmTask
+
 plugins {
   kotlin("multiplatform")
+  id("com.github.node-gradle.node")
   id("dokka-convention")
 }
 
@@ -51,4 +54,19 @@ kotlin {
     val jsMain by getting {
     }
   }
+}
+
+println("project.name: ${project.name}")
+
+tasks.register<NpmTask>("pack_${project.name}") {
+  dependsOn(project.tasks.named("build"))
+
+  val packageDir = rootProject.layout.buildDirectory
+    .dir("js/packages/munchies-${project.name}").get().asFile
+
+  workingDir.set(packageDir)
+  args.set(listOf("pack"))
+
+  inputs.dir(packageDir)
+  outputs.file(packageDir.resolve("munchies-${project.name}-0.1.0.tgz"))
 }
