@@ -56,8 +56,6 @@ kotlin {
   }
 }
 
-println("project.name: ${project.name}")
-
 tasks.register<NpmTask>("pack_${project.name}") {
   dependsOn(project.tasks.named("build"))
 
