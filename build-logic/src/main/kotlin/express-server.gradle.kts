@@ -57,7 +57,6 @@ afterEvaluate {
       if (!output.exists()) output.mkdirs()
       sources.forEach { (sourceDir, targetName) ->
         sourceDir.listFiles { f ->
-          println(f.name)
           f.isFile && f.extension != "json" // .tgz conflicted
         }?.forEach { file ->
           println("Copying ${file.name} to ${output.resolve(targetName).path}")

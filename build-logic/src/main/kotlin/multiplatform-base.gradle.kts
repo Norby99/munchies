@@ -57,6 +57,8 @@ kotlin {
 }
 
 tasks.register<NpmTask>("pack_${project.name}") {
+  println("Packing ${project.name}...")
+
   dependsOn(project.tasks.named("build"))
 
   val packageDir = rootProject.layout.buildDirectory

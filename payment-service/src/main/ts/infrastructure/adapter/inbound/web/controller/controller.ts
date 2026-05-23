@@ -14,9 +14,10 @@ import {
  */
 @Route("payments")
 @Tags("Payments")
-export class PaymentController implements PaymentAPI {
+export class PaymentController extends PaymentAPI {
   constructor() {
     console.log("PaymentService constructor called");
+    super();
   }
 
   /**
