@@ -1,7 +1,9 @@
 import com.github.gradle.node.npm.task.NpmTask
+import utils.libs
 
 plugins {
   kotlin("multiplatform")
+  kotlin("plugin.serialization")
   id("com.github.node-gradle.node")
   id("dokka-convention")
 }
@@ -36,11 +38,16 @@ kotlin {
       languageSettings {
         optIn("kotlin.js.ExperimentalJsExport")
       }
+
+      dependencies {
+        implementation(libs().kotlinx.serialization.json)
+      }
     }
   }
   sourceSets {
     val commonMain by getting {
       dependencies {
+        implementation(libs().kotlinx.serialization.json)
       }
     }
     val commonTest by getting {
@@ -52,6 +59,9 @@ kotlin {
       }
     }
     val jsMain by getting {
+      dependencies {
+        implementation(kotlin("stdlib-js"))
+      }
     }
   }
 }
