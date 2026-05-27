@@ -1,6 +1,17 @@
 micronaut:
   application:
     name: user-service
+  openapi:
+    enabled: true
+  http:
+    services:
+      payment-service:
+        url: ${PAYMENT_SERVICE_URL:http://localhost:8083}
 
 mongodb:
   uri: mongodb://localhost:27017/user-service
+
+endpoints:
+  health:
+    enabled: true
+    sensitive: false
