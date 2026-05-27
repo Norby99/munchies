@@ -4,7 +4,6 @@ import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import io.kotest.matchers.shouldBe
-import kotlin.compareTo
 import org.junit.jupiter.api.Test
 
 class MemoryUserCredentialsRepositoryTest {
@@ -159,7 +158,7 @@ class MemoryUserCredentialsRepositoryTest {
     )
     memoryRepository.save(credentials)
 
-    val result = memoryRepository.findByPredicate { it.loginAttempts > 10 }
+    val result = memoryRepository.repository.findByPredicate { it.loginAttempts > 10 }
 
     result shouldBe null
   }
@@ -189,8 +188,5 @@ class MemoryUserCredentialsRepositoryTest {
     object : MemoryUserCredentialsRepository {
       override val repository: InMemoryRepository<UserId, UserCredentials> =
         object : InMemoryRepository<UserId, UserCredentials>() {}
-
-      override fun findByPredicate(predicate: (UserCredentials) -> Boolean): UserCredentials? =
-        repository.findByPredicate { predicate(it) }
     }
 }
