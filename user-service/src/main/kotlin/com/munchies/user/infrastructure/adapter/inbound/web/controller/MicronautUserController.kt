@@ -8,6 +8,7 @@ import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
@@ -67,12 +68,14 @@ class MicronautUserController(
   RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
   LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
   UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
-  UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>> {
+  UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
+  DeleteUserAPI<String, HttpResponse<UserDTO>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
   private val loginUser: LoginUser = services.loginUser
   private val updateUserPassword: UpdateUserPassword = services.updateUserPassword
   private val updateUserInfo: UpdateUserInfo = services.updateUserInfo
+  private val deleteUser: DeleteUser = services.deleteUser
 
   @Get("/")
   fun get(): HttpResponse<ProcessPaymentResponse> {
@@ -316,6 +319,18 @@ class MicronautUserController(
 
       UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
         HttpResponse.notFound()
+    }
+  }
+
+  @Delete(UserServiceConfig.DELETE_USER_PATH)
+  override fun deleteUser(@PathVariable id: String): HttpResponse<UserDTO> {
+    return when (val res = deleteUser.execute(UserId(id))) {
+      is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
+        dtoFactory.run {
+          res.user.fromDomain()
+        },
+      )
+      DeleteUser.Companion.DeleteUserResult.NotFound -> HttpResponse.notFound()
     }
   }
 }
