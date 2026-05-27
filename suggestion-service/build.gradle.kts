@@ -10,7 +10,7 @@ dependencies {
   implementation(libs.lang4j.gemini)
 
   implementation(project(":commons"))
-  implementation(project(":suggestion-service:shared"))
+  implementation(project(":suggestion-shared"))
   testImplementation(testFixtures(project(":architecture-rules")))
 }
 

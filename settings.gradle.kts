@@ -59,6 +59,5 @@ include(":user-service:service")
 include(":user-service:api")
 include(":user-service:dto")
 
-include(":suggestion-service:service")
-include(":suggestion-service:client")
-include(":suggestion-service:shared")
+include(":suggestion-shared")
+include(":suggestion-service")
