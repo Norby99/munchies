@@ -23,8 +23,6 @@ class MemoryUserRepositoryTest {
 
       override fun findByUsername(username: String): User? =
         map.values.find { it.profile.username == username }
-
-      override fun findByPredicate(predicate: (User) -> Boolean): User? = map.values.find(predicate)
     }
   }
 
