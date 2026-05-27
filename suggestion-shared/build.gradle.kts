@@ -1,3 +1,3 @@
 plugins {
-  id("kotlin-jvm")
+  id("multiplatform-base")
 }
