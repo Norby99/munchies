@@ -28,4 +28,6 @@ dependencies {
 
   // Mockk
   testImplementation("io.mockk:mockk:1.13.10")
+
+  testImplementation(testFixtures(project(":architecture-rules")))
 }
