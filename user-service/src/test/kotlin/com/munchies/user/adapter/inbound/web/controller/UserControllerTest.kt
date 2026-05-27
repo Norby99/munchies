@@ -35,6 +35,7 @@ class UserControllerTest {
     loginUser = mock(),
     updateUserPassword = mock(),
     updateUserInfo = mock(),
+    deleteUser = mock(),
   )
 
   private fun getController(
@@ -339,5 +340,38 @@ class UserControllerTest {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.body().shouldNotBeEmpty()
+  }
+
+  @Test
+  fun `controller should return ok when deleteUser succeeds`() {
+    val userId = UserId("delete-me-id")
+    val userDTO = dtoFactory.run { MockUserFactory().create(userId.value).fromDomain() }
+    val deleteUseCase = mock<DeleteUser> {
+      on {
+        execute(userId)
+      } doReturn DeleteUser.Companion.DeleteUserResult.Success(dtoFactory.run { userDTO.fromDTO() })
+    }
+
+    val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
+
+    val response = controller.deleteUser(userId.value)
+    response.status shouldBe HttpStatus.OK
+    response.body() shouldNotBe null
+    response.body().id shouldBe userId.value
+    verify(deleteUseCase).execute(userId)
+  }
+
+  @Test
+  fun `controller should return not found when deleteUser user not found`() {
+    val userId = UserId("nonexistent-id")
+    val deleteUseCase = mock<DeleteUser> {
+      on { execute(userId) } doReturn DeleteUser.Companion.DeleteUserResult.NotFound
+    }
+    val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
+
+    val response = controller.deleteUser(userId.value)
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+    verify(deleteUseCase).execute(userId)
   }
 }
