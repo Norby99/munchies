@@ -24,6 +24,7 @@ export const PaymentDetails = _adapter.dto.PaymentDetails;
 export const PaymentMethod = _adapter.dto.PaymentMethod;
 
 const _PaymentAPI = _inbound.PaymentAPI;
+export const PaymentAPI = _PaymentAPI;
 
 // Types
 export type JsEntity = InstanceType<typeof JsEntity>;

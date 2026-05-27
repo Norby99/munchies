@@ -74,20 +74,12 @@ async function main(): Promise<void> {
 
     const response: PaymentResponse = controller.processPayment(request);
 
-    console.log(response);
+    console.log("response" + response);
 
-    console.log(JSON.stringify(response));
+    const jsonString = response.toJson();
+    console.log("Serialized JSON: " + jsonString);
 
-    const json_response = JSON.parse(JSON.stringify(response));
-
-    console.log(json_response);
-
-    json_response["status"] = json_response["status"]["a_1"];
-    json_response["currency"] = json_response["currency"]["a_1"];
-
-    console.log(json_response);
-
-    res.status(200).send(json_response);
+    res.status(200).type("json").send(jsonString);
   });
 
   const PORT = process.env.PORT ?? 8080;

@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-  add("jsImplementation", project(":commons"))
-  add("jsImplementation", project(":table-reservation-shared"))
+  jsImplementation(project(":commons"))
+  jsImplementation(project(":table-reservation-shared"))
 }

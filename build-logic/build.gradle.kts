@@ -15,6 +15,7 @@ dependencies {
   // Makes libs.* accessible inside convention plugins
   implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
   implementation(fromPluginToDependency(libs.plugins.kotlin.multiplatform))
+  implementation(fromPluginToDependency(libs.plugins.kotlinx.serialization))
   implementation(fromPluginToDependency(libs.plugins.ksp))
   implementation(fromPluginToDependency(libs.plugins.detekt))
   implementation(fromPluginToDependency(libs.plugins.kover))

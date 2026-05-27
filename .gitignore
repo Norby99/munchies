@@ -419,3 +419,7 @@ build
 # Remove all of IntelliJ's files
 
 .idea
+
+
+# Micronaut
+*/.micronaut/
