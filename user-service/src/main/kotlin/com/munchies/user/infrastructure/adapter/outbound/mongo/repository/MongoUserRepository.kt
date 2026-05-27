@@ -44,11 +44,6 @@ class MongoUserRepository(
     documentFactory.run { it.toDomain() }
   }.getOrNull()
 
-  override fun findByPredicate(predicate: (User) -> Boolean): User? =
-    repository.findAll().asSequence().map {
-      documentFactory.run { it.toDomain() }
-    }.firstOrNull(predicate)
-
   /**
    * Persists a new [User] entity.
    *
