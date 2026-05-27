@@ -11,10 +11,7 @@ config:
     nodePlacementStrategy: SIMPLE
 ---
 graph TB
-  subgraph :suggestion-service
-    direction TB
-    :suggestion-service:shared[shared]:::unknown
-  end
+  :suggestion-shared[suggestion-shared]:::unknown
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```
