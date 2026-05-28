@@ -88,7 +88,7 @@ sealed interface UserAPI {
       fun updateUserInfo(request: Request): Response
     }
 
-    interface DeleteUserAPI<Request, Response> : UserAPI {
+    interface DeleteUserAPI<Response> : UserAPI {
       /**
        * Deletes a user account.
        *
@@ -96,6 +96,11 @@ sealed interface UserAPI {
        * @return operation response.
        */
       fun deleteUser(id: String): Response
+    }
+
+    interface EmailVerificationAPI<Response> : UserAPI {
+
+      fun verifyEmail(id: String, otk: String): Response
     }
   }
 }

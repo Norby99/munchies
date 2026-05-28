@@ -23,4 +23,7 @@ interface JsUpdateUserPasswordAPI :
 interface JsUpdateUserInfoAPI : UserAPI.Companion.UpdateUserInfoAPI<UpdateUserInfoRequest, UserDTO>
 
 @JsExport
-interface JsDeleteUserAPI : UserAPI.Companion.DeleteUserAPI<String, UserDTO>
+interface JsDeleteUserAPI : UserAPI.Companion.DeleteUserAPI<UserDTO>
+
+@JsExport
+interface JsEmailVerificationAPI : UserAPI.Companion.EmailVerificationAPI<UserDTO>
