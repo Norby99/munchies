@@ -2,10 +2,7 @@ package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.UpdateUserPassword.Companion.UpdateUserPasswordResult
 import com.munchies.user.domain.factory.UserFactory
-import com.munchies.user.domain.model.UserCredentials
-import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.model.UserProfile
-import com.munchies.user.domain.model.UserRole
+import com.munchies.user.domain.model.*
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.TimeProvider
 import com.munchies.user.domain.port.UserCredentialsRepository
@@ -15,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+
 class UpdateUserPasswordUseCaseTest {
 
   private fun fakeUpdateUserPasswordUseCase(
@@ -53,7 +51,7 @@ class UpdateUserPasswordUseCaseTest {
     validId,
     UserProfile.empty.copy(
       username = validUsername,
-      email = validEmail,
+      email = Email(validEmail),
       role = UserRole.MANAGER,
     ),
   )
@@ -68,7 +66,7 @@ class UpdateUserPasswordUseCaseTest {
     val useCase = fakeUpdateUserPasswordUseCase()
 
     val result = useCase.execute(
-      validUser.copy(profile = validUser.profile.copy(email = "")),
+      validUser.copy(profile = validUser.profile.copy(email = Email(""))),
       validPassword,
       "newPassword",
     )
@@ -263,7 +261,7 @@ class UpdateUserPasswordUseCaseTest {
       userRepository = userRepository,
     )
     val userWithoutEmail = validUser.copy(
-      profile = validUser.profile.copy(email = ""),
+      profile = validUser.profile.copy(email = Email("")),
     )
 
     val result = useCase.execute(userWithoutEmail, validPassword, "newPassword")
@@ -275,7 +273,7 @@ class UpdateUserPasswordUseCaseTest {
   fun `execute should return UserNotFound when both email and username are blank`() {
     val useCase = fakeUpdateUserPasswordUseCase()
     val userWithoutIdentifiers = validUser.copy(
-      profile = validUser.profile.copy(email = "", username = ""),
+      profile = validUser.profile.copy(email = Email(""), username = ""),
     )
 
     val result = useCase.execute(userWithoutIdentifiers, validPassword, "newPassword")

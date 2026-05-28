@@ -2,9 +2,13 @@ package com.munchies.user.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
+import com.munchies.user.application.usecase.VerifyUserEmailUseCase
 import com.munchies.user.domain.factory.MockUserFactory
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.port.PasswordHasher
+import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
@@ -36,6 +40,7 @@ class UserControllerTest {
     updateUserPassword = mock(),
     updateUserInfo = mock(),
     deleteUser = mock(),
+    verifyUserEmail = mock(),
   )
 
   private fun getController(
@@ -54,7 +59,7 @@ class UserControllerTest {
       .create(
         "valid-user-id",
         profile = UserProfile.empty
-          .copy(username = "valid-username", email = "valid-email"),
+          .copy(username = "valid-username", email = Email("valid-email")),
       )
       .fromDomain()
   }
@@ -373,5 +378,74 @@ class UserControllerTest {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     verify(deleteUseCase).execute(userId)
+  }
+
+  @Test
+  fun `controller should return not found when user doesnt exist`() {
+    val userId = "user-id"
+
+    val repo = mock<UserRepository> {
+      on { findById(UserId(userId)) } doReturn null
+    }
+    val hasher = mock<PasswordHasher>()
+
+    val controller = getController(
+      fakeServices.copy(
+        verifyUserEmail =
+        VerifyUserEmailUseCase(repo, hasher),
+      ),
+    )
+
+    val response = controller.verifyEmail(userId, "otk")
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+  }
+
+  @Test
+  fun `controller should return not found when otk doesnt match`() {
+    val userId = "user-id"
+
+    val repo = mock<UserRepository> {
+      on { findById(UserId(userId)) } doReturn
+        UserDTOFactory.default.run { validUserDto.fromDTO() }
+    }
+    val hasher = mock<PasswordHasher> {
+      on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
+    }
+
+    val controller = getController(
+      fakeServices.copy(
+        verifyUserEmail =
+        VerifyUserEmailUseCase(repo, hasher),
+      ),
+    )
+
+    val response = controller.verifyEmail(userId, "fakeOtk")
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+  }
+
+  @Test
+  fun `controller should return ok found when user and otk match`() {
+    val userId = "user-id"
+
+    val repo = mock<UserRepository> {
+      on { findById(UserId(userId)) } doReturn
+        UserDTOFactory.default.run { validUserDto.fromDTO() }
+    }
+    val hasher = mock<PasswordHasher> {
+      on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
+    }
+
+    val controller = getController(
+      fakeServices.copy(
+        verifyUserEmail =
+        VerifyUserEmailUseCase(repo, hasher),
+      ),
+    )
+
+    val response = controller.verifyEmail(userId, "otk")
+
+    response.status shouldBe HttpStatus.OK
   }
 }
