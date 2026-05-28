@@ -1,5 +1,6 @@
 package com.munchies.user.domain.factory
 
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.model.UserRole
 import com.munchies.user.domain.model.UserRole.Companion.toUserRole
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test
 class UserFactoryTest {
   @Test
   fun `create should generate new id when id is empty`() {
-    val profile = UserProfile("username", "email@example.com", UserRole.CUSTOMER)
+    val profile = UserProfile("username", Email("email@example.com"), UserRole.CUSTOMER)
 
     val user = UserFactory.default.create("", profile)
 
@@ -21,7 +22,7 @@ class UserFactoryTest {
   @Test
   fun `create should use provided id when id is not empty`() {
     val id = "specific-id"
-    val profile = UserProfile("username", "email@example.com", "MANAGER".toUserRole())
+    val profile = UserProfile("username", Email("email@example.com"), "MANAGER".toUserRole())
 
     val user = UserFactory.default.create(id, profile)
 

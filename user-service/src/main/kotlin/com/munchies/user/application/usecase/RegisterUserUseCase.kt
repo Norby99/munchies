@@ -21,8 +21,8 @@ class RegisterUserUseCase(
   private val credentialsRepository: UserCredentialsRepository,
 ) : RegisterUser {
 
-  private fun findUser(user: User): User? = if (user.profile.email.isNotEmpty()) {
-    userRepository.findByEmail(user.profile.email)
+  private fun findUser(user: User): User? = if (user.profile.email.address.isNotEmpty()) {
+    userRepository.findByEmail(user.profile.email.address)
   } else if (user.profile.username.isNotEmpty()) {
     userRepository.findByUsername(user.profile.username)
   } else {

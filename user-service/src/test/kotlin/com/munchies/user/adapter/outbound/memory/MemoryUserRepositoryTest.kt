@@ -19,7 +19,9 @@ class MemoryUserRepositoryTest {
         get() = object : InMemoryRepository<UserId, User>(map) {
         }
 
-      override fun findByEmail(email: String): User? = map.values.find { it.profile.email == email }
+      override fun findByEmail(email: String): User? = map.values.find {
+        it.profile.email.address == email
+      }
 
       override fun findByUsername(username: String): User? =
         map.values.find { it.profile.username == username }

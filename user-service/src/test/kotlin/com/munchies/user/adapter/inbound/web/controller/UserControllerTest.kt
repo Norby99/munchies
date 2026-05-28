@@ -3,6 +3,7 @@ package com.munchies.user.adapter.inbound.web.controller
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.domain.factory.MockUserFactory
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
@@ -36,6 +37,7 @@ class UserControllerTest {
     updateUserPassword = mock(),
     updateUserInfo = mock(),
     deleteUser = mock(),
+    verifyUserEmail = mock(),
   )
 
   private fun getController(
@@ -54,7 +56,7 @@ class UserControllerTest {
       .create(
         "valid-user-id",
         profile = UserProfile.empty
-          .copy(username = "valid-username", email = "valid-email"),
+          .copy(username = "valid-username", email = Email("valid-email")),
       )
       .fromDomain()
   }
