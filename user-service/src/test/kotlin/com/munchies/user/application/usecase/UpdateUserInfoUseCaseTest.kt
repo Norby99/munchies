@@ -2,12 +2,12 @@ package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.UpdateUserInfo
 import com.munchies.user.domain.factory.MockUserFactory
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.model.UserRole
 import com.munchies.user.domain.port.UserRepository
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -19,7 +19,7 @@ class UpdateUserInfoUseCaseTest {
       id = "existing-user-id",
       profile = UserProfile(
         username = "updated-username",
-        email = "updated@email.com",
+        email = Email("updated@email.com"),
         role = UserRole.MANAGER,
       ),
     )
@@ -27,7 +27,7 @@ class UpdateUserInfoUseCaseTest {
       id = "existing-user-id",
       profile = UserProfile(
         username = "old-username",
-        email = "old@email.com",
+        email = Email("old@email.com"),
         role = UserRole.CUSTOMER,
       ),
     )
@@ -61,7 +61,7 @@ class UpdateUserInfoUseCaseTest {
       id = "profile-update-user-id",
       profile = UserProfile(
         username = "new-username",
-        email = "new@email.com",
+        email = Email("new@email.com"),
         role = UserRole.MANAGER,
       ),
     )
@@ -69,7 +69,7 @@ class UpdateUserInfoUseCaseTest {
       id = "profile-update-user-id",
       profile = UserProfile(
         username = "legacy-username",
-        email = "legacy@email.com",
+        email = Email("legacy@email.com"),
         role = UserRole.CUSTOMER,
       ),
     )

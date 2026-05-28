@@ -2,15 +2,11 @@ package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.domain.factory.UserFactory
-import com.munchies.user.domain.model.UserCredentials
-import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.model.UserProfile
-import com.munchies.user.domain.model.UserRole
+import com.munchies.user.domain.model.*
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
 import io.kotest.matchers.shouldBe
-import kotlin.invoke
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -55,7 +51,7 @@ class LoginUserUseCaseTest {
     validId,
     UserProfile.empty.copy(
       username = validUsername,
-      email = validEmail,
+      email = Email(validEmail),
       role = UserRole.MANAGER,
     ),
   )

@@ -4,11 +4,7 @@ import com.munchies.user.application.port.inbound.UpdateUserPassword
 import com.munchies.user.application.port.inbound.UpdateUserPassword.Companion.UpdateUserPasswordResult
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
-import com.munchies.user.domain.port.PasswordHasher
-import com.munchies.user.domain.port.TimeProvider
-import com.munchies.user.domain.port.UserCredentialsRepository
-import com.munchies.user.domain.port.UserRepository
-import com.munchies.user.domain.port.addOneHour
+import com.munchies.user.domain.port.*
 
 class UpdateUserPasswordUseCase(
   private val userRepository: UserRepository,
@@ -66,7 +62,10 @@ class UpdateUserPasswordUseCase(
     newPassword: String,
   ): UpdateUserPasswordResult {
     return when (
-      val credentials = findUser(email = user.profile.email, username = user.profile.username)
+      val credentials = findUser(
+        email = user.profile.email.address,
+        username = user.profile.username,
+      )
         ?.let { credentialsRepository.findById(it.id) }
     ) {
       null -> UpdateUserPasswordResult.UserNotFound

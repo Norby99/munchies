@@ -73,7 +73,7 @@ class MongoUserRepository(
 
   override fun findByEmail(email: String): User? = repository.findAll().asSequence().map {
     documentFactory.run { it.toDomain() }
-  }.firstOrNull { it.profile.email == email }
+  }.firstOrNull { it.profile.email.address == email }
 
   override fun findByUsername(username: String): User? = repository.findAll().asSequence().map {
     documentFactory.run { it.toDomain() }
