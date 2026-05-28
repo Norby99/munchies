@@ -12,6 +12,7 @@ object UserServiceConfig {
   const val UPDATE_USER_PASSWORD_PATH = "update-password/"
   const val UPDATE_USER_INFO_PATH = "update-info/"
   const val DELETE_USER_PATH: String = "{id}/"
+  const val VERIFY_EMAIL_PATH: String = "verify-email/"
 
   const val SERVICE_PORT = 8080
 }

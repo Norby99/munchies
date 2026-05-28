@@ -9,6 +9,7 @@ import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.EmailVerificationAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
@@ -69,13 +70,15 @@ class MicronautUserController(
   LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
   UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
   UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
-  DeleteUserAPI<String, HttpResponse<UserDTO>> {
+  DeleteUserAPI<HttpResponse<UserDTO>>,
+  EmailVerificationAPI<HttpResponse<UserDTO>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
   private val loginUser: LoginUser = services.loginUser
   private val updateUserPassword: UpdateUserPassword = services.updateUserPassword
   private val updateUserInfo: UpdateUserInfo = services.updateUserInfo
   private val deleteUser: DeleteUser = services.deleteUser
+  private val verifyUserEmail: VerifyUserEmail = services.verifyUserEmail
 
   @Get("/")
   fun get(): HttpResponse<ProcessPaymentResponse> {
@@ -331,6 +334,14 @@ class MicronautUserController(
         },
       )
       DeleteUser.Companion.DeleteUserResult.NotFound -> HttpResponse.notFound()
+    }
+  }
+
+  @Get(UserServiceConfig.VERIFY_EMAIL_PATH)
+  override fun verifyEmail(@Body id: String, @Body otk: String): HttpResponse<UserDTO> {
+    return when (verifyUserEmail.execute(id, otk)) {
+      is VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail -> HttpResponse.ok()
+      else -> HttpResponse.notFound()
     }
   }
 }

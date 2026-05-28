@@ -7,6 +7,7 @@ import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.port.Mailer
+import com.munchies.user.domain.port.Mailer.Companion.MailerResult.MailSent
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
@@ -30,8 +31,12 @@ class RegisterUserUseCaseTest {
       on { findById(any()) } doReturn null
     }
     val credentialsRepository = mock<UserCredentialsRepository>()
-    val hasher = mock<PasswordHasher>()
-    val mailer = mock<Mailer>()
+    val hasher = mock<PasswordHasher> {
+      on { hash(any(), any()) } doReturn ""
+    }
+    val mailer = mock<Mailer> {
+      on { sendMail(any(), any()) } doReturn MailSent
+    }
     val useCase = RegisterUserUseCase(userRepository, credentialsRepository, hasher, mailer)
 
     val result = useCase.execute(user, credentials)
@@ -42,6 +47,8 @@ class RegisterUserUseCaseTest {
 
     val credentialsCaptor = argumentCaptor<UserCredentials>()
     verify(credentialsRepository).save(credentialsCaptor.capture())
+    verify(hasher).hash(any(), any())
+    verify(mailer).sendMail(any(), any())
     assertEquals(user.id, credentialsCaptor.firstValue.id)
     assertEquals(credentials.passwordHash, credentialsCaptor.firstValue.passwordHash)
     assertEquals(credentials.salt, credentialsCaptor.firstValue.salt)
