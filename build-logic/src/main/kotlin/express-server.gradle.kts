@@ -40,7 +40,7 @@ afterEvaluate {
   }
 
   tasks.register("moveJsDeps") {
-
+    dependsOn("printJsDeps")
     dependsOn(packTasks)
 
     val sources = input.map { jsDep ->
