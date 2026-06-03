@@ -15,3 +15,8 @@ endpoints:
   health:
     enabled: true
     sensitive: false
+
+kafka:
+  bootstrap:
+    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    org.apache.kafka: WARN

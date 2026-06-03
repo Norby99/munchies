@@ -33,6 +33,7 @@ dependencies {
   ksp("io.micronaut.openapi:micronaut-openapi")
   compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
   implementation("io.swagger.core.v3:swagger-annotations")
+  implementation("io.micronaut.kafka:micronaut-kafka")
 }
 
 micronaut {
