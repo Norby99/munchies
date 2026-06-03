@@ -6,7 +6,10 @@ plugins {
 
 dependencies {
   implementation(project(":commons"))
+  implementation(project(":order-shared"))
   implementation("io.micronaut.kafka:micronaut-kafka")
+
+  testImplementation(testFixtures(project(":architecture-rules")))
 }
 
 application {
