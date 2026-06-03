@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
   implementation(project(":commons"))
-  implementation("io.micronaut.kafka:micronaut-kafka")
 }
 
 application {

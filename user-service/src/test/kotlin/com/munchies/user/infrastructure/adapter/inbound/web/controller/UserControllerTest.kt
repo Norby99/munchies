@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.inbound.web.controller
+package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
@@ -15,7 +15,7 @@ import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequ
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
-import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
+import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -26,10 +26,7 @@ import io.micronaut.serde.annotation.SerdeImport
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 class UserControllerTest {
 
@@ -46,9 +43,11 @@ class UserControllerTest {
   private fun getController(
     services: UserServices = fakeServices,
     dtoFactory: UserDTOFactory = UserDTOFactory.default,
+    emailConfirmationKafkaClient: EmailConfirmationClient = mock(),
   ) = MicronautUserController(
     services = services,
     dtoFactory = dtoFactory,
+    emailConfirmationKafkaClient = emailConfirmationKafkaClient,
     paymentClient = mock(),
   )
 
@@ -381,7 +380,7 @@ class UserControllerTest {
   }
 
   @Test
-  fun `controller should return not found when user doesnt exist`() {
+  fun `controller should return in verify-email not found when user doesnt exist`() {
     val userId = "user-id"
 
     val repo = mock<UserRepository> {
@@ -402,7 +401,7 @@ class UserControllerTest {
   }
 
   @Test
-  fun `controller should return not found when otk doesnt match`() {
+  fun `controller should return in verify-email not found when otk doesnt match`() {
     val userId = "user-id"
 
     val repo = mock<UserRepository> {
@@ -426,7 +425,7 @@ class UserControllerTest {
   }
 
   @Test
-  fun `controller should return ok found when user and otk match`() {
+  fun `controller should return ok in verify-email found when user and otk match`() {
     val userId = "user-id"
 
     val repo = mock<UserRepository> {
@@ -437,15 +436,20 @@ class UserControllerTest {
       on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
     }
 
+    val notificationClient = mock<EmailConfirmationClient> {
+      on { confirmEmail(any()) } doAnswer {}
+    }
+
     val controller = getController(
       fakeServices.copy(
         verifyUserEmail =
         VerifyUserEmailUseCase(repo, hasher),
       ),
+      emailConfirmationKafkaClient = notificationClient,
     )
 
     val response = controller.verifyEmail(userId, "otk")
-
+    verify(notificationClient).confirmEmail(any())
     response.status shouldBe HttpStatus.OK
   }
 }

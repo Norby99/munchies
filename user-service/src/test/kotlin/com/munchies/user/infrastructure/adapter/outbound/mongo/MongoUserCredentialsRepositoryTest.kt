@@ -1,19 +1,15 @@
-package com.munchies.user.infrastructure.adapter.outbound.mongo.repository
+package com.munchies.user.infrastructure.adapter.outbound.mongo
 
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserCredentialsDocument
 import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserCredentialsDocumentFactory
+import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoCrudUserCredentialsRepository
+import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoUserCredentialsRepository
 import io.kotest.matchers.shouldBe
-import java.util.Optional
+import java.util.*
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.doReturnConsecutively
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 class MongoUserCredentialsRepositoryTest {
 

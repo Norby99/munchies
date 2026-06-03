@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.outbound.mongo.repository
+package com.munchies.user.infrastructure.adapter.outbound.repository
 
 import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserId
