@@ -1,13 +1,13 @@
 package com.munchies.order.domain.model
 
-import com.munchies.commons.Entity
-
 data class DineInOrder(
   override val id: OrderId,
+  override val restaurantId: String,
+  override val customerId: String,
   val status: OrderStatus = OrderStatus.PENDING,
   val items: List<OrderItem>,
   val tableInfo: TableInfo,
-) : Entity<OrderId>(id) {
+) : Order(id, restaurantId, customerId) {
   val type = OrderType.DINE_IN
 }
 
