@@ -13,6 +13,6 @@ data class DeliveryOrder(
 
 data class DeliveryInfo(
   val deliveryAddress: String,
-  val customerName: String,
+  val bellName: String,
   val customerPhone: String,
 )
