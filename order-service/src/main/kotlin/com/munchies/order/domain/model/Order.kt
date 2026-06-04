@@ -4,8 +4,12 @@ import com.munchies.commons.Entity
 
 sealed class Order(
   override val id: OrderId,
-  open val restaurantId: String,
-  open val customerId: String,
+  open val restaurantId: RestaurantId,
+  open val customerId: CustomerId,
   open val status: OrderStatus,
   open val items: List<OrderItem>,
 ) : Entity<OrderId>(id)
+
+@JvmInline value class RestaurantId(val value: String)
+
+@JvmInline value class CustomerId(val value: String)

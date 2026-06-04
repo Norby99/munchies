@@ -2,8 +2,8 @@ package com.munchies.order.domain.model
 
 data class DineInOrder(
   override val id: OrderId,
-  override val restaurantId: String,
-  override val customerId: String,
+  override val restaurantId: RestaurantId,
+  override val customerId: CustomerId,
   override val status: OrderStatus = OrderStatus.PENDING,
   override val items: List<OrderItem>,
   val tableInfo: TableInfo,
