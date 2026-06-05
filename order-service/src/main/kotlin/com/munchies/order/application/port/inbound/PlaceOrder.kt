@@ -8,6 +8,8 @@ interface PlaceOrder {
 
   sealed interface Result {
     data class Success(val orderId: String) : Result
-    data object Failure : Result
+    sealed interface Failure : Result {
+      data object DateInvalid : Result
+    }
   }
 }
