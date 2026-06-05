@@ -22,6 +22,8 @@ import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswo
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.http.PaymentService
+import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
+import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import io.micronaut.scheduling.TaskExecutors
@@ -60,6 +62,9 @@ class MicronautUserController(
 
   @Inject
   private val paymentClient: PaymentService,
+
+  @Inject
+  private val emailConfirmationKafkaClient: EmailConfirmationClient,
   /**
    * Mapper/factory used to convert between transport DTOs and domain models.
    */
@@ -326,6 +331,12 @@ class MicronautUserController(
   }
 
   @Delete(UserServiceConfig.DELETE_USER_PATH)
+  @Operation(
+    summary = "Deletes a user.",
+    description = "Deletes a user from an id",
+  )
+  @ApiResponse(responseCode = "200", description = "User deleted successfully")
+  @ApiResponse(responseCode = "404", description = "User not found")
   override fun deleteUser(@PathVariable id: String): HttpResponse<UserDTO> {
     return when (val res = deleteUser.execute(UserId(id))) {
       is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
@@ -338,9 +349,20 @@ class MicronautUserController(
   }
 
   @Get(UserServiceConfig.VERIFY_EMAIL_PATH)
-  override fun verifyEmail(@Body id: String, @Body otk: String): HttpResponse<UserDTO> {
+  @Operation(
+    summary = "Confirm a user's email address",
+    description = "The user inputs a specific otk received in the email",
+  )
+  @ApiResponse(responseCode = "200", description = "Email confirmed successfully")
+  @ApiResponse(responseCode = "404", description = "User not found or otk not valid")
+  override fun verifyEmail(@QueryValue id: String, @QueryValue otk: String): HttpResponse<UserDTO> {
     return when (verifyUserEmail.execute(id, otk)) {
-      is VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail -> HttpResponse.ok()
+      is VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail -> {
+        emailConfirmationKafkaClient.confirmEmail(
+          UserEmailConfirmationNotification(id, "Email Confirmed").toJson(),
+        )
+        HttpResponse.ok()
+      }
       else -> HttpResponse.notFound()
     }
   }
