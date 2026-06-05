@@ -6,9 +6,7 @@ data class DineInOrder(
   override val customerId: CustomerId,
   override val items: List<OrderItem>,
   val tableInfo: TableInfo,
-) : Order(id, restaurantId, customerId, items) {
-  val type = OrderType.DINE_IN
-}
+) : Order(id, restaurantId, customerId, items)
 
 data class TableInfo(
   val tableNumber: Int,
