@@ -18,6 +18,15 @@ class VerifyUserEmailUseCase(
     if (hasher.hash(user.id.value, user.profile.email.address) != otk) {
       return InvalidRequest
     }
+    userRepository.update(
+      user.copy(
+        profile = user.profile.copy(
+          email = user.profile.email.copy(
+            isVerified = true,
+          ),
+        ),
+      ),
+    )
     return ConfirmedEmail
   }
 }

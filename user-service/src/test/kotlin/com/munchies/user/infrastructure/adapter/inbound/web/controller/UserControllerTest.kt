@@ -16,6 +16,7 @@ import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRe
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -426,12 +427,12 @@ class UserControllerTest {
 
   @Test
   fun `controller should return ok in verify-email found when user and otk match`() {
-    val userId = "user-id"
+    val userId = validUserDto.id
 
-    val repo = mock<UserRepository> {
-      on { findById(UserId(userId)) } doReturn
-        UserDTOFactory.default.run { validUserDto.fromDTO() }
-    }
+    val repo = MemoryUserRepositoryTest().createMemoryUserRepository()
+
+    repo.save(dtoFactory.run { validUserDto.fromDTO() })
+
     val hasher = mock<PasswordHasher> {
       on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
     }
@@ -451,5 +452,7 @@ class UserControllerTest {
     val response = controller.verifyEmail(userId, "otk")
     verify(notificationClient).confirmEmail(any())
     response.status shouldBe HttpStatus.OK
+    repo.findById(UserId(userId)) shouldNotBe null
+    repo.findById(UserId(userId))!!.profile.email.isVerified shouldBe true
   }
 }
