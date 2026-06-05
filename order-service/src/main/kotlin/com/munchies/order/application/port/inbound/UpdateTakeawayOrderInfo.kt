@@ -7,11 +7,11 @@ interface UpdateTakeawayOrderInfo {
   fun execute(command: UpdateTakeawayOrderCommand): Result
 
   sealed interface Result {
-    data class Success(val orderId: String) : Result
+    data object Success : Result
     sealed interface Failure : Result {
       data object OrderNotFound : Failure
       data object Unauthorized : Failure
-      data object DateInvalid : Failure
+      data object InvalidDate : Failure
     }
   }
 }
