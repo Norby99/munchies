@@ -6,9 +6,7 @@ data class TakeawayOrder(
   override val customerId: CustomerId,
   override val items: List<OrderItem>,
   val takeawayInfo: TakeawayInfo,
-) : Order(id, restaurantId, customerId, items) {
-  val type = OrderType.TAKEAWAY
-}
+) : Order(id, restaurantId, customerId, items)
 
 data class TakeawayInfo(
   val pickupTime: Long,
