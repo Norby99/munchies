@@ -11,6 +11,7 @@ data class DeliveryOrder(
 }
 
 data class DeliveryInfo(
+  val estimatedDeliveryTime: String,
   val deliveryAddress: String,
   val bellName: String,
   val customerPhone: String,
