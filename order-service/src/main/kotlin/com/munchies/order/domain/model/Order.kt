@@ -6,6 +6,7 @@ sealed class Order(
   override val id: OrderId,
   open val restaurantId: RestaurantId,
   open val customerId: CustomerId,
+  open val status: OrderStatus,
   open val items: List<OrderItem>,
 ) : Entity<OrderId>(id)
 
