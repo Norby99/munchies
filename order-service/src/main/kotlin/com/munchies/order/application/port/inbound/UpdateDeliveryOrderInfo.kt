@@ -7,9 +7,11 @@ interface UpdateDeliveryOrderInfo {
   fun execute(command: UpdateDeliveryOrderCommand): Result
 
   sealed interface Result {
-    data class Success(val orderId: String) : Result
+    data object Success : Result
     sealed interface Failure : Result {
-      data object DateInvalid : Result
+      data object OrderNotFound : Failure
+      data object Unauthorized : Failure
+      data object InvalidDate : Failure
     }
   }
 }
