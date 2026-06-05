@@ -6,9 +6,7 @@ data class DeliveryOrder(
   override val customerId: CustomerId,
   override val items: List<OrderItem>,
   val deliveryInfo: DeliveryInfo,
-) : Order(id, restaurantId, customerId, items) {
-  val type = OrderType.DELIVERY
-}
+) : Order(id, restaurantId, customerId, items)
 
 data class DeliveryInfo(
   val estimatedDeliveryTime: String,
