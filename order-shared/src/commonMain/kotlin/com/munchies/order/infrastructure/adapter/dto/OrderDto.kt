@@ -13,7 +13,7 @@ sealed interface OrderDto {
     override val customerId: String,
     override val status: String,
     override val items: List<OrderItemDto>,
-    val estimatedDeliveryTime: String,
+    val estimatedDeliveryTime: Long,
     val deliveryAddress: String,
     val bellName: String,
     val customerPhone: String,
@@ -25,7 +25,7 @@ sealed interface OrderDto {
     override val customerId: String,
     override val status: String,
     override val items: List<OrderItemDto>,
-    val pickupTime: String,
+    val pickupTime: Long,
     val customerName: String,
   ) : OrderDto
 

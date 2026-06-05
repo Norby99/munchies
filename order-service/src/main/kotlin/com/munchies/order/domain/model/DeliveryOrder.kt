@@ -10,7 +10,7 @@ data class DeliveryOrder(
 ) : Order(id, restaurantId, customerId, status, items)
 
 data class DeliveryInfo(
-  val estimatedDeliveryTime: String,
+  val estimatedDeliveryTime: Long,
   val deliveryAddress: String,
   val bellName: String,
   val customerPhone: String,
