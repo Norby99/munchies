@@ -1,35 +1,35 @@
 package com.munchies.order.application.port.inbound.command
 
-import com.munchies.order.domain.model.CustomerId
-import com.munchies.order.domain.model.DeliveryInfo
-import com.munchies.order.domain.model.OrderItem
-import com.munchies.order.domain.model.RestaurantId
-import com.munchies.order.domain.model.TableInfo
-import com.munchies.order.domain.model.TakeawayInfo
+import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
 sealed interface PlaceOrderCommand {
-  val restaurantId: RestaurantId
-  val customerId: CustomerId
-  val items: List<OrderItem>
+  val restaurantId: String
+  val customerId: String
+  val items: List<OrderItemDto>
 
   data class Delivery(
-    override val restaurantId: RestaurantId,
-    override val customerId: CustomerId,
-    override val items: List<OrderItem>,
-    val deliveryInfo: DeliveryInfo,
+    override val restaurantId: String,
+    override val customerId: String,
+    override val items: List<OrderItemDto>,
+    val estimatedDeliveryTime: Long,
+    val deliveryAddress: String,
+    val bellName: String,
+    val customerPhone: String,
   ) : PlaceOrderCommand
 
   data class Takeaway(
-    override val restaurantId: RestaurantId,
-    override val customerId: CustomerId,
-    override val items: List<OrderItem>,
-    val takeawayInfo: TakeawayInfo,
+    override val restaurantId: String,
+    override val customerId: String,
+    override val items: List<OrderItemDto>,
+    val pickupTime: Long,
+    val customerName: String,
   ) : PlaceOrderCommand
 
   data class DineIn(
-    override val restaurantId: RestaurantId,
-    override val customerId: CustomerId,
-    override val items: List<OrderItem>,
-    val tableInfo: TableInfo,
+    override val restaurantId: String,
+    override val customerId: String,
+    override val items: List<OrderItemDto>,
+    val tableNumber: Int,
+    val numberOfGuests: Int,
   ) : PlaceOrderCommand
 }
