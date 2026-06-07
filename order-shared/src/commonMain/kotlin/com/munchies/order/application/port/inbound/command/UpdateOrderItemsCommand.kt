@@ -1,11 +1,9 @@
 package com.munchies.order.application.port.inbound.command
 
-import com.munchies.order.domain.model.CustomerId
-import com.munchies.order.domain.model.OrderId
-import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
 data class UpdateOrderItemsCommand(
-  val orderId: OrderId,
-  val customerId: CustomerId,
-  val items: List<OrderItem>,
+  val orderId: String,
+  val customerId: String,
+  val items: List<OrderItemDto>,
 )
