@@ -8,6 +8,8 @@ import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.EmailVerificationAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
@@ -20,6 +22,8 @@ import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswo
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.http.PaymentService
+import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
+import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import io.micronaut.scheduling.TaskExecutors
@@ -58,6 +62,9 @@ class MicronautUserController(
 
   @Inject
   private val paymentClient: PaymentService,
+
+  @Inject
+  private val emailConfirmationKafkaClient: EmailConfirmationClient,
   /**
    * Mapper/factory used to convert between transport DTOs and domain models.
    */
@@ -67,12 +74,16 @@ class MicronautUserController(
   RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
   LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
   UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
-  UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>> {
+  UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
+  DeleteUserAPI<HttpResponse<UserDTO>>,
+  EmailVerificationAPI<HttpResponse<UserDTO>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
   private val loginUser: LoginUser = services.loginUser
   private val updateUserPassword: UpdateUserPassword = services.updateUserPassword
   private val updateUserInfo: UpdateUserInfo = services.updateUserInfo
+  private val deleteUser: DeleteUser = services.deleteUser
+  private val verifyUserEmail: VerifyUserEmail = services.verifyUserEmail
 
   @Get("/")
   fun get(): HttpResponse<ProcessPaymentResponse> {
@@ -316,6 +327,43 @@ class MicronautUserController(
 
       UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
         HttpResponse.notFound()
+    }
+  }
+
+  @Delete(UserServiceConfig.DELETE_USER_PATH)
+  @Operation(
+    summary = "Deletes a user.",
+    description = "Deletes a user from an id",
+  )
+  @ApiResponse(responseCode = "200", description = "User deleted successfully")
+  @ApiResponse(responseCode = "404", description = "User not found")
+  override fun deleteUser(@PathVariable id: String): HttpResponse<UserDTO> {
+    return when (val res = deleteUser.execute(UserId(id))) {
+      is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
+        dtoFactory.run {
+          res.user.fromDomain()
+        },
+      )
+      DeleteUser.Companion.DeleteUserResult.NotFound -> HttpResponse.notFound()
+    }
+  }
+
+  @Get(UserServiceConfig.VERIFY_EMAIL_PATH)
+  @Operation(
+    summary = "Confirm a user's email address",
+    description = "The user inputs a specific otk received in the email",
+  )
+  @ApiResponse(responseCode = "200", description = "Email confirmed successfully")
+  @ApiResponse(responseCode = "404", description = "User not found or otk not valid")
+  override fun verifyEmail(@QueryValue id: String, @QueryValue otk: String): HttpResponse<UserDTO> {
+    return when (verifyUserEmail.execute(id, otk)) {
+      is VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail -> {
+        emailConfirmationKafkaClient.confirmEmail(
+          UserEmailConfirmationNotification(id, "Email Confirmed").toJson(),
+        )
+        HttpResponse.ok()
+      }
+      else -> HttpResponse.notFound()
     }
   }
 }

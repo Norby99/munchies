@@ -9,7 +9,7 @@ package com.munchies.user.domain.model
  */
 data class UserProfile(
   val username: String,
-  val email: String,
+  val email: Email,
   val role: UserRole,
 ) {
   companion object {
@@ -21,7 +21,7 @@ data class UserProfile(
      */
     val empty: UserProfile = UserProfile(
       username = "",
-      email = "",
+      email = Email(address = ""),
       role = UserRole.CUSTOMER,
     )
   }

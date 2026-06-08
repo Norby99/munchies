@@ -87,5 +87,20 @@ sealed interface UserAPI {
        */
       fun updateUserInfo(request: Request): Response
     }
+
+    interface DeleteUserAPI<Response> : UserAPI {
+      /**
+       * Deletes a user account.
+       *
+       * @param id user deletion input data.
+       * @return operation response.
+       */
+      fun deleteUser(id: String): Response
+    }
+
+    interface EmailVerificationAPI<Response> : UserAPI {
+
+      fun verifyEmail(id: String, otk: String): Response
+    }
   }
 }

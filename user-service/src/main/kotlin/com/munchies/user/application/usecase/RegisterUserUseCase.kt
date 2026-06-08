@@ -4,6 +4,8 @@ import com.munchies.user.application.port.inbound.RegisterUser
 import com.munchies.user.application.port.inbound.RegisterUser.Companion.RegisterUserResult
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
+import com.munchies.user.domain.port.Mailer
+import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
 
@@ -19,10 +21,12 @@ import com.munchies.user.domain.port.UserRepository
 class RegisterUserUseCase(
   private val userRepository: UserRepository,
   private val credentialsRepository: UserCredentialsRepository,
+  private val hasher: PasswordHasher,
+  private val mailer: Mailer,
 ) : RegisterUser {
 
-  private fun findUser(user: User): User? = if (user.profile.email.isNotEmpty()) {
-    userRepository.findByEmail(user.profile.email)
+  private fun findUser(user: User): User? = if (user.profile.email.address.isNotEmpty()) {
+    userRepository.findByEmail(user.profile.email.address)
   } else if (user.profile.username.isNotEmpty()) {
     userRepository.findByUsername(user.profile.username)
   } else {
@@ -49,6 +53,21 @@ class RegisterUserUseCase(
       ?: try {
         userRepository.save(user)
         credentialsRepository.save(credentials.copy(id = user.id))
+
+        val emailVerificationOTK =
+          "Your verification otk is the following: " +
+            hasher.hash(user.id.value, user.profile.email.address)
+
+        mailer.sendMail(
+          user.profile.email.address,
+          emailVerificationOTK,
+        )
+
+        println(
+          "Registered user id: ${user.id.value}, email: ${user.profile.email.address} " +
+            "with OTK: $emailVerificationOTK",
+        )
+
         RegisterUserResult.Success(user)
       } catch (e: kotlin.Error) {
         RegisterUserResult.Failure(e.localizedMessage)

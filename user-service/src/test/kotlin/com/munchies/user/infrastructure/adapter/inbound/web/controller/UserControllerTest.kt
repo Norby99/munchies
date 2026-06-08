@@ -1,17 +1,22 @@
-package com.munchies.user.adapter.inbound.web.controller
+package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
+import com.munchies.user.application.usecase.VerifyUserEmailUseCase
 import com.munchies.user.domain.factory.MockUserFactory
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.port.PasswordHasher
+import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
-import com.munchies.user.infrastructure.adapter.inbound.web.controller.MicronautUserController
+import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -22,10 +27,7 @@ import io.micronaut.serde.annotation.SerdeImport
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 class UserControllerTest {
 
@@ -35,14 +37,18 @@ class UserControllerTest {
     loginUser = mock(),
     updateUserPassword = mock(),
     updateUserInfo = mock(),
+    deleteUser = mock(),
+    verifyUserEmail = mock(),
   )
 
   private fun getController(
     services: UserServices = fakeServices,
     dtoFactory: UserDTOFactory = UserDTOFactory.default,
+    emailConfirmationKafkaClient: EmailConfirmationClient = mock(),
   ) = MicronautUserController(
     services = services,
     dtoFactory = dtoFactory,
+    emailConfirmationKafkaClient = emailConfirmationKafkaClient,
     paymentClient = mock(),
   )
 
@@ -53,7 +59,7 @@ class UserControllerTest {
       .create(
         "valid-user-id",
         profile = UserProfile.empty
-          .copy(username = "valid-username", email = "valid-email"),
+          .copy(username = "valid-username", email = Email("valid-email")),
       )
       .fromDomain()
   }
@@ -339,5 +345,114 @@ class UserControllerTest {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.body().shouldNotBeEmpty()
+  }
+
+  @Test
+  fun `controller should return ok when deleteUser succeeds`() {
+    val userId = UserId("delete-me-id")
+    val userDTO = dtoFactory.run { MockUserFactory().create(userId.value).fromDomain() }
+    val deleteUseCase = mock<DeleteUser> {
+      on {
+        execute(userId)
+      } doReturn DeleteUser.Companion.DeleteUserResult.Success(dtoFactory.run { userDTO.fromDTO() })
+    }
+
+    val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
+
+    val response = controller.deleteUser(userId.value)
+    response.status shouldBe HttpStatus.OK
+    response.body() shouldNotBe null
+    response.body().id shouldBe userId.value
+    verify(deleteUseCase).execute(userId)
+  }
+
+  @Test
+  fun `controller should return not found when deleteUser user not found`() {
+    val userId = UserId("nonexistent-id")
+    val deleteUseCase = mock<DeleteUser> {
+      on { execute(userId) } doReturn DeleteUser.Companion.DeleteUserResult.NotFound
+    }
+    val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
+
+    val response = controller.deleteUser(userId.value)
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+    verify(deleteUseCase).execute(userId)
+  }
+
+  @Test
+  fun `controller should return in verify-email not found when user doesnt exist`() {
+    val userId = "user-id"
+
+    val repo = mock<UserRepository> {
+      on { findById(UserId(userId)) } doReturn null
+    }
+    val hasher = mock<PasswordHasher>()
+
+    val controller = getController(
+      fakeServices.copy(
+        verifyUserEmail =
+        VerifyUserEmailUseCase(repo, hasher),
+      ),
+    )
+
+    val response = controller.verifyEmail(userId, "otk")
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+  }
+
+  @Test
+  fun `controller should return in verify-email not found when otk doesnt match`() {
+    val userId = "user-id"
+
+    val repo = mock<UserRepository> {
+      on { findById(UserId(userId)) } doReturn
+        UserDTOFactory.default.run { validUserDto.fromDTO() }
+    }
+    val hasher = mock<PasswordHasher> {
+      on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
+    }
+
+    val controller = getController(
+      fakeServices.copy(
+        verifyUserEmail =
+        VerifyUserEmailUseCase(repo, hasher),
+      ),
+    )
+
+    val response = controller.verifyEmail(userId, "fakeOtk")
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+  }
+
+  @Test
+  fun `controller should return ok in verify-email found when user and otk match`() {
+    val userId = validUserDto.id
+
+    val repo = MemoryUserRepositoryTest().createMemoryUserRepository()
+
+    repo.save(dtoFactory.run { validUserDto.fromDTO() })
+
+    val hasher = mock<PasswordHasher> {
+      on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
+    }
+
+    val notificationClient = mock<EmailConfirmationClient> {
+      on { confirmEmail(any()) } doAnswer {}
+    }
+
+    val controller = getController(
+      fakeServices.copy(
+        verifyUserEmail =
+        VerifyUserEmailUseCase(repo, hasher),
+      ),
+      emailConfirmationKafkaClient = notificationClient,
+    )
+
+    val response = controller.verifyEmail(userId, "otk")
+    verify(notificationClient).confirmEmail(any())
+    response.status shouldBe HttpStatus.OK
+    repo.findById(UserId(userId)) shouldNotBe null
+    repo.findById(UserId(userId))!!.profile.email.isVerified shouldBe true
   }
 }

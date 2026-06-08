@@ -20,5 +20,6 @@ data class UserDocument(
   val id: String,
   val username: String,
   val email: String,
+  val isVerified: Boolean,
   val role: String,
 )

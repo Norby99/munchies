@@ -60,10 +60,6 @@ class InMemoryRestaurantRepository : RestaurantRepository {
     return entity.toDomain()
   }
 
-  override fun findByPredicate(predicate: (Restaurant) -> Boolean): Restaurant? {
-    TODO("Not yet implemented")
-  }
-
   override suspend fun findByIdSuspend(id: RestaurantId): Restaurant? {
     val entity = restaurants[id.value] ?: return null
     return entity.toDomain()

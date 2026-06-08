@@ -1,4 +1,4 @@
-package com.munchies.user.adapter.outbound.mongo.repository
+package com.munchies.user.infrastructure.adapter.outbound.repository
 
 import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserId
@@ -8,7 +8,7 @@ import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoU
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import java.util.Optional
+import java.util.*
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -23,7 +23,7 @@ class MongoUserRepositoryTest {
   val userId = UserId(id)
 
   val realUserDoc =
-    UserDocument(id, "username", "email", "role")
+    UserDocument(id, "username", "email", false, "role")
 
   @Test
   fun `mongo repository correctly finds existing user by id`() {

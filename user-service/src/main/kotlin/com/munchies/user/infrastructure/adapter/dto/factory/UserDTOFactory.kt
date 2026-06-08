@@ -1,11 +1,11 @@
 package com.munchies.user.infrastructure.adapter.dto.factory
 
 import com.munchies.user.domain.factory.UserFactory
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.model.UserRole
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
-import kotlin.run
 
 /**
  * Factory interface for converting between User domain models and UserDTOs.
@@ -49,7 +49,7 @@ sealed interface UserDTOFactory {
       override fun User.fromDomain(): UserDTO = UserDTO(
         id = this.id.value,
         username = this.profile.username,
-        email = this.profile.email,
+        email = this.profile.email.address,
         role = this.profile.role.toString(),
       )
 
@@ -63,7 +63,7 @@ sealed interface UserDTOFactory {
         id = this.id,
         profile = UserProfile(
           username = this.username,
-          email = this.email,
+          email = Email(this.email),
           role = UserRole.run { this@fromDTO.role.toUserRole() },
         ),
       )

@@ -1,6 +1,7 @@
 package com.munchies.user.infrastructure.adapter.outbound.mongo.factory
 
 import com.munchies.user.domain.factory.UserFactory
+import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.model.UserRole
@@ -48,7 +49,8 @@ sealed interface UserDocumentFactory {
       override fun User.toDocument(): UserDocument = UserDocument(
         id = this.id.value,
         username = this.profile.username,
-        email = this.profile.email,
+        email = this.profile.email.address,
+        isVerified = this.profile.email.isVerified,
         role = this.profile.role.toString(),
       )
 
@@ -62,7 +64,7 @@ sealed interface UserDocumentFactory {
         id = this.id,
         profile = UserProfile(
           username = this.username,
-          email = this.email,
+          email = Email(this.email, this.isVerified),
           role = UserRole.run { this@toDomain.role.toUserRole() },
         ),
       )
