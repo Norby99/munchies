@@ -8,4 +8,5 @@ application {
 
 dependencies {
   implementation(project(":commons"))
+  testImplementation(testFixtures(project(":architecture-rules")))
 }
