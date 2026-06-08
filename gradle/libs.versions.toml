@@ -20,7 +20,7 @@ node = "7.1.0"
 docker = "9.4.0"
 kotlinx-serialization = "1.6.3"
 mockk = "1.13.17"
-cucumber = "7.16.1"
+cucumber = "7.17.0"
 junit = "5.10.5"
 junit-platform = "1.10.5"
 
