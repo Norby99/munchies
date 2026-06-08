@@ -19,6 +19,10 @@ dokka = "2.2.0"
 node = "7.1.0"
 docker = "9.4.0"
 kotlinx-serialization = "1.6.3"
+mockk = "1.13.17"
+cucumber = "7.15.0"
+junit = "5.10.5"
+junit-platform = "1.10.5"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -49,8 +53,28 @@ mockito = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito
 micronaut-buildtools = { module = "io.micronaut.testresources:micronaut-test-resources-build-tools", version.ref = "micronaut-buildtools"  }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk"}
+cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit = { module = "io.cucumber:cucumber-junit", version.ref = "cucumber" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
 
 [bundles]
+junit = [
+  "junit-jupiter-api",
+  "junit-jupiter-params",
+  "junit-platform-suite"
+]
+
+cucumber = [
+  "cucumber-java",
+  "cucumber-junit",
+  "cucumber-junit-platform-engine"
+]
+
 micronaut-serialization = [
     "micronaut-kotlin-runtime",
     "micronaut-serde-jackson",
