@@ -9,7 +9,7 @@ import { KafkaUserEmailConfirmationNotificationConsumer } from "./infrastructure
 console.log("hello world");
 
 async function main() {
-  const kafka = getKafka(UserEmailConfirmationTopic);
+  const kafka = await getKafka(UserEmailConfirmationTopic);
 
   const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
     kafka,
