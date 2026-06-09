@@ -23,6 +23,7 @@ mockk = "1.13.17"
 cucumber = "7.22.2"
 junit = "5.10.5"
 junit-platform = "1.10.5"
+java-jwt = "4.5.2"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -61,6 +62,7 @@ junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.re
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
+java-jwt = { module = "com.auth0:java-jwt" , version.ref = "java-jwt"}
 
 [bundles]
 junit = [
