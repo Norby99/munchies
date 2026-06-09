@@ -43,7 +43,7 @@ class UpdateUserPasswordUseCase(
       passwordHasher
         .hash(oldPassword, credentials.salt) != credentials.passwordHash -> {
         val updatedCredentials = credentials.copy(
-          lockedUntil = timeProvider.addOneHour(),
+          lockedUntil = timeProvider.addOneHour()(),
           loginAttempts = credentials.loginAttempts + 1,
         )
         credentialsRepository.update(updatedCredentials)
