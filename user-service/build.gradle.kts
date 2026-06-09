@@ -13,6 +13,8 @@ dependencies {
   implementation(project(":payment-shared")) {
     targetConfiguration = "jvmRuntimeElements"
   }
+
+  implementation(libs.java.jwt)
 }
 
 application {
