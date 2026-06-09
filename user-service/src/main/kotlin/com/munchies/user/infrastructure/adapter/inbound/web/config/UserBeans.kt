@@ -3,8 +3,10 @@ package com.munchies.user.infrastructure.adapter.inbound.web.config
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.usecase.*
 import com.munchies.user.domain.port.*
+import com.munchies.user.infrastructure.adapter.outbound.token.JsonWebTokenProvider
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
+import java.util.*
 
 @Factory
 class UserBeans {
@@ -54,6 +56,17 @@ class UserBeans {
   @Singleton
   fun verifyEmail(userRepository: UserRepository, hasher: PasswordHasher): VerifyUserEmail =
     VerifyUserEmailUseCase(userRepository, hasher)
+
+  @Singleton
+  fun tokenProvider(
+    userRepository: UserRepository,
+    tokenRepository: TokenRepository,
+  ): TokenProvider = JsonWebTokenProvider(
+    timeProvider = defaultTimeProvider(),
+    userRepository = userRepository,
+    tokenRepository = tokenRepository,
+    jWTSecret = UUID.randomUUID().toString(),
+  )
 
   @Singleton
   fun getUserServices(

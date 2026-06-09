@@ -34,7 +34,10 @@ class JsonWebTokenProvider(
           .sign(algorithm),
       )
     }
-      ?: GenerateTokenResult.Failure
+      ?: GenerateTokenResult.Failure.let {
+        print("user not found")
+        it
+      }
   }
 
   override fun validateToken(token: String): ValidateTokenResult {
