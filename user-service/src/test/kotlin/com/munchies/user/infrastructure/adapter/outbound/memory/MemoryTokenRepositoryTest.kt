@@ -3,6 +3,7 @@ package com.munchies.user.infrastructure.adapter.outbound.memory
 import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.Token
 import com.munchies.user.domain.model.TokenId
+import com.munchies.user.domain.model.UserId
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
@@ -13,7 +14,7 @@ class MemoryTokenRepositoryTest {
   fun `repository finds token by its token value`() {
     val repo = getRepository()
     val token = "prova"
-    val entity = Token(TokenId(token), isValid = false)
+    val entity = Token(TokenId(token), isValid = false, UserId())
     repo.save(entity)
     repo.findById(TokenId(token)) shouldBe entity
   }
@@ -22,7 +23,7 @@ class MemoryTokenRepositoryTest {
   fun `repository updates token revoked state`() {
     val repo = getRepository()
     val token = "prova"
-    val entity = Token(TokenId(token), isValid = false)
+    val entity = Token(TokenId(token), isValid = false, UserId())
     repo.save(entity)
     repo.findById(TokenId(token)) shouldBe entity
     repo.update(entity.copy(isValid = true))
@@ -36,7 +37,7 @@ class MemoryTokenRepositoryTest {
     val token = "prova"
     repo.isRevoked(token) shouldBe true
 
-    val entity = Token(TokenId(token), isValid = false)
+    val entity = Token(TokenId(token), isValid = false, UserId())
     repo.save(entity)
     repo.isRevoked(token) shouldBe false
   }
@@ -47,7 +48,7 @@ class MemoryTokenRepositoryTest {
     val token = "prova"
     repo.isRevoked(token) shouldBe true
 
-    val entity = Token(TokenId(token), isValid = true)
+    val entity = Token(TokenId(token), isValid = true, UserId())
     repo.save(entity)
     repo.setRevoked(token)
     repo.isRevoked(token) shouldBe false

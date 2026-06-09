@@ -8,6 +8,8 @@ import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.port.PasswordHasher
+import com.munchies.user.domain.port.TokenProvider
+import com.munchies.user.domain.port.TokenProvider.Companion.GenerateTokenResult
 import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
@@ -45,11 +47,13 @@ class UserControllerTest {
     services: UserServices = fakeServices,
     dtoFactory: UserDTOFactory = UserDTOFactory.default,
     emailConfirmationKafkaClient: EmailConfirmationClient = mock(),
+    tokenProvider: TokenProvider = mock(),
   ) = MicronautUserController(
     services = services,
     dtoFactory = dtoFactory,
     emailConfirmationKafkaClient = emailConfirmationKafkaClient,
     paymentClient = mock(),
+    tokenProvider = tokenProvider,
   )
 
   private val dtoFactory = UserDTOFactory.default
@@ -119,7 +123,12 @@ class UserControllerTest {
     val registerUseCase = mock<RegisterUser> {
       on { execute(any(), any()) } doReturn RegisterUser.Companion.RegisterUserResult.Success(user)
     }
-    val controller = getController(fakeServices.copy(registerUser = registerUseCase))
+    val controller = getController(
+      fakeServices.copy(registerUser = registerUseCase),
+      tokenProvider = mock {
+        on { generateToken(any()) } doReturn GenerateTokenResult.Success("sometoken")
+      },
+    )
 
     val response = controller.registerUser(
       RegisterUserRequest(
@@ -130,6 +139,7 @@ class UserControllerTest {
     )
 
     response.status shouldBe HttpStatus.OK
+    response.cookies.all.shouldNotBeEmpty()
     response.body().shouldNotBeEmpty()
   }
 
@@ -184,12 +194,18 @@ class UserControllerTest {
       on { execute(userDTO.email, userDTO.username, "valid-password") } doReturn
         LoginUser.Companion.LoginResult.Success("login-success-id")
     }
-    val controller = getController(fakeServices.copy(loginUser = loginUseCase))
+    val controller = getController(
+      fakeServices.copy(loginUser = loginUseCase),
+      tokenProvider = mock {
+        on { generateToken(any()) } doReturn GenerateTokenResult.Success("sometoken")
+      },
+    )
 
     val response = controller
       .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "valid-password"))
 
     response.status shouldBe HttpStatus.OK
+    response.cookies.all.shouldNotBeEmpty()
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
   }
 

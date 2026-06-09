@@ -6,6 +6,8 @@ import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.port.TokenProvider
+import com.munchies.user.domain.port.TokenProvider.Companion.GenerateTokenResult
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
@@ -26,6 +28,8 @@ import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmation
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
+import io.micronaut.http.cookie.Cookie
+import io.micronaut.http.cookie.SameSite
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.SerdeImport
@@ -65,6 +69,8 @@ class MicronautUserController(
 
   @Inject
   private val emailConfirmationKafkaClient: EmailConfirmationClient,
+
+  @Inject val tokenProvider: TokenProvider,
   /**
    * Mapper/factory used to convert between transport DTOs and domain models.
    */
@@ -178,9 +184,21 @@ class MicronautUserController(
         credentials = userCredentials,
       )
     ) {
-      is RegisterUser.Companion.RegisterUserResult.Success ->
-        HttpResponse.ok("User registered successfully")
-
+      is RegisterUser.Companion.RegisterUserResult.Success -> {
+        when (val token = tokenProvider.generateToken(userId = user.id)) {
+          is GenerateTokenResult.Success ->
+            HttpResponse
+              .ok("User registered successfully")
+              .cookie(
+                Cookie.of("authToken", token.token)
+                  .httpOnly(true)
+                  .secure(true)
+                  .sameSite(SameSite.Strict)
+                  .path(UserServiceConfig.SERVICE_PATH),
+              )
+          else -> HttpResponse.serverError("Couldn't create token")
+        }
+      }
       RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
         HttpResponse.unauthorized()
 
@@ -225,13 +243,29 @@ class MicronautUserController(
     }
 
     return when (
-      loginUser.execute(
-        email = request.email,
-        username = request.username,
-        password = request.password,
-      )
+      val result =
+        loginUser.execute(
+          email = request.email,
+          username = request.username,
+          password = request.password,
+        )
     ) {
-      is LoginResult.Success -> HttpResponse.ok("Login successful")
+      is LoginResult.Success -> {
+        when (val token = tokenProvider.generateToken(userId = UserId(result.userId))) {
+          is GenerateTokenResult.Success ->
+            HttpResponse
+              .ok("User logged successfully")
+              .cookie(
+                Cookie.of("authToken", token.token)
+                  .httpOnly(true)
+                  .secure(true)
+                  .sameSite(SameSite.Strict)
+                  .path(UserServiceConfig.SERVICE_PATH),
+              )
+          is GenerateTokenResult.Failure ->
+            HttpResponse.serverError("Couldn't create token")
+        }
+      }
       is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
       else -> HttpResponse.badRequest("Invalid email or password")
     }
