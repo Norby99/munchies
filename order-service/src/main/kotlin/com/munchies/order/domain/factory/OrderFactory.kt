@@ -21,7 +21,7 @@ object OrderFactory {
     items: List<OrderItem>,
     info: DeliveryInfo,
   ): OrderCreationResult {
-    return validate(items) ?: if (info.estimatedDeliveryTime <= System.currentTimeMillis()) {
+    return validate(items) ?: if (!info.isValidTime()) {
       OrderCreationResult.Failure.InvalidDate
     } else {
       OrderCreationResult.Success(
@@ -37,7 +37,7 @@ object OrderFactory {
     items: List<OrderItem>,
     info: TakeawayInfo,
   ): OrderCreationResult {
-    return validate(items) ?: if (info.pickupTime <= System.currentTimeMillis()) {
+    return validate(items) ?: if (!info.isValidTime()) {
       OrderCreationResult.Failure.InvalidDate
     } else {
       OrderCreationResult.Success(
@@ -54,7 +54,6 @@ object OrderFactory {
     info: TableInfo,
   ): OrderCreationResult {
     validate(items)?.let { return it }
-
     return OrderCreationResult.Success(
       DineInOrder(id, restaurantId, customerId, PENDING, items, info),
     )
