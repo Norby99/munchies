@@ -9,6 +9,19 @@ data class DeliveryOrder(
   val deliveryInfo: DeliveryInfo,
 ) : Order(id, restaurantId, customerId, status, items) {
 
+  override fun nextStatus(): AdvanceStatusResult {
+    val next = when (status) {
+      OrderStatus.PENDING -> OrderStatus.PREPARING
+      OrderStatus.PREPARING -> OrderStatus.READY
+      OrderStatus.READY -> OrderStatus.ON_THE_WAY
+      OrderStatus.ON_THE_WAY -> OrderStatus.COMPLETED
+      else -> return AdvanceStatusResult.Failure.InvalidTransition
+    }
+    return AdvanceStatusResult.Success(copy(status = next))
+  }
+
+  override fun copyWithStatus(status: OrderStatus) = copy(status = status)
+
   fun updateInfo(
     estimatedDeliveryTime: Long,
     deliveryAddress: String,

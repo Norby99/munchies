@@ -9,6 +9,18 @@ data class TakeawayOrder(
   val takeawayInfo: TakeawayInfo,
 ) : Order(id, restaurantId, customerId, status, items) {
 
+  override fun nextStatus(): AdvanceStatusResult {
+    val next = when (status) {
+      OrderStatus.PENDING -> OrderStatus.PREPARING
+      OrderStatus.PREPARING -> OrderStatus.READY
+      OrderStatus.READY -> OrderStatus.COMPLETED
+      else -> return AdvanceStatusResult.Failure.InvalidTransition
+    }
+    return AdvanceStatusResult.Success(copy(status = next))
+  }
+
+  override fun copyWithStatus(status: OrderStatus) = copy(status = status)
+
   fun updateInfo(pickupTime: Long, customerName: String): UpdateResult {
     val newInfo = TakeawayInfo(pickupTime, customerName)
     if (!newInfo.isValidTime()) return UpdateResult.Failure.InvalidDate
