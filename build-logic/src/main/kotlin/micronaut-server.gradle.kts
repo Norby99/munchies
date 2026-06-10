@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import utils.getServiceName
+import utils.libs
 
 plugins {
   id("micronaut-base")
@@ -34,6 +35,22 @@ dependencies {
   compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
   implementation("io.swagger.core.v3:swagger-annotations")
   implementation("io.micronaut.kafka:micronaut-kafka")
+
+  // Cucumber BDD
+  testImplementation(libs().bundles.cucumber)
+
+  // JUnit 5
+  testImplementation(libs().bundles.junit)
+  testRuntimeOnly(libs().junit.platform.suite)
+
+  // Micronaut Test
+  testImplementation("io.micronaut.test:micronaut-test-junit5")
+
+  // Coroutines
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
+
+  // Mockk
+  testImplementation(libs().mockk)
 }
 
 micronaut {
