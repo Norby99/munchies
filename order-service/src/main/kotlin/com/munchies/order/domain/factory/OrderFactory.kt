@@ -4,6 +4,7 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryInfo
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.DineInOrder
+import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.model.OrderStatus.*
@@ -59,9 +60,11 @@ object OrderFactory {
     )
   }
 
-  private fun validate(items: List<OrderItem>): OrderCreationResult.Failure? {
-    if (items.isEmpty()) return OrderCreationResult.Failure.EmptyItems
-    if (items.any { it.quantity <= 0 }) return OrderCreationResult.Failure.InvalidItemQuantity
-    return null
-  }
+  private fun validate(items: List<OrderItem>): OrderCreationResult.Failure? =
+    when (Order.validateItems(items)) {
+      Order.ItemsValidationError.EmptyItems -> OrderCreationResult.Failure.EmptyItems
+      Order.ItemsValidationError.InvalidItemQuantity,
+      -> OrderCreationResult.Failure.InvalidItemQuantity
+      null -> null
+    }
 }

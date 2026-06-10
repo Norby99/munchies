@@ -8,7 +8,21 @@ sealed class Order(
   open val customerId: CustomerId,
   open val status: OrderStatus,
   open val items: List<OrderItem>,
-) : Entity<OrderId>(id)
+) : Entity<OrderId>(id) {
+
+  companion object {
+    fun validateItems(items: List<OrderItem>): ItemsValidationError? {
+      if (items.isEmpty()) return ItemsValidationError.EmptyItems
+      if (items.any { !it.isValid() }) return ItemsValidationError.InvalidItemQuantity
+      return null
+    }
+  }
+
+  enum class ItemsValidationError {
+    EmptyItems,
+    InvalidItemQuantity,
+  }
+}
 
 @JvmInline value class RestaurantId(val value: String)
 
