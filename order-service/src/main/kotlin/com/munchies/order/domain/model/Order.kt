@@ -10,6 +10,17 @@ sealed class Order(
   open val items: List<OrderItem>,
 ) : Entity<OrderId>(id) {
 
+  abstract fun nextStatus(): AdvanceStatusResult
+
+  fun cancel(): CancelResult {
+    if (status != OrderStatus.PENDING) {
+      return CancelResult.Failure.InvalidTransition
+    }
+    return CancelResult.Success(copyWithStatus(OrderStatus.CANCELLED))
+  }
+
+  protected abstract fun copyWithStatus(status: OrderStatus): Order
+
   companion object {
     fun validateItems(items: List<OrderItem>): ItemsValidationError? {
       if (items.isEmpty()) return ItemsValidationError.EmptyItems
@@ -29,10 +40,24 @@ sealed class Order(
     }
   }
 
+  sealed interface AdvanceStatusResult {
+    data class Success(val order: Order) : AdvanceStatusResult
+    sealed interface Failure : AdvanceStatusResult {
+      data object InvalidTransition : Failure
+    }
+  }
+
   sealed interface UpdateResult {
     data class Success(val order: Order) : UpdateResult
     sealed interface Failure : UpdateResult {
       data class InvalidItems(val error: ItemsValidationError) : Failure
+    }
+  }
+
+  sealed interface CancelResult {
+    data class Success(val order: Order) : CancelResult
+    sealed interface Failure : CancelResult {
+      data object InvalidTransition : Failure
     }
   }
 
