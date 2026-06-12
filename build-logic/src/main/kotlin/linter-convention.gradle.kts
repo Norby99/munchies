@@ -59,11 +59,11 @@ fun configureSpotlessForJs(project: Project) {
     }
   }
 
-  project.pluginManager.withPlugin("com.github.node-gradle.node") {
+  /*project.pluginManager.withPlugin("com.github.node-gradle.node") {
     project.tasks.matching { it.name.startsWith("spotless") }.configureEach {
       mustRunAfter(project.tasks.matching { it.name == "npmInstall" })
     }
-  }
+  }*/
 }
 
 apply<SpotlessPlugin>()

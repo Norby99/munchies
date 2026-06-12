@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-  jsImplementation(project(":notification-service:shared"))
-  jsImplementation(project(":payment-service:shared"))
-  jsImplementation(project(":table-reservation-service:shared"))
-  jsImplementation(project(":user-service:shared"))
+  jsImplementation(project(":notification-shared"))
+  jsImplementation(project(":payment-shared"))
+  jsImplementation(project(":table-reservation-shared"))
+  jsImplementation(project(":user-shared"))
 }
