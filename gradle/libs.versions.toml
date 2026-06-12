@@ -22,7 +22,7 @@ kotlinx-serialization = "1.6.3"
 mockk = "1.13.17"
 cucumber = "7.34.3"
 junit = "5.10.5"
-junit-platform = "1.12.2"
+junit-platform = "1.13.4"
 java-jwt = "4.5.2"
 
 [plugins]
