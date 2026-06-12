@@ -31,7 +31,7 @@ import kotlin.reflect.full.findAnnotations
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 
-class UserControllerTest {
+class MicronautUserControllerTest {
 
   private val fakeServices = UserServices(
     getUser = mock(),
