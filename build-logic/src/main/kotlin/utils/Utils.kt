@@ -30,6 +30,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
     "order",
     "restaurant",
     "scheduler",
+    "munchies",
   )
   val stringExpressProjects = listOf(
     "payment",
@@ -47,7 +48,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
   ) {
     in stringKotlinProjects -> ProjectLanguage.KOTLIN
     in stringExpressProjects -> ProjectLanguage.JS
-    else -> ProjectLanguage.KOTLIN
+    else -> throw IllegalArgumentException("Unknown project language for project ${this.name}")
   }
 }
 
