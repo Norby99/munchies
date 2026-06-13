@@ -21,7 +21,7 @@ docker = "9.4.0"
 kotlinx-serialization = "1.6.3"
 mockk = "1.13.17"
 cucumber = "7.34.3"
-junit = "5.12.2"
+junit = "5.13.4"
 junit-platform = "1.14.4"
 java-jwt = "4.5.2"
 
