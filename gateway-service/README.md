@@ -11,28 +11,19 @@ config:
     nodePlacementStrategy: SIMPLE
 ---
 graph TB
-  subgraph :notification-service
-    direction TB
-    :notification-service:shared[shared]:::unknown
-  end
-  subgraph :payment-service
-    direction TB
-    :payment-service:shared[shared]:::unknown
-  end
-  subgraph :table-reservation-service
-    direction TB
-    :table-reservation-service:shared[shared]:::unknown
-  end
-  subgraph :user-service
-    direction TB
-    :user-service:shared[shared]:::unknown
-  end
+  :user-shared[user-shared]:::unknown
+  :table-reservation-shared[table-reservation-shared]:::unknown
+  :payment-shared[payment-shared]:::unknown
+  :notification-shared[notification-shared]:::unknown
   :gateway-service[gateway-service]:::unknown
+  :commons[commons]:::unknown
 
-  :gateway-service -.->|jsImplementation| :notification-service:shared
-  :gateway-service -.->|jsImplementation| :payment-service:shared
-  :gateway-service -.->|jsImplementation| :table-reservation-service:shared
-  :gateway-service -.->|jsImplementation| :user-service:shared
+  :gateway-service -.->|jsImplementation| :notification-shared
+  :gateway-service -.->|jsImplementation| :payment-shared
+  :gateway-service -.->|jsImplementation| :table-reservation-shared
+  :gateway-service -.->|jsImplementation| :user-shared
+  :payment-shared -.->|commonMainImplementation| :commons
+  :user-shared -.->|commonMainImplementation| :commons
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

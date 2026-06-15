@@ -12,6 +12,9 @@ config:
 ---
 graph TB
   :user-shared[user-shared]:::unknown
+  :commons[commons]:::unknown
+
+  :user-shared -.->|commonMainImplementation| :commons
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```
