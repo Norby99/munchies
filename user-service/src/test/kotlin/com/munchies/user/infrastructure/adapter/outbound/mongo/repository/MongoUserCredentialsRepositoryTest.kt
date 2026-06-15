@@ -1,11 +1,9 @@
-package com.munchies.user.infrastructure.adapter.outbound.mongo
+package com.munchies.user.infrastructure.adapter.outbound.mongo.repository
 
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserCredentialsDocument
 import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserCredentialsDocumentFactory
-import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoCrudUserCredentialsRepository
-import com.munchies.user.infrastructure.adapter.outbound.mongo.repository.MongoUserCredentialsRepository
 import io.kotest.matchers.shouldBe
 import java.util.*
 import org.junit.jupiter.api.Test

@@ -2,4 +2,4 @@ package com.munchies.user.domain.model
 
 import com.munchies.commons.UUIDEntityId
 
-class TokenId(token: String) : UUIDEntityId(token)
+class TokenId(override val value: String) : UUIDEntityId(value)

@@ -12,3 +12,7 @@ kotlin {
     }
   }
 }
+
+dependencies {
+  commonMainImplementation(project(":commons"))
+}

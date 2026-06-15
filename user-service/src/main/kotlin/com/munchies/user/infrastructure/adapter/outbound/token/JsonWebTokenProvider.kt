@@ -3,51 +3,52 @@ package com.munchies.user.infrastructure.adapter.outbound.token
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
+import com.munchies.commons.UUIDEntityId
+import com.munchies.commons.domain.port.*
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.*
-import com.munchies.user.domain.port.TokenProvider.Companion.GenerateTokenResult
-import com.munchies.user.domain.port.TokenProvider.Companion.RefreshTokenResult
-import com.munchies.user.domain.port.TokenProvider.Companion.ValidateTokenResult
+import jakarta.inject.Singleton
 
+@Singleton
 class JsonWebTokenProvider(
-  val timeProvider: TimeProvider,
+  val timeProvider: TimeProvider = defaultTimeProvider(),
   val userRepository: UserRepository,
   val tokenRepository: TokenRepository,
-  val jWTSecret: String,
-) : TokenProvider {
+  val jWTSecret: String = System.getenv(JWT_SECRET_ENV_NAME),
+) : TokenProvider() {
 
   private val algorithm = Algorithm.HMAC256(jWTSecret)
 
   private val verifier = JWT.require(algorithm)
-    .withClaimPresence(idClaim)
-    .withClaimPresence(roleClaim)
-    .withClaimPresence(expirationClaim)
+    .withClaimPresence(ID_CLAIM)
+    .withClaimPresence(ROLE_CLAIM)
+    .withClaimPresence(EXPIRATION_CLAIM)
 
-  override fun generateToken(userId: UserId): GenerateTokenResult {
-    return userRepository.findById(userId)?.let { user ->
-      GenerateTokenResult.Success(
+  override fun generateToken(id: UUIDEntityId): GenerateTokenResult {
+    return userRepository.findById(UserId(id.value))?.let { user ->
+      GenerateTokenSuccess(
         JWT.create().withSubject(user.id.value)
-          .withClaim(idClaim, user.id.value)
-          .withClaim(roleClaim, user.profile.role.name)
-          .withClaim(expirationClaim, timeProvider.addOneHour().invoke().toString())
+          .withClaim(ID_CLAIM, user.id.value)
+          .withClaim(ROLE_CLAIM, user.profile.role.name)
+          .withClaim(EXPIRATION_CLAIM, timeProvider.addOneHour().invoke().toString())
           .withExpiresAt(timeProvider.addOneHour().toDate())
           .sign(algorithm),
       )
     }
-      ?: GenerateTokenResult.Failure.let {
+      ?: GenerateTokenFailure.let {
         print("user not found")
         it
       }
   }
 
   override fun validateToken(token: String): ValidateTokenResult {
-    if (tokenRepository.isRevoked(token)) return ValidateTokenResult.Failure
+    if (tokenRepository.isRevoked(token)) return ValidateTokenFailure
 
     return try {
       verifier.build().verify(token)
-      ValidateTokenResult.Success
+      ValidateTokenSuccess
     } catch (_: JWTVerificationException) {
-      ValidateTokenResult.Failure
+      ValidateTokenFailure
     }
   }
 
@@ -56,16 +57,16 @@ class JsonWebTokenProvider(
       val decoded = verifier
         .build()
         .verify(expiredToken)
-      val userId = decoded.getClaim(idClaim).asString()
+      val userId = decoded.getClaim(ID_CLAIM).asString()
       generateToken(UserId(userId)).let { res ->
-        if (res is GenerateTokenResult.Success) {
-          RefreshTokenResult.Success(res.token)
+        if (res is GenerateTokenSuccess) {
+          RefreshTokenSuccess(res.token)
         } else {
-          RefreshTokenResult.Failure
+          RefreshTokenFailure
         }
       }
     } catch (_: JWTVerificationException) {
-      RefreshTokenResult.Failure
+      RefreshTokenFailure
     }
   }
 

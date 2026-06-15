@@ -30,6 +30,7 @@ services:
     networks:
       - default
     environment:
+      - JWT_SECRET=blastimus_prime
       - MICRONAUT_ENVIRONMENTS=prod
       - PAYMENT_SERVICE_URL=http://payment-service:8080
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092

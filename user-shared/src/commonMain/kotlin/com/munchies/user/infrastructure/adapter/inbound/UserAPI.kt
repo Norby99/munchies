@@ -88,14 +88,14 @@ sealed interface UserAPI {
       fun updateUserInfo(request: Request): Response
     }
 
-    interface DeleteUserAPI<Response> : UserAPI {
+    interface DeleteUserAPI<Request, Response> : UserAPI {
       /**
        * Deletes a user account.
        *
-       * @param id user deletion input data.
+       * @param request user deletion input data.
        * @return operation response.
        */
-      fun deleteUser(id: String): Response
+      fun deleteUser(request: Request): Response
     }
 
     interface EmailVerificationAPI<Response> : UserAPI {

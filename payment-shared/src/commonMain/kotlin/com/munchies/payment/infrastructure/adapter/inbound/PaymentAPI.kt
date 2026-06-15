@@ -5,9 +5,6 @@ import com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPayme
 import kotlin.js.JsExport
 
 @JsExport
-interface PaymentInterface {
-  fun processPayment(request: ProcessPaymentRequest): ProcessPaymentResponse
+abstract class PaymentAPI {
+  abstract fun processPayment(request: ProcessPaymentRequest): ProcessPaymentResponse
 }
-
-@JsExport
-abstract class PaymentAPI : PaymentInterface
