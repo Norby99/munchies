@@ -1,6 +1,5 @@
 package com.munchies.user.infrastructure.adapter.outbound.memory
 
-import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.Token
 import com.munchies.user.domain.model.TokenId
 import com.munchies.user.domain.model.UserId
@@ -54,7 +53,5 @@ class MemoryTokenRepositoryTest {
     repo.isRevoked(token) shouldBe false
   }
 
-  private fun getRepository(): MemoryTokenRepository = object : MemoryTokenRepository {
-    override val repository: InMemoryRepository<TokenId, Token> = InMemoryRepository()
-  }
+  private fun getRepository(): MemoryTokenRepository = MemoryTokenRepository()
 }
