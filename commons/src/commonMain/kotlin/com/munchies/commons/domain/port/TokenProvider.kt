@@ -13,27 +13,30 @@ abstract class TokenProvider {
   abstract fun refreshToken(expiredToken: String): RefreshTokenResult
   abstract fun revokeToken(token: String)
 }
+
 @JsExport
 val ID_CLAIM: String = "id"
+
 @JsExport
 val ROLE_CLAIM: String = "role"
+
 @JsExport
 val EXPIRATION_CLAIM: String = "expiration"
 
-@JsExport
-sealed interface GenerateTokenResult {
-  data class Success(val token: String) : GenerateTokenResult
-  data object Failure : GenerateTokenResult
-}
+@JsExport sealed interface GenerateTokenResult
 
-@JsExport
-sealed interface ValidateTokenResult {
-  data object Success : ValidateTokenResult
-  data object Failure : ValidateTokenResult
-}
+@JsExport data class GenerateTokenSuccess(val token: String) : GenerateTokenResult
 
-@JsExport
-sealed interface RefreshTokenResult {
-  data class Success(val token: String) : RefreshTokenResult
-  data object Failure : RefreshTokenResult
-}
+@JsExport data object GenerateTokenFailure : GenerateTokenResult
+
+@JsExport sealed interface ValidateTokenResult
+
+@JsExport data object ValidateTokenSuccess : ValidateTokenResult
+
+@JsExport data object ValidateTokenFailure : ValidateTokenResult
+
+@JsExport sealed interface RefreshTokenResult
+
+@JsExport data class RefreshTokenSuccess(val token: String) : RefreshTokenResult
+
+@JsExport data object RefreshTokenFailure : RefreshTokenResult

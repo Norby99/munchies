@@ -1,5 +1,7 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.GenerateTokenSuccess
+import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.usecase.VerifyUserEmailUseCase
@@ -8,14 +10,9 @@ import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.port.PasswordHasher
-import com.munchies.commons.domain.port.TokenProvider
-import com.munchies.commons.domain.port.GenerateTokenResult
 import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
-import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
-import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
-import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
-import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
@@ -126,7 +123,7 @@ class MicronautUserControllerTest {
     val controller = getController(
       fakeServices.copy(registerUser = registerUseCase),
       tokenProvider = mock {
-        on { generateToken(any()) } doReturn GenerateTokenResult.Success("sometoken")
+        on { generateToken(any()) } doReturn GenerateTokenSuccess("sometoken")
       },
     )
 
@@ -197,7 +194,7 @@ class MicronautUserControllerTest {
     val controller = getController(
       fakeServices.copy(loginUser = loginUseCase),
       tokenProvider = mock {
-        on { generateToken(any()) } doReturn GenerateTokenResult.Success("sometoken")
+        on { generateToken(any()) } doReturn GenerateTokenSuccess("sometoken")
       },
     )
 
@@ -375,7 +372,7 @@ class MicronautUserControllerTest {
 
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser(userId.value)
+    val response = controller.deleteUser(DeleteUserRequest(userId.value))
     response.status shouldBe HttpStatus.OK
     response.body() shouldNotBe null
     response.body().id shouldBe userId.value
@@ -390,7 +387,7 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser(userId.value)
+    val response = controller.deleteUser(DeleteUserRequest(userId.value))
 
     response.status shouldBe HttpStatus.NOT_FOUND
     verify(deleteUseCase).execute(userId)

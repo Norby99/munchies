@@ -1,13 +1,13 @@
 package com.munchies.user.infrastructure.adapter.outbound.token
 
+import com.munchies.commons.domain.port.*
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
-import com.munchies.user.domain.port.*
-import com.munchies.commons.domain.port.TokenProvider
-import com.munchies.commons.domain.port.RefreshTokenResult
-import com.munchies.commons.domain.port.GenerateTokenResult
-import com.munchies.commons.domain.port.ValidateTokenResult
+import com.munchies.user.domain.port.TimeProvider
+import com.munchies.user.domain.port.TokenRepository
+import com.munchies.user.domain.port.UserRepository
+import com.munchies.user.domain.port.defaultTimeProvider
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ class JsonWebTokenProviderTest {
       },
     )
 
-    provider.generateToken(UserId()) shouldBe GenerateTokenResult.Failure
+    provider.generateToken(UserId()) shouldBe GenerateTokenFailure
   }
 
   @Test
@@ -53,7 +53,7 @@ class JsonWebTokenProviderTest {
 
     val token = provider.generateToken(userId)
 
-    (token as GenerateTokenResult.Success).token.shouldNotBeEmpty()
+    (token as GenerateTokenSuccess).token.shouldNotBeEmpty()
   }
 
   @Test
@@ -72,7 +72,7 @@ class JsonWebTokenProviderTest {
     )
     val token = "token"
 
-    provider.validateToken(token) shouldBe ValidateTokenResult.Failure
+    provider.validateToken(token) shouldBe ValidateTokenFailure
   }
 
   @Test
@@ -89,7 +89,7 @@ class JsonWebTokenProviderTest {
         on { isRevoked(any()) } doReturn false
       },
     )
-    val token = (provider.generateToken(userId) as GenerateTokenResult.Success).token
+    val token = (provider.generateToken(userId) as GenerateTokenSuccess).token
 
     val verifier = getProvider(
       defaultTimeProvider(),
@@ -101,7 +101,7 @@ class JsonWebTokenProviderTest {
       },
     )
 
-    verifier.validateToken(token) shouldBe ValidateTokenResult.Success
+    verifier.validateToken(token) shouldBe ValidateTokenSuccess
   }
 
   @Test
@@ -121,7 +121,7 @@ class JsonWebTokenProviderTest {
       },
     )
 
-    verifier.validateToken(token) shouldBe ValidateTokenResult.Failure
+    verifier.validateToken(token) shouldBe ValidateTokenFailure
   }
 
   @Test
@@ -141,7 +141,7 @@ class JsonWebTokenProviderTest {
       },
     )
 
-    provider.refreshToken(token) shouldBe RefreshTokenResult.Failure
+    provider.refreshToken(token) shouldBe RefreshTokenFailure
   }
 
   @Test
@@ -158,7 +158,7 @@ class JsonWebTokenProviderTest {
       },
     )
 
-    provider.refreshToken(token) shouldBe RefreshTokenResult.Failure
+    provider.refreshToken(token) shouldBe RefreshTokenFailure
   }
 
   @Test
