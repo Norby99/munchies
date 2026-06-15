@@ -4,9 +4,10 @@ import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.port.*
-import com.munchies.user.domain.port.TokenProvider.Companion.GenerateTokenResult
-import com.munchies.user.domain.port.TokenProvider.Companion.RefreshTokenResult
-import com.munchies.user.domain.port.TokenProvider.Companion.ValidateTokenResult
+import com.munchies.commons.domain.port.TokenProvider
+import com.munchies.commons.domain.port.RefreshTokenResult
+import com.munchies.commons.domain.port.GenerateTokenResult
+import com.munchies.commons.domain.port.ValidateTokenResult
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeEmpty
 import org.junit.jupiter.api.Test

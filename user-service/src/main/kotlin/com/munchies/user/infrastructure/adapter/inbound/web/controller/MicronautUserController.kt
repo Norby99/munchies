@@ -1,13 +1,13 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.GenerateTokenResult
+import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
 import com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.port.TokenProvider
-import com.munchies.user.domain.port.TokenProvider.Companion.GenerateTokenResult
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
@@ -185,7 +185,7 @@ class MicronautUserController(
       )
     ) {
       is RegisterUser.Companion.RegisterUserResult.Success -> {
-        when (val token = tokenProvider.generateToken(userId = user.id)) {
+        when (val token = tokenProvider.generateToken(user.id)) {
           is GenerateTokenResult.Success ->
             HttpResponse
               .ok("User registered successfully")
@@ -251,7 +251,7 @@ class MicronautUserController(
         )
     ) {
       is LoginResult.Success -> {
-        when (val token = tokenProvider.generateToken(userId = UserId(result.userId))) {
+        when (val token = tokenProvider.generateToken(UserId(result.userId))) {
           is GenerateTokenResult.Success ->
             HttpResponse
               .ok("User logged successfully")
