@@ -7,12 +7,14 @@ import com.munchies.commons.UUIDEntityId
 import com.munchies.commons.domain.port.*
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.*
+import jakarta.inject.Singleton
 
+@Singleton
 class JsonWebTokenProvider(
-  val timeProvider: TimeProvider,
+  val timeProvider: TimeProvider = defaultTimeProvider(),
   val userRepository: UserRepository,
   val tokenRepository: TokenRepository,
-  val jWTSecret: String,
+  val jWTSecret: String = System.getenv(JWT_SECRET_ENV_NAME),
 ) : TokenProvider() {
 
   private val algorithm = Algorithm.HMAC256(jWTSecret)
