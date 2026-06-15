@@ -8,8 +8,8 @@ import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.port.PasswordHasher
-import com.munchies.user.domain.port.TokenProvider
-import com.munchies.user.domain.port.TokenProvider.Companion.GenerateTokenResult
+import com.munchies.commons.domain.port.TokenProvider
+import com.munchies.commons.domain.port.GenerateTokenResult
 import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
