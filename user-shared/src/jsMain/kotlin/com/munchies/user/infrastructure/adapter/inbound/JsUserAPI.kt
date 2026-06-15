@@ -1,10 +1,7 @@
 package com.munchies.user.infrastructure.adapter.inbound
 
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
-import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
-import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
-import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
-import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.*
 
 @JsExport
 interface JsGetUserAPI : UserAPI.Companion.GetUserAPI<String, UserDTO>
@@ -23,7 +20,7 @@ interface JsUpdateUserPasswordAPI :
 interface JsUpdateUserInfoAPI : UserAPI.Companion.UpdateUserInfoAPI<UpdateUserInfoRequest, UserDTO>
 
 @JsExport
-interface JsDeleteUserAPI : UserAPI.Companion.DeleteUserAPI<UserDTO>
+interface JsDeleteUserAPI : UserAPI.Companion.DeleteUserAPI<DeleteUserRequest, UserDTO>
 
 @JsExport
 interface JsEmailVerificationAPI : UserAPI.Companion.EmailVerificationAPI<UserDTO>

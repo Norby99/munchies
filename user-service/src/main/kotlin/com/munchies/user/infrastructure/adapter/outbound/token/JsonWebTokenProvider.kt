@@ -26,7 +26,7 @@ class JsonWebTokenProvider(
 
   override fun generateToken(id: UUIDEntityId): GenerateTokenResult {
     return userRepository.findById(UserId(id.value))?.let { user ->
-      GenerateTokenResult.Success(
+      GenerateTokenSuccess(
         JWT.create().withSubject(user.id.value)
           .withClaim(ID_CLAIM, user.id.value)
           .withClaim(ROLE_CLAIM, user.profile.role.name)
@@ -35,20 +35,20 @@ class JsonWebTokenProvider(
           .sign(algorithm),
       )
     }
-      ?: GenerateTokenResult.Failure.let {
+      ?: GenerateTokenFailure.let {
         print("user not found")
         it
       }
   }
 
   override fun validateToken(token: String): ValidateTokenResult {
-    if (tokenRepository.isRevoked(token)) return ValidateTokenResult.Failure
+    if (tokenRepository.isRevoked(token)) return ValidateTokenFailure
 
     return try {
       verifier.build().verify(token)
-      ValidateTokenResult.Success
+      ValidateTokenSuccess
     } catch (_: JWTVerificationException) {
-      ValidateTokenResult.Failure
+      ValidateTokenFailure
     }
   }
 
@@ -59,14 +59,14 @@ class JsonWebTokenProvider(
         .verify(expiredToken)
       val userId = decoded.getClaim(ID_CLAIM).asString()
       generateToken(UserId(userId)).let { res ->
-        if (res is GenerateTokenResult.Success) {
-          RefreshTokenResult.Success(res.token)
+        if (res is GenerateTokenSuccess) {
+          RefreshTokenSuccess(res.token)
         } else {
-          RefreshTokenResult.Failure
+          RefreshTokenFailure
         }
       }
     } catch (_: JWTVerificationException) {
-      RefreshTokenResult.Failure
+      RefreshTokenFailure
     }
   }
 

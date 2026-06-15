@@ -2,7 +2,7 @@ package com.munchies.user.infrastructure.adapter.outbound.http
 
 import com.munchies.payment.infrastructure.adapter.dto.Currency
 import com.munchies.payment.infrastructure.adapter.dto.PaymentStatus
-import com.munchies.payment.infrastructure.adapter.inbound.PaymentInterface
+import com.munchies.payment.infrastructure.adapter.inbound.PaymentAPI
 import com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest
 import com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse
 import io.micronaut.http.client.HttpClient
@@ -20,7 +20,7 @@ class PaymentService(
   @Client("\${micronaut.http.services.payment-service.url}")
   private val httpClient: HttpClient,
   private val objectMapper: ObjectMapper,
-) : PaymentInterface {
+) : PaymentAPI() {
   override fun processPayment(request: ProcessPaymentRequest): ProcessPaymentResponse {
     val req = io.micronaut.http.HttpRequest.POST("/payments", "{}")
     val response = httpClient.toBlocking().exchange(req, String::class.java)

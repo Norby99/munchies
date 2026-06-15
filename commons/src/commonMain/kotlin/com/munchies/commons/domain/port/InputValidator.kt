@@ -8,3 +8,9 @@ abstract class InputValidator {
 
 @JsExport
 interface InputValidatorResult
+
+@JsExport
+data object ValidInput : InputValidatorResult
+
+@JsExport
+data class InvalidInput(val reason: String = "") : InputValidatorResult
