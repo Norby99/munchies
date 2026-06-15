@@ -33,9 +33,9 @@ export class PaymentController extends PaymentAPI {
   ): PaymentResponse {
     return new PaymentResponse(
       newId(),
-      PaymentStatus.CANCELLED,
-      10,
-      Currency.AUD
+      PaymentStatus.COMPLETED,
+      request.paymentDetails.amount,
+      request.paymentDetails.currency
     );
   }
 }
