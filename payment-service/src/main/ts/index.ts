@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   const controller = new PaymentController();
 
   app.post("/payments", (req, res) => {
-    //console.log(req);
+    console.log(req);
     const request = new PaymentRequest(
       "",
       new PaymentDetails(100, PaymentMethod.CARD, Currency.AUD)

@@ -11,10 +11,10 @@ import jakarta.inject.Singleton
 
 @Singleton
 class JsonWebTokenProvider(
-  val timeProvider: TimeProvider = defaultTimeProvider(),
-  val userRepository: UserRepository,
-  val tokenRepository: TokenRepository,
-  val jWTSecret: String = System.getenv(JWT_SECRET_ENV_NAME),
+  private val timeProvider: TimeProvider = defaultTimeProvider(),
+  private val userRepository: UserRepository,
+  private val tokenRepository: TokenRepository,
+  private val jWTSecret: String = System.getenv(JWT_SECRET_ENV_NAME),
 ) : TokenProvider() {
 
   private val algorithm = Algorithm.HMAC256(jWTSecret)

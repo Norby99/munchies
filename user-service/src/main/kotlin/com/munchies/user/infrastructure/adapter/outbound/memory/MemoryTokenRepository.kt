@@ -7,9 +7,9 @@ import com.munchies.user.domain.port.TokenRepository
 import jakarta.inject.Singleton
 
 @Singleton
-interface MemoryTokenRepository : TokenRepository {
-
-  val repository: InMemoryRepository<TokenId, Token>
+class MemoryTokenRepository(
+  private val repository: InMemoryRepository<TokenId, Token> = InMemoryRepository(),
+) : TokenRepository {
 
   override fun findById(id: TokenId): Token? = repository.findById(id)
 
