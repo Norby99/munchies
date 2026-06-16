@@ -1,8 +1,8 @@
-package com.munchies.order.application.port.inbound.command
+package com.munchies.order.infrastructure.adapter.inbound.request
 
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
-sealed interface PlaceOrderCommand {
+sealed interface PlaceOrderRequest {
   val restaurantId: String
   val customerId: String
   val items: List<OrderItemDto>
@@ -15,7 +15,7 @@ sealed interface PlaceOrderCommand {
     val deliveryAddress: String,
     val bellName: String,
     val customerPhone: String,
-  ) : PlaceOrderCommand
+  ) : PlaceOrderRequest
 
   data class Takeaway(
     override val restaurantId: String,
@@ -23,7 +23,7 @@ sealed interface PlaceOrderCommand {
     override val items: List<OrderItemDto>,
     val pickupTime: Long,
     val customerName: String,
-  ) : PlaceOrderCommand
+  ) : PlaceOrderRequest
 
   data class DineIn(
     override val restaurantId: String,
@@ -31,5 +31,5 @@ sealed interface PlaceOrderCommand {
     override val items: List<OrderItemDto>,
     val tableNumber: Int,
     val numberOfGuests: Int,
-  ) : PlaceOrderCommand
+  ) : PlaceOrderRequest
 }
