@@ -6,6 +6,8 @@ package com.munchies.order.domain.model
  * @property menuItemId The unique identifier of the menu item being ordered.
  * @property quantity The quantity of the menu item being ordered.
  */
-data class OrderItem(val menuItemId: String, val quantity: Int) {
+data class OrderItem(val menuItemId: MenuItemId, val quantity: Int) {
   fun isValid(): Boolean = quantity > 0
 }
+
+@JvmInline value class MenuItemId(val value: String)

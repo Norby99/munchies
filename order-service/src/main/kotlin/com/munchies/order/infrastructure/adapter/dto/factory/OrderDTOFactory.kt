@@ -6,18 +6,18 @@ import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.DineInOrder
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderId
-import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDomain
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDto
 
 object OrderDTOFactory {
   fun Order.toDto(): OrderDto {
-    val itemsDto = items.map { OrderItemDto(it.menuItemId, it.quantity) }
+    val itemsDto = items.map { it.toDto() }
     return when (this) {
       is DeliveryOrder -> OrderDto.Delivery(
         orderId = id.value,
@@ -52,7 +52,7 @@ object OrderDTOFactory {
   }
 
   fun OrderDto.toDomain(): Order {
-    val domainItems = items.map { OrderItem(it.menuItemId, it.quantity) }
+    val domainItems = items.map { it.toDomain() }
     val domainId = OrderId(orderId)
     val domainRestaurantId = RestaurantId(restaurantId)
     val domainCustomerId = CustomerId(customerId)
