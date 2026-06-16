@@ -1,10 +1,10 @@
-package com.munchies.order.application.port.inbound
+package com.munchies.order.application
 
-import com.munchies.order.application.port.inbound.command.UpdateDeliveryOrderCommand
+import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
 
 interface UpdateDeliveryOrderInfo {
 
-  fun execute(command: UpdateDeliveryOrderCommand): Result
+  fun execute(command: UpdateDeliveryOrderRequest): Result
 
   sealed interface Result {
     data object Success : Result
