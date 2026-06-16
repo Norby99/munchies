@@ -1,6 +1,6 @@
-package com.munchies.order.application.port.inbound.command
+package com.munchies.order.infrastructure.adapter.inbound.request
 
-data class UpdateDeliveryOrderCommand(
+data class UpdateDeliveryOrderRequest(
   val orderId: String,
   val customerId: String,
   val estimatedDeliveryTime: Long,
