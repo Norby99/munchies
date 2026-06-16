@@ -1,10 +1,10 @@
-package com.munchies.order.application
+package com.munchies.order.application.port.inbound
 
-import com.munchies.order.infrastructure.adapter.inbound.request.DiscardOrderRequest
+import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 
 interface DiscardOrder {
 
-  fun execute(command: DiscardOrderRequest): Result
+  fun execute(command: DiscardOrderCommand): Result
 
   sealed interface Result {
     data object Success : Result

@@ -4,11 +4,8 @@ import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.application.port.inbound.command.PlaceOrderCommand
 import com.munchies.order.domain.factory.OrderCreationResult
 import com.munchies.order.domain.factory.OrderFactory
-import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryInfo
 import com.munchies.order.domain.model.OrderId
-import com.munchies.order.domain.model.OrderItem
-import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.ports.OrderRepository
@@ -20,9 +17,9 @@ class PlaceOrderUseCase(
 
   override fun execute(command: PlaceOrderCommand): PlaceOrder.Result {
     val id = OrderId()
-    val restaurantId = RestaurantId(command.restaurantId)
-    val customerId = CustomerId(command.customerId)
-    val items = command.items.map { OrderItem(it.menuItemId, it.quantity) }
+    val restaurantId = command.restaurantId
+    val customerId = command.customerId
+    val items = command.items
 
     val creationResult = when (command) {
       is PlaceOrderCommand.Delivery -> OrderFactory.createDelivery(

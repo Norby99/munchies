@@ -6,7 +6,6 @@ import com.munchies.order.application.port.inbound.UpdateOrderItems.Result.Succe
 import com.munchies.order.application.port.inbound.command.UpdateOrderItemsCommand
 import com.munchies.order.domain.model.Order.ItemsValidationError
 import com.munchies.order.domain.model.Order.UpdateResult.Failure.InvalidItems
-import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.ports.OrderRepository
 
@@ -15,11 +14,11 @@ class UpdateOrderItemsUseCase(
 ) : UpdateOrderItems {
 
   override fun execute(command: UpdateOrderItemsCommand): UpdateOrderItems.Result {
-    val order = repository.findById(OrderId(command.orderId))
+    val order = repository.findById(command.orderId)
 
     return when {
       order == null -> OrderNotFound
-      order.customerId.value != command.customerId -> Unauthorized
+      order.customerId != command.customerId -> Unauthorized
       else -> {
         val items = command.items.map { OrderItem(it.menuItemId, it.quantity) }
         when (val result = order.updateItems(items)) {

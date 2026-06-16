@@ -1,11 +1,11 @@
-package com.munchies.order.application
+package com.munchies.order.application.port.inbound
 
+import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.inbound.request.GetOrderDetailsRequest
 
 interface GetOrderDetails {
 
-  fun execute(command: GetOrderDetailsRequest): Result
+  fun execute(command: GetOrderDetailsCommand): Result
 
   sealed interface Result {
     data class Success(val order: OrderDto) : Result
