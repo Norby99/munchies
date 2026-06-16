@@ -1,9 +1,9 @@
-package com.munchies.order.application
+package com.munchies.order.application.port.inbound
 
-import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
+import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCommand
 
 interface AdvanceOrderStatus {
-  fun execute(command: AdvanceOrderStatusRequest): Result
+  fun execute(command: AdvanceOrderStatusCommand): Result
 
   sealed interface Result {
     data object Success : Result
