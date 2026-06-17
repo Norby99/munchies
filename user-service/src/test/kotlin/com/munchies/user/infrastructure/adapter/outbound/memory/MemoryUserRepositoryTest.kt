@@ -1,9 +1,7 @@
 package com.munchies.user.infrastructure.adapter.outbound.memory
 
 import com.munchies.commons.repository.InMemoryRepository
-import com.munchies.user.domain.factory.UserFactory
-import com.munchies.user.domain.model.User
-import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.*
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
@@ -41,25 +39,26 @@ class MemoryUserRepositoryTest {
 
   @Test
   fun `repository correctly finds existing id`() {
-    val id = UserId()
-
-    repository.save(UserFactory.default.create(id.value))
-    repository.findById(id)?.shouldBeEqual(UserFactory.default.create(id.value))
+    repository.save(exampleUser)
+    repository.findById(exampleUserId)?.shouldBeEqual(exampleUser)
   }
 
   @Test
   fun save() {
-    val user = UserFactory.default.create(UserId().value)
+    val user = exampleUser
     repository.save(user)
     repository.findById(user.id)?.shouldBeEqual(user)
   }
 
   @Test
   fun update() {
-    val user = UserFactory.default.create(UserId().value)
+    val user = exampleUser
     repository.save(user)
 
-    val updatedUser = user.copy(profile = user.profile.copy(username = "Updated Name"))
+    val updatedUser = user.update(
+      id = user.id,
+      profile = user.profile.copy(username = "Updated Name"),
+    )
     repository.update(updatedUser)
 
     repository.findById(user.id)?.shouldBeEqual(updatedUser)
@@ -67,7 +66,7 @@ class MemoryUserRepositoryTest {
 
   @Test
   fun delete() {
-    val user = UserFactory.default.create(UserId().value)
+    val user = exampleUser
     repository.save(user)
     repository.delete(user)
     repository.findById(user.id) shouldBe null

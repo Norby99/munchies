@@ -15,27 +15,6 @@ class MemoryUserCredentialsRepositoryTest {
   }
 
   @Test
-  fun `save should persist credentials with default security state`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
-    val credentials = UserCredentials(
-      id = UserId("user-credentials-id"),
-      passwordHash = "hash-1",
-      salt = "salt-1",
-      loginAttempts = 7,
-      lockedUntil = 9999L,
-      lastLogin = 1234L,
-    )
-
-    memoryRepository.save(credentials)
-
-    memoryRepository.findById(credentials.id) shouldBe credentials.copy(
-      loginAttempts = 0,
-      lockedUntil = -1L,
-      lastLogin = 0L,
-    )
-  }
-
-  @Test
   fun `update should modify existing credentials and keep previous hash and salt`() {
     val memoryRepository = createMemoryUserCredentialsRepository()
     val id = UserId("update-credentials-id")

@@ -4,12 +4,12 @@ import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.UserRepository
 import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserDocument
-import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserDocumentFactory
+import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserDocumentFactory.toDocument
+import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserDocumentFactory.toNullableDomain
 import io.micronaut.context.annotation.Requires
 import io.micronaut.data.mongodb.annotation.MongoRepository
 import io.micronaut.data.repository.CrudRepository
 import jakarta.inject.Singleton
-import kotlin.jvm.optionals.getOrNull
 
 /**
  * Micronaut Data Mongo repository contract for low-level CRUD operations on [UserDocument].
@@ -31,7 +31,6 @@ sealed interface MongoCrudUserRepository : CrudRepository<UserDocument, String>
 @Requires(env = ["prod"])
 class MongoUserRepository(
   private val repository: MongoCrudUserRepository,
-  private val documentFactory: UserDocumentFactory = UserDocumentFactory.default,
 ) : UserRepository {
 
   /**
@@ -41,8 +40,8 @@ class MongoUserRepository(
    * @return the mapped domain [User] when found, or `null` otherwise.
    */
   override fun findById(id: UserId): User? = repository.findById(id.value).map {
-    documentFactory.run { it.toDomain() }
-  }.getOrNull()
+    it.toNullableDomain()
+  }.orElse(null)
 
   /**
    * Persists a new [User] entity.
@@ -50,7 +49,7 @@ class MongoUserRepository(
    * @param entity domain user to be stored.
    */
   override fun save(entity: User) {
-    repository.save(documentFactory.run { entity.toDocument() })
+    repository.save(entity.toDocument())
   }
 
   /**
@@ -59,7 +58,7 @@ class MongoUserRepository(
    * @param entity domain user with updated state.
    */
   override fun update(entity: User) {
-    repository.update(documentFactory.run { entity.toDocument() })
+    repository.update(entity.toDocument())
   }
 
   /**
@@ -68,14 +67,14 @@ class MongoUserRepository(
    * @param entity domain user to remove.
    */
   override fun delete(entity: User) {
-    repository.delete(documentFactory.run { entity.toDocument() })
+    repository.delete(entity.toDocument())
   }
 
   override fun findByEmail(email: String): User? = repository.findAll().asSequence().map {
-    documentFactory.run { it.toDomain() }
-  }.firstOrNull { it.profile.email.address == email }
+    it.toNullableDomain()
+  }.firstOrNull { it?.profile?.email?.address == email }
 
   override fun findByUsername(username: String): User? = repository.findAll().asSequence().map {
-    documentFactory.run { it.toDomain() }
-  }.firstOrNull { it.profile.username == username }
+    it.toNullableDomain()
+  }.firstOrNull { it?.profile?.username == username }
 }

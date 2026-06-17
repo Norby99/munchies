@@ -1,9 +1,9 @@
 package com.munchies.user.infrastructure.adapter.outbound.token
 
 import com.munchies.commons.domain.port.*
-import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.model.exampleUser
+import com.munchies.user.domain.model.update
 import com.munchies.user.domain.port.TimeProvider
 import com.munchies.user.domain.port.TokenRepository
 import com.munchies.user.domain.port.UserRepository
@@ -42,7 +42,7 @@ class JsonWebTokenProviderTest {
   @Test
   fun `generate token returns success when user is found`() {
     val userId = UserId()
-    val user = User(userId, profile = UserProfile.empty)
+    val user = exampleUser.update(userId)
 
     val provider = getProvider(
       defaultTimeProvider(),
@@ -59,7 +59,7 @@ class JsonWebTokenProviderTest {
   @Test
   fun `validate token returns failure when token is revoked`() {
     val userId = UserId()
-    val user = User(userId, profile = UserProfile.empty)
+    val user = exampleUser.update(userId)
 
     val provider = getProvider(
       defaultTimeProvider(),
@@ -78,7 +78,7 @@ class JsonWebTokenProviderTest {
   @Test
   fun `validate token returns success when token has not expired`() {
     val userId = UserId()
-    val user = User(userId, profile = UserProfile.empty)
+    val user = exampleUser.update(userId)
 
     val provider = getProvider(
       defaultTimeProvider(),
@@ -107,7 +107,7 @@ class JsonWebTokenProviderTest {
   @Test
   fun `validate token returns failure when token is invalid`() {
     val userId = UserId()
-    val user = User(userId, profile = UserProfile.empty)
+    val user = exampleUser.update(userId)
 
     val token = "prova"
 
@@ -127,7 +127,7 @@ class JsonWebTokenProviderTest {
   @Test
   fun `refresh token returns failure when token is invalid`() {
     val userId = UserId()
-    val user = User(userId, profile = UserProfile.empty)
+    val user = exampleUser.update(userId)
 
     val token = "prova"
 

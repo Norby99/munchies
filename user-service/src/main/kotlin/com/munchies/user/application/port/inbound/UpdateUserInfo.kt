@@ -10,6 +10,7 @@ interface UpdateUserInfo {
     sealed interface UpdateUserInfoResult {
       data object Success : UpdateUserInfoResult
       data object UserNotFound : UpdateUserInfoResult
+      data class Failure(val reason: String = "") : UpdateUserInfoResult
     }
   }
 }

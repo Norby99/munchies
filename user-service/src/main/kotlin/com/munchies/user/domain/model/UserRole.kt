@@ -24,7 +24,8 @@ enum class UserRole {
      */
     fun String.toUserRole(): UserRole = when (this.uppercase()) {
       "MANAGER" -> MANAGER
-      else -> CUSTOMER
+      "CUSTOMER" -> CUSTOMER
+      else -> throw IllegalArgumentException("Invalid User Role")
     }
   }
 }

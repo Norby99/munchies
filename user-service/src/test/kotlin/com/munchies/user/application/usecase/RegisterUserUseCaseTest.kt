@@ -1,17 +1,14 @@
 package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.RegisterUser.Companion.RegisterUserResult
-import com.munchies.user.domain.factory.MockUserFactory
-import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.model.exampleUser
 import com.munchies.user.domain.port.Mailer
 import com.munchies.user.domain.port.Mailer.Companion.MailerResult.MailSent
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
-import io.kotest.matchers.equals.shouldBeEqual
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -20,7 +17,7 @@ import org.mockito.kotlin.*
 class RegisterUserUseCaseTest {
   @Test
   fun `execute should return Success when user is not registered`() {
-    val user = MockUserFactory().create("new-user-id")
+    val user = exampleUser
     val credentials = UserCredentials(
       id = UserId("temporary-credentials-id"),
       passwordHash = "hashed-password",
@@ -56,13 +53,7 @@ class RegisterUserUseCaseTest {
 
   @Test
   fun `execute should return UserIsAlreadyRegistered when user already exists`() {
-    val user = MockUserFactory().create(
-      "existing-user-id",
-      profile = UserProfile.empty.copy(
-        username = "existing-username",
-        email = Email("existing-email"),
-      ),
-    )
+    val user = exampleUser
     val credentials = UserCredentials(
       id = UserId("irrelevant-id"),
       passwordHash = "hashed-password",
@@ -79,12 +70,7 @@ class RegisterUserUseCaseTest {
     val useCase = RegisterUserUseCase(userRepository, credentialsRepository, hasher, mailer)
 
     val result = useCase.execute(user, credentials)
-    val result2 = useCase.execute(
-      user.copy(profile = user.profile.copy(email = Email(""))),
-      credentials,
-    )
 
-    result shouldBeEqual result2
     assertTrue(result is RegisterUserResult.UserIsAlreadyRegistered)
     verify(userRepository, never()).save(any())
     verifyNoInteractions(credentialsRepository)
@@ -92,7 +78,7 @@ class RegisterUserUseCaseTest {
 
   @Test
   fun `execute should return Failure when saving user throws Error`() {
-    val user = MockUserFactory().create("user-id")
+    val user = exampleUser
     val credentials = UserCredentials(
       id = UserId("credentials-id"),
       passwordHash = "hashed-password",

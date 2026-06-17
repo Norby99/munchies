@@ -3,9 +3,9 @@ package com.munchies.user.application.usecase
 import com.munchies.user.application.port.inbound.VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail
 import com.munchies.user.application.port.inbound.VerifyUserEmail.Companion.VerifyUserEmailResult.InvalidRequest
 import com.munchies.user.domain.model.Email
-import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.model.exampleUser
+import com.munchies.user.domain.model.update
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserRepository
 import io.kotest.matchers.shouldBe
@@ -19,8 +19,7 @@ class VerifyUserEmailUseCaseTest {
   val userId = UserId()
   val fakeId = UserId(userId.value + "fake")
   val email = "email"
-  val user =
-    User(id = userId, profile = UserProfile.empty.copy(email = Email(email)))
+  val user = exampleUser.update(userId, exampleUser.profile.copy(email = Email(email)))
 
   val otk = "otk"
 

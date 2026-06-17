@@ -19,13 +19,7 @@ class VerifyUserEmailUseCase(
       return InvalidRequest
     }
     userRepository.update(
-      user.copy(
-        profile = user.profile.copy(
-          email = user.profile.email.copy(
-            isVerified = true,
-          ),
-        ),
-      ),
+      user.updateEmailAsVerified(),
     )
     return ConfirmedEmail
   }
