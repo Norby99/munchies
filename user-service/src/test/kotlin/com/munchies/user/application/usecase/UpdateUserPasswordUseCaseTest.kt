@@ -1,13 +1,14 @@
 package com.munchies.user.application.usecase
 
+import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.application.port.inbound.UpdateUserPassword.Companion.UpdateUserPasswordResult
-import com.munchies.user.domain.factory.UserFactory
 import com.munchies.user.domain.model.*
-import com.munchies.user.domain.port.PasswordHasher
-import com.munchies.user.domain.port.TimeProvider
-import com.munchies.user.domain.port.UserCredentialsRepository
-import com.munchies.user.domain.port.UserRepository
+import com.munchies.user.domain.port.*
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserCredentialsRepository
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -41,15 +42,19 @@ class UpdateUserPasswordUseCaseTest {
     timeProvider = timeProvider,
   )
 
+  private class MemoryUserCredentialRepositoryImpl(
+    override val repository: InMemoryRepository<UserId, UserCredentials> = InMemoryRepository(),
+  ) : MemoryUserCredentialsRepository
+
   val validId = "userId"
   val validUserId = UserId(validId)
   val validUsername = "validUsername"
   val validEmail = "validEmail"
   val invalidUsername = "invalidUsername"
   val invalidEmail = "invalidEmail"
-  val validUser = UserFactory.default.create(
+  val validUser = exampleUser.update(
     validId,
-    UserProfile.empty.copy(
+    UserProfile(
       username = validUsername,
       email = Email(validEmail),
       role = UserRole.MANAGER,
@@ -66,7 +71,9 @@ class UpdateUserPasswordUseCaseTest {
     val useCase = fakeUpdateUserPasswordUseCase()
 
     val result = useCase.execute(
-      validUser.copy(profile = validUser.profile.copy(email = Email(""))),
+      validId,
+      validUsername,
+      validEmail,
       validPassword,
       "newPassword",
     )
@@ -83,8 +90,13 @@ class UpdateUserPasswordUseCaseTest {
       },
     )
 
-    val result = useCase.execute(validUser, validPassword, "newPassword")
-
+    val result = useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
     result shouldBe UpdateUserPasswordResult.UserNotFound
   }
 
@@ -96,8 +108,13 @@ class UpdateUserPasswordUseCaseTest {
       },
     )
 
-    val result = useCase.execute(validUser, validPassword, "newPassword")
-
+    val result = useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
     result shouldBe UpdateUserPasswordResult.UserNotFound
   }
 
@@ -110,8 +127,13 @@ class UpdateUserPasswordUseCaseTest {
       },
     )
 
-    val result = useCase.execute(validUser, "wrongPassword", "newPassword")
-
+    val result = useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      "wrongPassword",
+      "newPassword",
+    )
     result shouldBe UpdateUserPasswordResult.WrongCredentials
   }
 
@@ -130,76 +152,121 @@ class UpdateUserPasswordUseCaseTest {
       timeProvider = { currentTime },
     )
 
-    val result = useCase.execute(validUser, validPassword, "newPassword")
-
+    val result = useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
     result shouldBe UpdateUserPasswordResult.LockedUser
   }
 
   @Test
   fun `execute should update password with new hash and salt on success`() {
-    val credentialsRepository = mock<UserCredentialsRepository> {
-      on { findById(validUserId) } doReturn UserCredentials(
+    val repo = MemoryUserCredentialRepositoryImpl()
+
+    repo.save(
+      UserCredentials(
         validUserId,
         hashedValidPassword,
         validSalt,
-      )
-    }
+      ),
+    )
+
     val hasher = mock<PasswordHasher> {
       on { hash(password = any(), salt = any()) } doReturn hashedValidPassword
       on { generateSalt() } doReturn generatedSalt
     }
     val useCase = fakeUpdateUserPasswordUseCase(
-      credentialsRepository = credentialsRepository,
+      credentialsRepository = repo,
       hasher = hasher,
     )
 
-    useCase.execute(validUser, validPassword, "newPassword")
+    useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
+
+    val updated = repo.findById(validUserId)
+    updated shouldNotBe null
+    updated!!.passwordHash shouldBe hashedValidPassword
   }
 
   @Test
   fun `execute should reset login attempts on successful password update`() {
-    val credentialsRepository = mock<UserCredentialsRepository> {
-      on { findById(validUserId) } doReturn UserCredentials(
+    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    credentialsRepository.save(
+      UserCredentials(
         validUserId,
         hashedValidPassword,
         validSalt,
         loginAttempts = 5,
-      )
-    }
+      ),
+    )
     val useCase = fakeUpdateUserPasswordUseCase(
       credentialsRepository = credentialsRepository,
     )
 
-    useCase.execute(validUser, validPassword, "newPassword")
+    useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
+
+    val updated = credentialsRepository.findById(validUserId)
+    updated shouldNotBe null
+    updated!!.loginAttempts shouldBe 0
   }
 
   @Test
   fun `execute should reset lock on successful password update`() {
-    val credentialsRepository = mock<UserCredentialsRepository> {
-      on { findById(validUserId) } doReturn UserCredentials(
+    val lockedUntil = currentTime - 1000L
+    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    credentialsRepository.save(
+      UserCredentials(
         validUserId,
         hashedValidPassword,
         validSalt,
-        lockedUntil = currentTime + 100000L,
-      )
-    }
+        lockedUntil = currentTime,
+      ),
+    )
+
     val useCase = fakeUpdateUserPasswordUseCase(
       credentialsRepository = credentialsRepository,
     )
 
-    useCase.execute(validUser, validPassword, "newPassword")
+    useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
+
+    val updated = credentialsRepository.findById(validUserId)
+    updated shouldNotBe null
+    updated!!.lockedUntil shouldNotBe lockedUntil
   }
 
   @Test
   fun `execute should increment login attempts on wrong password`() {
-    val credentialsRepository = mock<UserCredentialsRepository> {
-      on { findById(validUserId) } doReturn UserCredentials(
-        validUserId,
-        hashedValidPassword,
-        validSalt,
-        loginAttempts = 2,
-      )
-    }
+    val attemps = 2
+    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    val cred = UserCredentials(
+      id = validUserId,
+      passwordHash = hashedValidPassword,
+      salt = validSalt,
+      lockedUntil = 0,
+      lastLogin = 0,
+      loginAttempts = attemps,
+    )
+    credentialsRepository.save(cred)
     val hasher = mock<PasswordHasher> {
       on { hash(password = any(), salt = any()) } doReturn "wrongHash"
       on { generateSalt() } doReturn generatedSalt
@@ -209,19 +276,33 @@ class UpdateUserPasswordUseCaseTest {
       hasher = hasher,
     )
 
-    useCase.execute(validUser, "wrongPassword", "newPassword")
+    useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      "wrongPassword",
+      "newPassword",
+    )
+
+    val updated = credentialsRepository.findById(validUserId)
+    updated shouldNotBe null
+    println(updated)
+    updated!!.loginAttempts shouldBe attemps + 1
   }
 
   @Test
   fun `execute should lock account for one hour on wrong password`() {
-    val credentialsRepository = mock<UserCredentialsRepository> {
-      on { findById(validUserId) } doReturn UserCredentials(
-        validUserId,
-        hashedValidPassword,
-        validSalt,
-        loginAttempts = 0,
-      )
-    }
+    val time = defaultTimeProvider().invoke()
+
+    val cred = UserCredentials(
+      validUserId,
+      hashedValidPassword,
+      validSalt,
+      loginAttempts = 0,
+      lockedUntil = 0,
+    )
+    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    credentialsRepository.save(cred)
     val hasher = mock<PasswordHasher> {
       on { hash(password = any(), salt = any()) } doReturn "wrongHash"
       on { generateSalt() } doReturn generatedSalt
@@ -229,10 +310,21 @@ class UpdateUserPasswordUseCaseTest {
     val useCase = fakeUpdateUserPasswordUseCase(
       credentialsRepository = credentialsRepository,
       hasher = hasher,
-      timeProvider = { currentTime },
+      timeProvider = { time },
     )
 
-    useCase.execute(validUser, "wrongPassword", "newPassword")
+    useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      "wrongPassword",
+      "newPassword",
+    ).shouldBeInstanceOf<UpdateUserPasswordResult.WrongCredentials>()
+
+    val updated = credentialsRepository.findById(validUserId)
+    updated shouldNotBe null
+    updated!!.loginAttempts shouldBe 1
+    updated.lockedUntil shouldBeGreaterThan time
   }
 
   @Test
@@ -243,12 +335,13 @@ class UpdateUserPasswordUseCaseTest {
     val useCase = fakeUpdateUserPasswordUseCase(
       userRepository = userRepository,
     )
-    val userWithoutUsername = validUser.copy(
-      profile = validUser.profile.copy(username = ""),
+    val result = useCase.execute(
+      validId,
+      "",
+      validEmail,
+      validPassword,
+      "newPassword",
     )
-
-    val result = useCase.execute(userWithoutUsername, validPassword, "newPassword")
-
     result shouldBe UpdateUserPasswordResult.Success
   }
 
@@ -260,24 +353,27 @@ class UpdateUserPasswordUseCaseTest {
     val useCase = fakeUpdateUserPasswordUseCase(
       userRepository = userRepository,
     )
-    val userWithoutEmail = validUser.copy(
-      profile = validUser.profile.copy(email = Email("")),
+
+    val result = useCase.execute(
+      validId,
+      validUsername,
+      "",
+      validPassword,
+      "newPassword",
     )
-
-    val result = useCase.execute(userWithoutEmail, validPassword, "newPassword")
-
     result shouldBe UpdateUserPasswordResult.Success
   }
 
   @Test
   fun `execute should return UserNotFound when both email and username are blank`() {
     val useCase = fakeUpdateUserPasswordUseCase()
-    val userWithoutIdentifiers = validUser.copy(
-      profile = validUser.profile.copy(email = Email(""), username = ""),
+    val result = useCase.execute(
+      validId,
+      "",
+      "",
+      validPassword,
+      "newPassword",
     )
-
-    val result = useCase.execute(userWithoutIdentifiers, validPassword, "newPassword")
-
     result shouldBe UpdateUserPasswordResult.UserNotFound
   }
 
@@ -300,6 +396,12 @@ class UpdateUserPasswordUseCaseTest {
       hasher = hasher,
     )
 
-    useCase.execute(validUser, validPassword, "newPassword")
+    useCase.execute(
+      validId,
+      validUsername,
+      validEmail,
+      validPassword,
+      "newPassword",
+    )
   }
 }

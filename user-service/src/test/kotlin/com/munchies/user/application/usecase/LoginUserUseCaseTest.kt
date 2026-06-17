@@ -1,7 +1,6 @@
 package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
-import com.munchies.user.domain.factory.UserFactory
 import com.munchies.user.domain.model.*
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
@@ -47,12 +46,12 @@ class LoginUserUseCaseTest {
   val invalidUsername = "invalidUsername"
   val validEmail = "validEmail"
   val invalidEmail = "invalidEmail"
-  val validUser = UserFactory.default.create(
-    validId,
-    UserProfile.empty.copy(
+  val validUser = exampleUser.update(
+    id = validId,
+    profile = UserProfile(
       username = validUsername,
       email = Email(validEmail),
-      role = UserRole.MANAGER,
+      role = UserRole.CUSTOMER,
     ),
   )
 
@@ -64,10 +63,10 @@ class LoginUserUseCaseTest {
   fun `login should succeed with valid credentials`() {
     val useCase = fakeLoginUserUserUseCase()
 
-    val result = useCase.execute(validEmail, "", validPassword)
+    val result = useCase.execute(validEmail, validUsername, validPassword)
     result shouldBe LoginResult.Success(validId)
 
-    val result2 = useCase.execute("", validUsername, validPassword)
+    val result2 = useCase.execute(validEmail, validUsername, validPassword)
     result2 shouldBe LoginResult.Success(validId)
   }
 

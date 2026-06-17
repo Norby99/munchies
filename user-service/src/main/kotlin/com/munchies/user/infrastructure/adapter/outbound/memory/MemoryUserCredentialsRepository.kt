@@ -41,13 +41,7 @@ interface MemoryUserCredentialsRepository : UserCredentialsRepository {
    *
    * @param entity The UserCredentials entity to be saved.
    */
-  override fun save(entity: UserCredentials) = repository.save(
-    entity.copy(
-      loginAttempts = 0,
-      lastLogin = 0L,
-      lockedUntil = -1L,
-    ),
-  )
+  override fun save(entity: UserCredentials) = repository.save(entity)
 
   /**
    * Updates an existing UserCredentials entity in the repository.
@@ -58,11 +52,11 @@ interface MemoryUserCredentialsRepository : UserCredentialsRepository {
    * @param entity The UserCredentials entity with updated values.
    */
   override fun update(entity: UserCredentials) {
-    repository.findById(entity.id)?.let {
+    repository.findById(entity.id)?.let { cred ->
       repository.update(
-        it.copy(
-          passwordHash = entity.passwordHash.ifEmpty { it.passwordHash },
-          salt = entity.salt.ifEmpty { it.salt },
+        cred.copy(
+          passwordHash = entity.passwordHash.ifEmpty { cred.passwordHash },
+          salt = entity.salt.ifEmpty { cred.salt },
           loginAttempts = entity.loginAttempts,
           lockedUntil = entity.lockedUntil,
           lastLogin = entity.lastLogin,

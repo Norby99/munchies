@@ -5,13 +5,13 @@ import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.usecase.VerifyUserEmailUseCase
-import com.munchies.user.domain.factory.MockUserFactory
-import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.model.exampleUser
+import com.munchies.user.domain.model.update
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserRepository
-import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
@@ -42,28 +42,17 @@ class MicronautUserControllerTest {
 
   private fun getController(
     services: UserServices = fakeServices,
-    dtoFactory: UserDTOFactory = UserDTOFactory.default,
     emailConfirmationKafkaClient: EmailConfirmationClient = mock(),
     tokenProvider: TokenProvider = mock(),
   ) = MicronautUserController(
     services = services,
-    dtoFactory = dtoFactory,
     emailConfirmationKafkaClient = emailConfirmationKafkaClient,
     paymentClient = mock(),
     tokenProvider = tokenProvider,
   )
 
-  private val dtoFactory = UserDTOFactory.default
-
-  private val validUserDto = dtoFactory.run {
-    MockUserFactory()
-      .create(
-        "valid-user-id",
-        profile = UserProfile.empty
-          .copy(username = "valid-username", email = Email("valid-email")),
-      )
-      .fromDomain()
-  }
+  private val validUser = exampleUser
+  private val validUserDto = exampleUser.toDTO()
 
   @Test
   fun `controller is @Controller annotated`() {
@@ -95,13 +84,13 @@ class MicronautUserControllerTest {
   @Test
   fun `controller should return a correct user when getUser`() {
     val userId = UserId("very-real-id")
-    val userDTO = dtoFactory.run { MockUserFactory().create(userId.value).fromDomain() }
+    val user = validUser.update(userId)
     val userUseCase = mock<GetUser> {
       on {
         execute(
           userId,
         )
-      } doReturn Success(dtoFactory.run { userDTO.fromDTO() })
+      } doReturn Success(user)
     }
 
     val controller = getController(fakeServices.copy(getUser = userUseCase))
@@ -115,8 +104,8 @@ class MicronautUserControllerTest {
 
   @Test
   fun `controller should return ok when registerUser succeeds`() {
-    val user = MockUserFactory().create("new-user-id")
-    val userDTO = validUserDto
+    val user = validUser.update("new-user-id")
+    val userDTO = user.toDTO()
     val registerUseCase = mock<RegisterUser> {
       on { execute(any(), any()) } doReturn RegisterUser.Companion.RegisterUserResult.Success(user)
     }
@@ -241,21 +230,28 @@ class MicronautUserControllerTest {
   fun `controller should return unauthorized when updateUserPassword user is locked`() {
     val userDTO = validUserDto
     val updatePasswordUseCase = mock<UpdateUserPassword> {
-      on { execute(any(), any(), any()) } doReturn
+      on { execute(any(), any(), any(), any(), any()) } doReturn
         UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser
     }
     val controller = getController(fakeServices.copy(updateUserPassword = updatePasswordUseCase))
 
     val response = controller
       .updateUserPassword(
-        UpdateUserPasswordRequest(userDTO, "old-password", "new-password"),
+        UpdateUserPasswordRequest(
+          userDTO.id,
+          userDTO.username,
+          userDTO.email,
+          "old-password",
+          "new-password",
+        ),
       )
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
     verify(updatePasswordUseCase)
       .execute(
-        dtoFactory
-          .run { userDTO.fromDTO() },
+        validUser.id.value,
+        validUser.profile.username,
+        validUser.profile.email.address,
         "old-password",
         "new-password",
       )
@@ -265,7 +261,7 @@ class MicronautUserControllerTest {
   fun `controller should return not found when updateUserPassword user not found`() {
     val userDTO = validUserDto
     val updatePasswordUseCase = mock<UpdateUserPassword> {
-      on { execute(any(), any(), any()) } doReturn
+      on { execute(any(), any(), any(), any(), any()) } doReturn
         UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound
     }
     val controller = getController(fakeServices.copy(updateUserPassword = updatePasswordUseCase))
@@ -273,7 +269,9 @@ class MicronautUserControllerTest {
     val response = controller
       .updateUserPassword(
         UpdateUserPasswordRequest(
-          userDTO,
+          userDTO.id,
+          userDTO.username,
+          userDTO.email,
           "old-password",
           "new-password",
         ),
@@ -282,8 +280,9 @@ class MicronautUserControllerTest {
     response.status shouldBe HttpStatus.NOT_FOUND
     verify(updatePasswordUseCase)
       .execute(
-        dtoFactory
-          .run { userDTO.fromDTO() },
+        validUser.id.value,
+        validUser.profile.username,
+        validUser.profile.email.address,
         "old-password",
         "new-password",
       )
@@ -301,7 +300,7 @@ class MicronautUserControllerTest {
 
     response.status shouldBe HttpStatus.OK
     response.body() shouldBe "User info updated successfully"
-    verify(updateInfoUseCase).execute(dtoFactory.run { userDTO.fromDTO() })
+    verify(updateInfoUseCase).execute(validUser)
   }
 
   @Test
@@ -315,14 +314,17 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(userDTO))
 
     response.status shouldBe HttpStatus.NOT_FOUND
-    verify(updateInfoUseCase).execute(dtoFactory.run { userDTO.fromDTO() })
+    verify(updateInfoUseCase).execute(validUser)
   }
 
   @Test
   fun `controller should return bad request when updateUserInfo user id is blank`() {
-    val invalidUserDTO = dtoFactory
-      .run { MockUserFactory().create("update-info-invalid-id").fromDomain() }
-      .copy(id = "")
+    val invalidUserDTO = UserDTO(
+      "",
+      username = validUser.profile.username,
+      email = validUser.profile.email.address,
+      role = validUser.profile.role.toString(),
+    )
     val updateInfoUseCase = mock<UpdateUserInfo>()
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
 
@@ -334,9 +336,12 @@ class MicronautUserControllerTest {
 
   @Test
   fun `controller should return bad request when updateUserInfo username is blank`() {
-    val invalidUserDTO = dtoFactory
-      .run { MockUserFactory().create("update-info-invalid-username").fromDomain() }
-      .copy(username = "")
+    val invalidUserDTO = UserDTO(
+      validUser.id.value,
+      username = "",
+      email = validUser.profile.email.address,
+      role = validUser.profile.role.toString(),
+    )
     val updateInfoUseCase = mock<UpdateUserInfo>()
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
 
@@ -348,9 +353,12 @@ class MicronautUserControllerTest {
 
   @Test
   fun `controller should return bad request when updateUserInfo email is blank`() {
-    val invalidUserDTO = dtoFactory
-      .run { MockUserFactory().create("update-info-invalid-email").fromDomain() }
-      .copy(email = "")
+    val invalidUserDTO = UserDTO(
+      validUser.id.value,
+      username = validUser.profile.username,
+      email = "",
+      role = validUser.profile.role.toString(),
+    )
     val updateInfoUseCase = mock<UpdateUserInfo>()
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
 
@@ -363,11 +371,11 @@ class MicronautUserControllerTest {
   @Test
   fun `controller should return ok when deleteUser succeeds`() {
     val userId = UserId("delete-me-id")
-    val userDTO = dtoFactory.run { MockUserFactory().create(userId.value).fromDomain() }
+    val user = exampleUser.update(userId)
     val deleteUseCase = mock<DeleteUser> {
       on {
         execute(userId)
-      } doReturn DeleteUser.Companion.DeleteUserResult.Success(dtoFactory.run { userDTO.fromDTO() })
+      } doReturn DeleteUser.Companion.DeleteUserResult.Success(user)
     }
 
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
@@ -417,13 +425,14 @@ class MicronautUserControllerTest {
   @Test
   fun `controller should return in verify-email not found when otk doesnt match`() {
     val userId = "user-id"
+    val user = exampleUser.update(userId)
+    val userDTO = user.toDTO()
 
     val repo = mock<UserRepository> {
-      on { findById(UserId(userId)) } doReturn
-        UserDTOFactory.default.run { validUserDto.fromDTO() }
+      on { findById(UserId(userId)) } doReturn user
     }
     val hasher = mock<PasswordHasher> {
-      on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"
+      on { hash(userDTO.id, userDTO.email) } doReturn "otk"
     }
 
     val controller = getController(
@@ -441,10 +450,9 @@ class MicronautUserControllerTest {
   @Test
   fun `controller should return ok in verify-email found when user and otk match`() {
     val userId = validUserDto.id
-
     val repo = MemoryUserRepositoryTest().createMemoryUserRepository()
 
-    repo.save(dtoFactory.run { validUserDto.fromDTO() })
+    repo.save(validUser)
 
     val hasher = mock<PasswordHasher> {
       on { hash(validUserDto.id, validUserDto.email) } doReturn "otk"

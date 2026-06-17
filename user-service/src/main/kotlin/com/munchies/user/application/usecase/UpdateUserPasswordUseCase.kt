@@ -28,26 +28,33 @@ class UpdateUserPasswordUseCase(
       passwordHash = newHash,
       salt = newSalt,
       lockedUntil = 0L,
+      lastLogin = timeProvider.invoke(),
       loginAttempts = 0,
     )
     credentialsRepository.update(updatedCredentials)
   }
 
   private fun validateAndUpdatePassword(
+    providedId: String,
     credentials: UserCredentials,
     oldPassword: String,
     newPassword: String,
   ): UpdateUserPasswordResult {
     return when {
       credentials.lockedUntil > timeProvider() -> UpdateUserPasswordResult.LockedUser
-      passwordHasher
-        .hash(oldPassword, credentials.salt) != credentials.passwordHash -> {
+      (
+        passwordHasher
+          .hash(oldPassword, credentials.salt) != credentials.passwordHash
+        ) -> {
         val updatedCredentials = credentials.copy(
           lockedUntil = timeProvider.addOneHour()(),
           loginAttempts = credentials.loginAttempts + 1,
         )
         credentialsRepository.update(updatedCredentials)
         UpdateUserPasswordResult.WrongCredentials
+      }
+      (providedId != credentials.id.value) -> {
+        UpdateUserPasswordResult.UnauthorizedOperation
       }
       else -> {
         updatePassword(credentials, newPassword)
@@ -57,20 +64,22 @@ class UpdateUserPasswordUseCase(
   }
 
   override fun execute(
-    user: User,
+    id: String,
+    username: String,
+    email: String,
     oldPassword: String,
     newPassword: String,
   ): UpdateUserPasswordResult {
     return when (
       val credentials = findUser(
-        email = user.profile.email.address,
-        username = user.profile.username,
+        email = email,
+        username = username,
       )
         ?.let { credentialsRepository.findById(it.id) }
     ) {
       null -> UpdateUserPasswordResult.UserNotFound
 
-      else -> validateAndUpdatePassword(credentials, oldPassword, newPassword)
+      else -> validateAndUpdatePassword(id, credentials, oldPassword, newPassword)
     }
   }
 }

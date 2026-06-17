@@ -1,10 +1,7 @@
 package com.munchies.user.infrastructure.adapter.dto.factory
 
-import com.munchies.user.domain.factory.UserFactory
-import com.munchies.user.domain.model.Email
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserProfile
-import com.munchies.user.domain.model.UserRole
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 
 /**
@@ -14,66 +11,50 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
  * - A User domain model to a UserDTO.
  * - A UserDTO to a User domain model.
  */
-sealed interface UserDTOFactory {
+object UserDTOFactory {
+  sealed interface UserDTOFactoryResult {
+    data class Success(val user: User) : UserDTOFactoryResult
+    data class Failure(val reason: String) : UserDTOFactoryResult
+  }
 
   /**
-   * Extension function to convert a User domain model to a UserDTO.
+   * Converts a User domain model to a UserDTO.
    *
    * @receiver The User domain model to be converted.
-   * @return The corresponding UserDTO.
+   * @return The corresponding UserDTO with mapped fields.
    */
-  fun User.fromDomain(): UserDTO
+  fun User.toDTO(): UserDTO = UserDTO(
+    id = this.id.value,
+    username = this.profile.username,
+    email = this.profile.email.address,
+    role = this.profile.role.toString(),
+  )
 
   /**
-   * Extension function to convert a UserDTO to a User domain model.
+   * Converts a UserDTO to a User domain model.
    *
    * @receiver The UserDTO to be converted.
-   * @return The corresponding User domain model.
+   * @return The corresponding User domain model with mapped fields.
    */
-  fun UserDTO.fromDTO(): User
-
-  companion object {
-    /**
-     * Default implementation of the UserDTOFactory interface.
-     *
-     * This implementation provides the logic for converting between User domain models and UserDTOs.
-     */
-    private class DefaultUserDTOFactory : UserDTOFactory {
-
-      /**
-       * Converts a User domain model to a UserDTO.
-       *
-       * @receiver The User domain model to be converted.
-       * @return The corresponding UserDTO with mapped fields.
-       */
-      override fun User.fromDomain(): UserDTO = UserDTO(
-        id = this.id.value,
-        username = this.profile.username,
-        email = this.profile.email.address,
-        role = this.profile.role.toString(),
+  fun UserDTO.toDomain(): UserDTOFactoryResult {
+    return when (
+      val profile = UserProfile.factory.create(
+        this.username,
+        this.email,
+        this.role,
       )
-
-      /**
-       * Converts a UserDTO to a User domain model.
-       *
-       * @receiver The UserDTO to be converted.
-       * @return The corresponding User domain model with mapped fields.
-       */
-      override fun UserDTO.fromDTO(): User = UserFactory.default.create(
-        id = this.id,
-        profile = UserProfile(
-          username = this.username,
-          email = Email(this.email),
-          role = UserRole.run { this@fromDTO.role.toUserRole() },
-        ),
-      )
+    ) {
+      is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Failure,
+      -> UserDTOFactoryResult.Failure(profile.reason)
+      is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Success -> {
+        when (val user = User.factory.create(this.id, profile.profile)) {
+          is User.Companion.UserFactory.UserFactoryResult.Failure,
+          -> UserDTOFactoryResult.Failure(user.reason)
+          is User.Companion.UserFactory.UserFactoryResult.Success -> {
+            UserDTOFactoryResult.Success(user.user)
+          }
+        }
+      }
     }
-
-    /**
-     * Singleton instance of the default UserDTOFactory implementation.
-     *
-     * This instance can be used to perform conversions without explicitly instantiating the factory.
-     */
-    val default: UserDTOFactory = DefaultUserDTOFactory()
   }
 }

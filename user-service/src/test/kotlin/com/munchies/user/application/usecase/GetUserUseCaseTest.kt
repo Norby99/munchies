@@ -1,8 +1,9 @@
 package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult
-import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.exampleUser
+import com.munchies.user.domain.model.exampleUserId
 import com.munchies.user.domain.port.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -29,15 +30,14 @@ class GetUserUseCaseTest {
 
   @Test
   fun `execute should return Success with user when user is found`() {
-    val userId = UserId("real-id")
     val repository = mock<UserRepository> {
-      on { findById(any()) } doReturn MockUserFactory().create(userId.value)
+      on { findById(any()) } doReturn exampleUser
     }
     val useCase = GetUserUseCase(repository)
 
-    val result = useCase.execute(userId)
+    val result = useCase.execute(exampleUserId)
     assertTrue(result is GetUserResult.Success)
-    assertEquals(userId, (result as GetUserResult.Success).user.id)
-    verify(repository).findById(userId)
+    assertEquals(exampleUserId, (result as GetUserResult.Success).user.id)
+    verify(repository).findById(exampleUserId)
   }
 }
