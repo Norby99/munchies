@@ -11,7 +11,7 @@ sealed interface OrderAPI {
   }
 
   interface GetOrderDetailsAPI<Request, Response> : OrderAPI {
-    fun getOrderDetails(request: Request): Response
+    fun getOrderDetails(id: Request): Response
   }
 
   interface PlaceOrderAPI<Request, Response> : OrderAPI {
