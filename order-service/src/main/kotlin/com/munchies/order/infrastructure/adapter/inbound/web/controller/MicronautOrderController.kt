@@ -7,31 +7,12 @@ import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.application.port.inbound.UpdateOrderItems
 import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo
-import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCommand
-import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
-import com.munchies.order.application.port.inbound.command.UpdateDeliveryOrderCommand
-import com.munchies.order.application.port.inbound.command.UpdateOrderItemsCommand
-import com.munchies.order.application.port.inbound.command.UpdateTakeawayOrderCommand
-import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDomain
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.AdvanceOrderStatusAPI
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.DiscardOrderAPI
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.GetOrderDetailsAPI
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.PlaceOrderAPI
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.UpdateDeliveryOrderInfoAPI
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.UpdateOrderItemsAPI
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.UpdateTakeawayOrderInfoAPI
-import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.DiscardOrderRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.GetOrderDetailsRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest
+import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
+import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
 import io.micronaut.http.HttpResponse
@@ -148,9 +129,7 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "400", description = "Invalid order data")
   @ApiResponse(responseCode = "500", description = "Failed to place order")
   override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<String> {
-    val command = request.toCommand()
-
-    return when (val res = placeOrder.execute(command)) {
+    return when (val res = placeOrder.execute(request.toCommand())) {
       is PlaceOrder.Result.Success ->
         HttpResponse.ok("Order placed successfully with ID: ${res.order.orderId}")
       is PlaceOrder.Result.Failure.InvalidDate ->
@@ -185,9 +164,7 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "400", description = "Invalid status transition")
   override fun advanceOrderStatus(@Body request: AdvanceOrderStatusRequest): HttpResponse<String> {
     return when (
-      advanceOrderStatus.execute(
-        AdvanceOrderStatusCommand(OrderId(request.orderId)),
-      )
+      advanceOrderStatus.execute(request.toCommand())
     ) {
       is AdvanceOrderStatus.Result.Success -> HttpResponse.ok("Order status advanced")
       is AdvanceOrderStatus.Result.Failure.OrderNotFound -> HttpResponse.notFound()
@@ -219,12 +196,7 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "400", description = "Order cannot be cancelled")
   override fun discardOrder(@Body request: DiscardOrderRequest): HttpResponse<String> {
     return when (
-      discardOrder.execute(
-        DiscardOrderCommand(
-          orderId = OrderId(request.orderId),
-          customerId = CustomerId(request.customerId),
-        ),
-      )
+      discardOrder.execute(request.toCommand())
     ) {
       is DiscardOrder.Result.Success -> HttpResponse.ok("Order discarded")
       is DiscardOrder.Result.Failure.OrderNotFound -> HttpResponse.notFound()
@@ -258,13 +230,7 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "400", description = "Invalid items or unauthorized")
   override fun updateOrderItems(@Body request: UpdateOrderItemsRequest): HttpResponse<String> {
     return when (
-      updateOrderItems.execute(
-        UpdateOrderItemsCommand(
-          orderId = OrderId(request.orderId),
-          customerId = CustomerId(request.customerId),
-          items = request.items.map { it.toDomain() },
-        ),
-      )
+      updateOrderItems.execute(request.toCommand())
     ) {
       is UpdateOrderItems.Result.Success -> HttpResponse.ok("Order items updated")
       is UpdateOrderItems.Result.Failure.OrderNotFound -> HttpResponse.notFound()
@@ -300,16 +266,7 @@ class MicronautOrderController(
     @Body request: UpdateDeliveryOrderRequest,
   ): HttpResponse<String> {
     return when (
-      updateDeliveryOrderInfo.execute(
-        UpdateDeliveryOrderCommand(
-          orderId = OrderId(request.orderId),
-          customerId = CustomerId(request.customerId),
-          estimatedDeliveryTime = request.estimatedDeliveryTime,
-          deliveryAddress = request.deliveryAddress,
-          bellName = request.bellName,
-          customerPhone = request.customerPhone,
-        ),
-      )
+      updateDeliveryOrderInfo.execute(request.toCommand())
     ) {
       is UpdateDeliveryOrderInfo.Result.Success -> HttpResponse.ok("Delivery info updated")
       is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound()
@@ -345,14 +302,7 @@ class MicronautOrderController(
     @Body request: UpdateTakeawayOrderRequest,
   ): HttpResponse<String> {
     return when (
-      updateTakeawayOrderInfo.execute(
-        UpdateTakeawayOrderCommand(
-          orderId = OrderId(request.orderId),
-          customerId = CustomerId(request.customerId),
-          pickupTime = request.pickupTime,
-          customerName = request.customerName,
-        ),
-      )
+      updateTakeawayOrderInfo.execute(request.toCommand())
     ) {
       is UpdateTakeawayOrderInfo.Result.Success -> HttpResponse.ok("Takeaway info updated")
       is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound()
