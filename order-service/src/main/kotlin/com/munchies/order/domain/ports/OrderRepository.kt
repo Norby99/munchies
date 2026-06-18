@@ -9,6 +9,4 @@ import com.munchies.order.domain.model.OrderId
  *
  * @see com.munchies.commons.Repository
  */
-interface OrderRepository : Repository<OrderId, Order> {
-  // TODO: Implement methods that are required besides the basic CRUD operations. See Repository.
-}
+interface OrderRepository : Repository<OrderId, Order>
