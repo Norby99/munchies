@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Currency, PaymentStatus } from "@main/domain/external-modules";
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
-
+import {
+  Currency,
+  PaymentStatus,
+} from "munchies-payment-service-shared/kotlin/payment-modules";
 vi.mock(
   "@main/infrastructure/adapter/outbound/mongo/document/payment-document",
   () => ({

@@ -1,6 +1,9 @@
-import { PaymentStatus, Currency } from "../external-modules";
 import { PaymentId } from "./PaymentId";
 import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
+import {
+  PaymentStatus,
+  Currency,
+} from "munchies-payment-service-shared/kotlin/payment-modules";
 class _Payment {
   constructor(
     id: PaymentId,

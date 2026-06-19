@@ -1,6 +1,8 @@
-import { Currency, PaymentStatus } from "@main/domain/external-modules";
 import { Schema, model, HydratedDocument } from "mongoose";
-
+import {
+  PaymentStatus,
+  Currency,
+} from "munchies-payment-service-shared/kotlin/payment-modules";
 interface _PaymentDocument {
   _id: string;
   status: PaymentStatus;
