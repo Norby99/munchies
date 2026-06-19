@@ -1,13 +1,10 @@
-import type * as CommonsModule from "munchies-commons";
 import type * as SharedModule from "munchies-notification-service-shared";
 import * as UserModule from "munchies-user-service-shared";
 
-const commonsModule = require("munchies-commons") as typeof CommonsModule;
 const sharedModule =
   require("munchies-notification-service-shared") as typeof SharedModule;
 const userModule = require("munchies-user-service-shared") as typeof UserModule;
 
-const _commons = commonsModule.com.munchies.commons;
 const _inbound =
   sharedModule.com.munchies.notification.infrastructure.adapter.inbound;
 const _adapter = sharedModule.com.munchies.notification.infrastructure.adapter;

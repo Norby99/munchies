@@ -7,6 +7,9 @@ import kotlin.js.JsExport
 val JWT_SECRET_ENV_NAME = "JWT_SECRET"
 
 @JsExport
+val JWT_SECRET_ALGORITHM = "HMAC256"
+
+@JsExport
 abstract class TokenProvider {
   abstract fun generateToken(id: UUIDEntityId): GenerateTokenResult
   abstract fun validateToken(token: String): ValidateTokenResult
