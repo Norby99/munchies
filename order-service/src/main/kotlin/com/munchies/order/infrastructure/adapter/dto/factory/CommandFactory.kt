@@ -42,26 +42,26 @@ object CommandFactory {
     DiscardOrderCommand(OrderId(orderId), CustomerId(customerId))
 
   fun UpdateOrderItemsRequest.toCommand(): UpdateOrderItemsCommand = UpdateOrderItemsCommand(
-    OrderId(orderId),
-    CustomerId(customerId),
-    items.map { it.toDomain() },
+    orderId = OrderId(orderId),
+    customerId = CustomerId(customerId),
+    items = items.map { it.toDomain() },
   )
 
   fun UpdateDeliveryOrderRequest.toCommand(): UpdateDeliveryOrderCommand =
     UpdateDeliveryOrderCommand(
-      OrderId(orderId),
-      CustomerId(customerId),
-      estimatedDeliveryTime,
-      deliveryAddress,
-      bellName,
-      customerPhone,
+      orderId = OrderId(orderId),
+      customerId = CustomerId(customerId),
+      estimatedDeliveryTime = estimatedDeliveryTime,
+      deliveryAddress = deliveryAddress,
+      bellName = bellName,
+      customerPhone = customerPhone,
     )
 
   fun UpdateTakeawayOrderRequest.toCommand(): UpdateTakeawayOrderCommand =
     UpdateTakeawayOrderCommand(
-      OrderId(orderId),
-      CustomerId(customerId),
-      pickupTime,
-      customerName,
+      orderId = OrderId(orderId),
+      customerId = CustomerId(customerId),
+      pickupTime = pickupTime,
+      customerName = customerName,
     )
 }
