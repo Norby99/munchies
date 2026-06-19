@@ -1,13 +1,9 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import {
-  Currency,
-  PaymentStatus,
-  newUUIDEntityId,
-} from "@main/domain/external-modules";
+import { Currency, PaymentStatus } from "@main/domain/external-modules";
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import { InMemoryPaymentRepository } from "@main/infrastructure/adapter/outbound/memory/InMemoryPaymentRepository";
-
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 describe("InMemoryPaymentRepository", () => {
   let repository: InMemoryPaymentRepository;
 
@@ -20,7 +16,7 @@ describe("InMemoryPaymentRepository", () => {
       new PaymentId(id),
       PaymentStatus.PENDING,
       amount,
-      newUUIDEntityId(`${id}-order`),
+      new UUIDEntityId(`${id}-order`),
       Currency.AUD,
       null
     );

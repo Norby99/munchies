@@ -16,5 +16,8 @@ data class ProcessPaymentResponse(
   val currency: Currency,
 ) {
   fun toJson(): String = Json.encodeToString(this)
-  fun fromJson(json: String): ProcessPaymentResponse = Json.decodeFromString(json)
 }
+
+@JsExport
+fun processPaymentResponseFromJson(json: String): ProcessPaymentResponse =
+  Json.decodeFromString(json)
