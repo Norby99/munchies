@@ -39,3 +39,21 @@ fun defaultDeliveryOrder(status: OrderStatus = OrderStatus.PENDING): DeliveryOrd
     customerPhone = Address1.customerPhone,
   ),
 )
+
+fun defualtNewItems() = listOf(
+  OrderItem(
+    MenuItemId("item-1"),
+    2,
+  ),
+  OrderItem(MenuItemId("item-2"), 3),
+)
+
+fun defaultEmptyItems() = listOf<OrderItem>()
+
+fun defaultInvalidItemsZeroCount() = listOf(
+  OrderItem(MenuItemId("item-1"), 0),
+)
+
+fun defaultInvalidItemsNegativeCount() = listOf(
+  OrderItem(MenuItemId("item-1"), -1),
+)
