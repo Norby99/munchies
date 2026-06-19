@@ -34,9 +34,9 @@ class OrderTest {
   @Test
   fun `order should update items`() {
     val order = defaultDeliveryOrder()
-    val expectedItems = defualtNewItems()
+    val expectedItems = defaultNewItems()
 
-    val result = order.updateItems(defualtNewItems())
+    val result = order.updateItems(defaultNewItems())
 
     result.shouldBeInstanceOf<UpdateResult.Success>()
     result.order.items shouldBeEqual expectedItems
