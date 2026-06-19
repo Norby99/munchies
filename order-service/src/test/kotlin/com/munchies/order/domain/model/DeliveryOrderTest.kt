@@ -1,6 +1,8 @@
 package com.munchies.order.domain.model
 
+import com.munchies.order.domain.model.Order.AdvanceStatusResult
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 class DeliveryOrderTest {
@@ -10,9 +12,8 @@ class DeliveryOrderTest {
     val order = defaultDeliveryOrder(OrderStatus.PENDING)
     val result = order.nextStatus()
 
-    val updatedOrder = (result as Order.AdvanceStatusResult.Success).order
-    result shouldBeEqual Order.AdvanceStatusResult.Success(updatedOrder)
-    updatedOrder.status shouldBeEqual OrderStatus.PREPARING
+    result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
+    result.order.status shouldBeEqual OrderStatus.PREPARING
   }
 
   @Test
@@ -20,9 +21,8 @@ class DeliveryOrderTest {
     val order = defaultDeliveryOrder(OrderStatus.PREPARING)
     val result = order.nextStatus()
 
-    val updatedOrder = (result as Order.AdvanceStatusResult.Success).order
-    result shouldBeEqual Order.AdvanceStatusResult.Success(updatedOrder)
-    updatedOrder.status shouldBeEqual OrderStatus.READY
+    result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
+    result.order.status shouldBeEqual OrderStatus.READY
   }
 
   @Test
@@ -30,9 +30,8 @@ class DeliveryOrderTest {
     val order = defaultDeliveryOrder(OrderStatus.READY)
     val result = order.nextStatus()
 
-    val updatedOrder = (result as Order.AdvanceStatusResult.Success).order
-    result shouldBeEqual Order.AdvanceStatusResult.Success(updatedOrder)
-    updatedOrder.status shouldBeEqual OrderStatus.ON_THE_WAY
+    result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
+    result.order.status shouldBeEqual OrderStatus.ON_THE_WAY
   }
 
   @Test
@@ -40,9 +39,8 @@ class DeliveryOrderTest {
     val order = defaultDeliveryOrder(OrderStatus.ON_THE_WAY)
     val result = order.nextStatus()
 
-    val updatedOrder = (result as Order.AdvanceStatusResult.Success).order
-    result shouldBeEqual Order.AdvanceStatusResult.Success(updatedOrder)
-    updatedOrder.status shouldBeEqual OrderStatus.COMPLETED
+    result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
+    result.order.status shouldBeEqual OrderStatus.COMPLETED
   }
 
   @Test
@@ -51,7 +49,7 @@ class DeliveryOrderTest {
     val result = order.nextStatus()
 
     order.status shouldBeEqual OrderStatus.COMPLETED
-    result shouldBeEqual Order.AdvanceStatusResult.Failure.InvalidTransition
+    result shouldBeEqual AdvanceStatusResult.Failure.InvalidTransition
   }
 
   @Test
@@ -79,10 +77,10 @@ class DeliveryOrderTest {
       Address2.customerPhone,
     )
 
-    val updatedOrder = (result as DeliveryOrder.UpdateResult.Success).order
-    updatedOrder.deliveryInfo.deliveryAddress shouldBeEqual Address2.deliveryAddress
-    updatedOrder.deliveryInfo.bellName shouldBeEqual Address2.bellName
-    updatedOrder.deliveryInfo.customerPhone shouldBeEqual Address2.customerPhone
-    updatedOrder.deliveryInfo.estimatedDeliveryTime shouldBeEqual FUTURE_TIME
+    result.shouldBeInstanceOf<DeliveryOrder.UpdateResult.Success>()
+    result.order.deliveryInfo.deliveryAddress shouldBeEqual Address2.deliveryAddress
+    result.order.deliveryInfo.bellName shouldBeEqual Address2.bellName
+    result.order.deliveryInfo.customerPhone shouldBeEqual Address2.customerPhone
+    result.order.deliveryInfo.estimatedDeliveryTime shouldBeEqual FUTURE_TIME
   }
 }
