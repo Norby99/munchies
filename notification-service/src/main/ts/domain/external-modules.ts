@@ -15,10 +15,6 @@ const _userNotification =
   userModule.com.munchies.user.infrastructure.adapter.outbound.notification;
 
 // Values
-export const newUUIDEntityId = _commons.newUUIDEntityId;
-export const getIdFromEntityId = _commons.getIdFromEntityId;
-export const newId = () => getIdFromEntityId(newUUIDEntityId(null));
-export const JsEntity = _commons.JsEntity;
 
 // Notification Observers and Subjects
 const _UserEmailConfirmationNotification =
@@ -60,7 +56,3 @@ export const _UserEmailConfirmationNotificationSubject =
 
 export const UserEmailConfirmationNotificationSubject =
   _userNotification.UserEmailConfirmationNotificationSubject;
-
-// Types
-export type JsEntity = InstanceType<typeof JsEntity>;
-export type UUIDEntityId = InstanceType<typeof _commons.UUIDEntityId>;

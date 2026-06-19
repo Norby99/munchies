@@ -10,12 +10,6 @@ const _inbound =
   sharedModule.com.munchies.payment.infrastructure.adapter.inbound;
 const _adapter = sharedModule.com.munchies.payment.infrastructure.adapter;
 
-// Values
-export const newUUIDEntityId = _commons.newUUIDEntityId;
-export const getIdFromEntityId = _commons.getIdFromEntityId;
-export const newId = () => getIdFromEntityId(newUUIDEntityId(null));
-export const JsEntity = _commons.JsEntity;
-
 export const PaymentResponse = _inbound.response.ProcessPaymentResponse;
 export const PaymentRequest = _inbound.request.ProcessPaymentRequest;
 export const PaymentStatus = _adapter.dto.PaymentStatus;
@@ -25,10 +19,6 @@ export const PaymentMethod = _adapter.dto.PaymentMethod;
 
 const _PaymentAPI = _inbound.PaymentAPI;
 export const PaymentAPI = _PaymentAPI;
-
-// Types
-export type JsEntity = InstanceType<typeof JsEntity>;
-export type UUIDEntityId = InstanceType<typeof _commons.UUIDEntityId>;
 
 export type PaymentMethod =
   (typeof _adapter.dto.PaymentMethod)[keyof typeof _adapter.dto.PaymentMethod];

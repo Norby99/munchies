@@ -10,8 +10,9 @@ import kotlin.js.JsExport
  */
 @JsExport
 open class UUIDEntityId(
-  value: String = newId(),
+  override val value: String = newId(),
 ) : EntityId<String>(value) {
+  fun stringValue(): String = this.value
   companion object {
     fun newId(): String = getUUID()
   }

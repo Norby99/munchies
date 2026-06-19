@@ -1,4 +1,3 @@
-import { getIdFromEntityId } from "@main/domain/external-modules";
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import { PaymentRepository } from "@main/domain/port/payment-repository";
@@ -10,7 +9,7 @@ import { PaymentFactory } from "@main/infrastructure/adapter/outbound/mongo/fact
 
 export class PaymentMongoRepository implements PaymentRepository {
   async findById(id: PaymentId): Promise<Payment | null> {
-    const _id = getIdFromEntityId(id);
+    const _id = id.value;
     const doc: PaymentDocument | null = await PaymentModel.findById(_id);
     return doc ? PaymentFactory.toDomain(doc) : null;
   }
@@ -32,7 +31,7 @@ export class PaymentMongoRepository implements PaymentRepository {
     return PaymentFactory.toDomain(doc!!);
   }
   async delete(entity: Payment): Promise<Payment> {
-    const _id = getIdFromEntityId(entity.id);
+    const _id = entity.id.value;
     const doc: PaymentDocument | null = await PaymentModel.findByIdAndDelete(
       _id
     );

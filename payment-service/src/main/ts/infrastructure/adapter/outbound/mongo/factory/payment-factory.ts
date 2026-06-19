@@ -1,18 +1,14 @@
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentDocument } from "../document/payment-document";
 import { PaymentId } from "@main/domain/model/PaymentId";
-import {
-  getIdFromEntityId,
-  newUUIDEntityId,
-} from "@main/domain/external-modules";
-
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 export class PaymentFactory {
   static toDomain(document: PaymentDocument): Payment {
     return new Payment(
       new PaymentId(document.id),
       document.status,
       document.amount,
-      newUUIDEntityId(document.orderId),
+      new UUIDEntityId(document.orderId),
       document.currency,
       document.payedAt
     );
@@ -20,10 +16,10 @@ export class PaymentFactory {
 
   static toDocument(domain: Payment): Record<string, unknown> {
     return {
-      _id: getIdFromEntityId(domain.id),
+      _id: domain.id.value,
       status: domain.status,
       amount: domain.amount,
-      orderId: getIdFromEntityId(domain.orderId),
+      orderId: domain.orderId.stringValue(),
       currency: domain.currency,
       payedAt: domain.payedAt ?? null,
     };

@@ -1,12 +1,9 @@
 import {
   Currency,
-  getIdFromEntityId,
-  newId,
   PaymentStatus,
   PaymentRequest,
   PaymentMethod,
   PaymentDetails,
-  newUUIDEntityId,
   PaymentResponse,
 } from "@main/domain/external-modules";
 import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";

@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  Currency,
-  PaymentStatus,
-  newUUIDEntityId,
-} from "@main/domain/external-modules";
+import { Currency, PaymentStatus } from "@main/domain/external-modules";
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 
@@ -33,6 +29,7 @@ vi.mock(
 import { PaymentModel } from "@main/infrastructure/adapter/outbound/mongo/document/payment-document";
 import { PaymentFactory } from "@main/infrastructure/adapter/outbound/mongo/factory/payment-factory";
 import { PaymentMongoRepository } from "@main/infrastructure/adapter/outbound/mongo/repository/payment-mongo-repository";
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 
 const mockedPaymentModel = vi.mocked(PaymentModel);
 const mockedPaymentFactory = vi.mocked(PaymentFactory);
@@ -50,7 +47,7 @@ describe("PaymentMongoRepository", () => {
       new PaymentId(id),
       PaymentStatus.PENDING,
       amount,
-      newUUIDEntityId(`${id}-order`),
+      new UUIDEntityId(`${id}-order`),
       Currency.AUD,
       null
     );
