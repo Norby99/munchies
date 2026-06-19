@@ -40,7 +40,11 @@ fun defaultDeliveryOrder(status: OrderStatus = OrderStatus.PENDING): DeliveryOrd
   ),
 )
 
-fun defualtNewItems() = listOf(
+/**
+ * Creates a valid item list.
+ * @return A list of OrderItem instances with valid quantities.
+ */
+fun defaultNewItems() = listOf(
   OrderItem(
     MenuItemId("item-1"),
     2,
@@ -48,12 +52,26 @@ fun defualtNewItems() = listOf(
   OrderItem(MenuItemId("item-2"), 3),
 )
 
+/**
+ * Creates an empty item list.
+ * @return An empty list of OrderItem instances.
+ */
 fun defaultEmptyItems() = listOf<OrderItem>()
 
+/**
+ * Creates an item list with an item having zero quantity.
+ * @return A list of OrderItem instances with one item having zero quantity.
+ */
 fun defaultInvalidItemsZeroCount() = listOf(
-  OrderItem(MenuItemId("item-1"), 0),
+  OrderItem(MenuItemId("item-1"), 2),
+  OrderItem(MenuItemId("item-2"), 0),
 )
 
+/**
+ * Creates an item list with an item having negative quantity.
+ * @return A list of OrderItem instances with one item having negative quantity.
+ */
 fun defaultInvalidItemsNegativeCount() = listOf(
+  OrderItem(MenuItemId("item-1"), 2),
   OrderItem(MenuItemId("item-1"), -1),
 )
