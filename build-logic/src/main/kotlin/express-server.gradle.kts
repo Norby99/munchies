@@ -2,6 +2,8 @@ import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.gradle.node.npm.task.NpxTask
 import com.github.gradle.node.task.NodeTask
+import org.gradle.api.GradleException
+import org.gradle.api.artifacts.ProjectDependency
 import utils.getServiceName
 
 plugins {
@@ -27,7 +29,8 @@ val serviceName = getServiceName(project.parent!!)
 afterEvaluate {
   val input = project.configurations["jsImplementation"]
     .dependencies
-    .map { it.name }
+    .withType(ProjectDependency::class.java)
+    .map { it.dependencyProject.name }
 
   tasks.register("printJsDeps") {
     doLast {
@@ -50,18 +53,19 @@ afterEvaluate {
     }
     val output = project.layout.buildDirectory.dir("libs/").get().asFile
 
-    inputs.files(sources.map { (f, _) -> f })
+    inputs.files(sources.map { (sourceDir, _) -> fileTree(sourceDir) { include("*.tgz") } })
     outputs.dir(output)
 
     doLast {
       if (!output.exists()) output.mkdirs()
       sources.forEach { (sourceDir, targetName) ->
-        sourceDir.listFiles { f ->
-          f.isFile && f.extension != "json" // .tgz conflicted
-        }?.forEach { file ->
-          println("Copying ${file.name} to ${output.resolve(targetName).path}")
-          file.copyTo(output.resolve(targetName), overwrite = true)
-        }
+        val packedFile = sourceDir
+          .listFiles { file -> file.isFile && file.extension == "tgz" }
+          ?.maxByOrNull { it.lastModified() }
+          ?: throw GradleException("No packed .tgz found in ${sourceDir.path} for $targetName")
+
+        println("Copying ${packedFile.name} to ${output.resolve(targetName).path}")
+        packedFile.copyTo(output.resolve(targetName), overwrite = true)
       }
     }
   }

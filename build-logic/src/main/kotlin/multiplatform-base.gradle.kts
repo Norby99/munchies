@@ -78,5 +78,11 @@ tasks.register<NpmTask>("pack_${project.name}") {
   args.set(listOf("pack"))
 
   inputs.dir(packageDir)
-  outputs.file(packageDir.resolve("munchies-${project.name}-0.1.0.tgz"))
+  outputs.dir(packageDir)
+
+  doFirst {
+    // Keep only the tarball generated in this run to avoid stale picks in dependent services.
+    packageDir.listFiles { file -> file.isFile && file.extension == "tgz" }
+      ?.forEach { it.delete() }
+  }
 }
