@@ -1,7 +1,19 @@
 package com.munchies.order.domain.model
 
+import kotlin.String
+
 val PAST_TIME = System.currentTimeMillis() - 60000
 val FUTURE_TIME = System.currentTimeMillis() + 60000
+
+val tableInfo1 = TableInfo(
+  tableNumber = 1,
+  numberOfGuests = 2,
+)
+
+val tableInfo2 = TableInfo(
+  tableNumber = 2,
+  numberOfGuests = 4,
+)
 
 sealed interface Address {
   val deliveryAddress: String
@@ -38,6 +50,37 @@ fun defaultDeliveryOrder(status: OrderStatus = OrderStatus.PENDING): DeliveryOrd
     bellName = Address1.bellName,
     customerPhone = Address1.customerPhone,
   ),
+)
+
+/**
+ * Creates a default TakeawayOrder with the specified status.
+ * @param status The status of the order. Defaults to PENDING.
+ * @return A TakeawayOrder instance with the specified status and default values.
+ */
+fun defaultTakeawayOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder = TakeawayOrder(
+  id = OrderId("o-1"),
+  restaurantId = RestaurantId("r-1"),
+  customerId = CustomerId("c-1"),
+  status = status,
+  items = listOf(),
+  takeawayInfo = TakeawayInfo(
+    pickupTime = FUTURE_TIME,
+    customerName = Address1.bellName,
+  ),
+)
+
+/**
+ * Creates a default DeliveryOrder with the specified status and items.
+ * @param status The status of the order. Defaults to PENDING.
+ * @return A DeliveryOrder instance with the specified status, items, and default values.
+ */
+fun defaultDineInOrder(status: OrderStatus = OrderStatus.PENDING): DineInOrder = DineInOrder(
+  id = OrderId("o-1"),
+  restaurantId = RestaurantId("r-1"),
+  customerId = CustomerId("c-1"),
+  status = status,
+  items = listOf(),
+  tableInfo = tableInfo1,
 )
 
 /**
