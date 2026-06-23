@@ -200,9 +200,9 @@ class MicronautOrderController(
     ) {
       is DiscardOrder.Result.Success -> HttpResponse.ok("Order discarded")
       is DiscardOrder.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is DiscardOrder.Result.Failure.Unauthorized,
-      is DiscardOrder.Result.Failure.OrderNotCancellable,
-      ->
+      is DiscardOrder.Result.Failure.Unauthorized ->
+        HttpResponse.badRequest("Unauthorized to discard this order")
+      is DiscardOrder.Result.Failure.OrderNotCancellable ->
         HttpResponse.badRequest("Cannot discard this order")
     }
   }
