@@ -116,6 +116,16 @@ sealed class Order(
   }
 }
 
+/**
+ * Represents the unique identifier for an order.
+ *
+ * @property value The string value of the order ID.
+ */
 @JvmInline value class RestaurantId(val value: String)
 
+/**
+ * Represents the unique identifier for a customer.
+ *
+ * @property value The string value of the customer ID.
+ */
 @JvmInline value class CustomerId(val value: String)
