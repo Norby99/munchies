@@ -8,13 +8,10 @@ import com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymen
 import kotlin.js.JsExport
 
 @JsExport
-class ProcessPaymentRequestValidator : InputValidator() {
-  override fun validate(input: Any): InputValidatorResult {
-    if (input !is ProcessPaymentRequest) return InvalidInput("Wrong class passed")
-    val request = (input as ProcessPaymentRequest)
-    if (request.orderId.isEmpty()) return InvalidInput("Missing Order Id")
-    if (request.paymentDetails.amount < 0) return InvalidInput("Negative owed amount")
-
+class ProcessPaymentRequestValidator : InputValidator<ProcessPaymentRequest>() {
+  override fun validate(input: ProcessPaymentRequest): InputValidatorResult {
+    if (input.orderId.isEmpty()) return InvalidInput("Missing Order Id")
+    if (input.paymentDetails.amount < 0) return InvalidInput("Negative owed amount")
     return ValidInput
   }
 }

@@ -2,8 +2,8 @@ package com.munchies.commons.domain.port
 
 import kotlin.js.JsExport
 @JsExport
-abstract class InputValidator {
-  abstract fun validate(input: Any): InputValidatorResult
+abstract class InputValidator<I> {
+  abstract fun validate(input: I): InputValidatorResult
 }
 
 @JsExport
