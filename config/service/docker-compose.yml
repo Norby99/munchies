@@ -49,6 +49,7 @@ services:
     networks:
       - default
     environment:
+      - USER_SERVICE_URL=http://user-service:8080
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-payment-service:27017/payment-service
 
@@ -83,5 +84,22 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
       - MONGODB_URI=mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
+    networks:
+      - default
+  gateway-service:
+    container_name: munchies-gateway-service
+    build:
+      context: ../../gateway-service/build/docker/main
+    image: munchies-gateway-service:latest
+    ports: [ "8086:8080" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - USER_SERVICE_URL=http://user-service:8080
+      - KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092
+      - MONGODB_URI=mongodb://munchies-mongo-gateway-service:27017/gateway-service
     networks:
       - default
