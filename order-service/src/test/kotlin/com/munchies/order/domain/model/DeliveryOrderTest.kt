@@ -1,6 +1,10 @@
 package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.AdvanceStatusResult
+import com.munchies.order.fixtures.Address2
+import com.munchies.order.fixtures.defaultDeliveryOrder
+import com.munchies.order.fixtures.futureTime
+import com.munchies.order.fixtures.pastTime
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
@@ -57,7 +61,7 @@ class DeliveryOrderTest {
     val order = defaultDeliveryOrder()
 
     val result = order.updateInfo(
-      PAST_TIME,
+      pastTime,
       Address2.deliveryAddress,
       Address2.bellName,
       Address2.customerPhone,
@@ -71,7 +75,7 @@ class DeliveryOrderTest {
     val order = defaultDeliveryOrder()
 
     val result = order.updateInfo(
-      FUTURE_TIME,
+      futureTime,
       Address2.deliveryAddress,
       Address2.bellName,
       Address2.customerPhone,
@@ -81,6 +85,6 @@ class DeliveryOrderTest {
     result.order.deliveryInfo.deliveryAddress shouldBeEqual Address2.deliveryAddress
     result.order.deliveryInfo.bellName shouldBeEqual Address2.bellName
     result.order.deliveryInfo.customerPhone shouldBeEqual Address2.customerPhone
-    result.order.deliveryInfo.estimatedDeliveryTime shouldBeEqual FUTURE_TIME
+    result.order.deliveryInfo.estimatedDeliveryTime shouldBeEqual futureTime
   }
 }
