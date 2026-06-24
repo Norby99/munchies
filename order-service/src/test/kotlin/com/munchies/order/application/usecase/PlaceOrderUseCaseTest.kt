@@ -5,9 +5,6 @@ import com.munchies.order.domain.factory.OrderCreationResult
 import com.munchies.order.domain.factory.OrderFactory
 import com.munchies.order.domain.model.*
 import com.munchies.order.domain.ports.OrderRepository
-import com.munchies.order.fixtures.createDeliveryOrder
-import com.munchies.order.fixtures.createDineInOrder
-import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.deliveryCommand
 import com.munchies.order.fixtures.dineInCommand
 import com.munchies.order.fixtures.takeawayCommand
@@ -39,7 +36,7 @@ class PlaceOrderUseCaseTest {
   @Test
   fun `execute creates and saves a delivery order on success`() {
     val command = deliveryCommand()
-    val order = createDeliveryOrder()
+    val order = defaultDeliveryOrder()
     every { OrderFactory.createDelivery(any(), any(), any(), any(), any()) } returns
       OrderCreationResult.Success(order)
     every { repository.save(order) } just Runs
@@ -71,7 +68,7 @@ class PlaceOrderUseCaseTest {
   @Test
   fun `execute creates and saves a takeaway order on success`() {
     val command = takeawayCommand()
-    val order = createTakeawayOrder()
+    val order = defaultTakeawayOrder()
     every { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) } returns
       OrderCreationResult.Success(order)
     every { repository.save(order) } just Runs
@@ -101,7 +98,7 @@ class PlaceOrderUseCaseTest {
   @Test
   fun `execute creates and saves a dine-in order on success`() {
     val command = dineInCommand()
-    val order = createDineInOrder()
+    val order = defaultDineInOrder()
     every { OrderFactory.createDineIn(any(), any(), any(), any(), any()) } returns
       OrderCreationResult.Success(order)
     every { repository.save(order) } just Runs
