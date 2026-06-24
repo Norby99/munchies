@@ -1,106 +1,103 @@
 package com.munchies.user.infrastructure.adapter.inbound
 
+import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import kotlin.js.JsExport
+
 /**
  * Contract namespace for user-related inbound API operations.
  *
  * This sealed interface groups operation-specific contracts used by adapters
  * (for example, HTTP controllers/clients) while keeping each use case focused.
  */
-sealed interface UserAPI {
-  companion object {
-    /**
-     * Contract for retrieving a user by identifier.
-     *
-     * @param UserId Type used to identify a user.
-     * @param User Type returned by the operation.
-     */
-    interface GetUserAPI<UserId, User> : UserAPI {
-      /**
-       * Retrieves a user by its identifier.
-       *
-       * @param id user identifier.
-       * @return the resolved user representation.
-       */
-      fun getUser(id: UserId): User
-    }
+@JsExport
+object UserAPI {
+
+  interface GetUserAPI<Response> {
 
     /**
-     * Contract for registering a new user.
+     * Retrieves a user by its identifier.
      *
-     * @param Request request payload type.
-     * @param Response response payload type.
+     * @param id user identifier.
+     * @return the resolved user representation.
      */
-    interface RegisterUserAPI<Request, Response> : UserAPI {
-      /**
-       * Registers a user using the provided request payload.
-       *
-       * @param request registration input data.
-       * @return operation response.
-       */
-      fun registerUser(request: Request): Response
-    }
+    fun getUser(id: String): Response
+  }
 
+  /**
+   * Contract for registering a new user.
+   *
+   * @param Response response payload type.
+   */
+  interface RegisterUserAPI<Response> {
     /**
-     * Contract for authenticating a user.
+     * Registers a user using the provided request payload.
      *
-     * @param Request request payload type.
-     * @param Response response payload type.
+     * @param request registration input data.
+     * @return operation response.
      */
-    interface LoginUserAPI<Request, Response> : UserAPI {
-      /**
-       * Authenticates a user with the provided credentials payload.
-       *
-       * @param request authentication input data.
-       * @return operation response.
-       */
-      fun loginUser(request: Request): Response
-    }
+    fun registerUser(request: RegisterUserRequest): Response
+  }
 
+  /**
+   * Contract for authenticating a user.
+   *
+   * @param Request request payload type.
+   * @param Response response payload type.
+   */
+  interface LoginUserAPI<Request, Response> {
     /**
-     * Contract for updating an existing user's password.
+     * Authenticates a user with the provided credentials payload.
      *
-     * @param Request request payload type.
-     * @param Response response payload type.
+     * @param request authentication input data.
+     * @return operation response.
      */
-    interface UpdateUserPasswordAPI<Request, Response> : UserAPI {
-      /**
-       * Updates user password information.
-       *
-       * @param request password update input data.
-       * @return operation response.
-       */
-      fun updateUserPassword(request: Request): Response
-    }
+    fun loginUser(request: Request): Response
+  }
 
+  /**
+   * Contract for updating an existing user's password.
+   *
+   * @param Request request payload type.
+   * @param Response response payload type.
+   */
+  interface UpdateUserPasswordAPI<Request, Response> {
     /**
-     * Contract for updating an existing user's profile/info.
+     * Updates user password information.
      *
-     * @param Request request payload type.
-     * @param Response response payload type.
+     * @param request password update input data.
+     * @return operation response.
      */
-    interface UpdateUserInfoAPI<Request, Response> : UserAPI {
-      /**
-       * Updates user profile or account information.
-       *
-       * @param request user info update input data.
-       * @return operation response.
-       */
-      fun updateUserInfo(request: Request): Response
-    }
+    fun updateUserPassword(request: Request): Response
+  }
 
-    interface DeleteUserAPI<Request, Response> : UserAPI {
-      /**
-       * Deletes a user account.
-       *
-       * @param request user deletion input data.
-       * @return operation response.
-       */
-      fun deleteUser(request: Request): Response
-    }
+  /**
+   * Contract for updating an existing user's profile/info.
+   *
+   * @param Request request payload type.
+   * @param Response response payload type.
+   */
+  interface UpdateUserInfoAPI<Request, Response> {
+    /**
+     * Updates user profile or account information.
+     *
+     * @param request user info update input data.
+     * @return operation response.
+     */
+    fun updateUserInfo(request: Request): Response
+  }
 
-    interface EmailVerificationAPI<Response> : UserAPI {
+  interface DeleteUserAPI<Request, Response> {
+    /**
+     * Deletes a user account.
+     *
+     * @param request user deletion input data.
+     * @return operation response.
+     */
+    fun deleteUser(request: Request): Response
+  }
 
-      fun verifyEmail(id: String, otk: String): Response
-    }
+  interface EmailVerificationAPI<Response> {
+
+    fun verifyEmail(id: String, otk: String): Response
   }
 }
