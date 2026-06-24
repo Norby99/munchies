@@ -16,10 +16,13 @@ import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
+import com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure
+import com.munchies.user.infrastructure.adapter.outbound.response.GetUserSuccess
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeEmpty
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.serde.annotation.SerdeImport
@@ -78,6 +81,8 @@ class MicronautUserControllerTest {
 
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.NOT_FOUND
+    res.body() shouldNotBe null
+    res.body().result.shouldBeInstanceOf<GetUserFailure>().reason.shouldNotBeEmpty()
     verify(userUseCase).execute(userId)
   }
 
@@ -98,7 +103,7 @@ class MicronautUserControllerTest {
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
-    res.body().id shouldBe userId.value
+    res.body().result.shouldBeInstanceOf<GetUserSuccess>().user.id shouldBe userId.value
     verify(userUseCase).execute(userId)
   }
 

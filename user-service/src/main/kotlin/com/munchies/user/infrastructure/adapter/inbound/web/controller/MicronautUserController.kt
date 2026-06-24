@@ -14,21 +14,18 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDomain
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.EmailVerificationAPI
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.LoginUserAPI
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.RegisterUserAPI
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserInfoAPI
-import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.UpdateUserPasswordAPI
+import com.munchies.user.infrastructure.adapter.inbound.UserAPI
 import com.munchies.user.infrastructure.adapter.inbound.request.*
-import com.munchies.user.infrastructure.adapter.inbound.validator.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.http.PaymentService
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotificationInfo.USER_CONFIRMATION_KEY
+import com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure
+import com.munchies.user.infrastructure.adapter.outbound.response.GetUserResponse
+import com.munchies.user.infrastructure.adapter.outbound.response.GetUserSuccess
+import com.munchies.user.infrastructure.adapter.validator.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
@@ -57,6 +54,9 @@ import jakarta.inject.Inject
 @SerdeImport(UserDTO::class)
 @SerdeImport(RegisterUserRequest::class)
 @SerdeImport(LoginUserRequest::class)
+@SerdeImport(GetUserResponse::class)
+@SerdeImport(GetUserSuccess::class)
+@SerdeImport(GetUserFailure::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
@@ -76,13 +76,13 @@ class MicronautUserController(
 
   @Inject val tokenProvider: TokenProvider,
 ) :
-  GetUserAPI<String, HttpResponse<UserDTO>>,
-  RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
-  LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
-  UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
-  UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
-  DeleteUserAPI<DeleteUserRequest, HttpResponse<UserDTO>>,
-  EmailVerificationAPI<HttpResponse<UserDTO>> {
+  UserAPI.GetUserAPI<HttpResponse<GetUserResponse>>,
+  UserAPI.RegisterUserAPI<HttpResponse<String>>,
+  UserAPI.LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
+  UserAPI.UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
+  UserAPI.UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
+  UserAPI.DeleteUserAPI<DeleteUserRequest, HttpResponse<UserDTO>>,
+  UserAPI.EmailVerificationAPI<HttpResponse<UserDTO>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
   private val loginUser: LoginUser = services.loginUser
@@ -128,12 +128,14 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "Found")
   @ApiResponse(responseCode = "404", description = "Not Found")
-  override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
+  override fun getUser(@PathVariable id: String): HttpResponse<GetUserResponse> {
     return when (val res = getUser.execute(UserId(id))) {
       is GetUser.Companion.GetUserResult.Success -> HttpResponse.ok(
-        res.user.toDTO(),
+        GetUserResponse(GetUserSuccess(res.user.toDTO())),
       )
-      GetUser.Companion.GetUserResult.NotFound -> HttpResponse.notFound()
+      GetUser.Companion.GetUserResult.NotFound -> HttpResponse.notFound(
+        GetUserResponse(GetUserFailure("Not Found")),
+      )
     }
   }
 
