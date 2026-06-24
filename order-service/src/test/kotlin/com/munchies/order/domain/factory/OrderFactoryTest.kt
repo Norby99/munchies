@@ -2,6 +2,17 @@ package com.munchies.order.domain.factory
 
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.fixtures.defaultCustomerId
+import com.munchies.order.fixtures.defaultDeliveryInfo
+import com.munchies.order.fixtures.defaultEmptyItems
+import com.munchies.order.fixtures.defaultInvalidItemsZeroCount
+import com.munchies.order.fixtures.defaultNewItems
+import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.fixtures.defaultRestaurantId
+import com.munchies.order.fixtures.defaultTableInfo
+import com.munchies.order.fixtures.defaultTakeawayInfo
+import com.munchies.order.fixtures.futureTime
+import com.munchies.order.fixtures.pastTime
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
@@ -10,13 +21,13 @@ class OrderFactoryTest {
 
   @Test
   fun `createDelivery should succeed with PENDING status when items and date are valid`() {
-    val info = MockOrderFactory.createDeliveryInfo()
+    val info = defaultDeliveryInfo()
 
     val result = OrderFactory.createDelivery(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.validItems,
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultNewItems(),
       info,
     )
 
@@ -27,14 +38,13 @@ class OrderFactoryTest {
 
   @Test
   fun `createDelivery should fail with InvalidDate when delivery time is in the past`() {
-    val info =
-      MockOrderFactory.createDeliveryInfo(estimatedDeliveryTime = MockOrderFactory.pastTime)
+    val info = defaultDeliveryInfo(estimatedDeliveryTime = pastTime)
 
     val result = OrderFactory.createDelivery(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.validItems,
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultNewItems(),
       info,
     )
 
@@ -43,13 +53,13 @@ class OrderFactoryTest {
 
   @Test
   fun `createDelivery should fail with EmptyItems when items list is empty`() {
-    val info = MockOrderFactory.createDeliveryInfo()
+    val info = defaultDeliveryInfo()
 
     val result = OrderFactory.createDelivery(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.emptyItems,
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultEmptyItems(),
       info,
     )
 
@@ -58,13 +68,13 @@ class OrderFactoryTest {
 
   @Test
   fun `createDineIn should succeed with PENDING status when items are valid`() {
-    val info = MockOrderFactory.createTableInfo()
+    val info = defaultTableInfo()
 
     val result = OrderFactory.createDineIn(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.validItems,
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultNewItems(),
       info,
     )
 
@@ -73,13 +83,13 @@ class OrderFactoryTest {
 
   @Test
   fun `createDelivery should fail with InvalidItemQuantity when an item is invalid`() {
-    val info = MockOrderFactory.createDeliveryInfo()
+    val info = defaultDeliveryInfo()
 
     val result = OrderFactory.createDelivery(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.invalidQuantityItems,
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultInvalidItemsZeroCount(),
       info,
     )
 
@@ -88,12 +98,14 @@ class OrderFactoryTest {
 
   @Test
   fun `isValidTime should succeed when pickup time is in the future`() {
+    val info = defaultTakeawayInfo(futureTime)
+
     val result = OrderFactory.createTakeaway(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.validItems,
-      MockOrderFactory.createTakeawayInfo(pickupTime = MockOrderFactory.futureTime),
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultNewItems(),
+      info,
     )
 
     result.shouldBeInstanceOf<OrderCreationResult.Success>()
@@ -101,12 +113,14 @@ class OrderFactoryTest {
 
   @Test
   fun `isValidTime should fail when pickup time is in the past`() {
+    val info = defaultTakeawayInfo(pastTime)
+
     val result = OrderFactory.createTakeaway(
-      MockOrderFactory.defaultOrderId,
-      MockOrderFactory.defaultRestaurantId,
-      MockOrderFactory.defaultCustomerId,
-      MockOrderFactory.validItems,
-      MockOrderFactory.createTakeawayInfo(pickupTime = MockOrderFactory.pastTime),
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      defaultNewItems(),
+      info,
     )
 
     result.shouldBeInstanceOf<OrderCreationResult.Failure.InvalidDate>()

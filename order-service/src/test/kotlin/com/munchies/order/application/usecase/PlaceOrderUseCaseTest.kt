@@ -5,6 +5,9 @@ import com.munchies.order.domain.factory.OrderCreationResult
 import com.munchies.order.domain.factory.OrderFactory
 import com.munchies.order.domain.model.*
 import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.fixtures.defaultDeliveryOrder
+import com.munchies.order.fixtures.defaultDineInOrder
+import com.munchies.order.fixtures.defaultTakeawayOrder
 import com.munchies.order.fixtures.deliveryCommand
 import com.munchies.order.fixtures.dineInCommand
 import com.munchies.order.fixtures.takeawayCommand
