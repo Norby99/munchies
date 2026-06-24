@@ -1,6 +1,11 @@
 package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.UpdateResult
+import com.munchies.order.fixtures.defaultDeliveryOrder
+import com.munchies.order.fixtures.defaultEmptyItems
+import com.munchies.order.fixtures.defaultInvalidItemsNegativeCount
+import com.munchies.order.fixtures.defaultInvalidItemsZeroCount
+import com.munchies.order.fixtures.defaultNewItems
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
