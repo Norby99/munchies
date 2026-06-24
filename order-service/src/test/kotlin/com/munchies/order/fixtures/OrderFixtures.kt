@@ -2,34 +2,141 @@ package com.munchies.order.fixtures
 
 import com.munchies.order.domain.model.*
 
+// ---------- Time helpers ----------
+
+private val fixedNow: Long = System.currentTimeMillis()
+val pastTime: Long get() = fixedNow - 60_000
+val futureTime: Long get() = fixedNow + 60_000
+
+// ---------- IDs ----------
+
+val defaultOrderId: OrderId get() = OrderId("o-1")
+val defaultRestaurantId: RestaurantId get() = RestaurantId("r-1")
+val defaultCustomerId: CustomerId get() = CustomerId("c-1")
+
+// ---------- Reusable contact presets ----------
+
+sealed interface Address {
+  val deliveryAddress: String
+  val bellName: String
+  val customerPhone: String
+}
+
+object Address1 : Address {
+  override val deliveryAddress = "Via Roma 1"
+  override val bellName = "Rossi"
+  override val customerPhone = "123456"
+}
+
+object Address2 : Address {
+  override val deliveryAddress = "Via Torino 2"
+  override val bellName = "Gallo"
+  override val customerPhone = "999"
+}
+
+// ---------- Info builders ----------
+
+fun defaultDeliveryInfo(
+  estimatedDeliveryTime: Long = futureTime,
+  address: Address = Address1,
+): DeliveryInfo = DeliveryInfo(
+  estimatedDeliveryTime = estimatedDeliveryTime,
+  deliveryAddress = address.deliveryAddress,
+  bellName = address.bellName,
+  customerPhone = address.customerPhone,
+)
+
+fun defaultTakeawayInfo(
+  pickupTime: Long = futureTime,
+  customerName: String = "Bianchi",
+): TakeawayInfo = TakeawayInfo(
+  pickupTime = pickupTime,
+  customerName = customerName,
+)
+
+fun defaultTableInfo(tableNumber: Int = 1, numberOfGuests: Int = 2): TableInfo = TableInfo(
+  tableNumber = tableNumber,
+  numberOfGuests = numberOfGuests,
+)
+
+val tableInfo1: TableInfo get() = defaultTableInfo(tableNumber = 1, numberOfGuests = 2)
+val tableInfo2: TableInfo get() = defaultTableInfo(tableNumber = 2, numberOfGuests = 4)
+
+// ---------- Order builders ----------
+
+/**
+ * Creates a default DeliveryOrder with valid items, using [Address1] by default.
+ * @param status The status of the order. Defaults to PENDING.
+ * @param items The items of the order. Defaults to a valid non-empty list.
+ */
 fun defaultDeliveryOrder(
-  id: OrderId = OrderId("order-1"),
-  restaurantId: RestaurantId = RestaurantId("rest-1"),
-  customerId: CustomerId = CustomerId("cust-1"),
   status: OrderStatus = OrderStatus.PENDING,
-  items: List<OrderItem> = listOf(OrderItem(MenuItemId("item-1"), 2)),
-  deliveryInfo: DeliveryInfo = DeliveryInfo(
-    estimatedDeliveryTime = 1_000L,
-    deliveryAddress = "Via Roma 1",
-    bellName = "Rossi",
-    customerPhone = "+393331234567",
-  ),
-): DeliveryOrder = DeliveryOrder(id, restaurantId, customerId, status, items, deliveryInfo)
+  items: List<OrderItem> = defaultNewItems(),
+  deliveryInfo: DeliveryInfo = defaultDeliveryInfo(),
+): DeliveryOrder = DeliveryOrder(
+  id = defaultOrderId,
+  restaurantId = defaultRestaurantId,
+  customerId = defaultCustomerId,
+  status = status,
+  items = items,
+  deliveryInfo = deliveryInfo,
+)
 
+/**
+ * Creates a default TakeawayOrder with valid items.
+ * @param status The status of the order. Defaults to PENDING.
+ * @param items The items of the order. Defaults to a valid non-empty list.
+ */
 fun defaultTakeawayOrder(
-  id: OrderId = OrderId("order-1"),
-  restaurantId: RestaurantId = RestaurantId("rest-1"),
-  customerId: CustomerId = CustomerId("cust-1"),
   status: OrderStatus = OrderStatus.PENDING,
-  items: List<OrderItem> = listOf(OrderItem(MenuItemId("item-1"), 2)),
-  takeawayInfo: TakeawayInfo = TakeawayInfo(pickupTime = 1_000L, customerName = "Bianchi"),
-): TakeawayOrder = TakeawayOrder(id, restaurantId, customerId, status, items, takeawayInfo)
+  items: List<OrderItem> = defaultNewItems(),
+  takeawayInfo: TakeawayInfo = defaultTakeawayInfo(),
+): TakeawayOrder = TakeawayOrder(
+  id = defaultOrderId,
+  restaurantId = defaultRestaurantId,
+  customerId = defaultCustomerId,
+  status = status,
+  items = items,
+  takeawayInfo = takeawayInfo,
+)
 
+/**
+ * Creates a default DineInOrder with valid items.
+ * @param status The status of the order. Defaults to PENDING.
+ * @param items The items of the order. Defaults to a valid non-empty list.
+ */
 fun defaultDineInOrder(
-  id: OrderId = OrderId("order-1"),
-  restaurantId: RestaurantId = RestaurantId("rest-1"),
-  customerId: CustomerId = CustomerId("cust-1"),
   status: OrderStatus = OrderStatus.PENDING,
-  items: List<OrderItem> = listOf(OrderItem(MenuItemId("item-1"), 2)),
-  tableInfo: TableInfo = TableInfo(tableNumber = 5, numberOfGuests = 2),
-): DineInOrder = DineInOrder(id, restaurantId, customerId, status, items, tableInfo)
+  items: List<OrderItem> = defaultNewItems(),
+  tableInfo: TableInfo = tableInfo1,
+): DineInOrder = DineInOrder(
+  id = defaultOrderId,
+  restaurantId = defaultRestaurantId,
+  customerId = defaultCustomerId,
+  status = status,
+  items = items,
+  tableInfo = tableInfo,
+)
+
+// ---------- Item lists ----------
+
+/** A valid, non-empty list of order items. */
+fun defaultNewItems(): List<OrderItem> = listOf(
+  OrderItem(MenuItemId("item-1"), 2),
+  OrderItem(MenuItemId("item-2"), 3),
+)
+
+/** An empty item list — used to test the EmptyItems failure case. */
+fun defaultEmptyItems(): List<OrderItem> = emptyList()
+
+/** An item list containing one item with zero quantity. */
+fun defaultInvalidItemsZeroCount(): List<OrderItem> = listOf(
+  OrderItem(MenuItemId("item-1"), 2),
+  OrderItem(MenuItemId("item-2"), 0),
+)
+
+/** An item list containing one item with negative quantity. */
+fun defaultInvalidItemsNegativeCount(): List<OrderItem> = listOf(
+  OrderItem(MenuItemId("item-1"), 2),
+  OrderItem(MenuItemId("item-1"), -1),
+)
