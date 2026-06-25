@@ -2,7 +2,7 @@ package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.AdvanceStatusResult
 import com.munchies.order.fixtures.Address2
-import com.munchies.order.fixtures.defaultDeliveryOrder
+import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.futureTime
 import com.munchies.order.fixtures.pastTime
 import io.kotest.matchers.equals.shouldBeEqual
@@ -13,7 +13,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `nextStatus of pending should be preparing`() {
-    val order = defaultDeliveryOrder(OrderStatus.PENDING)
+    val order = createDeliveryOrder(OrderStatus.PENDING)
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
@@ -22,7 +22,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `nextStatus of preparing should be ready`() {
-    val order = defaultDeliveryOrder(OrderStatus.PREPARING)
+    val order = createDeliveryOrder(OrderStatus.PREPARING)
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
@@ -31,7 +31,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `nextStatus of ready should be 'on the way'`() {
-    val order = defaultDeliveryOrder(OrderStatus.READY)
+    val order = createDeliveryOrder(OrderStatus.READY)
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
@@ -40,7 +40,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `nextStatus of 'on the way' should be completed`() {
-    val order = defaultDeliveryOrder(OrderStatus.ON_THE_WAY)
+    val order = createDeliveryOrder(OrderStatus.ON_THE_WAY)
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
@@ -49,7 +49,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `nextStatus should fail when order is already COMPLETED`() {
-    val order = defaultDeliveryOrder(OrderStatus.COMPLETED)
+    val order = createDeliveryOrder(OrderStatus.COMPLETED)
     val result = order.nextStatus()
 
     order.status shouldBeEqual OrderStatus.COMPLETED
@@ -58,7 +58,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `updateInfo should fail if estimated delivery time is in the past`() {
-    val order = defaultDeliveryOrder()
+    val order = createDeliveryOrder()
 
     val result = order.updateInfo(
       pastTime,
@@ -72,7 +72,7 @@ class DeliveryOrderTest {
 
   @Test
   fun `updateInfo should succeed if data is valid`() {
-    val order = defaultDeliveryOrder()
+    val order = createDeliveryOrder()
 
     val result = order.updateInfo(
       futureTime,

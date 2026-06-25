@@ -1,11 +1,11 @@
 package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.UpdateResult
-import com.munchies.order.fixtures.defaultDeliveryOrder
-import com.munchies.order.fixtures.defaultEmptyItems
-import com.munchies.order.fixtures.defaultInvalidItemsNegativeCount
-import com.munchies.order.fixtures.defaultInvalidItemsZeroCount
-import com.munchies.order.fixtures.defaultNewItems
+import com.munchies.order.fixtures.createDeliveryOrder
+import com.munchies.order.fixtures.createEmptyItems
+import com.munchies.order.fixtures.createInvalidItemsNegativeCount
+import com.munchies.order.fixtures.createInvalidItemsZeroCount
+import com.munchies.order.fixtures.createNewItems
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
@@ -14,34 +14,34 @@ class OrderTest {
 
   @Test
   fun `order should be cancellable only when in pending status`() {
-    val order = defaultDeliveryOrder(OrderStatus.PENDING)
-    val cancelledOrder = defaultDeliveryOrder(OrderStatus.CANCELLED)
+    val order = createDeliveryOrder(OrderStatus.PENDING)
+    val cancelledOrder = createDeliveryOrder(OrderStatus.CANCELLED)
     val cancelResult = order.cancel()
     cancelResult shouldBeEqual Order.CancelResult.Success(cancelledOrder)
 
-    val orderPreparing = defaultDeliveryOrder(OrderStatus.PREPARING)
+    val orderPreparing = createDeliveryOrder(OrderStatus.PREPARING)
     val cancelResultPreparing = orderPreparing.cancel()
     cancelResultPreparing shouldBeEqual Order.CancelResult.Failure.InvalidTransition
 
-    val orderReady = defaultDeliveryOrder(OrderStatus.READY)
+    val orderReady = createDeliveryOrder(OrderStatus.READY)
     val cancelResultReady = orderReady.cancel()
     cancelResultReady shouldBeEqual Order.CancelResult.Failure.InvalidTransition
 
-    val orderOnTheWay = defaultDeliveryOrder(OrderStatus.ON_THE_WAY)
+    val orderOnTheWay = createDeliveryOrder(OrderStatus.ON_THE_WAY)
     val cancelResultOnTheWay = orderOnTheWay.cancel()
     cancelResultOnTheWay shouldBeEqual Order.CancelResult.Failure.InvalidTransition
 
-    val orderCompleted = defaultDeliveryOrder(OrderStatus.COMPLETED)
+    val orderCompleted = createDeliveryOrder(OrderStatus.COMPLETED)
     val cancelResultCompleted = orderCompleted.cancel()
     cancelResultCompleted shouldBeEqual Order.CancelResult.Failure.InvalidTransition
   }
 
   @Test
   fun `order should update items`() {
-    val order = defaultDeliveryOrder()
-    val expectedItems = defaultNewItems()
+    val order = createDeliveryOrder()
+    val expectedItems = createNewItems()
 
-    val result = order.updateItems(defaultNewItems())
+    val result = order.updateItems(createNewItems())
 
     result.shouldBeInstanceOf<UpdateResult.Success>()
     result.order.items shouldBeEqual expectedItems
@@ -49,9 +49,9 @@ class OrderTest {
 
   @Test
   fun `order should not update items when empty`() {
-    val order = defaultDeliveryOrder()
+    val order = createDeliveryOrder()
 
-    val result = order.updateItems(defaultEmptyItems())
+    val result = order.updateItems(createEmptyItems())
 
     result.shouldBeInstanceOf<UpdateResult.Failure.InvalidItems>()
     result.error shouldBeEqual Order.ItemsValidationError.EmptyItems
@@ -59,9 +59,9 @@ class OrderTest {
 
   @Test
   fun `order should not update items when item count is zero`() {
-    val order = defaultDeliveryOrder()
+    val order = createDeliveryOrder()
 
-    val result = order.updateItems(defaultInvalidItemsZeroCount())
+    val result = order.updateItems(createInvalidItemsZeroCount())
 
     result.shouldBeInstanceOf<UpdateResult.Failure.InvalidItems>()
     result.error shouldBeEqual Order.ItemsValidationError.InvalidItemQuantity
@@ -69,9 +69,9 @@ class OrderTest {
 
   @Test
   fun `order should not update items when item count is negative`() {
-    val order = defaultDeliveryOrder()
+    val order = createDeliveryOrder()
 
-    val result = order.updateItems(defaultInvalidItemsNegativeCount())
+    val result = order.updateItems(createInvalidItemsNegativeCount())
 
     result.shouldBeInstanceOf<UpdateResult.Failure.InvalidItems>()
     result.error shouldBeEqual Order.ItemsValidationError.InvalidItemQuantity

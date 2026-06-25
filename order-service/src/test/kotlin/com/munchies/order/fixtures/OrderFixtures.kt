@@ -36,7 +36,7 @@ object Address2 : Address {
 
 // ---------- Info builders ----------
 
-fun defaultDeliveryInfo(
+fun createDeliveryInfo(
   estimatedDeliveryTime: Long = futureTime,
   address: Address = Address1,
 ): DeliveryInfo = DeliveryInfo(
@@ -46,7 +46,7 @@ fun defaultDeliveryInfo(
   customerPhone = address.customerPhone,
 )
 
-fun defaultTakeawayInfo(
+fun createTakeawayInfo(
   pickupTime: Long = futureTime,
   customerName: String = "Bianchi",
 ): TakeawayInfo = TakeawayInfo(
@@ -69,10 +69,10 @@ val tableInfo2: TableInfo get() = defaultTableInfo(tableNumber = 2, numberOfGues
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun defaultDeliveryOrder(
+fun createDeliveryOrder(
   status: OrderStatus = OrderStatus.PENDING,
-  items: List<OrderItem> = defaultNewItems(),
-  deliveryInfo: DeliveryInfo = defaultDeliveryInfo(),
+  items: List<OrderItem> = createNewItems(),
+  deliveryInfo: DeliveryInfo = createDeliveryInfo(),
 ): DeliveryOrder = DeliveryOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
@@ -87,10 +87,10 @@ fun defaultDeliveryOrder(
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun defaultTakeawayOrder(
+fun createTakeawayOrder(
   status: OrderStatus = OrderStatus.PENDING,
-  items: List<OrderItem> = defaultNewItems(),
-  takeawayInfo: TakeawayInfo = defaultTakeawayInfo(),
+  items: List<OrderItem> = createNewItems(),
+  takeawayInfo: TakeawayInfo = createTakeawayInfo(),
 ): TakeawayOrder = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
@@ -105,9 +105,9 @@ fun defaultTakeawayOrder(
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun defaultDineInOrder(
+fun createDineInOrder(
   status: OrderStatus = OrderStatus.PENDING,
-  items: List<OrderItem> = defaultNewItems(),
+  items: List<OrderItem> = createNewItems(),
   tableInfo: TableInfo = tableInfo1,
 ): DineInOrder = DineInOrder(
   id = defaultOrderId,
@@ -128,29 +128,29 @@ fun createSampleOrder(status: OrderStatus) = TakeawayOrder(
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
   status = status,
-  items = defaultNewItems(),
-  takeawayInfo = defaultTakeawayInfo(),
+  items = createNewItems(),
+  takeawayInfo = createTakeawayInfo(),
 )
 
 // ---------- Item lists ----------
 
 /** A valid, non-empty list of order items. */
-fun defaultNewItems(): List<OrderItem> = listOf(
+fun createNewItems(): List<OrderItem> = listOf(
   OrderItem(MenuItemId("item-1"), 2),
   OrderItem(MenuItemId("item-2"), 3),
 )
 
 /** An empty item list — used to test the EmptyItems failure case. */
-fun defaultEmptyItems(): List<OrderItem> = emptyList()
+fun createEmptyItems(): List<OrderItem> = emptyList()
 
 /** An item list containing one item with zero quantity. */
-fun defaultInvalidItemsZeroCount(): List<OrderItem> = listOf(
+fun createInvalidItemsZeroCount(): List<OrderItem> = listOf(
   OrderItem(MenuItemId("item-1"), 2),
   OrderItem(MenuItemId("item-2"), 0),
 )
 
 /** An item list containing one item with negative quantity. */
-fun defaultInvalidItemsNegativeCount(): List<OrderItem> = listOf(
+fun createInvalidItemsNegativeCount(): List<OrderItem> = listOf(
   OrderItem(MenuItemId("item-1"), 2),
   OrderItem(MenuItemId("item-1"), -1),
 )
