@@ -6,9 +6,9 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultCustomerId
-import com.munchies.order.fixtures.defaultDeliveryOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.futureTime
 import com.munchies.order.fixtures.pastTime
@@ -48,7 +48,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
   @Test
   fun `execute should return Unauthorized when order belongs to another customer`() {
     val command = createValidCommand()
-    val orderOfAnotherCustomer = defaultDeliveryOrder()
+    val orderOfAnotherCustomer = createDeliveryOrder()
       .copy(customerId = CustomerId("wrong-customer-id"))
 
     every { repository.findById(command.orderId) } returns orderOfAnotherCustomer
@@ -75,7 +75,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
   @Test
   fun `execute should return InvalidDate when domain logic rejects the estimated time`() {
     val command = createValidCommand(estimatedDeliveryTime = pastTime)
-    val deliveryOrder = defaultDeliveryOrder()
+    val deliveryOrder = createDeliveryOrder()
 
     every { repository.findById(command.orderId) } returns deliveryOrder
 
@@ -88,7 +88,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
   @Test
   fun `execute should update repository and return Success when command is valid`() {
     val command = createValidCommand(estimatedDeliveryTime = futureTime)
-    val deliveryOrder = defaultDeliveryOrder()
+    val deliveryOrder = createDeliveryOrder()
 
     every { repository.findById(command.orderId) } returns deliveryOrder
     every { repository.update(any()) } returns Unit
