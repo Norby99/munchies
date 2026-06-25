@@ -118,6 +118,20 @@ fun defaultDineInOrder(
   tableInfo = tableInfo,
 )
 
+/**
+ * Creates a default Order with valid items, using [Address1] by default.
+ * @param status The status of the order. Defaults to PENDING.
+ * @param items The items of the order. Defaults to a valid non-empty list.
+ */
+fun createSampleOrder(status: OrderStatus) = TakeawayOrder(
+  id = defaultOrderId,
+  restaurantId = defaultRestaurantId,
+  customerId = defaultCustomerId,
+  status = status,
+  items = defaultNewItems(),
+  takeawayInfo = defaultTakeawayInfo(),
+)
+
 // ---------- Item lists ----------
 
 /** A valid, non-empty list of order items. */
