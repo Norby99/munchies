@@ -234,9 +234,9 @@ class MicronautOrderController(
     ) {
       is UpdateOrderItems.Result.Success -> HttpResponse.ok("Order items updated")
       is UpdateOrderItems.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is UpdateOrderItems.Result.Failure.Unauthorized,
-      is UpdateOrderItems.Result.Failure.EmptyItems,
-      ->
+      is UpdateOrderItems.Result.Failure.Unauthorized ->
+        HttpResponse.badRequest("Unauthorized to update this order")
+      is UpdateOrderItems.Result.Failure.EmptyItems ->
         HttpResponse.badRequest("Cannot update items")
     }
   }
@@ -270,9 +270,9 @@ class MicronautOrderController(
     ) {
       is UpdateDeliveryOrderInfo.Result.Success -> HttpResponse.ok("Delivery info updated")
       is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized,
-      is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate,
-      ->
+      is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized ->
+        HttpResponse.badRequest("Unauthorized to update this order")
+      is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate ->
         HttpResponse.badRequest("Cannot update delivery info")
     }
   }
@@ -306,9 +306,9 @@ class MicronautOrderController(
     ) {
       is UpdateTakeawayOrderInfo.Result.Success -> HttpResponse.ok("Takeaway info updated")
       is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized,
-      is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate,
-      ->
+      is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized ->
+        HttpResponse.badRequest("Unauthorized to update this order")
+      is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate ->
         HttpResponse.badRequest("Cannot update takeaway info")
     }
   }
