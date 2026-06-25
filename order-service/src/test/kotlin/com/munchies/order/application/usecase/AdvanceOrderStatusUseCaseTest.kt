@@ -17,10 +17,10 @@ class AdvanceOrderStatusUseCaseTest {
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = AdvanceOrderStatusUseCase(repository)
 
+  private val command = AdvanceOrderStatusCommand(defaultOrderId)
+
   @Test
   fun `execute should return OrderNotFound when order does not exist in repository`() {
-    val command = AdvanceOrderStatusCommand(defaultOrderId)
-
     every { repository.findById(command.orderId) } returns null
 
     val result = useCase.execute(command)
@@ -31,7 +31,6 @@ class AdvanceOrderStatusUseCaseTest {
 
   @Test
   fun `execute should return InvalidTransition when domain logic rejects the status advancement`() {
-    val command = AdvanceOrderStatusCommand(defaultOrderId)
     val completedOrder = createSampleOrder(OrderStatus.COMPLETED)
 
     every { repository.findById(command.orderId) } returns completedOrder
@@ -44,7 +43,6 @@ class AdvanceOrderStatusUseCaseTest {
 
   @Test
   fun `execute should update repository and return Success when transition is valid`() {
-    val command = AdvanceOrderStatusCommand(defaultOrderId)
     val pendingOrder = createSampleOrder(OrderStatus.PENDING)
 
     every { repository.findById(command.orderId) } returns pendingOrder

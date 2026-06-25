@@ -1,15 +1,13 @@
 package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
-import com.munchies.order.application.port.inbound.command.UpdateDeliveryOrderCommand
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createSampleOrder
-import com.munchies.order.fixtures.defaultCustomerId
-import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.fixtures.createUpdateDeliveryOrderInfoCommand
 import com.munchies.order.fixtures.futureTime
 import com.munchies.order.fixtures.pastTime
 import io.kotest.matchers.equals.shouldBeEqual
@@ -24,19 +22,9 @@ class UpdateDeliveryOrderInfoUseCaseTest {
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = UpdateDeliveryOrderInfoUseCase(repository)
 
-  private fun createValidCommand(estimatedDeliveryTime: Long = futureTime) =
-    UpdateDeliveryOrderCommand(
-      orderId = defaultOrderId,
-      customerId = defaultCustomerId,
-      estimatedDeliveryTime = estimatedDeliveryTime,
-      deliveryAddress = "Nuova Via 10",
-      bellName = "Verdi",
-      customerPhone = "987654321",
-    )
-
   @Test
   fun `execute should return OrderNotFound when order does not exist`() {
-    val command = createValidCommand()
+    val command = createUpdateDeliveryOrderInfoCommand()
     every { repository.findById(command.orderId) } returns null
 
     val result = useCase.execute(command)
@@ -47,7 +35,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
 
   @Test
   fun `execute should return Unauthorized when order belongs to another customer`() {
-    val command = createValidCommand()
+    val command = createUpdateDeliveryOrderInfoCommand()
     val orderOfAnotherCustomer = createDeliveryOrder()
       .copy(customerId = CustomerId("wrong-customer-id"))
 
@@ -61,7 +49,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
 
   @Test
   fun `execute should return OrderNotFound when order exists but is NOT a DeliveryOrder`() {
-    val command = createValidCommand()
+    val command = createUpdateDeliveryOrderInfoCommand()
     val takeawayOrder = createSampleOrder(OrderStatus.PENDING)
 
     every { repository.findById(command.orderId) } returns takeawayOrder
@@ -74,7 +62,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
 
   @Test
   fun `execute should return InvalidDate when domain logic rejects the estimated time`() {
-    val command = createValidCommand(estimatedDeliveryTime = pastTime)
+    val command = createUpdateDeliveryOrderInfoCommand(estimatedDeliveryTime = pastTime)
     val deliveryOrder = createDeliveryOrder()
 
     every { repository.findById(command.orderId) } returns deliveryOrder
@@ -87,7 +75,7 @@ class UpdateDeliveryOrderInfoUseCaseTest {
 
   @Test
   fun `execute should update repository and return Success when command is valid`() {
-    val command = createValidCommand(estimatedDeliveryTime = futureTime)
+    val command = createUpdateDeliveryOrderInfoCommand(estimatedDeliveryTime = futureTime)
     val deliveryOrder = createDeliveryOrder()
 
     every { repository.findById(command.orderId) } returns deliveryOrder
