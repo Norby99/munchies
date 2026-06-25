@@ -1,16 +1,13 @@
 package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.UpdateOrderItems
-import com.munchies.order.application.port.inbound.command.UpdateOrderItemsCommand
 import com.munchies.order.domain.model.CustomerId
-import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createNewItems
 import com.munchies.order.fixtures.createSampleOrder
-import com.munchies.order.fixtures.defaultCustomerId
-import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.fixtures.createUpdateOrderItemsCommand
 import io.kotest.matchers.equals.shouldBeEqual
 import io.mockk.every
 import io.mockk.mockk
@@ -22,15 +19,9 @@ class UpdateOrderItemsUseCaseTest {
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = UpdateOrderItemsUseCase(repository)
 
-  private fun createCommand(items: List<OrderItem> = createNewItems()) = UpdateOrderItemsCommand(
-    orderId = defaultOrderId,
-    customerId = defaultCustomerId,
-    items = items,
-  )
-
   @Test
   fun `execute should return OrderNotFound when order does not exist`() {
-    val command = createCommand()
+    val command = createUpdateOrderItemsCommand()
     every { repository.findById(command.orderId) } returns null
 
     val result = useCase.execute(command)
@@ -41,7 +32,7 @@ class UpdateOrderItemsUseCaseTest {
 
   @Test
   fun `execute should return Unauthorized when order belongs to a different customer`() {
-    val command = createCommand()
+    val command = createUpdateOrderItemsCommand()
     val wrongCustomer = CustomerId("another-customer-999")
     val orderOfAnotherCustomer = createSampleOrder(OrderStatus.PENDING)
       .copy(customerId = wrongCustomer)
@@ -56,7 +47,7 @@ class UpdateOrderItemsUseCaseTest {
 
   @Test
   fun `execute should return EmptyItems when the command contains an empty list of items`() {
-    val command = createCommand(items = createEmptyItems())
+    val command = createUpdateOrderItemsCommand(items = createEmptyItems())
     val existingOrder = createSampleOrder(OrderStatus.PENDING)
 
     every { repository.findById(command.orderId) } returns existingOrder
@@ -70,7 +61,7 @@ class UpdateOrderItemsUseCaseTest {
   @Test
   fun `execute should update repository and return Success when command is valid`() {
     val newItems = createNewItems()
-    val command = createCommand(items = newItems)
+    val command = createUpdateOrderItemsCommand(items = newItems)
 
     val existingOrder = createSampleOrder(OrderStatus.PENDING)
 
