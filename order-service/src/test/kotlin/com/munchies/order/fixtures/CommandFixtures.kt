@@ -1,6 +1,9 @@
 package com.munchies.order.fixtures
 
 import com.munchies.order.application.port.inbound.command.PlaceOrderCommand
+import com.munchies.order.application.port.inbound.command.UpdateDeliveryOrderCommand
+import com.munchies.order.application.port.inbound.command.UpdateOrderItemsCommand
+import com.munchies.order.application.port.inbound.command.UpdateTakeawayOrderCommand
 import com.munchies.order.domain.model.*
 
 fun deliveryCommand(
@@ -48,3 +51,28 @@ fun dineInCommand(
   tableNumber = tableNumber,
   numberOfGuests = numberOfGuests,
 )
+
+fun createUpdateDeliveryOrderInfoCommand(estimatedDeliveryTime: Long = futureTime) =
+  UpdateDeliveryOrderCommand(
+    orderId = defaultOrderId,
+    customerId = defaultCustomerId,
+    estimatedDeliveryTime = estimatedDeliveryTime,
+    deliveryAddress = "Nuova Via 10",
+    bellName = "Verdi",
+    customerPhone = "987654321",
+  )
+
+fun createUpdateOrderItemsCommand(items: List<OrderItem> = createNewItems()) =
+  UpdateOrderItemsCommand(
+    orderId = defaultOrderId,
+    customerId = defaultCustomerId,
+    items = items,
+  )
+
+fun createUpdateTakeawayOrderInfoUseCommand(pickupTime: Long = futureTime) =
+  UpdateTakeawayOrderCommand(
+    orderId = defaultOrderId,
+    customerId = defaultCustomerId,
+    pickupTime = pickupTime,
+    customerName = "Giovanni Gialli",
+  )

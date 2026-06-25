@@ -26,6 +26,8 @@ class GetOrderDetailsUseCaseTest {
 
   private val mockOrderDto = mockk<OrderDto>()
 
+  private val command = GetOrderDetailsCommand(defaultOrderId)
+
   @BeforeEach
   fun setUp() {
     mockkObject(OrderDTOFactory)
@@ -38,7 +40,6 @@ class GetOrderDetailsUseCaseTest {
 
   @Test
   fun `execute should return OrderNotFound when repository cannot find the order`() {
-    val command = GetOrderDetailsCommand(defaultOrderId)
     every { repository.findById(command.orderId) } returns null
 
     val result = useCase.execute(command)
@@ -48,7 +49,6 @@ class GetOrderDetailsUseCaseTest {
 
   @Test
   fun `execute should return Success with mapped DTO when order exists`() {
-    val command = GetOrderDetailsCommand(defaultOrderId)
     val existingOrder = createSampleOrder(OrderStatus.PENDING)
 
     every { repository.findById(command.orderId) } returns existingOrder
