@@ -19,10 +19,10 @@ class DiscardOrderUseCaseTest {
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = DiscardOrderUseCase(repository)
 
+  private val command = DiscardOrderCommand(defaultOrderId, defaultCustomerId)
+
   @Test
   fun `execute should return OrderNotFound when order does not exist`() {
-    val command = DiscardOrderCommand(defaultOrderId, defaultCustomerId)
-
     every { repository.findById(command.orderId) } returns null
 
     val result = useCase.execute(command)
@@ -33,8 +33,6 @@ class DiscardOrderUseCaseTest {
 
   @Test
   fun `execute should return Unauthorized when order belongs to a different customer`() {
-    val command = DiscardOrderCommand(defaultOrderId, defaultCustomerId)
-
     val differentCustomerId = CustomerId("wrong-customer-456")
     val orderOfAnotherCustomer = createSampleOrder(OrderStatus.PENDING)
       .copy(customerId = differentCustomerId)
@@ -49,7 +47,6 @@ class DiscardOrderUseCaseTest {
 
   @Test
   fun `execute should return OrderNotCancellable when order status is not PENDING`() {
-    val command = DiscardOrderCommand(defaultOrderId, defaultCustomerId)
     val nonCancellableOrder = createSampleOrder(OrderStatus.PREPARING)
 
     every { repository.findById(command.orderId) } returns nonCancellableOrder
@@ -62,7 +59,6 @@ class DiscardOrderUseCaseTest {
 
   @Test
   fun `execute should update repository and return Success when order is pending`() {
-    val command = DiscardOrderCommand(defaultOrderId, defaultCustomerId)
     val cancellableOrder = createSampleOrder(OrderStatus.PENDING)
 
     every { repository.findById(command.orderId) } returns cancellableOrder
