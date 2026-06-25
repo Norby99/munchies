@@ -6,10 +6,10 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.fixtures.createEmptyItems
+import com.munchies.order.fixtures.createNewItems
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultCustomerId
-import com.munchies.order.fixtures.defaultEmptyItems
-import com.munchies.order.fixtures.defaultNewItems
 import com.munchies.order.fixtures.defaultOrderId
 import io.kotest.matchers.equals.shouldBeEqual
 import io.mockk.every
@@ -22,7 +22,7 @@ class UpdateOrderItemsUseCaseTest {
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = UpdateOrderItemsUseCase(repository)
 
-  private fun createCommand(items: List<OrderItem> = defaultNewItems()) = UpdateOrderItemsCommand(
+  private fun createCommand(items: List<OrderItem> = createNewItems()) = UpdateOrderItemsCommand(
     orderId = defaultOrderId,
     customerId = defaultCustomerId,
     items = items,
@@ -56,7 +56,7 @@ class UpdateOrderItemsUseCaseTest {
 
   @Test
   fun `execute should return EmptyItems when the command contains an empty list of items`() {
-    val command = createCommand(items = defaultEmptyItems())
+    val command = createCommand(items = createEmptyItems())
     val existingOrder = createSampleOrder(OrderStatus.PENDING)
 
     every { repository.findById(command.orderId) } returns existingOrder
@@ -69,7 +69,7 @@ class UpdateOrderItemsUseCaseTest {
 
   @Test
   fun `execute should update repository and return Success when command is valid`() {
-    val newItems = defaultNewItems()
+    val newItems = createNewItems()
     val command = createCommand(items = newItems)
 
     val existingOrder = createSampleOrder(OrderStatus.PENDING)
