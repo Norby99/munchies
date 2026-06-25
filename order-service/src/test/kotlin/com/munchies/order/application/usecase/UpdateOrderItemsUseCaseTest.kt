@@ -5,6 +5,7 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createEmptyItems
+import com.munchies.order.fixtures.createInvalidItemsZeroCount
 import com.munchies.order.fixtures.createNewItems
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.createUpdateOrderItemsCommand
@@ -80,5 +81,19 @@ class UpdateOrderItemsUseCaseTest {
         },
       )
     }
+  }
+
+  @Test
+  fun `execute should return EmptyItems when the command contains items with invalid quantity`() {
+    val command = createUpdateOrderItemsCommand(items = createInvalidItemsZeroCount())
+    val existingOrder = createSampleOrder(OrderStatus.PENDING)
+
+    every { repository.findById(command.orderId) } returns existingOrder
+
+    val result = useCase.execute(command)
+
+    result shouldBeEqual UpdateOrderItems.Result.Failure.EmptyItems
+
+    verify(exactly = 0) { repository.update(any()) }
   }
 }
