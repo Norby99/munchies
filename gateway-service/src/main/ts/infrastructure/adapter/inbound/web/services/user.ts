@@ -21,15 +21,17 @@ export class GetUser extends GetUserAPI {
 
       console.log("Called user-service");
 
-      const response = getUserResponseFromJson(res.getBody("utf8"));
+      console.log("raw body to string is " + res.body.toString());
+
+      const response = getUserResponseFromJson(res.body.toString());
       console.log("Got this response: " + response);
-      if (response.result.type != "Success")
-        throw new Error((response.result as GetUserFailure).reason);
-      console.log("response is not failure");
-      return response.result;
+      if (response.result.type != "GetUserSuccess")
+        return response.result as GetUserFailure;
+      return response.result as GetUserSuccess;
     } catch (e: any) {
-      console.log("response is a failure");
-      return new GetUserFailure(e.toString());
+      console.log("Something went wrong");
+      console.log("error is " + JSON.stringify(e));
+      return new GetUserFailure(JSON.stringify(e));
     }
   }
 }
