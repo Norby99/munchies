@@ -46,6 +46,8 @@ sealed class Order(
    */
   protected abstract fun copyWithStatus(status: OrderStatus): Order
 
+  protected abstract fun copyWithItems(items: List<OrderItem>): Order
+
   companion object {
     /**
      * Validates the list of order items.
@@ -70,11 +72,7 @@ sealed class Order(
     val validationError = validateItems(newItems)
     if (validationError != null) return UpdateResult.Failure.InvalidItems(validationError)
 
-    return when (this) {
-      is DeliveryOrder -> UpdateResult.Success(copy(items = newItems))
-      is TakeawayOrder -> UpdateResult.Success(copy(items = newItems))
-      is DineInOrder -> UpdateResult.Success(copy(items = newItems))
-    }
+    return UpdateResult.Success(copyWithItems(newItems))
   }
 
   /**
