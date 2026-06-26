@@ -123,7 +123,7 @@ fun createDineInOrder(
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun createSampleOrder(status: OrderStatus) = TakeawayOrder(
+fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
