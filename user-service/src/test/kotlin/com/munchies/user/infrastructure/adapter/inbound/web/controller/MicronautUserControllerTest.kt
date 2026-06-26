@@ -18,6 +18,8 @@ import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmation
 import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
 import com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure
 import com.munchies.user.infrastructure.adapter.outbound.response.GetUserSuccess
+import com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserFailure
+import com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserSuccess
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -131,7 +133,7 @@ class MicronautUserControllerTest {
 
     response.status shouldBe HttpStatus.OK
     response.cookies.all.shouldNotBeEmpty()
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<RegisterUserSuccess>()
   }
 
   @Test
@@ -175,7 +177,7 @@ class MicronautUserControllerTest {
     )
 
     response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<RegisterUserFailure>()
   }
 
   @Test
