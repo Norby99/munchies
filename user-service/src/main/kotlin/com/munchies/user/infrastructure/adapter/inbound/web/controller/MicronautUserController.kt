@@ -12,6 +12,8 @@ import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
+import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDomain
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.DeleteUserAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.EmailVerificationAPI
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI.Companion.GetUserAPI
@@ -73,10 +75,6 @@ class MicronautUserController(
   private val emailConfirmationKafkaClient: EmailConfirmationClient,
 
   @Inject val tokenProvider: TokenProvider,
-  /**
-   * Mapper/factory used to convert between transport DTOs and domain models.
-   */
-  private val dtoFactory: UserDTOFactory = UserDTOFactory.default,
 ) :
   GetUserAPI<String, HttpResponse<UserDTO>>,
   RegisterUserAPI<RegisterUserRequest, HttpResponse<String>>,
@@ -133,9 +131,7 @@ class MicronautUserController(
   override fun getUser(@PathVariable id: String): HttpResponse<UserDTO> {
     return when (val res = getUser.execute(UserId(id))) {
       is GetUser.Companion.GetUserResult.Success -> HttpResponse.ok(
-        dtoFactory.run {
-          res.user.fromDomain()
-        },
+        res.user.toDTO(),
       )
       GetUser.Companion.GetUserResult.NotFound -> HttpResponse.notFound()
     }
@@ -169,44 +165,47 @@ class MicronautUserController(
     return when (val msg = RegisterUserRequestValidator().validate(request)) {
       is InvalidInput -> HttpResponse.badRequest(msg.reason)
       else -> {
-        val user = dtoFactory.run { request.user.fromDTO() }
-        val userCredentials =
-          UserCredentials(
-            id = user.id,
-            passwordHash = request.hashedPassword,
-            salt = request.saltValue,
-          )
+        when (val user = request.user.toDomain()) {
+          is UserDTOFactory.UserDTOFactoryResult.Failure -> HttpResponse.badRequest(user.reason)
+          is UserDTOFactory.UserDTOFactoryResult.Success -> {
+            val userCredentials =
+              UserCredentials(
+                id = user.user.id,
+                passwordHash = request.hashedPassword,
+                salt = request.saltValue,
+              )
+            when (
+              val res =
+                registerUser.execute(
+                  user = user.user,
+                  credentials = userCredentials,
+                )
+            ) {
+              is RegisterUser.Companion.RegisterUserResult.Success -> {
+                when (val token = tokenProvider.generateToken(user.user.id)) {
+                  is GenerateTokenSuccess ->
+                    HttpResponse
+                      .ok("User registered successfully")
+                      .cookie(
+                        Cookie.of("authToken", token.token)
+                          .httpOnly(true)
+                          .secure(true)
+                          .sameSite(SameSite.Strict)
+                          .path(UserServiceConfig.SERVICE_PATH),
+                      )
+                  else -> HttpResponse.serverError("Couldn't create token")
+                }
+              }
+              RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
+                HttpResponse.unauthorized()
 
-        when (
-          val res =
-            registerUser.execute(
-              user = user,
-              credentials = userCredentials,
-            )
-        ) {
-          is RegisterUser.Companion.RegisterUserResult.Success -> {
-            when (val token = tokenProvider.generateToken(user.id)) {
-              is GenerateTokenSuccess ->
+              is RegisterUser.Companion.RegisterUserResult.Failure ->
                 HttpResponse
-                  .ok("User registered successfully")
-                  .cookie(
-                    Cookie.of("authToken", token.token)
-                      .httpOnly(true)
-                      .secure(true)
-                      .sameSite(SameSite.Strict)
-                      .path(UserServiceConfig.SERVICE_PATH),
+                  .serverError(
+                    "Failed to register user: $user",
                   )
-              else -> HttpResponse.serverError("Couldn't create token")
             }
           }
-          RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
-            HttpResponse.unauthorized()
-
-          is RegisterUser.Companion.RegisterUserResult.Failure ->
-            HttpResponse
-              .serverError(
-                "Failed to register user: $user",
-              )
         }
       }
     }
@@ -302,7 +301,9 @@ class MicronautUserController(
       else -> {
         when (
           updateUserPassword.execute(
-            user = dtoFactory.run { request.user.fromDTO() },
+            id = request.id,
+            username = request.username,
+            email = request.email,
             oldPassword = request.oldHashedPassword,
             newPassword = request.newPassword,
           )
@@ -314,6 +315,9 @@ class MicronautUserController(
             HttpResponse.badRequest("Invalid old password")
 
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser ->
+            HttpResponse.unauthorized()
+
+          is UpdateUserPassword.Companion.UpdateUserPasswordResult.UnauthorizedOperation ->
             HttpResponse.unauthorized()
 
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
@@ -348,16 +352,25 @@ class MicronautUserController(
     return when (val msg = UpdateUserInfoRequestValidator().validate(request)) {
       is InvalidInput -> HttpResponse.badRequest(msg.reason)
       else -> {
-        when (
-          updateUserInfo.execute(
-            user = dtoFactory.run { request.user.fromDTO() },
-          )
-        ) {
-          is UpdateUserInfo.Companion.UpdateUserInfoResult.Success ->
-            HttpResponse.ok("User info updated successfully")
+        when (val user = request.user.toDomain()) {
+          is UserDTOFactory.UserDTOFactoryResult.Failure -> HttpResponse.badRequest(user.reason)
+          is UserDTOFactory.UserDTOFactoryResult.Success -> {
+            when (
+              val res =
+                updateUserInfo.execute(
+                  user = user.user,
+                )
+            ) {
+              is UpdateUserInfo.Companion.UpdateUserInfoResult.Success ->
+                HttpResponse.ok("User info updated successfully")
 
-          UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
-            HttpResponse.notFound()
+              is UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
+                HttpResponse.notFound()
+
+              is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure ->
+                HttpResponse.badRequest(res.reason)
+            }
+          }
         }
       }
     }
@@ -379,9 +392,7 @@ class MicronautUserController(
       else -> {
         when (val res = deleteUser.execute(UserId(request.userId))) {
           is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
-            dtoFactory.run {
-              res.user.fromDomain()
-            },
+            res.user.toDTO(),
           )
           DeleteUser.Companion.DeleteUserResult.NotFound -> HttpResponse.notFound()
         }

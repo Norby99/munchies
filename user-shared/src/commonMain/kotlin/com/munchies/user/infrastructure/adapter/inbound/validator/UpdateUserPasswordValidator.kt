@@ -16,10 +16,14 @@ class UpdateUserPasswordValidator : InputValidator() {
     val request = (input as UpdateUserPasswordRequest)
     if (request.newPassword.isEmpty()) return InvalidInput("New password cannot be empty")
     if (request.oldHashedPassword.isEmpty()) return InvalidInput("Old password cannot be empty")
-    val user = request.user
-    if (user.email.isEmpty() and user.username.isEmpty()) {
+    if (request.email.isEmpty() and request.username.isEmpty()) {
       return InvalidInput(
         "Both email and username cannot be empty",
+      )
+    }
+    if (request.id.isEmpty()) {
+      return InvalidInput(
+        "UserId cannot be empty",
       )
     }
     return ValidInput

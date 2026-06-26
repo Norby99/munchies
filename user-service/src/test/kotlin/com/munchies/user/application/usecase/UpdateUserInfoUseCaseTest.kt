@@ -1,13 +1,12 @@
 package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.UpdateUserInfo
-import com.munchies.user.domain.factory.MockUserFactory
-import com.munchies.user.domain.model.Email
-import com.munchies.user.domain.model.UserProfile
-import com.munchies.user.domain.model.UserRole
+import com.munchies.user.domain.model.*
 import com.munchies.user.domain.port.UserRepository
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -15,24 +14,9 @@ import org.mockito.kotlin.verify
 class UpdateUserInfoUseCaseTest {
   @Test
   fun `execute should return success and save the provided user when id exists`() {
-    val userToUpdate = MockUserFactory().create(
-      id = "existing-user-id",
-      profile = UserProfile(
-        username = "updated-username",
-        email = Email("updated@email.com"),
-        role = UserRole.MANAGER,
-      ),
-    )
-    val existingUser = MockUserFactory().create(
-      id = "existing-user-id",
-      profile = UserProfile(
-        username = "old-username",
-        email = Email("old@email.com"),
-        role = UserRole.CUSTOMER,
-      ),
-    )
+    val userToUpdate = exampleUser
     val userRepository = mock<UserRepository> {
-      on { findById(userToUpdate.id) } doReturn existingUser
+      on { findById(userToUpdate.id) } doReturn userToUpdate
     }
     val useCase = UpdateUserInfoUseCase(userRepository)
 
@@ -44,7 +28,7 @@ class UpdateUserInfoUseCaseTest {
 
   @Test
   fun `execute should return user not found and not save when id does not exist`() {
-    val userToUpdate = MockUserFactory().create(id = "missing-user-id")
+    val userToUpdate = exampleUser
     val userRepository = mock<UserRepository> {
       on { findById(userToUpdate.id) } doReturn null
     }
@@ -57,29 +41,29 @@ class UpdateUserInfoUseCaseTest {
 
   @Test
   fun `execute should use the provided user profile when saving`() {
-    val userToUpdate = MockUserFactory().create(
-      id = "profile-update-user-id",
-      profile = UserProfile(
-        username = "new-username",
-        email = Email("new@email.com"),
-        role = UserRole.MANAGER,
-      ),
+    val userToUpdate = exampleUser
+
+    val newProfile = UserProfile(
+      username = "legacy-username",
+      email = Email("legacy@email.com"),
+      role = UserRole.CUSTOMER,
     )
-    val existingUser = MockUserFactory().create(
-      id = "profile-update-user-id",
-      profile = UserProfile(
-        username = "legacy-username",
-        email = Email("legacy@email.com"),
-        role = UserRole.CUSTOMER,
-      ),
+
+    val newUser = userToUpdate.update(
+      id = userToUpdate.id,
+      profile = newProfile,
     )
+
     val userRepository = mock<UserRepository> {
-      on { findById(userToUpdate.id) } doReturn existingUser
+      on { findById(userToUpdate.id) } doReturn userToUpdate
+      on { save(newUser) } doAnswer {}
     }
     val useCase = UpdateUserInfoUseCase(userRepository)
 
-    useCase.execute(userToUpdate)
+    useCase.execute(newUser)
+      .shouldBeInstanceOf<UpdateUserInfo.Companion.UpdateUserInfoResult.Success>()
 
-    verify(userRepository).save(userToUpdate.copy(profile = userToUpdate.profile))
+    verify(userRepository).save(newUser)
+    verify(userRepository).findById(userToUpdate.id)
   }
 }

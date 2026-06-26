@@ -1,8 +1,9 @@
 package com.munchies.user.infrastructure.adapter.outbound.mongo.repository
 
-import com.munchies.user.domain.factory.MockUserFactory
 import com.munchies.user.domain.model.UserId
-import com.munchies.user.infrastructure.adapter.outbound.mongo.document.UserDocument
+import com.munchies.user.domain.model.exampleUser
+import com.munchies.user.domain.model.update
+import com.munchies.user.infrastructure.adapter.outbound.mongo.factory.UserDocumentFactory.toDocument
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -21,7 +22,8 @@ class MongoUserRepositoryTest {
   val userId = UserId(id)
 
   val realUserDoc =
-    UserDocument(id, "username", "email", false, "role")
+    exampleUser.update(id = userId)
+      .toDocument()
 
   @Test
   fun `mongo repository correctly finds existing user by id`() {
@@ -58,7 +60,7 @@ class MongoUserRepositoryTest {
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
     val userId = UserId("new-$id")
-    val user = MockUserFactory().create(userId.value)
+    val user = exampleUser.update(userId)
 
     mongoUserRepository.save(user)
 
@@ -70,7 +72,7 @@ class MongoUserRepositoryTest {
     val crudUserRepository = mock<MongoCrudUserRepository>()
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val user = MockUserFactory().create("id")
+    val user = exampleUser
 
     mongoUserRepository.update(user)
 
@@ -82,7 +84,7 @@ class MongoUserRepositoryTest {
     val crudUserRepository = mock<MongoCrudUserRepository>()
     val mongoUserRepository = MongoUserRepository(crudUserRepository)
 
-    val user = MockUserFactory().create("id")
+    val user = exampleUser
 
     mongoUserRepository.delete(user)
 
