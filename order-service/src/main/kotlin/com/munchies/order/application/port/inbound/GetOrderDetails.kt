@@ -30,7 +30,7 @@ interface GetOrderDetails {
   sealed interface Result {
     data class Success(val order: OrderDto) : Result
     sealed interface Failure : Result {
-      data object OrderNotFound : Result
+      data object OrderNotFound : Failure
     }
   }
 }
