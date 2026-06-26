@@ -44,7 +44,7 @@ fun configureSpotlessForJs(project: Project) {
     typescript {
       target("src/**/*.ts")
       targetExclude("**/node_modules/**/*.ts", "**/dist/**/*.ts", "build/**")
-      prettier()
+      BiomeTs("2.1.0")
     }
     javascript {
       target("src/**/*.js")
@@ -54,7 +54,7 @@ fun configureSpotlessForJs(project: Project) {
         "**/*.cjs.js",
         "**/*.min.js",
       )
-      prettier()
+      BiomeJs("2.1.0")
     }
   }
 
