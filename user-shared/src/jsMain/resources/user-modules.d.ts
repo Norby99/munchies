@@ -30,6 +30,9 @@ export type RegisterUserAPI =
 export declare const RegisterUserAPI: typeof
   com.munchies.user.infrastructure.adapter.inbound.JsRegisterUserAPI;
 
+export type RegisterUserRequest = com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest;
+export declare const RegisterUserRequest: typeof com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest;
+
 export type RegisterUserResponse = com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResponse;
 export declare const RegisterUserResponse: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResponse;
 
