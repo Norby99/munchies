@@ -53,7 +53,7 @@ class OrderBeans {
   )
 }
 
-data class OrderServices(
+open class OrderServices(
   val advanceOrderStatus: AdvanceOrderStatus,
   val discardOrder: DiscardOrder,
   val getOrderDetails: GetOrderDetails,
