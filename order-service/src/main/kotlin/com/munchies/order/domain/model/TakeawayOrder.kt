@@ -31,6 +31,8 @@ data class TakeawayOrder(
 
   override fun copyWithStatus(status: OrderStatus) = copy(status = status)
 
+  override fun copyWithItems(items: List<OrderItem>) = copy(items = items)
+
   /**
    * Updates the takeaway information of the order.
    *
