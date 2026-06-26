@@ -1,0 +1,160 @@
+package com.munchies.order.infrastructure.adapter.inbound.web.controller
+
+import com.munchies.order.application.port.inbound.*
+import com.munchies.order.fixtures.createSampleOrder
+import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDto
+import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
+import com.munchies.order.infrastructure.adapter.inbound.request.DiscardOrderRequest
+import com.munchies.order.infrastructure.adapter.inbound.request.GetOrderDetailsRequest
+import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderRequest
+import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
+import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
+import com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest
+import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.shouldBe
+import io.micronaut.http.HttpRequest
+import io.micronaut.http.HttpStatus
+import io.micronaut.http.client.HttpClient
+import io.micronaut.http.client.annotation.Client
+import io.micronaut.http.client.exceptions.HttpClientResponseException
+import io.micronaut.serde.annotation.SerdeImport
+import io.micronaut.test.annotation.MockBean
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import io.mockk.every
+import io.mockk.mockk
+import jakarta.inject.Inject
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Test
+
+@SerdeImport(OrderDto::class)
+@SerdeImport(OrderItemDto::class)
+@SerdeImport(OrderDto.Delivery::class)
+@SerdeImport(OrderDto.Takeaway::class)
+@SerdeImport(OrderDto.DineIn::class)
+@SerdeImport(PlaceOrderRequest::class)
+@SerdeImport(GetOrderDetailsRequest::class)
+@SerdeImport(AdvanceOrderStatusRequest::class)
+@SerdeImport(DiscardOrderRequest::class)
+@SerdeImport(UpdateOrderItemsRequest::class)
+@SerdeImport(UpdateDeliveryOrderRequest::class)
+@SerdeImport(UpdateTakeawayOrderRequest::class)
+@MicronautTest
+class MicronautOrderControllerTest {
+
+  @Inject
+  @field:Client(
+    "http://localhost:${OrderServiceConfig.SERVICE_PORT}${OrderServiceConfig.SERVICE_PATH}",
+  )
+  lateinit var client: HttpClient
+
+  private val getOrderDetailsMock = mockk<GetOrderDetails>()
+  private val advanceOrderStatusMock = mockk<AdvanceOrderStatus>()
+  private val placeOrderMock = mockk<PlaceOrder>()
+  private val discardOrderMock = mockk<DiscardOrder>()
+  private val updateOrderItemsMock = mockk<UpdateOrderItems>()
+  private val updateDeliveryOrderInfoMock = mockk<UpdateDeliveryOrderInfo>()
+  private val updateTakeawayOrderInfoMock = mockk<UpdateTakeawayOrderInfo>()
+
+  @MockBean(GetOrderDetails::class)
+  fun getOrderDetails(): GetOrderDetails = getOrderDetailsMock
+
+  @MockBean(AdvanceOrderStatus::class)
+  fun advanceOrderStatus(): AdvanceOrderStatus = advanceOrderStatusMock
+
+  @MockBean(PlaceOrder::class)
+  fun placeOrder(): PlaceOrder = placeOrderMock
+
+  @MockBean(DiscardOrder::class)
+  fun discardOrder(): DiscardOrder = discardOrderMock
+
+  @MockBean(UpdateOrderItems::class)
+  fun updateOrderItems(): UpdateOrderItems = updateOrderItemsMock
+
+  @MockBean(UpdateDeliveryOrderInfo::class)
+  fun updateDeliveryOrderInfo(): UpdateDeliveryOrderInfo = updateDeliveryOrderInfoMock
+
+  @MockBean(UpdateTakeawayOrderInfo::class)
+  fun updateTakeawayOrderInfo(): UpdateTakeawayOrderInfo = updateTakeawayOrderInfoMock
+
+  // ==========================================
+  // TEST: GET /orders/{id}
+  // ==========================================
+
+  @Test
+  fun `GET order by id should return 200 OK and DTO when found`() {
+    val realDto = createSampleOrder().toDto()
+
+    every {
+      getOrderDetailsMock.execute(any())
+    } returns GetOrderDetails.Result.Success(realDto)
+
+    val response = client.toBlocking().exchange(
+      HttpRequest.GET<Any>(realDto.orderId),
+      OrderDto.Takeaway::class.java,
+    )
+
+    response.status shouldBe HttpStatus.OK
+    response.body() shouldBeEqual realDto
+  }
+
+  @Test
+  fun `GET order by id should return 404 Not Found when use case returns OrderNotFound`() {
+    every {
+      getOrderDetailsMock.execute(any())
+    } returns GetOrderDetails.Result.Failure.OrderNotFound
+
+    val exception = assertThrows(HttpClientResponseException::class.java) {
+      client.toBlocking().exchange<Any, Any>(HttpRequest.GET(defaultOrderId.value))
+    }
+
+    exception.status shouldBe HttpStatus.NOT_FOUND
+  }
+
+  // ==========================================
+  // TEST: POST orders/{id}/advance
+  // ==========================================
+
+  @Test
+  fun `POST advance status should return 200 OK on success`() {
+    val requestBody = AdvanceOrderStatusRequest(defaultOrderId.value)
+
+    every {
+      advanceOrderStatusMock.execute(any())
+    } returns AdvanceOrderStatus.Result.Success
+
+    val response = client.toBlocking().exchange(
+      HttpRequest.POST(
+        "/${OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH}",
+        requestBody,
+      ),
+      String::class.java,
+    )
+
+    response.status shouldBe HttpStatus.OK
+  }
+
+  @Test
+  fun `POST advance status should return 400 Bad Request on InvalidTransition`() {
+    val requestBody = AdvanceOrderStatusRequest(defaultOrderId.value)
+
+    every {
+      advanceOrderStatusMock.execute(any())
+    } returns AdvanceOrderStatus.Result.Failure.InvalidTransition
+
+    val exception = assertThrows(HttpClientResponseException::class.java) {
+      client.toBlocking().exchange(
+        HttpRequest.POST(
+          "/${OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH}",
+          requestBody,
+        ),
+        String::class.java,
+      )
+    }
+
+    exception.status shouldBe HttpStatus.BAD_REQUEST
+  }
+}
