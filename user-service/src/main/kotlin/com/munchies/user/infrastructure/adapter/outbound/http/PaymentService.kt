@@ -4,7 +4,7 @@ import com.munchies.payment.infrastructure.adapter.dto.Currency
 import com.munchies.payment.infrastructure.adapter.dto.PaymentStatus
 import com.munchies.payment.infrastructure.adapter.inbound.PaymentAPI
 import com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest
-import com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse
+import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper

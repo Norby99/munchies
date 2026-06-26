@@ -1,4 +1,4 @@
-package com.munchies.payment.infrastructure.adapter.inbound.response
+package com.munchies.payment.infrastructure.adapter.outbound.response
 
 import com.munchies.payment.infrastructure.adapter.dto.Currency
 import com.munchies.payment.infrastructure.adapter.dto.PaymentStatus

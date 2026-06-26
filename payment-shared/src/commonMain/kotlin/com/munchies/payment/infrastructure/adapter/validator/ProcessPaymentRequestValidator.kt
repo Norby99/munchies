@@ -1,4 +1,4 @@
-package com.munchies.payment.infrastructure.adapter.inbound.validator
+package com.munchies.payment.infrastructure.adapter.validator
 
 import com.munchies.commons.domain.port.InputValidator
 import com.munchies.commons.domain.port.InputValidatorResult
