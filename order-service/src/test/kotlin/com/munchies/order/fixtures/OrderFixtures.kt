@@ -10,7 +10,7 @@ val futureTime: Long get() = fixedNow + 60_000
 
 // ---------- IDs ----------
 
-val defaultOrderId: OrderId get() = OrderId("o-1")
+val defaultOrderId: OrderId get() = OrderId("o1")
 val defaultRestaurantId: RestaurantId get() = RestaurantId("r-1")
 val defaultCustomerId: CustomerId get() = CustomerId("c-1")
 
@@ -123,7 +123,7 @@ fun createDineInOrder(
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun createSampleOrder(status: OrderStatus) = TakeawayOrder(
+fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING) = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
