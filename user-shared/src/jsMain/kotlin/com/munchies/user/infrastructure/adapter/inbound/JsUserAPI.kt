@@ -5,12 +5,13 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.outbound.response.GetUserResult
+import kotlin.js.Promise
 
 @JsExport
-abstract class JsGetUserAPI : UserAPI.GetUserAPI<GetUserResult>, API() {
+abstract class JsGetUserAPI : UserAPI.GetUserAPI<Promise<GetUserResult>>, API() {
   override fun getPath(): String = UserServiceConfig.SERVICE_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
-  abstract override fun getUser(id: String): GetUserResult
+  abstract override fun getUser(id: String): Promise<GetUserResult>
 }
 
 @JsExport

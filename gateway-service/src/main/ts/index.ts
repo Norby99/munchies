@@ -5,18 +5,16 @@ import { GetUserResponse } from "munchies-user-service-shared/kotlin/user-module
 async function main(): Promise<void> {
   const app = express();
   app.use(express.json());
-  app.get("/users/:id", (req, res) => {
+  app.get("/users/:id", async (req, res) => {
     const { id } = req.params;
 
-    const result = new GetUser().getUser(id);
+    const result = await new GetUser().getUser(id);
 
     console.log("result is: " + result);
 
     const response = new GetUserResponse(result);
-
-    console.log("response is: " + response);
-
-    res.status(200).type("json").send(response.toJson());
+    
+    res.status(200).type("json").send(response.toJson());  
   });
   const PORT = process.env.PORT ?? 8080;
   app.listen(PORT, () => {
