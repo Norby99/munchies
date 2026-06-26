@@ -11,14 +11,14 @@ module.exports = {
   ProcessPaymentRequest:
     _payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest,
   ProcessPaymentResponse:
-    _payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse,
+    _payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse,
   ProcessRequestValidator:
-    _payment.infrastructure.adapter.inbound.validator.ProcessRequestValidator,
+    _payment.infrastructure.adapter.validator.ProcessRequestValidator,
   processPaymentRequestFromJson:
     _payment.infrastructure.adapter.inbound.request
       .processPaymentRequestFromJson,
   processPaymentResponseFromJson:
-    _payment.infrastructure.adapter.inbound.response
+    _payment.infrastructure.adapter.outbound.response
       .processPaymentResponseFromJson,
   PaymentServiceConfig:
     _payment.infrastructure.adapter.inbound.web.config.PaymentServiceConfig,

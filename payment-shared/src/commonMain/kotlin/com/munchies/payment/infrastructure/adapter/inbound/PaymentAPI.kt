@@ -1,7 +1,7 @@
 package com.munchies.payment.infrastructure.adapter.inbound
 
 import com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest
-import com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse
+import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import kotlin.js.JsExport
 
 @JsExport

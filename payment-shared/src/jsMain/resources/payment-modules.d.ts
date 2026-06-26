@@ -25,13 +25,13 @@ export type ProcessPaymentRequest =
 export declare const ProcessPaymentRequest: typeof com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest;
 
 export type ProcessPaymentResponse =
-  com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse;
-export declare const ProcessPaymentResponse: typeof com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse;
+  com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse;
+export declare const ProcessPaymentResponse: typeof com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse;
 
 export type ProcessRequestValidator =
-  com.munchies.payment.infrastructure.adapter.inbound.validator.ProcessRequestValidator;
-export declare const ProcessRequestValidator: typeof com.munchies.payment.infrastructure.adapter.inbound.validator.ProcessRequestValidator;
+  com.munchies.payment.infrastructure.adapter.validator.ProcessRequestValidator;
+export declare const ProcessRequestValidator: typeof com.munchies.payment.infrastructure.adapter.validator.ProcessRequestValidator;
 
 export declare const processPaymentRequestFromJson: typeof com.munchies.payment.infrastructure.adapter.inbound.request.processPaymentRequestFromJson;
-export declare const processPaymentResponseFromJson: typeof com.munchies.payment.infrastructure.adapter.inbound.response.processPaymentResponseFromJson;
+export declare const processPaymentResponseFromJson: typeof com.munchies.payment.infrastructure.adapter.outbound.response.processPaymentResponseFromJson;
 export declare const PaymentServiceConfig: typeof com.munchies.payment.infrastructure.adapter.inbound.web.config.PaymentServiceConfig;

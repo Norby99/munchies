@@ -5,7 +5,7 @@ import com.munchies.commons.domain.port.GenerateTokenSuccess
 import com.munchies.commons.domain.port.InvalidInput
 import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
-import com.munchies.payment.infrastructure.adapter.inbound.response.ProcessPaymentResponse
+import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.domain.model.UserCredentials
