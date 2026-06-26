@@ -9,12 +9,8 @@ import {
   getUserResponseFromJson,
 } from "munchies-user-service-shared/kotlin/user-modules";
 
-import syncRequest from "sync-request";
-
 import axios from "axios";
 axios.defaults.validateStatus = (status: number) => status <= 500;
-
-import type { AxiosResponse } from "axios";
 
 export class GetUser extends GetUserAPI {
   async getUser(id: string): Promise<GetUserResult> {
@@ -23,9 +19,9 @@ export class GetUser extends GetUserAPI {
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
 
       const result = axios.get(uri + this.getPath() + id).then(value => {
-        
+
         const response = getUserResponseFromJson(JSON.stringify(value.data))
-        
+
         if (response.result.type != "GetUserSuccess")
           return response.result as GetUserFailure;
         return response.result as GetUserSuccess;

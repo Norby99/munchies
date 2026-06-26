@@ -25,3 +25,21 @@ export declare const GetUserSuccess: typeof com.munchies.user.infrastructure.ada
 export type GetUserFailure = com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure;
 export declare const GetUserFailure: typeof com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure;
 
+export type RegisterUserAPI =
+  com.munchies.user.infrastructure.adapter.inbound.JsRegisterUserAPI;
+export declare const RegisterUserAPI: typeof
+  com.munchies.user.infrastructure.adapter.inbound.JsRegisterUserAPI;
+
+export type RegisterUserResponse = com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResponse;
+export declare const RegisterUserResponse: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResponse;
+
+export type RegisterUserResult = com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResult;
+export declare const RegisterUserResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResult;
+
+export declare const registerUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.registerUserResponseFromJson;
+
+export type RegisterUserSuccess = com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserSuccess;
+export declare const RegisterUserSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserSuccess;
+
+export type RegisterUserFailure = com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserFailure;
+export declare const RegisterUserFailure: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserFailure;

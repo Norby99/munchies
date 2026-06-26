@@ -12,4 +12,10 @@ module.exports = {
   GetUserResult: _outbound.response.GetUserResult,
   GetUserSuccess: _outbound.response.GetUserSuccess,
   GetUserFailure: _outbound.response.GetUserFailure,
+  RegisterUserAPI: _inbound.JsRegisterUserAPI,
+  RegisterUserResponse: _outbound.response.RegisterUserResponse,
+  registerUserResponseFromJson: _outbound.response.registerUserResponseFromJson,
+  RegisterUserResult: _outbound.response.RegisterUserResult,
+  RegisterUserSuccess: _outbound.response.RegisterUserSuccess,
+  RegisterUserFailure: _outbound.response.RegisterUserFailure
 }

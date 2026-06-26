@@ -22,9 +22,7 @@ import com.munchies.user.infrastructure.adapter.outbound.http.PaymentService
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotificationInfo.USER_CONFIRMATION_KEY
-import com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure
-import com.munchies.user.infrastructure.adapter.outbound.response.GetUserResponse
-import com.munchies.user.infrastructure.adapter.outbound.response.GetUserSuccess
+import com.munchies.user.infrastructure.adapter.outbound.response.*
 import com.munchies.user.infrastructure.adapter.validator.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -77,7 +75,7 @@ class MicronautUserController(
   @Inject val tokenProvider: TokenProvider,
 ) :
   UserAPI.GetUserAPI<HttpResponse<GetUserResponse>>,
-  UserAPI.RegisterUserAPI<HttpResponse<String>>,
+  UserAPI.RegisterUserAPI<HttpResponse<RegisterUserResponse>>,
   UserAPI.LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
   UserAPI.UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
   UserAPI.UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
@@ -163,12 +161,20 @@ class MicronautUserController(
   @ApiResponse(responseCode = "400", description = "Invalid user data or missing fields")
   @ApiResponse(responseCode = "401", description = "User is already registered")
   @ApiResponse(responseCode = "500", description = "Failed to register user")
-  override fun registerUser(@Body request: RegisterUserRequest): HttpResponse<String> {
+  override fun registerUser(
+    @Body request: RegisterUserRequest,
+  ): HttpResponse<RegisterUserResponse> {
     return when (val msg = RegisterUserRequestValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest(msg.reason)
+      is InvalidInput ->
+        HttpResponse.badRequest(RegisterUserResponse(RegisterUserFailure(msg.reason)))
       else -> {
         when (val user = request.user.toDomain()) {
-          is UserDTOFactory.UserDTOFactoryResult.Failure -> HttpResponse.badRequest(user.reason)
+          is UserDTOFactory.UserDTOFactoryResult.Failure ->
+            HttpResponse.badRequest(
+              RegisterUserResponse(
+                RegisterUserFailure(user.reason),
+              ),
+            )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
             val userCredentials =
               UserCredentials(
@@ -185,9 +191,15 @@ class MicronautUserController(
             ) {
               is RegisterUser.Companion.RegisterUserResult.Success -> {
                 when (val token = tokenProvider.generateToken(user.user.id)) {
-                  is GenerateTokenSuccess ->
+                  is GenerateTokenSuccess -> {
                     HttpResponse
-                      .ok("User registered successfully")
+                      .ok(
+                        RegisterUserResponse(
+                          RegisterUserSuccess(
+                            "User registered successfully",
+                          ),
+                        ),
+                      )
                       .cookie(
                         Cookie.of("authToken", token.token)
                           .httpOnly(true)
@@ -195,16 +207,34 @@ class MicronautUserController(
                           .sameSite(SameSite.Strict)
                           .path(UserServiceConfig.SERVICE_PATH),
                       )
-                  else -> HttpResponse.serverError("Couldn't create token")
+                  }
+                  else ->
+                    HttpResponse.serverError(
+                      RegisterUserResponse(
+                        RegisterUserFailure(
+                          "Couldn't generate token",
+                        ),
+                      ),
+                    )
                 }
               }
-              RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
-                HttpResponse.unauthorized()
-
+              is RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
+                HttpResponse
+                  .unauthorized<RegisterUserResponse>().body(
+                    RegisterUserResponse(
+                      RegisterUserFailure(
+                        "User is already registered",
+                      ),
+                    ),
+                  )
               is RegisterUser.Companion.RegisterUserResult.Failure ->
                 HttpResponse
                   .serverError(
-                    "Failed to register user: $user",
+                    RegisterUserResponse(
+                      RegisterUserFailure(
+                        "An error has occurred: " + res.reason,
+                      ),
+                    ),
                   )
             }
           }
