@@ -3,7 +3,6 @@ import { GetUser } from "@main/infrastructure/adapter/inbound/web/services/user"
 import express from "express";
 import { GetUserResponse } from "munchies-user-service-shared/kotlin/user-modules";
 async function main(): Promise<void> {
-  //console.log(process.env);
   const app = express();
   app.use(express.json());
   app.get("/users/:id", (req, res) => {

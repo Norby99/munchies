@@ -13,10 +13,10 @@ import syncRequest from "sync-request";
 
 export class GetUser extends GetUserAPI {
   getUser(id: string): GetUserResult {
-    const uri = "http://user-service:8080"; //process.env.USER_SERVICE_URL;
-    if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
-
     try {
+      const uri = process.env.USER_SERVICE_URL;
+      if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
+
       const res = syncRequest("GET", uri + this.getPath() + id);
 
       console.log("Called user-service");
