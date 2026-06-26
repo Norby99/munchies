@@ -67,21 +67,6 @@ class OrderFactoryTest {
   }
 
   @Test
-  fun `createDineIn should succeed with PENDING status when items are valid`() {
-    val info = defaultTableInfo()
-
-    val result = OrderFactory.createDineIn(
-      defaultOrderId,
-      defaultRestaurantId,
-      defaultCustomerId,
-      createNewItems(),
-      info,
-    )
-
-    result.shouldBeInstanceOf<OrderCreationResult.Success>()
-  }
-
-  @Test
   fun `createDelivery should fail with InvalidItemQuantity when an item is invalid`() {
     val info = createDeliveryInfo()
 
@@ -97,7 +82,37 @@ class OrderFactoryTest {
   }
 
   @Test
-  fun `isValidTime should succeed when pickup time is in the future`() {
+  fun `createDineIn should succeed with PENDING status when items are valid`() {
+    val info = defaultTableInfo()
+
+    val result = OrderFactory.createDineIn(
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      createNewItems(),
+      info,
+    )
+
+    result.shouldBeInstanceOf<OrderCreationResult.Success>()
+  }
+
+  @Test
+  fun `createDineIn should fail with EmptyItems when items list is invalid`() {
+    val info = defaultTableInfo()
+
+    val result = OrderFactory.createDineIn(
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      createInvalidItemsZeroCount(),
+      info,
+    )
+
+    result shouldBeEqual OrderCreationResult.Failure.InvalidItemQuantity
+  }
+
+  @Test
+  fun `createTakeaway should succeed with PENDING status when items and date are valid`() {
     val info = createTakeawayInfo(futureTime)
 
     val result = OrderFactory.createTakeaway(
@@ -112,7 +127,37 @@ class OrderFactoryTest {
   }
 
   @Test
-  fun `isValidTime should fail when pickup time is in the past`() {
+  fun `createTakeaway should fail with EmptyItems when items list is empty`() {
+    val info = createTakeawayInfo(futureTime)
+
+    val result = OrderFactory.createTakeaway(
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      createEmptyItems(),
+      info,
+    )
+
+    result shouldBeEqual OrderCreationResult.Failure.EmptyItems
+  }
+
+  @Test
+  fun `createTakeaway should fail with InvalidItemQuantity when an item is invalid`() {
+    val info = createTakeawayInfo(futureTime)
+
+    val result = OrderFactory.createTakeaway(
+      defaultOrderId,
+      defaultRestaurantId,
+      defaultCustomerId,
+      createInvalidItemsZeroCount(),
+      info,
+    )
+
+    result shouldBeEqual OrderCreationResult.Failure.InvalidItemQuantity
+  }
+
+  @Test
+  fun `createTakeaway should fail when pickup time is in the past`() {
     val info = createTakeawayInfo(pastTime)
 
     val result = OrderFactory.createTakeaway(
@@ -123,6 +168,6 @@ class OrderFactoryTest {
       info,
     )
 
-    result.shouldBeInstanceOf<OrderCreationResult.Failure.InvalidDate>()
+    result shouldBeEqual OrderCreationResult.Failure.InvalidDate
   }
 }
