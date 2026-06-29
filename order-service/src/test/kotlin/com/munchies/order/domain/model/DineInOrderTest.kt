@@ -1,7 +1,9 @@
 package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.AdvanceStatusResult
+import com.munchies.order.domain.model.Order.UpdateResult
 import com.munchies.order.fixtures.createDineInOrder
+import com.munchies.order.fixtures.createNewItems
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
@@ -42,5 +44,16 @@ class DineInOrderTest {
 
     order.status shouldBeEqual OrderStatus.COMPLETED
     result shouldBeEqual AdvanceStatusResult.Failure.InvalidTransition
+  }
+
+  @Test
+  fun `DineInOrder should update items`() {
+    val order = createDineInOrder()
+    val expectedItems = createNewItems()
+
+    val result = order.updateItems(createNewItems())
+
+    result.shouldBeInstanceOf<UpdateResult.Success>()
+    result.order.items shouldBeEqual expectedItems
   }
 }

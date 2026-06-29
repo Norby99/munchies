@@ -30,6 +30,8 @@ data class DineInOrder(
   }
 
   override fun copyWithStatus(status: OrderStatus) = copy(status = status)
+
+  override fun copyWithItems(items: List<OrderItem>) = copy(items = items)
 }
 
 /**
