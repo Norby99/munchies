@@ -24,4 +24,5 @@ module.exports = {
   ROLE_CLAIM: _commons.domain.port.ROLE_CLAIM,
   EXPIRATION_CLAIM: _commons.domain.port.EXPIRATION_CLAIM,
   JWT_SECRET_ALGORITHM: _commons.domain.port.JWT_SECRET_ALGORITHM,
+  HttpMethod: _commons.infrastructure.adapter.HttpMethod,
 };

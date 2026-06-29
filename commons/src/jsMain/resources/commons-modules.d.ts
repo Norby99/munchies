@@ -49,3 +49,7 @@ export declare const RefreshTokenSuccess: typeof com.munchies.commons.domain.por
 
 export type RefreshTokenFailure = typeof com.munchies.commons.domain.port.RefreshTokenFailure;
 export declare const RefreshTokenFailure: typeof com.munchies.commons.domain.port.RefreshTokenFailure;
+
+export type HttpMethod =
+  com.munchies.commons.infrastructure.adapter.HttpMethod;
+export declare const HttpMethod: typeof com.munchies.commons.infrastructure.adapter.HttpMethod;
