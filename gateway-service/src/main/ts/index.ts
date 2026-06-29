@@ -8,11 +8,9 @@ async function main(): Promise<void> {
   app.get("/users/:id", async (req, res) => {
     const { id } = req.params;
 
-    const result = await new GetUser().getUser(id);
+    const response = await new GetUser().getUser(id);
 
-    console.log("result is: " + result);
-
-    const response = new GetUserResponse(result);
+    console.log("result is: " + response);
     
     res.status(200).type("json").send(response.toJson());  
   });
