@@ -57,12 +57,12 @@ abstract class JsUpdateUserInfoAPI :
 }
 
 @JsExport
-abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<DeleteUserRequest, UserDTO>, API() {
+abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<DeleteUserResponse>, API() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.DELETE_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
-  abstract override fun deleteUser(request: DeleteUserRequest): UserDTO
+  abstract override fun deleteUser(request: DeleteUserRequest): DeleteUserResponse
 }
 
 @JsExport
