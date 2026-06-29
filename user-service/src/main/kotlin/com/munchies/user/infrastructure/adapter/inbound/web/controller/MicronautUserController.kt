@@ -449,7 +449,7 @@ class MicronautUserController(
   @ApiResponse(responseCode = "400", description = "Invalid request data")
   @ApiResponse(responseCode = "404", description = "User not found")
   override fun updateUserInfo(
-    request: UpdateUserInfoRequest,
+    @Body request: UpdateUserInfoRequest,
   ): HttpResponse<UpdateUserInfoResponse> {
     return when (val msg = UpdateUserInfoRequestValidator().validate(request)) {
       is InvalidInput ->

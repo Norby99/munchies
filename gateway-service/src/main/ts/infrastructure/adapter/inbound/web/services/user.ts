@@ -6,21 +6,14 @@ import {
   GetUserFailure,
   GetUserResult,
   GetUserSuccess,
-  getUserResponseFromJson,
-  RegisterUserAPI,
-  RegisterUserResponse,
-  RegisterUserResult,
-  RegisterUserSuccess,
-  RegisterUserFailure,
-  RegisterUserRequest,
-  registerUserResponseFromJson
+  getUserResponseFromJson, 
 } from "munchies-user-service-shared/kotlin/user-modules";
 
 import axios from "axios";
 axios.defaults.validateStatus = (status: number) => status <= 500;
 
 export class GetUser extends GetUserAPI {
-  async getUser(id: string): Promise<GetUserResult> {
+  async getUser(id: string): Promise<GetUserResponse> {
     try {
       const uri = process.env.USER_SERVICE_URL;
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
@@ -30,11 +23,11 @@ export class GetUser extends GetUserAPI {
         const response = getUserResponseFromJson(JSON.stringify(value.data))
 
         if (response.result.type != "GetUserSuccess")
-          return response.result as GetUserFailure;
-        return response.result as GetUserSuccess;
+          return new GetUserResponse(response.result as GetUserFailure);
+        return new GetUserResponse(response.result as GetUserSuccess);
       }).catch(e => {
         console.log("axios error: " + JSON.stringify(e).toString());
-        return new GetUserFailure(e);
+        return new GetUserResponse(new GetUserFailure(e));
       });
       
       return result;
@@ -43,13 +36,23 @@ export class GetUser extends GetUserAPI {
     catch(e: any){
       console.log("Something went wrong");
       console.log("error is " + JSON.stringify(e));
-      return Promise.resolve(new GetUserFailure(JSON.stringify(e)));
+      return Promise.resolve( new GetUserResponse( new GetUserFailure(JSON.stringify(e))));
     }
   }
 }
 
+import {
+  RegisterUserAPI,
+    RegisterUserResponse,
+    RegisterUserResult,
+    RegisterUserSuccess,
+    RegisterUserFailure,
+    RegisterUserRequest,
+    registerUserResponseFromJson
+} from "munchies-user-service-shared/kotlin/user-modules"
+
 export class RegisterUser extends RegisterUserAPI{
-  registerUser(request: RegisterUserRequest): Promise<RegisterUserResult> {
+  registerUser(request: RegisterUserRequest): Promise<RegisterUserResponse> {
     try {
       const uri = process.env.USER_SERVICE_URL;
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
@@ -60,11 +63,11 @@ export class RegisterUser extends RegisterUserAPI{
       ).then(value => {
         const response = registerUserResponseFromJson(JSON.stringify(value.data))
         if (response.result.type != "RegisterUserSuccess")
-          return response.result as RegisterUserFailure;
-        return response.result as RegisterUserSuccess;
+          return new RegisterUserResponse(response.result as RegisterUserFailure);
+        return new RegisterUserResponse(response.result as RegisterUserSuccess);
         }).catch(e => {
           console.log("axios error: " + JSON.stringify(e).toString());
-          return new RegisterUserFailure(e);
+          return new RegisterUserResponse(new RegisterUserFailure(e));
         });
           
       return result;
@@ -73,7 +76,45 @@ export class RegisterUser extends RegisterUserAPI{
       catch(e: any){
         console.log("Something went wrong");
         console.log("error is " + JSON.stringify(e));
-        return Promise.resolve(new RegisterUserFailure(JSON.stringify(e)));
+        return Promise.resolve(new RegisterUserResponse(new RegisterUserFailure(JSON.stringify(e))));
       }
   }
+}
+
+import {
+  LoginUserAPI,
+  LoginUserRequest,
+  LoginUserResponse,
+  LoginUserResult,
+  LoginUserSuccess,
+  LoginUserFailure,
+  loginUserResponseFromJson
+} from "munchies-user-service-shared/kotlin/user-modules"
+export class LoginUser extends LoginUserAPI{
+  loginUser(request: LoginUserRequest): Promise<LoginUserResponse> {
+    try {
+          const uri = process.env.USER_SERVICE_URL;
+          if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
+        
+          const result = axios.post(
+            uri + this.getPath(),
+            request.toJson()
+          ).then(value => {
+            const response = loginUserResponseFromJson(JSON.stringify(value.data))
+            if (response.result.type != "LoginUserSuccess")
+              return new LoginUserResponse(response.result as LoginUserFailure);
+            return new LoginUserResponse(response.result as LoginUserSuccess);
+            }).catch(e => {
+              console.log("axios error: " + JSON.stringify(e).toString());
+              return new LoginUserResponse(new LoginUserFailure(e));
+            });
+              
+          return result;
+                
+          }
+          catch(e: any){
+            console.log("Something went wrong");
+            console.log("error is " + JSON.stringify(e));
+            return Promise.resolve(new LoginUserResponse(new LoginUserFailure(JSON.stringify(e))));
+          }  }
 }
