@@ -1,7 +1,11 @@
 import "@main/infrastructure/adapter/inbound/web/services/user";
-import { GetUser } from "@main/infrastructure/adapter/inbound/web/services/user";
+import {
+  GetUser,
+  RegisterUser,
+  LoginUser,
+  UpdateUserInfo
+} from "@main/infrastructure/adapter/inbound/web/services/user";
 import express from "express";
-import { GetUserResponse } from "munchies-user-service-shared/kotlin/user-modules";
 async function main(): Promise<void> {
   const app = express();
   app.use(express.json());
