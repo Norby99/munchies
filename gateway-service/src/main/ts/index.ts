@@ -3,7 +3,9 @@ import {
   GetUser,
   RegisterUser,
   LoginUser,
-  UpdateUserInfo
+  UpdateUserInfo,
+  UpdateUserPassword,
+  DeleteUser,
 } from "@main/infrastructure/adapter/inbound/web/services/user";
 import express from "express";
 async function main(): Promise<void> {
