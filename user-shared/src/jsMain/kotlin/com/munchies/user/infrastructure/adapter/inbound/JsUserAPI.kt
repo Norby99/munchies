@@ -1,6 +1,7 @@
 package com.munchies.user.infrastructure.adapter.inbound
 
 import com.munchies.commons.infrastructure.adapter.API
+import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
@@ -11,6 +12,7 @@ import kotlin.js.Promise
 
 @JsExport
 abstract class JsGetUserAPI : UserAPI.GetUserAPI<Promise<GetUserResult>>, API() {
+  override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getPath(): String = UserServiceConfig.SERVICE_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   abstract override fun getUser(id: String): Promise<GetUserResult>
@@ -21,6 +23,7 @@ abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserR
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.REGISTER_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.POST
   abstract override fun registerUser(request: RegisterUserRequest): Promise<RegisterUserResult>
 }
 
@@ -29,6 +32,7 @@ abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<LoginUserResponse>, API() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.LOGIN_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.POST
   abstract override fun loginUser(request: LoginUserRequest): LoginUserResponse
 }
 
@@ -38,6 +42,7 @@ abstract class JsUpdateUserPasswordAPI :
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_PASSWORD_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PATCH
   abstract override fun updateUserPassword(request: UpdateUserPasswordRequest): UserDTO
 }
 
@@ -47,6 +52,7 @@ abstract class JsUpdateUserInfoAPI :
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_INFO_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PATCH
   abstract override fun updateUserInfo(request: UpdateUserInfoRequest): UserDTO
 }
 
@@ -55,6 +61,7 @@ abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<DeleteUserRequest, UserDT
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.DELETE_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.DELETE
   abstract override fun deleteUser(request: DeleteUserRequest): UserDTO
 }
 
@@ -63,5 +70,6 @@ abstract class JsEmailVerificationAPI : UserAPI.EmailVerificationAPI<UserDTO>, A
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.VERIFY_EMAIL_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
   abstract override fun verifyEmail(id: String, otk: String): UserDTO
 }
