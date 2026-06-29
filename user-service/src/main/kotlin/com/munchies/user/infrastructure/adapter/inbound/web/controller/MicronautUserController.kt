@@ -76,7 +76,7 @@ class MicronautUserController(
 ) :
   UserAPI.GetUserAPI<HttpResponse<GetUserResponse>>,
   UserAPI.RegisterUserAPI<HttpResponse<RegisterUserResponse>>,
-  UserAPI.LoginUserAPI<LoginUserRequest, HttpResponse<String>>,
+  UserAPI.LoginUserAPI<HttpResponse<LoginUserResponse>>,
   UserAPI.UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
   UserAPI.UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
   UserAPI.DeleteUserAPI<DeleteUserRequest, HttpResponse<UserDTO>>,
@@ -268,9 +268,15 @@ class MicronautUserController(
     responseCode = "401",
     description = "User is locked out due to too many failed login attempts",
   )
-  override fun loginUser(@Body request: LoginUserRequest): HttpResponse<String> {
+  override fun loginUser(@Body request: LoginUserRequest): HttpResponse<LoginUserResponse> {
     return when (val msg = LoginUserRequestValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest(msg.reason)
+      is InvalidInput -> HttpResponse.badRequest(
+        LoginUserResponse(
+          LoginUserFailure(
+            msg.reason,
+          ),
+        ),
+      )
       else -> {
         when (
           val result =
@@ -284,7 +290,13 @@ class MicronautUserController(
             when (val token = tokenProvider.generateToken(UserId(result.userId))) {
               is GenerateTokenSuccess ->
                 HttpResponse
-                  .ok("User logged successfully")
+                  .ok(
+                    LoginUserResponse(
+                      LoginUserSuccess(
+                        "User logged successfully",
+                      ),
+                    ),
+                  )
                   .cookie(
                     Cookie.of("authToken", token.token)
                       .httpOnly(true)
@@ -293,11 +305,33 @@ class MicronautUserController(
                       .path(UserServiceConfig.SERVICE_PATH),
                   )
               is GenerateTokenFailure ->
-                HttpResponse.serverError("Couldn't create token")
+                HttpResponse
+                  .serverError(
+                    LoginUserResponse(
+                      LoginUserFailure(
+                        "Couldn't create token",
+                      ),
+                    ),
+                  )
             }
           }
-          is LoginResult.BlockedLogin -> HttpResponse.unauthorized()
-          else -> HttpResponse.badRequest("Invalid email or password")
+          is LoginResult.BlockedLogin ->
+            HttpResponse
+              .unauthorized<LoginUserResponse>()
+              .body(
+                LoginUserResponse(
+                  LoginUserFailure("Unauthorized"),
+                ),
+              )
+          else ->
+            HttpResponse
+              .badRequest(
+                LoginUserResponse(
+                  LoginUserFailure(
+                    "Invalid email or password",
+                  ),
+                ),
+              )
         }
       }
     }

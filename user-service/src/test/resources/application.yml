@@ -7,7 +7,8 @@ micronaut:
     services:
       payment-service:
         url: ${PAYMENT_SERVICE_URL:http://localhost:8083}
-
+      gateway-service:
+        url: ${GATEWAY_SERVICE_URL:http://localhost:8086}
 mongodb:
   uri: mongodb://localhost:27017/user-service
 

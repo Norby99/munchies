@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound
 
+import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
 import kotlin.js.JsExport
 
@@ -41,17 +42,16 @@ object UserAPI {
   /**
    * Contract for authenticating a user.
    *
-   * @param Request request payload type.
    * @param Response response payload type.
    */
-  interface LoginUserAPI<Request, Response> {
+  interface LoginUserAPI<Response> {
     /**
      * Authenticates a user with the provided credentials payload.
      *
      * @param request authentication input data.
      * @return operation response.
      */
-    fun loginUser(request: Request): Response
+    fun loginUser(request: LoginUserRequest): Response
   }
 
   /**
