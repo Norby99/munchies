@@ -8,6 +8,7 @@ import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceCo
 import com.munchies.user.infrastructure.adapter.outbound.response.GetUserResult
 import com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResponse
 import com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResult
+import com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordResponse
 import kotlin.js.Promise
 
 @JsExport
@@ -38,12 +39,14 @@ abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<LoginUserResponse>, API() {
 
 @JsExport
 abstract class JsUpdateUserPasswordAPI :
-  UserAPI.UpdateUserPasswordAPI<UpdateUserPasswordRequest, UserDTO>, API() {
+  UserAPI.UpdateUserPasswordAPI<UpdateUserPasswordResponse>, API() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_PASSWORD_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
-  abstract override fun updateUserPassword(request: UpdateUserPasswordRequest): UserDTO
+  abstract override fun updateUserPassword(
+    request: UpdateUserPasswordRequest,
+  ): UpdateUserPasswordResponse
 }
 
 @JsExport
