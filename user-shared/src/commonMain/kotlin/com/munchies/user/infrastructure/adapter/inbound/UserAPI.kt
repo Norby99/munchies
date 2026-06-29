@@ -2,6 +2,7 @@ package com.munchies.user.infrastructure.adapter.inbound
 
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserInfoRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import kotlin.js.JsExport
 
@@ -73,17 +74,16 @@ object UserAPI {
   /**
    * Contract for updating an existing user's profile/info.
    *
-   * @param Request request payload type.
    * @param Response response payload type.
    */
-  interface UpdateUserInfoAPI<Request, Response> {
+  interface UpdateUserInfoAPI<Response> {
     /**
      * Updates user profile or account information.
      *
      * @param request user info update input data.
      * @return operation response.
      */
-    fun updateUserInfo(request: Request): Response
+    fun updateUserInfo(request: UpdateUserInfoRequest): Response
   }
 
   interface DeleteUserAPI<Request, Response> {

@@ -78,7 +78,7 @@ class MicronautUserController(
   UserAPI.RegisterUserAPI<HttpResponse<RegisterUserResponse>>,
   UserAPI.LoginUserAPI<HttpResponse<LoginUserResponse>>,
   UserAPI.UpdateUserPasswordAPI<HttpResponse<UpdateUserPasswordResponse>>,
-  UserAPI.UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
+  UserAPI.UpdateUserInfoAPI<HttpResponse<UpdateUserInfoResponse>>,
   UserAPI.DeleteUserAPI<DeleteUserRequest, HttpResponse<UserDTO>>,
   UserAPI.EmailVerificationAPI<HttpResponse<UserDTO>> {
   private val getUser: GetUser = services.getUser
@@ -448,12 +448,23 @@ class MicronautUserController(
   @ApiResponse(responseCode = "200", description = "User info updated successfully")
   @ApiResponse(responseCode = "400", description = "Invalid request data")
   @ApiResponse(responseCode = "404", description = "User not found")
-  override fun updateUserInfo(request: UpdateUserInfoRequest): HttpResponse<String> {
+  override fun updateUserInfo(
+    request: UpdateUserInfoRequest,
+  ): HttpResponse<UpdateUserInfoResponse> {
     return when (val msg = UpdateUserInfoRequestValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest(msg.reason)
+      is InvalidInput ->
+        HttpResponse
+          .badRequest(
+            UpdateUserInfoResponse(
+              UpdateUserInfoFailure(msg.reason),
+            ),
+          )
       else -> {
         when (val user = request.user.toDomain()) {
-          is UserDTOFactory.UserDTOFactoryResult.Failure -> HttpResponse.badRequest(user.reason)
+          is UserDTOFactory.UserDTOFactoryResult.Failure ->
+            HttpResponse.badRequest(
+              UpdateUserInfoResponse(UpdateUserInfoFailure(user.reason)),
+            )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
             when (
               val res =
@@ -462,13 +473,21 @@ class MicronautUserController(
                 )
             ) {
               is UpdateUserInfo.Companion.UpdateUserInfoResult.Success ->
-                HttpResponse.ok("User info updated successfully")
+                HttpResponse.ok(
+                  UpdateUserInfoResponse(
+                    UpdateUserInfoSuccess("User info updated successfully"),
+                  ),
+                )
 
               is UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
-                HttpResponse.notFound()
+                HttpResponse
+                  .notFound<UpdateUserInfoResponse>()
+                  .body(UpdateUserInfoResponse(UpdateUserInfoFailure("Not Found")))
 
               is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure ->
-                HttpResponse.badRequest(res.reason)
+                HttpResponse.badRequest(
+                  UpdateUserInfoResponse(UpdateUserInfoFailure(res.reason)),
+                )
             }
           }
         }
