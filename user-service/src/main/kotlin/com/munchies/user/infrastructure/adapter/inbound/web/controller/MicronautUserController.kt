@@ -79,7 +79,7 @@ class MicronautUserController(
   UserAPI.LoginUserAPI<HttpResponse<LoginUserResponse>>,
   UserAPI.UpdateUserPasswordAPI<HttpResponse<UpdateUserPasswordResponse>>,
   UserAPI.UpdateUserInfoAPI<HttpResponse<UpdateUserInfoResponse>>,
-  UserAPI.DeleteUserAPI<DeleteUserRequest, HttpResponse<UserDTO>>,
+  UserAPI.DeleteUserAPI<HttpResponse<DeleteUserResponse>>,
   UserAPI.EmailVerificationAPI<HttpResponse<UserDTO>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
@@ -502,18 +502,24 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "User deleted successfully")
   @ApiResponse(responseCode = "404", description = "User not found")
-  override fun deleteUser(@Body request: DeleteUserRequest): HttpResponse<UserDTO> {
+  override fun deleteUser(@Body request: DeleteUserRequest): HttpResponse<DeleteUserResponse> {
     return when (val msg = DeleteUserRequestValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest<UserDTO>().status(
-        HttpStatus.BAD_REQUEST,
-        msg.reason,
+      is InvalidInput -> HttpResponse.badRequest(
+        DeleteUserResponse(DeleteUserFailure(msg.reason)),
       )
       else -> {
         when (val res = deleteUser.execute(UserId(request.userId))) {
           is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
-            res.user.toDTO(),
+            DeleteUserResponse(
+              DeleteUserSuccess(
+                res.user.toDTO(),
+              ),
+            ),
           )
-          DeleteUser.Companion.DeleteUserResult.NotFound -> HttpResponse.notFound()
+          DeleteUser.Companion.DeleteUserResult.NotFound ->
+            HttpResponse
+              .notFound<DeleteUserResponse>()
+              .body(DeleteUserResponse(DeleteUserFailure("Not Found")))
         }
       }
     }
