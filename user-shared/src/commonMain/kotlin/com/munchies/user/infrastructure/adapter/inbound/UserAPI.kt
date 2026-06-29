@@ -2,6 +2,7 @@ package com.munchies.user.infrastructure.adapter.inbound
 
 import com.munchies.user.infrastructure.adapter.inbound.request.LoginUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
+import com.munchies.user.infrastructure.adapter.inbound.request.UpdateUserPasswordRequest
 import kotlin.js.JsExport
 
 /**
@@ -57,17 +58,16 @@ object UserAPI {
   /**
    * Contract for updating an existing user's password.
    *
-   * @param Request request payload type.
    * @param Response response payload type.
    */
-  interface UpdateUserPasswordAPI<Request, Response> {
+  interface UpdateUserPasswordAPI<Response> {
     /**
      * Updates user password information.
      *
      * @param request password update input data.
      * @return operation response.
      */
-    fun updateUserPassword(request: Request): Response
+    fun updateUserPassword(request: UpdateUserPasswordRequest): Response
   }
 
   /**

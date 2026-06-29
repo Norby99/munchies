@@ -77,7 +77,7 @@ class MicronautUserController(
   UserAPI.GetUserAPI<HttpResponse<GetUserResponse>>,
   UserAPI.RegisterUserAPI<HttpResponse<RegisterUserResponse>>,
   UserAPI.LoginUserAPI<HttpResponse<LoginUserResponse>>,
-  UserAPI.UpdateUserPasswordAPI<UpdateUserPasswordRequest, HttpResponse<String>>,
+  UserAPI.UpdateUserPasswordAPI<HttpResponse<UpdateUserPasswordResponse>>,
   UserAPI.UpdateUserInfoAPI<UpdateUserInfoRequest, HttpResponse<String>>,
   UserAPI.DeleteUserAPI<DeleteUserRequest, HttpResponse<UserDTO>>,
   UserAPI.EmailVerificationAPI<HttpResponse<UserDTO>> {
@@ -361,9 +361,16 @@ class MicronautUserController(
   @ApiResponse(responseCode = "400", description = "Invalid request data or wrong old password")
   @ApiResponse(responseCode = "401", description = "User is locked out")
   @ApiResponse(responseCode = "404", description = "User not found")
-  override fun updateUserPassword(@Body request: UpdateUserPasswordRequest): HttpResponse<String> {
+  override fun updateUserPassword(
+    @Body request: UpdateUserPasswordRequest,
+  ): HttpResponse<UpdateUserPasswordResponse> {
     return when (val msg = UpdateUserPasswordValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest(msg.reason)
+      is InvalidInput ->
+        HttpResponse.badRequest(
+          UpdateUserPasswordResponse(
+            UpdateUserPasswordFailure(msg.reason),
+          ),
+        )
       else -> {
         when (
           updateUserPassword.execute(
@@ -375,19 +382,46 @@ class MicronautUserController(
           )
         ) {
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.Success ->
-            HttpResponse.ok("Password updated successfully")
+            HttpResponse.ok(
+              UpdateUserPasswordResponse(
+                UpdateUserPasswordSuccess(
+                  "Password updated successfully",
+                ),
+              ),
+            )
 
           UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
-            HttpResponse.badRequest("Invalid old password")
+            HttpResponse.badRequest(
+              UpdateUserPasswordResponse(
+                UpdateUserPasswordFailure(
+                  "Invalid old password",
+                ),
+              ),
+            )
 
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.LockedUser ->
-            HttpResponse.unauthorized()
-
+            HttpResponse
+              .unauthorized<UpdateUserPasswordResponse>()
+              .body(
+                UpdateUserPasswordResponse(
+                  UpdateUserPasswordFailure(
+                    "Unauthorized",
+                  ),
+                ),
+              )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UnauthorizedOperation ->
-            HttpResponse.unauthorized()
-
+            HttpResponse
+              .unauthorized<UpdateUserPasswordResponse>()
+              .body(
+                UpdateUserPasswordResponse(
+                  UpdateUserPasswordFailure(
+                    "Unauthorized",
+                  ),
+                ),
+              )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
-            HttpResponse.notFound()
+            HttpResponse.notFound<UpdateUserPasswordResponse>()
+              .body(UpdateUserPasswordResponse(UpdateUserPasswordFailure("Not found")))
         }
       }
     }
