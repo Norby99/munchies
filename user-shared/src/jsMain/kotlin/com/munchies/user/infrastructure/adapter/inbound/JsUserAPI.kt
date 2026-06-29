@@ -5,6 +5,7 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.outbound.response.GetUserResult
+import com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResponse
 import com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResult
 import kotlin.js.Promise
 
@@ -24,11 +25,11 @@ abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserR
 }
 
 @JsExport
-abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<LoginUserRequest, UserDTO>, API() {
+abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<LoginUserResponse>, API() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.LOGIN_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
-  abstract override fun loginUser(request: LoginUserRequest): UserDTO
+  abstract override fun loginUser(request: LoginUserRequest): LoginUserResponse
 }
 
 @JsExport
