@@ -16,10 +16,12 @@ import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
+import com.munchies.user.infrastructure.adapter.outbound.response.*
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeEmpty
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.serde.annotation.SerdeImport
@@ -78,6 +80,8 @@ class MicronautUserControllerTest {
 
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.NOT_FOUND
+    res.body() shouldNotBe null
+    res.body().result.shouldBeInstanceOf<GetUserFailure>().reason.shouldNotBeEmpty()
     verify(userUseCase).execute(userId)
   }
 
@@ -98,7 +102,7 @@ class MicronautUserControllerTest {
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
-    res.body().id shouldBe userId.value
+    res.body().result.shouldBeInstanceOf<GetUserSuccess>().user.id shouldBe userId.value
     verify(userUseCase).execute(userId)
   }
 
@@ -126,7 +130,7 @@ class MicronautUserControllerTest {
 
     response.status shouldBe HttpStatus.OK
     response.cookies.all.shouldNotBeEmpty()
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<RegisterUserSuccess>()
   }
 
   @Test
@@ -149,6 +153,7 @@ class MicronautUserControllerTest {
     )
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
+    response.body().result.shouldBeInstanceOf<RegisterUserFailure>()
   }
 
   @Test
@@ -170,7 +175,7 @@ class MicronautUserControllerTest {
     )
 
     response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<RegisterUserFailure>()
   }
 
   @Test
@@ -191,6 +196,7 @@ class MicronautUserControllerTest {
       .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "valid-password"))
 
     response.status shouldBe HttpStatus.OK
+    response.body().result.shouldBeInstanceOf<LoginUserSuccess>()
     response.cookies.all.shouldNotBeEmpty()
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
   }
@@ -208,6 +214,7 @@ class MicronautUserControllerTest {
       .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "invalid-password"))
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.body().result.shouldBeInstanceOf<LoginUserFailure>()
   }
 
   @Test
@@ -223,6 +230,7 @@ class MicronautUserControllerTest {
       .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "blocked-password"))
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
+    response.body().result.shouldBeInstanceOf<LoginUserFailure>()
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "blocked-password")
   }
 
@@ -247,6 +255,7 @@ class MicronautUserControllerTest {
       )
 
     response.status shouldBe HttpStatus.UNAUTHORIZED
+    response.body().result.shouldBeInstanceOf<UpdateUserPasswordFailure>()
     verify(updatePasswordUseCase)
       .execute(
         validUser.id.value,
@@ -278,6 +287,7 @@ class MicronautUserControllerTest {
       )
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.body().result.shouldBeInstanceOf<UpdateUserPasswordFailure>()
     verify(updatePasswordUseCase)
       .execute(
         validUser.id.value,
@@ -299,7 +309,7 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(userDTO))
 
     response.status shouldBe HttpStatus.OK
-    response.body() shouldBe "User info updated successfully"
+    response.body().result.shouldBeInstanceOf<UpdateUserInfoSuccess>()
     verify(updateInfoUseCase).execute(validUser)
   }
 
@@ -314,6 +324,7 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(userDTO))
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
     verify(updateInfoUseCase).execute(validUser)
   }
 
@@ -331,7 +342,7 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
   }
 
   @Test
@@ -348,7 +359,7 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
   }
 
   @Test
@@ -365,7 +376,7 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().shouldNotBeEmpty()
+    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
   }
 
   @Test
@@ -382,8 +393,7 @@ class MicronautUserControllerTest {
 
     val response = controller.deleteUser(DeleteUserRequest(userId.value))
     response.status shouldBe HttpStatus.OK
-    response.body() shouldNotBe null
-    response.body().id shouldBe userId.value
+    response.body().result.shouldBeInstanceOf<DeleteUserSuccess>()
     verify(deleteUseCase).execute(userId)
   }
 
@@ -398,6 +408,7 @@ class MicronautUserControllerTest {
     val response = controller.deleteUser(DeleteUserRequest(userId.value))
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.body().result.shouldBeInstanceOf<DeleteUserFailure>()
     verify(deleteUseCase).execute(userId)
   }
 

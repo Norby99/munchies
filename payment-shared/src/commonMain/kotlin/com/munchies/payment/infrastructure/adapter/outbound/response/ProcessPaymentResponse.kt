@@ -1,4 +1,4 @@
-package com.munchies.payment.infrastructure.adapter.inbound.response
+package com.munchies.payment.infrastructure.adapter.outbound.response
 
 import com.munchies.payment.infrastructure.adapter.dto.Currency
 import com.munchies.payment.infrastructure.adapter.dto.PaymentStatus
@@ -16,5 +16,8 @@ data class ProcessPaymentResponse(
   val currency: Currency,
 ) {
   fun toJson(): String = Json.encodeToString(this)
-  fun fromJson(json: String): ProcessPaymentResponse = Json.decodeFromString(json)
 }
+
+@JsExport
+fun processPaymentResponseFromJson(json: String): ProcessPaymentResponse =
+  Json.decodeFromString(json)

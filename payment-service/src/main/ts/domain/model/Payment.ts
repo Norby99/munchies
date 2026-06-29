@@ -1,12 +1,10 @@
+import { PaymentId } from "./PaymentId";
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 import {
-  JsEntity,
-  UUIDEntityId,
   PaymentStatus,
   Currency,
-} from "../external-modules";
-import { PaymentId } from "./PaymentId";
-
-class _Payment implements JsEntity {
+} from "munchies-payment-service-shared/kotlin/payment-modules";
+class _Payment {
   constructor(
     id: PaymentId,
     status: PaymentStatus,
@@ -22,7 +20,7 @@ class _Payment implements JsEntity {
     this.currency = currency;
     this.payedAt = payedAt;
   }
-  readonly id: UUIDEntityId;
+  readonly id: PaymentId;
   readonly status: PaymentStatus;
   readonly amount: Number;
   readonly orderId: UUIDEntityId;

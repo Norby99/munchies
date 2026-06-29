@@ -1,20 +1,14 @@
-import {
-  Currency,
-  getIdFromEntityId,
-  newId,
-  PaymentStatus,
-  PaymentRequest,
-  PaymentMethod,
-  PaymentDetails,
-  newUUIDEntityId,
-  PaymentResponse,
-} from "@main/domain/external-modules";
 import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import express from "express";
 
-new PaymentController();
-
+import {
+  ProcessPaymentRequest,
+  ProcessPaymentResponse,
+  Currency,
+  PaymentDetails,
+  PaymentMethod,
+} from "munchies-payment-service-shared/kotlin/payment-modules";
 import "dotenv/config";
 import {
   connectDB,
@@ -67,12 +61,12 @@ async function main(): Promise<void> {
 
   app.post("/payments", (req, res) => {
     console.log(req);
-    const request = new PaymentRequest(
+    const request = new ProcessPaymentRequest(
       "",
       new PaymentDetails(100, PaymentMethod.CARD, Currency.AUD)
     );
 
-    const response: PaymentResponse = controller.processPayment(request);
+    const response: ProcessPaymentResponse = controller.processPayment(request);
 
     console.log("response" + response);
 

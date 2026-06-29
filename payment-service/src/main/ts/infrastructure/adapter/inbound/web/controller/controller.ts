@@ -1,13 +1,12 @@
 import { Body, Post, Route, Tags } from "tsoa";
 
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 import {
-  newId,
-  PaymentStatus,
-  Currency,
-  PaymentResponse,
-  PaymentRequest,
+  ProcessPaymentRequest,
+  ProcessPaymentResponse,
   PaymentAPI,
-} from "../../../../../domain/external-modules";
+  PaymentStatus,
+} from "munchies-payment-service-shared/kotlin/payment-modules";
 
 /**
  * HTTP controller exposing payment endpoints.
@@ -27,12 +26,12 @@ export class PaymentController extends PaymentAPI {
    * @returns The created payment details and acceptance status.
    */
   @Post()
-  public processPayment(
+  override processPayment(
     @Body()
-    request: PaymentRequest
-  ): PaymentResponse {
-    return new PaymentResponse(
-      newId(),
+    request: ProcessPaymentRequest
+  ): ProcessPaymentResponse {
+    return new ProcessPaymentResponse(
+      UUIDEntityId.Companion.newId(),
       PaymentStatus.COMPLETED,
       request.paymentDetails.amount,
       request.paymentDetails.currency

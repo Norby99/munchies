@@ -42,20 +42,19 @@ fun configureSpotlessForKotlin(project: Project) {
 fun configureSpotlessForJs(project: Project) {
   project.configure<SpotlessExtension> {
     typescript {
-      target("**/*.ts")
-      targetExclude("**/build/**/*.ts", "**/node_modules/**/*.ts", "**/dist/**/*.ts")
-      prettier()
+      target("src/**/*.ts")
+      targetExclude("**/node_modules/**/*.ts", "**/dist/**/*.ts", "build/**")
+      BiomeTs("2.1.0")
     }
     javascript {
-      target("**/*.js")
+      target("src/**/*.js")
       targetExclude(
-        "**/build/**/*.js",
         "**/node_modules/**/*.js",
         "**/dist/**/*.js",
         "**/*.cjs.js",
         "**/*.min.js",
       )
-      prettier()
+      BiomeJs("2.1.0")
     }
   }
 
