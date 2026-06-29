@@ -364,7 +364,7 @@ class MicronautUserController(
   override fun updateUserPassword(
     @Body request: UpdateUserPasswordRequest,
   ): HttpResponse<UpdateUserPasswordResponse> {
-    return when (val msg = UpdateUserPasswordValidator().validate(request)) {
+    return when (val msg = UpdateUserPasswordRequestValidator().validate(request)) {
       is InvalidInput ->
         HttpResponse.badRequest(
           UpdateUserPasswordResponse(
