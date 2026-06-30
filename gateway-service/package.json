@@ -22,6 +22,7 @@
     "munchies-payment-service-shared": "file:./build/libs/munchies-payment-shared.tgz",
     "munchies-table-reservation-service-shared": "file:./build/libs/munchies-table-reservation-shared.tgz",
     "munchies-user-service-shared": "file:./build/libs/munchies-user-shared.tgz",
+    "munchies-commons": "file:./build/libs/munchies-commons.tgz",
     "sync-request": "^6.1.0"
   },
   "devDependencies": {
