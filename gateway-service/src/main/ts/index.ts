@@ -8,6 +8,7 @@ import {
   DeleteUser,
 } from "@main/infrastructure/adapter/inbound/web/services/user";
 import express from "express";
+import { GetUserSuccess } from "munchies-user-service-shared/kotlin/user-modules";
 async function main(): Promise<void> {
   const app = express();
   app.use(express.json());
@@ -24,6 +25,7 @@ async function main(): Promise<void> {
   app.listen(PORT, () => {
     console.log("Gateway Server online");
   });
+  
 }
 
 main();
