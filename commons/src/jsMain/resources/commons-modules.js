@@ -25,4 +25,10 @@ module.exports = {
   EXPIRATION_CLAIM: _commons.domain.port.EXPIRATION_CLAIM,
   JWT_SECRET_ALGORITHM: _commons.domain.port.JWT_SECRET_ALGORITHM,
   HttpMethod: _commons.infrastructure.adapter.HttpMethod,
+  AuthRole: _commons.domain.port.AuthRole,
+  TokenDecoder: _commons.domain.port.TokenDecoder,
+  DecodedTokenResult: _commons.domain.port.DecodedTokenResult,
+  DecodedTokenSuccess: _commons.domain.port.DecodedTokenSuccess,
+  DecodedTokenFailure: _commons.domain.port.DecodedTokenFailure,
+  API: _commons.infrastructure.adapter.API,
 };

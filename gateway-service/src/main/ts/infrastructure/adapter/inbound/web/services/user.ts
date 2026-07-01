@@ -7,31 +7,36 @@ import {
   getUserResponseFromJson,
 } from "munchies-user-service-shared/kotlin/user-modules";
 
-import { request as axiosRequest } from "@main/infrastructure/adapter/middleware/route";
+import {
+  request as axiosRequest,
+  convertRouteToExpress,
+} from "@main/infrastructure/adapter/middleware/route";
 
 import axios from "axios";
-
+import { fillPath } from "@main/infrastructure/adapter/middleware/route";
 export class GetUser extends GetUserAPI {
   async getUser(id: string): Promise<GetUserResponse> {
     try {
       const uri = process.env.USER_SERVICE_URL;
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
       return axiosRequest(
-        uri + this.getPath() + id,
+        fillPath(uri + this.getPath(), id),
         this.getMethod(),
         () => "",
         getUserResponseFromJson,
         (result: GetUserResult) => {
           if (result.type == GetUserSuccess.name)
             return result as GetUserSuccess;
-          else return result as GetUserFailure;
+          else if (result.type == GetUserFailure.name)
+            return result as GetUserFailure;
+          else throw new Error(String(result));
         },
         (result: GetUserResult) => new GetUserResponse(result),
         (err) => new GetUserFailure(err),
       );
     } catch (e: any) {
-      console.log("Something went wrong");
-      console.log("error is " + JSON.stringify(e));
+      console.error("Something went wrong with Register");
+      console.error("error is " + e);
       return Promise.resolve(
         new GetUserResponse(new GetUserFailure(JSON.stringify(e))),
       );
@@ -56,10 +61,10 @@ export class RegisterUser extends RegisterUserAPI {
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
 
       return axiosRequest(
-        uri,
+        uri + this.getPath(),
         this.getMethod(),
-        request.toJson,
-        registerUserResponseFromJson,
+        () => request.toJson(),
+        (json) => registerUserResponseFromJson(json),
         (result: RegisterUserResult) => {
           if (result.type == RegisterUserSuccess.name)
             return result as RegisterUserSuccess;
@@ -226,8 +231,7 @@ export class DeleteUser extends DeleteUserAPI {
             return result as DeleteUserSuccess;
           else return result as DeleteUserFailure;
         },
-        (result: DeleteUserResult) =>
-          new DeleteUserResponse(result),
+        (result: DeleteUserResult) => new DeleteUserResponse(result),
         (err) => new DeleteUserFailure(err),
       );
     } catch (e: any) {

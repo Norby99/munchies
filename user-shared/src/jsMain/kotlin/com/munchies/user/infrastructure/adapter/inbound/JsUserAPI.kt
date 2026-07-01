@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound
 
+import com.munchies.commons.domain.port.AuthRole
 import com.munchies.commons.infrastructure.adapter.API
 import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
@@ -11,8 +12,9 @@ import kotlin.js.Promise
 @JsExport
 abstract class JsGetUserAPI : UserAPI.GetUserAPI<Promise<GetUserResponse>>, API() {
   override fun getMethod(): HttpMethod = HttpMethod.GET
-  override fun getPath(): String = UserServiceConfig.SERVICE_PATH
+  override fun getPath(): String = UserServiceConfig.SERVICE_PATH + UserServiceConfig.GET_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun getUser(id: String): Promise<GetUserResponse>
 }
 
@@ -22,6 +24,7 @@ abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserR
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.REGISTER_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun registerUser(request: RegisterUserRequest): Promise<RegisterUserResponse>
 }
 
@@ -31,6 +34,7 @@ abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<Promise<LoginUserResponse>>
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.LOGIN_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun loginUser(request: LoginUserRequest): Promise<LoginUserResponse>
 }
 
@@ -41,6 +45,7 @@ abstract class JsUpdateUserPasswordAPI :
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_PASSWORD_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun updateUserPassword(
     request: UpdateUserPasswordRequest,
   ): Promise<UpdateUserPasswordResponse>
@@ -53,6 +58,7 @@ abstract class JsUpdateUserInfoAPI :
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_INFO_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun updateUserInfo(
     request: UpdateUserInfoRequest,
   ): Promise<UpdateUserInfoResponse>
@@ -64,6 +70,7 @@ abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<Promise<DeleteUserRespons
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.DELETE_USER_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun deleteUser(request: DeleteUserRequest): Promise<DeleteUserResponse>
 }
 
@@ -73,5 +80,6 @@ abstract class JsEmailVerificationAPI : UserAPI.EmailVerificationAPI<UserDTO>, A
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.VERIFY_EMAIL_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun verifyEmail(id: String, otk: String): UserDTO
 }

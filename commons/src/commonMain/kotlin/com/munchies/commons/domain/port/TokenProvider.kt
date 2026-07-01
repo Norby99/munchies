@@ -18,6 +18,35 @@ abstract class TokenProvider {
 }
 
 @JsExport
+abstract class TokenDecoder {
+  abstract fun validateAndDecodeToken(token: String): DecodedTokenResult
+}
+
+@JsExport
+enum class AuthRole {
+  CUSTOMER(1),
+  MANAGER(2),
+  ;
+
+  constructor(
+    visibility: Int,
+  ) {
+    this.visibility = visibility
+  }
+  val visibility: Int
+}
+
+@JsExport
+fun isAuthRoleGreaterThan(role: AuthRole, other: AuthRole): Boolean =
+  role.visibility > other.visibility
+
+@JsExport sealed interface DecodedTokenResult
+
+@JsExport data object DecodedTokenSuccess : DecodedTokenResult
+
+@JsExport data object DecodedTokenFailure : DecodedTokenResult
+
+@JsExport
 val ID_CLAIM: String = "id"
 
 @JsExport

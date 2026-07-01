@@ -53,3 +53,24 @@ export declare const RefreshTokenFailure: typeof com.munchies.commons.domain.por
 export type HttpMethod =
   com.munchies.commons.infrastructure.adapter.HttpMethod;
 export declare const HttpMethod: typeof com.munchies.commons.infrastructure.adapter.HttpMethod;
+
+export type AuthRole =
+  com.munchies.commons.domain.port.AuthRole;
+export declare const AuthRole: typeof com.munchies.commons.domain.port.AuthRole;
+
+export type TokenDecoder = com.munchies.commons.domain.port.TokenDecoder;
+export declare const TokenDecoder: typeof com.munchies.commons.domain.port.TokenDecoder;
+
+export type DecodedTokenResult = com.munchies.commons.domain.port.DecodedTokenResult;
+
+export type DecodedTokenSuccess = com.munchies.commons.domain.port.DecodedTokenSuccess;
+export declare const DecodedTokenSuccess: typeof com.munchies.commons.domain.port.DecodedTokenSuccess;
+
+export type DecodedTokenFailure = typeof com.munchies.commons.domain.port.DecodedTokenFailure;
+export declare const DecodedTokenFailure: typeof com.munchies.commons.domain.port.DecodedTokenFailure;
+
+export declare const isAuthRoleGreaterThan: typeof com.munchies.commons.domain.port.isAuthRoleGreaterThan;
+
+export type API = com.munchies.commons.infrastructure.adapter.API
+export declare const API: typeof com.munchies.commons.infrastructure.adapter.API;
+
