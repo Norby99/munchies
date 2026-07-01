@@ -6,6 +6,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException
 import com.munchies.commons.UUIDEntityId
 import com.munchies.commons.domain.port.*
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.UserRole
 import com.munchies.user.domain.port.*
 import jakarta.inject.Singleton
 
@@ -24,12 +25,17 @@ class JsonWebTokenProvider(
     .withClaimPresence(ROLE_CLAIM)
     .withClaimPresence(EXPIRATION_CLAIM)
 
+  private fun UserRole.toAuthRole(): AuthRole = when (this) {
+    UserRole.CUSTOMER -> AuthRole.CUSTOMER
+    UserRole.MANAGER -> AuthRole.MANAGER
+  }
+
   override fun generateToken(id: UUIDEntityId): GenerateTokenResult {
     return userRepository.findById(UserId(id.value))?.let { user ->
       GenerateTokenSuccess(
         JWT.create().withSubject(user.id.value)
           .withClaim(ID_CLAIM, user.id.value)
-          .withClaim(ROLE_CLAIM, user.profile.role.name)
+          .withClaim(ROLE_CLAIM, user.profile.role.toAuthRole().name)
           .withClaim(EXPIRATION_CLAIM, timeProvider.addOneHour().invoke().toString())
           .withExpiresAt(timeProvider.addOneHour().toDate())
           .sign(algorithm),
