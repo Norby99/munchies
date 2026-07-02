@@ -11,6 +11,7 @@ import com.munchies.order.application.port.inbound.command.GetOrderDetailsComman
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
+import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
@@ -45,10 +46,8 @@ import jakarta.inject.Inject
 @SerdeImport(OrderDto.Takeaway::class)
 @SerdeImport(OrderDto.DineIn::class)
 @SerdeImport(OrderItemDto::class)
+@SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
-@SerdeImport(DeliveryRequest::class)
-@SerdeImport(TakeawayRequest::class)
-@SerdeImport(DineInRequest::class)
 @SerdeImport(GetOrderDetailsRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
 @SerdeImport(DiscardOrderRequest::class)

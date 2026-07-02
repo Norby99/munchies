@@ -7,14 +7,12 @@ import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
+import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDto
 import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.DeliveryRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.DineInRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.DiscardOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.GetOrderDetailsRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.TakeawayRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest
@@ -41,10 +39,8 @@ import org.junit.jupiter.api.Test
 @SerdeImport(OrderDto.Takeaway::class)
 @SerdeImport(OrderDto.DineIn::class)
 @SerdeImport(OrderItemDto::class)
+@SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
-@SerdeImport(DeliveryRequest::class)
-@SerdeImport(TakeawayRequest::class)
-@SerdeImport(DineInRequest::class)
 @SerdeImport(GetOrderDetailsRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
 @SerdeImport(DiscardOrderRequest::class)
@@ -146,23 +142,15 @@ class MicronautOrderControllerTest {
       placeOrderMock.execute(any())
     } returns PlaceOrder.Result.Success(order.toDto())
 
-    println(mapper.writeValueAsString(requestBody))
-    try {
-      val response = client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
-      )
-      response.status shouldBe HttpStatus.OK
-      response.body() shouldBeEqual "Order placed successfully with ID: ${order.id}"
-    } catch (e: HttpClientResponseException) {
-      // Questo ti stamperà sul terminale il motivo esatto del 400 Bad Request!
-      val errorBody = e.response.getBody(String::class.java).orElse("Nessun dettaglio")
-      println("--- DIRETTO DA MICRONAUT: $errorBody ---")
-      throw e
-    }
+    val response = client.toBlocking().exchange(
+      HttpRequest.POST(
+        "/${OrderServiceConfig.PLACE_ORDER_PATH}",
+        mapper.writeValueAsString(requestBody),
+      ),
+      String::class.java,
+    )
+    response.status shouldBe HttpStatus.OK
+    response.body() shouldBeEqual "Order placed successfully with ID: ${order.id.value}"
   }
 
   // ==========================================
@@ -176,8 +164,6 @@ class MicronautOrderControllerTest {
     every {
       advanceOrderStatusMock.execute(any())
     } returns AdvanceOrderStatus.Result.Success
-
-    println(mapper.writeValueAsString(requestBody))
 
     val response = client.toBlocking().exchange(
       HttpRequest.POST(
