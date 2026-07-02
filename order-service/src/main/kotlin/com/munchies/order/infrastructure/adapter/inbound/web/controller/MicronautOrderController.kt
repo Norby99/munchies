@@ -10,6 +10,7 @@ import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
@@ -22,8 +23,6 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Patch
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
-import io.micronaut.scheduling.TaskExecutors
-import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.SerdeImport
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -41,12 +40,15 @@ import jakarta.inject.Inject
  * The controller intentionally avoids domain logic so the application and domain
  * layers remain independent from transport concerns.
  */
-@ExecuteOn(TaskExecutors.BLOCKING)
 @SerdeImport(OrderDto::class)
 @SerdeImport(OrderDto.Delivery::class)
 @SerdeImport(OrderDto.Takeaway::class)
 @SerdeImport(OrderDto.DineIn::class)
+@SerdeImport(OrderItemDto::class)
 @SerdeImport(PlaceOrderRequest::class)
+@SerdeImport(DeliveryRequest::class)
+@SerdeImport(TakeawayRequest::class)
+@SerdeImport(DineInRequest::class)
 @SerdeImport(GetOrderDetailsRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
 @SerdeImport(DiscardOrderRequest::class)

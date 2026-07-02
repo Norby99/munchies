@@ -10,7 +10,7 @@ import com.munchies.order.infrastructure.adapter.inbound.request.*
 object CommandFactory {
 
   fun PlaceOrderRequest.toCommand(): PlaceOrderCommand = when (this) {
-    is PlaceOrderRequest.Delivery -> PlaceOrderCommand.Delivery(
+    is DeliveryRequest -> PlaceOrderCommand.Delivery(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
@@ -19,19 +19,22 @@ object CommandFactory {
       bellName = bellName,
       customerPhone = customerPhone,
     )
-    is PlaceOrderRequest.Takeaway -> PlaceOrderCommand.Takeaway(
+    is TakeawayRequest -> PlaceOrderCommand.Takeaway(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
       pickupTime = pickupTime,
       customerName = customerName,
     )
-    is PlaceOrderRequest.DineIn -> PlaceOrderCommand.DineIn(
+    is DineInRequest -> PlaceOrderCommand.DineIn(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
       tableNumber = tableNumber,
       numberOfGuests = numberOfGuests,
+    )
+    else -> throw IllegalArgumentException(
+      "Unknown PlaceOrderRequest type: ${this::class.simpleName}",
     )
   }
 
