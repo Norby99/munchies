@@ -1,9 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.commons.domain.port.GenerateTokenFailure
-import com.munchies.commons.domain.port.GenerateTokenSuccess
 import com.munchies.commons.domain.port.InvalidInput
-import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
 import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import com.munchies.user.application.port.inbound.*
@@ -27,8 +24,6 @@ import com.munchies.user.infrastructure.adapter.validator.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
-import io.micronaut.http.cookie.Cookie
-import io.micronaut.http.cookie.SameSite
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.SerdeImport
@@ -79,8 +74,6 @@ class MicronautUserController(
 
   @Inject
   private val emailConfirmationKafkaClient: EmailConfirmationClient,
-
-  @Inject val tokenProvider: TokenProvider,
 ) :
   UserAPI.GetUserAPI<HttpResponse<GetUserResponse>>,
   UserAPI.RegisterUserAPI<HttpResponse<RegisterUserResponse>>,
@@ -198,33 +191,14 @@ class MicronautUserController(
                 )
             ) {
               is RegisterUser.Companion.RegisterUserResult.Success -> {
-                when (val token = tokenProvider.generateToken(user.user.id)) {
-                  is GenerateTokenSuccess -> {
-                    HttpResponse
-                      .ok(
-                        RegisterUserResponse(
-                          RegisterUserSuccess(
-                            "User registered successfully",
-                          ),
-                        ),
-                      )
-                      .cookie(
-                        Cookie.of("authToken", token.token)
-                          .httpOnly(true)
-                          .secure(true)
-                          .sameSite(SameSite.Strict)
-                          .path(UserServiceConfig.SERVICE_PATH),
-                      )
-                  }
-                  else ->
-                    HttpResponse.serverError(
-                      RegisterUserResponse(
-                        RegisterUserFailure(
-                          "Couldn't generate token",
-                        ),
+                HttpResponse
+                  .ok(
+                    RegisterUserResponse(
+                      RegisterUserSuccess(
+                        "User registered successfully",
                       ),
-                    )
-                }
+                    ),
+                  )
               }
               is RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
                 HttpResponse
@@ -295,33 +269,14 @@ class MicronautUserController(
             )
         ) {
           is LoginResult.Success -> {
-            when (val token = tokenProvider.generateToken(UserId(result.userId))) {
-              is GenerateTokenSuccess ->
-                HttpResponse
-                  .ok(
-                    LoginUserResponse(
-                      LoginUserSuccess(
-                        "User logged successfully",
-                      ),
-                    ),
-                  )
-                  .cookie(
-                    Cookie.of("authToken", token.token)
-                      .httpOnly(true)
-                      .secure(true)
-                      .sameSite(SameSite.Strict)
-                      .path(UserServiceConfig.SERVICE_PATH),
-                  )
-              is GenerateTokenFailure ->
-                HttpResponse
-                  .serverError(
-                    LoginUserResponse(
-                      LoginUserFailure(
-                        "Couldn't create token",
-                      ),
-                    ),
-                  )
-            }
+            HttpResponse
+              .ok(
+                LoginUserResponse(
+                  LoginUserSuccess(
+                    "User logged successfully",
+                  ),
+                ),
+              )
           }
           is LoginResult.BlockedLogin ->
             HttpResponse
