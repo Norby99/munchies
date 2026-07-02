@@ -1,7 +1,5 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.commons.domain.port.GenerateTokenSuccess
-import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.usecase.VerifyUserEmailUseCase
@@ -45,12 +43,10 @@ class MicronautUserControllerTest {
   private fun getController(
     services: UserServices = fakeServices,
     emailConfirmationKafkaClient: EmailConfirmationClient = mock(),
-    tokenProvider: TokenProvider = mock(),
   ) = MicronautUserController(
     services = services,
     emailConfirmationKafkaClient = emailConfirmationKafkaClient,
     paymentClient = mock(),
-    tokenProvider = tokenProvider,
   )
 
   private val validUser = exampleUser
@@ -115,9 +111,6 @@ class MicronautUserControllerTest {
     }
     val controller = getController(
       fakeServices.copy(registerUser = registerUseCase),
-      tokenProvider = mock {
-        on { generateToken(any()) } doReturn GenerateTokenSuccess("sometoken")
-      },
     )
 
     val response = controller.registerUser(
@@ -129,7 +122,6 @@ class MicronautUserControllerTest {
     )
 
     response.status shouldBe HttpStatus.OK
-    response.cookies.all.shouldNotBeEmpty()
     response.body().result.shouldBeInstanceOf<RegisterUserSuccess>()
   }
 
@@ -187,9 +179,6 @@ class MicronautUserControllerTest {
     }
     val controller = getController(
       fakeServices.copy(loginUser = loginUseCase),
-      tokenProvider = mock {
-        on { generateToken(any()) } doReturn GenerateTokenSuccess("sometoken")
-      },
     )
 
     val response = controller
@@ -197,7 +186,6 @@ class MicronautUserControllerTest {
 
     response.status shouldBe HttpStatus.OK
     response.body().result.shouldBeInstanceOf<LoginUserSuccess>()
-    response.cookies.all.shouldNotBeEmpty()
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
   }
 
