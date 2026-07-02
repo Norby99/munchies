@@ -4,37 +4,45 @@ import com.munchies.order.application.port.inbound.command.*
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.RestaurantId
+import com.munchies.order.infrastructure.adapter.dto.OrderType.*
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDomain
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
 object CommandFactory {
 
-  fun PlaceOrderRequest.toCommand(): PlaceOrderCommand = when (this) {
-    is DeliveryRequest -> PlaceOrderCommand.Delivery(
+  fun PlaceOrderRequest.toCommand(): PlaceOrderCommand = when (this.orderType) {
+    DELIVERY -> PlaceOrderCommand.Delivery(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
-      estimatedDeliveryTime = estimatedDeliveryTime,
-      deliveryAddress = deliveryAddress,
-      bellName = bellName,
-      customerPhone = customerPhone,
+      estimatedDeliveryTime = estimatedDeliveryTime
+        ?: throw IllegalArgumentException(
+          "Estimated delivery time is required for delivery orders",
+        ),
+      deliveryAddress = deliveryAddress
+        ?: throw IllegalArgumentException("Delivery address is required for delivery orders"),
+      bellName = bellName
+        ?: throw IllegalArgumentException("Bell name is required for delivery orders"),
+      customerPhone = customerPhone
+        ?: throw IllegalArgumentException("Customer phone is required for delivery orders"),
     )
-    is TakeawayRequest -> PlaceOrderCommand.Takeaway(
+    TAKEAWAY -> PlaceOrderCommand.Takeaway(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
-      pickupTime = pickupTime,
-      customerName = customerName,
+      pickupTime = pickupTime
+        ?: throw IllegalArgumentException("Pickup time is required for takeaway orders"),
+      customerName = customerName
+        ?: throw IllegalArgumentException("Customer name is required for takeaway orders"),
     )
-    is DineInRequest -> PlaceOrderCommand.DineIn(
+    DINE_IN -> PlaceOrderCommand.DineIn(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
-      tableNumber = tableNumber,
-      numberOfGuests = numberOfGuests,
-    )
-    else -> throw IllegalArgumentException(
-      "Unknown PlaceOrderRequest type: ${this::class.simpleName}",
+      tableNumber = tableNumber
+        ?: throw IllegalArgumentException("Table number is required for dine-in orders"),
+      numberOfGuests = numberOfGuests
+        ?: throw IllegalArgumentException("Number of guests is required for dine-in orders"),
     )
   }
 
