@@ -16,12 +16,12 @@ import org.junit.jupiter.api.Test
 class AddCategoryTest {
 
   private lateinit var menuRepository: MenuRepository
-  private lateinit var addCategoryUseCase: AddCategoryUseCase
+  private lateinit var createCategoryUseCase: CreateCategoryUseCase
 
   @BeforeEach
   fun setUp() {
     menuRepository = mockk()
-    addCategoryUseCase = AddCategoryUseCase(menuRepository)
+    createCategoryUseCase = CreateCategoryUseCase(menuRepository)
   }
 
   @Test
@@ -30,13 +30,13 @@ class AddCategoryTest {
     val menu =
       spyk(Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList()))
 
-    val command = AddCategoryCommand(menuId.value, "Desserts")
+    val command = CreateCategoryCommand(menuId.value, "Desserts")
 
     coEvery { menuRepository.findById(any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
-    when (val result = addCategoryUseCase(command)) {
-      is AddCategoryResult.Success -> {
+    when (val result = createCategoryUseCase(command)) {
+      is CreateCategoryResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
       }
       else -> {
@@ -47,12 +47,12 @@ class AddCategoryTest {
 
   @Test
   fun `should fail with Error when menu does not exist`() = runBlocking {
-    val command = AddCategoryCommand(MenuId().value, "Desserts")
+    val command = CreateCategoryCommand(MenuId().value, "Desserts")
 
     coEvery { menuRepository.findById(any()) } returns null
 
-    when (val result = addCategoryUseCase(command)) {
-      is AddCategoryResult.MenuNotFound -> {
+    when (val result = createCategoryUseCase(command)) {
+      is CreateCategoryResult.MenuNotFound -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }
       else -> {
@@ -67,12 +67,12 @@ class AddCategoryTest {
     val menu =
       spyk(Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList()))
 
-    val command = AddCategoryCommand(menuId.value, "    ")
+    val command = CreateCategoryCommand(menuId.value, "    ")
 
     coEvery { menuRepository.findById(any()) } returns menu
 
-    when (val result = addCategoryUseCase(command)) {
-      is AddCategoryResult.InvalidCategory -> {
+    when (val result = createCategoryUseCase(command)) {
+      is CreateCategoryResult.InvalidCategory -> {
         assertTrue(result.error.isNotEmpty())
       }
       else -> {

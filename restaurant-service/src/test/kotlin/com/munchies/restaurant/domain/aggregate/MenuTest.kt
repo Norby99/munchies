@@ -44,7 +44,7 @@ class MenuTest {
   fun `should add category to menu`() {
     val menu = Menu.create(RestaurantId())
 
-    val category = menu.addCategory(CategoryName.of("Desserts"))
+    val category = menu.createCategory(CategoryName.of("Desserts"))
 
     assertTrue(menu.categories.contains(category))
     assertEquals(1, menu.categories.size)
@@ -53,7 +53,7 @@ class MenuTest {
   @Test
   fun `should update category in menu`() {
     val menu = Menu.create(RestaurantId())
-    val category = menu.addCategory(CategoryName.of("Desserts"))
+    val category = menu.createCategory(CategoryName.of("Desserts"))
 
     val newName = CategoryName.of("Sweet Desserts")
     menu.updateCategory(category.id, newName)
@@ -74,7 +74,7 @@ class MenuTest {
   @Test
   fun `should remove category from menu`() {
     val menu = Menu.create(RestaurantId())
-    val category = menu.addCategory(CategoryName.of("Desserts"))
+    val category = menu.createCategory(CategoryName.of("Desserts"))
 
     menu.removeCategory(category.id)
 
@@ -85,7 +85,7 @@ class MenuTest {
   @Test
   fun `should get category by id`() {
     val menu = Menu.create(RestaurantId())
-    val category = menu.addCategory(CategoryName.of("Desserts"))
+    val category = menu.createCategory(CategoryName.of("Desserts"))
 
     val foundCategory = menu.getCategory(category.id)
     assertEquals(category, foundCategory)

@@ -10,70 +10,40 @@ import com.munchies.restaurant.domain.valueobject.menu.MenuItemDescription
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemName
 import com.munchies.restaurant.domain.valueobject.menu.MenuName
 import com.munchies.restaurant.domain.valueobject.menu.Validity
-import com.munchies.restaurant.domain.valueobject.menu.VariationName
-import com.munchies.restaurant.domain.valueobject.menu.VariationOptionName
+import com.munchies.restaurant.domain.valueobject.menu.Variation
 import java.time.LocalDateTime
 
-data class VariationOption(
-  val name: VariationOptionName,
-  val additionalPrice: Money,
-)
-
-data class VariationId(override val value: String = newId()) : UUIDEntityId(value)
-
-class Variation internal constructor(
-  override val id: VariationId = VariationId(),
-  var name: VariationName,
-  var options: List<VariationOption>,
-) : Entity<VariationId>(id) {
-  fun update(name: VariationName, options: List<VariationOption>) {
-    this.name = name
-    this.options = options
-  }
-}
-
 data class MenuItemId(override val value: String = newId()) : UUIDEntityId(value)
+
+data class MenuItemDetails(val name: MenuItemName, val description: MenuItemDescription)
 
 class MenuItem internal constructor(
   override val id: MenuItemId = MenuItemId(),
   var name: MenuItemName,
   var description: MenuItemDescription,
   var price: Money,
-  val variations: MutableList<Variation> = mutableListOf(),
+  variations: List<Variation> = emptyList(),
   var validity: Validity = Validity.always,
 ) : Entity<MenuItemId>(id) {
-  fun update(name: MenuItemName, description: MenuItemDescription, price: Money) {
-    this.name = name
-    this.description = description
-    this.price = price
-  }
+  private val _variations = variations.toMutableList()
+  val variations: List<Variation> get() = _variations.toList()
+  private var details = MenuItemDetails(name, description)
 
-  fun addVariation(name: VariationName, options: List<VariationOption>): Variation {
-    val variation = Variation(name = name, options = options)
-    variations.add(variation)
-    return variation
-  }
-
-  fun updateVariation(
-    variationId: VariationId,
-    name: VariationName,
-    options: List<VariationOption>,
+  fun update(
+    details: MenuItemDetails,
+    price: Money,
+    newVariations: List<Variation> = _variations,
+    validity: Validity = this.validity,
   ) {
-    val variation = variations.find { it.id == variationId }
-      ?: throw IllegalArgumentException("Variation not found")
-    variation.update(name, options)
-  }
-
-  fun removeVariation(variationId: VariationId) {
-    variations.removeIf { it.id == variationId }
+    this.details = details
+    this.price = price
+    this._variations.clear()
+    this._variations.addAll(newVariations)
+    this.validity = validity
   }
 
   fun isValid(date: LocalDateTime): Boolean {
     return validity.isValid(date)
-  }
-
-  fun updateValidity(validity: Validity) {
-    this.validity = validity
   }
 }
 
@@ -82,53 +52,54 @@ data class CategoryId(override val value: String = newId()) : UUIDEntityId(value
 class Category internal constructor(
   override val id: CategoryId = CategoryId(),
   var name: CategoryName,
-  val items: MutableList<MenuItem> = mutableListOf(),
-  val variations: MutableList<Variation> = mutableListOf(),
+  items: List<MenuItem> = emptyList(),
+  variations: List<Variation> = emptyList(),
 ) : Entity<CategoryId>(id) {
-  fun updateName(name: CategoryName) {
+  private val _items = items.toMutableList()
+  val items: List<MenuItem> get() = _items.toList()
+
+  private val _variations = variations.toMutableList()
+  val variations: List<Variation> get() = _variations.toList()
+
+  fun update(name: CategoryName, newVariations: List<Variation>) {
     this.name = name
+    this._variations.clear()
+    this._variations.addAll(newVariations)
   }
 
-  fun addItem(name: MenuItemName, description: MenuItemDescription, price: Money): MenuItem {
-    val item = MenuItem(name = name, description = description, price = price)
-    items += item
+  fun createItem(
+    name: MenuItemName,
+    description: MenuItemDescription,
+    price: Money,
+    variations: List<Variation> = emptyList(),
+    validity: Validity = Validity.always,
+  ): MenuItem {
+    val item = MenuItem(
+      name = name,
+      description = description,
+      price = price,
+      variations = variations,
+      validity = validity,
+    )
+    _items += item
     return item
   }
 
   fun updateItem(
     itemId: MenuItemId,
-    name: MenuItemName,
-    description: MenuItemDescription,
+    details: MenuItemDetails,
     price: Money,
+    newVariations: List<Variation> = emptyList(),
+    validity: Validity = Validity.always,
   ) {
-    val item = items.find { it.id == itemId } ?: throw IllegalArgumentException(
+    val item = _items.find { it.id == itemId } ?: throw IllegalArgumentException(
       "Item not found",
     )
-    item.update(name, description, price)
+    item.update(details, price, newVariations, validity)
   }
 
   fun removeItem(itemId: MenuItemId) {
-    items.removeIf { it.id == itemId }
-  }
-
-  fun addVariation(name: VariationName, options: List<VariationOption>): Variation {
-    val variation = Variation(name = name, options = options)
-    variations.add(variation)
-    return variation
-  }
-
-  fun updateVariation(
-    variationId: VariationId,
-    name: VariationName,
-    options: List<VariationOption>,
-  ) {
-    val variation = variations.find { it.id == variationId }
-      ?: throw IllegalArgumentException("Variation not found")
-    variation.update(name, options)
-  }
-
-  fun removeVariation(variationId: VariationId) {
-    variations.removeIf { it.id == variationId }
+    _items.removeIf { it.id == itemId }
   }
 }
 
@@ -149,17 +120,21 @@ class Menu internal constructor(
     this.name = name
   }
 
-  fun addCategory(name: CategoryName): Category {
-    val category = Category(name = name)
+  fun createCategory(name: CategoryName, variations: List<Variation> = emptyList()): Category {
+    val category = Category(name = name, variations = variations)
     _categories.add(category)
     return category
   }
 
-  fun updateCategory(categoryId: CategoryId, name: CategoryName) {
+  fun updateCategory(
+    categoryId: CategoryId,
+    name: CategoryName,
+    newVariations: List<Variation> = emptyList(),
+  ) {
     val category = _categories.find {
       it.id == categoryId
     } ?: throw IllegalArgumentException("Category not found")
-    category.updateName(name)
+    category.update(name, newVariations)
   }
 
   fun removeCategory(categoryId: CategoryId) {

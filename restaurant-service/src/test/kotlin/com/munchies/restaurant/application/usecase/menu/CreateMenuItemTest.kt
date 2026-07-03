@@ -17,15 +17,15 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AddMenuItemTest {
+class CreateMenuItemTest {
 
   private lateinit var menuRepository: MenuRepository
-  private lateinit var addMenuItemUseCase: AddMenuItemUseCase
+  private lateinit var createMenuItemUseCase: CreateMenuItemUseCase
 
   @BeforeEach
   fun setUp() {
     menuRepository = mockk()
-    addMenuItemUseCase = AddMenuItemUseCase(menuRepository)
+    createMenuItemUseCase = CreateMenuItemUseCase(menuRepository)
   }
 
   @Test
@@ -38,7 +38,7 @@ class AddMenuItemTest {
         Menu(id = menuId, restaurantId = RestaurantId(), categories = listOf(category)),
       )
 
-    val command = AddMenuItemCommand(
+    val command = CreateMenuItemCommand(
       menuId = menuId.value,
       categoryId = categoryId.value,
       name = "Salad",
@@ -49,8 +49,8 @@ class AddMenuItemTest {
     coEvery { menuRepository.findById(any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
-    when (val result = addMenuItemUseCase(command)) {
-      is AddMenuItemResult.Success -> {
+    when (val result = createMenuItemUseCase(command)) {
+      is CreateMenuItemResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
         assertEquals(1, category.items.size)
       }
@@ -62,7 +62,7 @@ class AddMenuItemTest {
 
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
-    val command = AddMenuItemCommand(
+    val command = CreateMenuItemCommand(
       menuId = MenuId().value,
       categoryId = CategoryId().value,
       name = "Salad",
@@ -72,8 +72,8 @@ class AddMenuItemTest {
 
     coEvery { menuRepository.findById(any()) } returns null
 
-    when (val result = addMenuItemUseCase(command)) {
-      is AddMenuItemResult.MenuNotFound -> {
+    when (val result = createMenuItemUseCase(command)) {
+      is CreateMenuItemResult.MenuNotFound -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }
       else -> {
@@ -87,7 +87,7 @@ class AddMenuItemTest {
     val menuId = MenuId()
     val menu = Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList())
 
-    val command = AddMenuItemCommand(
+    val command = CreateMenuItemCommand(
       menuId = menuId.value,
       categoryId = CategoryId().value,
       name = "Salad",
@@ -97,8 +97,8 @@ class AddMenuItemTest {
 
     coEvery { menuRepository.findById(any()) } returns menu
 
-    when (val result = addMenuItemUseCase(command)) {
-      is AddMenuItemResult.CategoryNotFound -> {
+    when (val result = createMenuItemUseCase(command)) {
+      is CreateMenuItemResult.CategoryNotFound -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }
       else -> {

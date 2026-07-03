@@ -1,19 +1,20 @@
 package com.munchies.restaurant.domain.entity
 
 import com.munchies.restaurant.domain.aggregate.Category
+import com.munchies.restaurant.domain.aggregate.MenuItemDetails
 import com.munchies.restaurant.domain.aggregate.MenuItemId
-import com.munchies.restaurant.domain.aggregate.VariationId
-import com.munchies.restaurant.domain.aggregate.VariationOption
 import com.munchies.restaurant.domain.valueobject.Money
 import com.munchies.restaurant.domain.valueobject.menu.CategoryName
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemDescription
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemName
+import com.munchies.restaurant.domain.valueobject.menu.Validity
+import com.munchies.restaurant.domain.valueobject.menu.Variation
 import com.munchies.restaurant.domain.valueobject.menu.VariationName
-import com.munchies.restaurant.domain.valueobject.menu.VariationOptionName
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import java.time.LocalTime
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -23,44 +24,57 @@ class CategoryTest {
     val category = Category(name = CategoryName.of("Pizzas"))
 
     val newName = CategoryName.of("Wood Fired Pizzas")
-    category.updateName(newName)
+    category.update(newName, emptyList())
 
-    assertEquals(newName, category.name)
+    category.name shouldBe newName
   }
 
   @Test
   fun `should add item to category`() {
     val category = Category(name = CategoryName.of("Pizzas"))
 
-    val item = category.addItem(
-      MenuItemName.of("Margherita"),
-      MenuItemDescription.of("Classic"),
-      Money(BigDecimal("8.0")),
+    val item = category.createItem(
+      name = MenuItemName.of("Margherita"),
+      description = MenuItemDescription.of("Classic"),
+      price = Money(BigDecimal("8.0")),
     )
 
-    assertTrue(category.items.contains(item))
-    assertEquals(1, category.items.size)
+    category.items shouldContain item
   }
 
   @Test
   fun `should update item in category`() {
     val category = Category(name = CategoryName.of("Pizzas"))
-    val item = category.addItem(
+    val item = category.createItem(
       MenuItemName.of("Margherita"),
       MenuItemDescription.of("Classic"),
       Money(BigDecimal("8.0")),
+      emptyList(),
     )
 
     val newName = MenuItemName.of("Super Margherita")
     val newDesc = MenuItemDescription.of("With extra cheese")
     val newPrice = Money(BigDecimal("10.0"))
+    val newVariations = listOf(
+      Variation(VariationName("Size"))
+        .option("Large", Money("2.0")),
+    )
+    val newValidity = Validity.hours(LocalTime.of(10, 0), LocalTime.of(22, 0))
 
-    category.updateItem(item.id, newName, newDesc, newPrice)
+    category.updateItem(
+      item.id,
+      MenuItemDetails(newName, newDesc),
+      newPrice,
+      newVariations,
+      newValidity,
+    )
 
-    val updatedItem = category.items.first { it.id == item.id }
-    assertEquals(newName, updatedItem.name)
-    assertEquals(newDesc, updatedItem.description)
-    assertEquals(newPrice, updatedItem.price)
+    val updated = category.items.first { it.id == item.id }
+    updated.name shouldBe newName
+    updated.description shouldBe newDesc
+    updated.price shouldBe newPrice
+    updated.variations shouldBe newVariations
+    updated.validity shouldBe newValidity
   }
 
   @Test
@@ -70,9 +84,12 @@ class CategoryTest {
     assertThrows<IllegalArgumentException> {
       category.updateItem(
         MenuItemId(),
-        MenuItemName.of("Test"),
-        MenuItemDescription.of("Desc"),
+        MenuItemDetails(
+          MenuItemName.of("Test"),
+          MenuItemDescription.of("Desc"),
+        ),
         Money(BigDecimal("1.0")),
+        emptyList(),
       )
     }
   }
@@ -80,7 +97,7 @@ class CategoryTest {
   @Test
   fun `should remove item from category`() {
     val category = Category(name = CategoryName.of("Pizzas"))
-    val item = category.addItem(
+    val item = category.createItem(
       MenuItemName.of("Margherita"),
       MenuItemDescription.of("Classic"),
       Money(BigDecimal("8.0")),
@@ -88,64 +105,28 @@ class CategoryTest {
 
     category.removeItem(item.id)
 
-    assertFalse(category.items.contains(item))
-    assertEquals(0, category.items.size)
+    category.items shouldNotContain item
   }
 
   @Test
   fun `should add variation to category`() {
     val category = Category(name = CategoryName.of("Pizzas"))
+    val variation = Variation(VariationName("Dough"))
+      .option("Whole Wheat", Money(BigDecimal("1.5")))
 
-    val variation = category.addVariation(
-      VariationName.of("Dough"),
-      emptyList<VariationOption>(),
-    )
+    category.update(category.name, listOf(variation))
 
-    assertTrue(category.variations.contains(variation))
-    assertEquals(1, category.variations.size)
-  }
-
-  @Test
-  fun `should update variation in category`() {
-    val category = Category(name = CategoryName.of("Pizzas"))
-    val variation = category.addVariation(
-      VariationName.of("Dough"),
-      emptyList<VariationOption>(),
-    )
-
-    val newOptions =
-      listOf(VariationOption(VariationOptionName.of("Whole Wheat"), Money(BigDecimal("1.5"))))
-    category.updateVariation(variation.id, VariationName.of("Pizza Dough"), newOptions)
-
-    val updatedVariation = category.variations.first { it.id == variation.id }
-    assertEquals(VariationName.of("Pizza Dough"), updatedVariation.name)
-    assertEquals(newOptions, updatedVariation.options)
-  }
-
-  @Test
-  fun `should throw exception when updating non existent variation in category`() {
-    val category = Category(name = CategoryName.of("Pizzas"))
-
-    assertThrows<IllegalArgumentException> {
-      category.updateVariation(
-        VariationId(),
-        VariationName.of("Dough"),
-        emptyList<VariationOption>(),
-      )
-    }
+    category.variations shouldContain variation
   }
 
   @Test
   fun `should remove variation from category`() {
-    val category = Category(name = CategoryName.of("Pizzas"))
-    val variation = category.addVariation(
-      VariationName.of("Dough"),
-      emptyList(),
-    )
+    val variation = Variation(VariationName("Dough"))
+      .option("Whole Wheat", Money(BigDecimal("1.5")))
+    val category = Category(name = CategoryName.of("Pizzas"), variations = listOf(variation))
 
-    category.removeVariation(variation.id)
+    category.update(category.name, emptyList())
 
-    assertFalse(category.variations.contains(variation))
-    assertEquals(0, category.variations.size)
+    category.variations shouldNotContain variation
   }
 }
