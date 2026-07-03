@@ -28,12 +28,16 @@ data class Money(val amount: BigDecimal) {
   }
 
   companion object {
-    fun of(value: String): Money {
+    operator fun invoke(value: String): Money {
       return Money(BigDecimal(value))
     }
 
-    fun of(value: Double): Money {
-      return Money(BigDecimal.valueOf(value))
+    operator fun invoke(value: Double): Money {
+      return Money(BigDecimal(value))
+    }
+
+    operator fun invoke(value: Int): Money {
+      return Money(BigDecimal(value))
     }
   }
 }

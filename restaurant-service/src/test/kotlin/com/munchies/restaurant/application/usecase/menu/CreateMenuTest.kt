@@ -10,20 +10,20 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AddMenuTest {
+class CreateMenuTest {
 
   private lateinit var menuRepository: MenuRepository
-  private lateinit var addMenuUseCase: AddMenuUseCase
+  private lateinit var createMenuUseCase: CreateMenuUseCase
 
   @BeforeEach
   fun setUp() {
     menuRepository = mockk()
-    addMenuUseCase = AddMenuUseCase(menuRepository)
+    createMenuUseCase = CreateMenuUseCase(menuRepository)
   }
 
   @Test
   fun `should add menu successfully with valid data`() = runBlocking {
-    val command = AddMenuCommand(
+    val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "Winter Menu",
       validity = ValidityConfig.Period(LocalDate.of(2026, 12, 1), LocalDate.of(2027, 2, 28)),
@@ -31,8 +31,8 @@ class AddMenuTest {
 
     coEvery { menuRepository.save(any()) } returns Unit
 
-    when (val result = addMenuUseCase(command)) {
-      is AddMenuResult.Success -> {
+    when (val result = createMenuUseCase(command)) {
+      is CreateMenuResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(any()) }
       }
       else -> assert(false) { "Expected Success, but got $result" }
@@ -41,7 +41,7 @@ class AddMenuTest {
 
   @Test
   fun `should add menu successfully without validity dates`() = runBlocking {
-    val command = AddMenuCommand(
+    val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "Main Menu",
       validity = ValidityConfig.Always,
@@ -49,8 +49,8 @@ class AddMenuTest {
 
     coEvery { menuRepository.save(any()) } returns Unit
 
-    when (val result = addMenuUseCase(command)) {
-      is AddMenuResult.Success -> {
+    when (val result = createMenuUseCase(command)) {
+      is CreateMenuResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(any()) }
       }
       else -> assert(false) { "Expected Success, but got $result" }
@@ -59,14 +59,14 @@ class AddMenuTest {
 
   @Test
   fun `should fail when menu name is blank`() = runBlocking {
-    val command = AddMenuCommand(
+    val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "   ",
       validity = ValidityConfig.Always,
     )
 
-    when (val result = addMenuUseCase(command)) {
-      is AddMenuResult.InvalidMenu -> {
+    when (val result = createMenuUseCase(command)) {
+      is CreateMenuResult.InvalidMenu -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }
       else -> assert(false) { "Expected InvalidMenu, but got $result" }

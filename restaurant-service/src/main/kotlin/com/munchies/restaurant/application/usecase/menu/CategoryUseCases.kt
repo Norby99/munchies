@@ -1,37 +1,41 @@
 package com.munchies.restaurant.application.usecase.menu
-
 import com.munchies.restaurant.application.UseCase
 import com.munchies.restaurant.domain.aggregate.CategoryId
 import com.munchies.restaurant.domain.aggregate.MenuId
 import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.menu.CategoryName
 
-data class CategoryUseCases(
-  val add: AddCategoryUseCase,
-  val update: UpdateCategoryUseCase,
-  val remove: RemoveCategoryUseCase,
-)
-
-data class AddCategoryCommand(val menuId: String, val name: String)
-
-sealed interface AddCategoryResult {
-  data class Success(val categoryId: String) : AddCategoryResult
-  data object MenuNotFound : AddCategoryResult
-  data class InvalidCategory(val error: String) : AddCategoryResult
+data class CategoryUseCases(val repository: MenuRepository) {
+  val add = CreateCategoryUseCase(repository)
+  val update = UpdateCategoryUseCase(repository)
+  val remove = RemoveCategoryUseCase(repository)
 }
 
-class AddCategoryUseCase(
+data class CreateCategoryCommand(
+  val menuId: String,
+  val name: String,
+  val variations: List<VariationDto> = emptyList(),
+)
+
+sealed interface CreateCategoryResult {
+  data class Success(val categoryId: String) : CreateCategoryResult
+  data object MenuNotFound : CreateCategoryResult
+  data class InvalidCategory(val error: String) : CreateCategoryResult
+}
+
+class CreateCategoryUseCase(
   private val menuRepository: MenuRepository,
-) : UseCase<AddCategoryCommand, AddCategoryResult> {
-  override suspend operator fun invoke(command: AddCategoryCommand): AddCategoryResult {
+) : UseCase<CreateCategoryCommand, CreateCategoryResult> {
+  override suspend operator fun invoke(command: CreateCategoryCommand): CreateCategoryResult {
     val menu = menuRepository.findById(MenuId(command.menuId))
-      ?: return AddCategoryResult.MenuNotFound
+      ?: return CreateCategoryResult.MenuNotFound
 
     return runCatching {
-      val category = menu.addCategory(CategoryName.of(command.name))
+      val variations = command.variations.map { it.toDomain() }
+      val category = menu.createCategory(CategoryName.of(command.name), variations)
       menuRepository.save(menu)
-      AddCategoryResult.Success(category.id.value)
-    }.getOrElse { AddCategoryResult.InvalidCategory(it.message ?: "") }
+      CreateCategoryResult.Success(category.id.value)
+    }.getOrElse { CreateCategoryResult.InvalidCategory(it.message ?: "") }
   }
 }
 
@@ -39,6 +43,7 @@ data class UpdateCategoryCommand(
   val menuId: String,
   val categoryId: String,
   val name: String,
+  val variations: List<VariationDto> = emptyList(),
 )
 
 sealed interface UpdateCategoryResult {
@@ -55,7 +60,11 @@ class UpdateCategoryUseCase(
       ?: return UpdateCategoryResult.MenuNotFound
 
     return runCatching {
-      menu.updateCategory(CategoryId(command.categoryId), CategoryName.of(command.name))
+      menu.updateCategory(
+        CategoryId(command.categoryId),
+        CategoryName.of(command.name),
+        command.variations.map { it.toDomain() },
+      )
       menuRepository.save(menu)
       UpdateCategoryResult.Success
     }.getOrElse { UpdateCategoryResult.InvalidCategory(it.message ?: "") }

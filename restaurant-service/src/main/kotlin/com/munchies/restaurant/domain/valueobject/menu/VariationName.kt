@@ -12,6 +12,6 @@ value class VariationName private constructor(val value: String) {
   companion object {
     private const val MAX_NAME_LENGTH = 100
 
-    fun of(value: String): VariationName = VariationName(value.trim())
+    operator fun invoke(value: String): VariationName = VariationName(value.trim())
   }
 }
