@@ -7,51 +7,63 @@ import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.menu.MenuName
 import com.munchies.restaurant.domain.valueobject.menu.Validity
-import java.time.LocalDate
-import java.time.MonthDay
 
-sealed interface ValidityConfig {
-  data class Period(val start: LocalDate, val end: LocalDate) : ValidityConfig
-  data class Yearly(
-    val startMonth: Int,
-    val startDay: Int,
-    val endMonth: Int,
-    val endDay: Int,
-  ) : ValidityConfig
-  data class From(val start: LocalDate) : ValidityConfig
-  data class Until(val end: LocalDate) : ValidityConfig
-  data object Always : ValidityConfig
+data class MenuUseCases(val repository: MenuRepository) {
+  val add = CreateMenuUseCase(repository)
+  val update = UpdateMenuUseCase(repository)
+  val remove = RemoveMenuUseCase(repository)
+  val getDetails = GetMenuUseCase(repository)
+  val getRestaurantMenus = GetRestaurantMenusUseCase(repository)
+}
 
-  fun toDomain(): Validity = when (this) {
-    is Period -> Validity.period(start, end)
-    is Yearly -> Validity.yearly(MonthDay.of(startMonth, startDay), MonthDay.of(endMonth, endDay))
-    is From -> Validity.from(start)
-    is Until -> Validity.until(end)
-    is Always -> Validity.always
+data class GetMenuCommand(val menuId: String)
+
+sealed interface GetMenuResult {
+  data class Success(val menu: Menu) : GetMenuResult
+  data object MenuNotFound : GetMenuResult
+}
+
+class GetMenuUseCase(
+  private val menuRepository: MenuRepository,
+) : UseCase<GetMenuCommand, GetMenuResult> {
+  override suspend operator fun invoke(command: GetMenuCommand): GetMenuResult {
+    val menu = menuRepository.findById(MenuId(command.menuId))
+      ?: return GetMenuResult.MenuNotFound
+    return GetMenuResult.Success(menu)
   }
 }
 
-data class MenuUseCases(
-  val add: AddMenuUseCase,
-  val update: UpdateMenuUseCase,
-  val remove: RemoveMenuUseCase,
-)
+data class GetRestaurantMenusCommand(val restaurantId: String)
 
-data class AddMenuCommand(
+sealed interface GetRestaurantMenusResult {
+  data class Success(val menus: List<Menu>) : GetRestaurantMenusResult
+}
+
+class GetRestaurantMenusUseCase(
+  private val menuRepository: MenuRepository,
+) : UseCase<GetRestaurantMenusCommand, GetRestaurantMenusResult> {
+  override suspend fun invoke(command: GetRestaurantMenusCommand): GetRestaurantMenusResult {
+    val menus = menuRepository.findAllByRestaurantId(RestaurantId(command.restaurantId))
+
+    return GetRestaurantMenusResult.Success(menus)
+  }
+}
+
+data class CreateMenuCommand(
   val restaurantId: String,
   val name: String,
   val validity: ValidityConfig,
 )
 
-sealed interface AddMenuResult {
-  data class Success(val menuId: String) : AddMenuResult
-  data class InvalidMenu(val error: String) : AddMenuResult
+sealed interface CreateMenuResult {
+  data class Success(val menuId: String) : CreateMenuResult
+  data class InvalidMenu(val error: String) : CreateMenuResult
 }
 
-class AddMenuUseCase(
+class CreateMenuUseCase(
   private val menuRepository: MenuRepository,
-) : UseCase<AddMenuCommand, AddMenuResult> {
-  override suspend operator fun invoke(command: AddMenuCommand): AddMenuResult {
+) : UseCase<CreateMenuCommand, CreateMenuResult> {
+  override suspend operator fun invoke(command: CreateMenuCommand): CreateMenuResult {
     return runCatching {
       val menu = Menu.create(
         restaurantId = RestaurantId(command.restaurantId),
@@ -59,8 +71,8 @@ class AddMenuUseCase(
         validity = command.validity.toDomain(),
       )
       menuRepository.save(menu)
-      AddMenuResult.Success(menu.id.value)
-    }.getOrElse { AddMenuResult.InvalidMenu(it.message ?: "") }
+      CreateMenuResult.Success(menu.id.value)
+    }.getOrElse { CreateMenuResult.InvalidMenu(it.message ?: "") }
   }
 }
 

@@ -3,6 +3,7 @@ package com.munchies.restaurant.application.usecase.menu
 import com.munchies.restaurant.application.UseCase
 import com.munchies.restaurant.domain.aggregate.CategoryId
 import com.munchies.restaurant.domain.aggregate.MenuId
+import com.munchies.restaurant.domain.aggregate.MenuItemDetails
 import com.munchies.restaurant.domain.aggregate.MenuItemId
 import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.Money
@@ -10,46 +11,47 @@ import com.munchies.restaurant.domain.valueobject.menu.MenuItemDescription
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemName
 import java.math.BigDecimal
 
-data class MenuItemUseCases(
-  val add: AddMenuItemUseCase,
-  val update: UpdateMenuItemUseCase,
-  val remove: RemoveMenuItemUseCase,
-)
+data class MenuItemUseCases(val repository: MenuRepository) {
+  val add = CreateMenuItemUseCase(repository)
+  val update = UpdateMenuItemUseCase(repository)
+  val remove = RemoveMenuItemUseCase(repository)
+}
 
-data class AddMenuItemCommand(
+data class CreateMenuItemCommand(
   val menuId: String,
   val categoryId: String,
   val name: String,
   val description: String,
   val price: BigDecimal,
+  val variations: List<VariationDto> = emptyList(),
 )
 
-sealed interface AddMenuItemResult {
-  data class Success(val itemId: String) : AddMenuItemResult
-  data object MenuNotFound : AddMenuItemResult
-  data object CategoryNotFound : AddMenuItemResult
-  data class InvalidItem(val error: String) : AddMenuItemResult
+sealed interface CreateMenuItemResult {
+  data class Success(val itemId: String) : CreateMenuItemResult
+  data object MenuNotFound : CreateMenuItemResult
+  data object CategoryNotFound : CreateMenuItemResult
+  data class InvalidItem(val error: String) : CreateMenuItemResult
 }
 
-class AddMenuItemUseCase(private val menuRepository: MenuRepository) :
-  UseCase<AddMenuItemCommand, AddMenuItemResult> {
-  override suspend operator fun invoke(command: AddMenuItemCommand): AddMenuItemResult {
+class CreateMenuItemUseCase(private val menuRepository: MenuRepository) :
+  UseCase<CreateMenuItemCommand, CreateMenuItemResult> {
+  override suspend operator fun invoke(command: CreateMenuItemCommand): CreateMenuItemResult {
     val menu = menuRepository.findById(MenuId(command.menuId))
-      ?: return AddMenuItemResult.MenuNotFound
+      ?: return CreateMenuItemResult.MenuNotFound
 
     val category = menu.getCategory(CategoryId(command.categoryId))
-      ?: return AddMenuItemResult.CategoryNotFound
+      ?: return CreateMenuItemResult.CategoryNotFound
 
     return runCatching {
-      val item = category.addItem(
+      val item = category.createItem(
         MenuItemName.of(command.name),
         MenuItemDescription.of(command.description),
         Money(command.price),
+        command.variations.map { it.toDomain() },
       )
       menuRepository.save(menu)
-
-      AddMenuItemResult.Success(item.id.value)
-    }.getOrElse { AddMenuItemResult.InvalidItem(it.message ?: "") }
+      CreateMenuItemResult.Success(item.id.value)
+    }.getOrElse { CreateMenuItemResult.InvalidItem(it.message ?: "") }
   }
 }
 
@@ -60,6 +62,7 @@ data class UpdateMenuItemCommand(
   val name: String,
   val description: String,
   val price: BigDecimal,
+  val variations: List<VariationDto> = emptyList(),
 )
 
 sealed interface UpdateMenuItemResult {
@@ -82,9 +85,12 @@ class UpdateMenuItemUseCase(
     return runCatching {
       category.updateItem(
         MenuItemId(command.itemId),
-        MenuItemName.of(command.name),
-        MenuItemDescription.of(command.description),
+        MenuItemDetails(
+          MenuItemName.of(command.name),
+          MenuItemDescription.of(command.description),
+        ),
         Money(command.price),
+        command.variations.map { it.toDomain() },
       )
       menuRepository.save(menu)
       UpdateMenuItemResult.Success
