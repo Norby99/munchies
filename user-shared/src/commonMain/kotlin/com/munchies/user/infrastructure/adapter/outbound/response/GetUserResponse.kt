@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 open class GetUserResponse(
   val result: GetUserResult,
+  val code: Int,
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }

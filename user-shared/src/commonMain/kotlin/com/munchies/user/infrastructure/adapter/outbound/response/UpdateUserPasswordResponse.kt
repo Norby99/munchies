@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 class UpdateUserPasswordResponse(
   val result: UpdateUserPasswordResult,
+  val code: Int,
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }

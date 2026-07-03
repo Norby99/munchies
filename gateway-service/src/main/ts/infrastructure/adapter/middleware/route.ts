@@ -1,5 +1,9 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosStatic } from "axios";
-import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
+import {
+  AuthRole,
+  HttpMethod,
+  newId,
+} from "munchies-commons/kotlin/commons-modules";
 
 const axiosClient = axios.create({
   transformRequest: [(data) => data],
@@ -42,7 +46,7 @@ function axiosMethodChooser(
 }
 
 export async function request<
-  Response extends { result: Result },
+  Response extends { result: Result; code: number },
   Result extends { type: string },
   Success extends Result,
   Failure extends Result,
@@ -52,20 +56,14 @@ export async function request<
   toJson: () => string,
   fromJson: (json: string) => Response,
   toResult: (result: Result) => Success | Failure,
-  toResponse: (result: Success | Failure) => Response,
+  toResponse: (result: Success | Failure, code: number) => Response,
   toFailure: (err: string) => Failure,
 ): Promise<Response> {
   return axiosMethodChooser(axiosClient, uri, httpMethod, toJson())
     .then((value) => {
       console.log("received data: ", value.data);
       const response = fromJson(value.data);
-      console.log("headers: \n------\n", value.headers, "\n-----");
-
-      const cookie = value.headers["set-cookie"] as string[] | undefined;
-      console.log("cookie: ", cookie);
-      const token: string | undefined = undefined 
-            
-      return toResponse(toResult(response.result));
+      return toResponse(toResult(response.result), response.code);
     })
     .catch((err) => {
       console.error("-----Error-----");
@@ -73,7 +71,7 @@ export async function request<
       console.error("with: " + toJson());
       console.error("result err: ", err);
       console.error("-----End Error-----");
-      return toResponse(toFailure(JSON.stringify(err)));
+      return toResponse(toFailure(JSON.stringify(err)), 500);
     });
 }
 
@@ -85,18 +83,21 @@ export function fillPath(path: string, ...values: (string | number)[]): string {
   let i = 0;
   return path.replace(/\{([^}]+)\}/g, () => {
     if (i >= values.length) {
-      throw new Error('Not enough values provided for path params');
+      throw new Error("Not enough values provided for path params");
     }
     return String(values[i++]);
   });
 }
 
-import { API } from "munchies-commons/kotlin/commons-modules"
-import { Express, Request, Response } from "express";
+import { API } from "munchies-commons/kotlin/commons-modules";
+import {
+  Express,
+  RequestHandler,
+} from "express";
 function getRoute<Service extends API>(
   app: Express,
   service: Service,
-  handlers: (req: Request, res: Response) => void,
+  ...handlers: RequestHandler[]
 ): Express {
   switch (service.getMethod().name) {
     case HttpMethod.POST.name:
@@ -110,16 +111,58 @@ function getRoute<Service extends API>(
   }
 }
 
-
-import { GetUser } from "../inbound/web/services/user";
-import { AuthTokenDecoder } from "./auth";
-export const routes: [(app: Express, next: any) => void] = [
+import { GetUser, RegisterUser } from "../inbound/web/services/user";
+import { AuthedRequest, injectCookie, requireAuth, requireRole } from "./auth";
+import {
+  GetUserResponse,
+  GetUserFailure,
+  RegisterUserRequest,
+  UserDTO,
+  RegisterUserResponse,
+  RegisterUserFailure,
+} from "munchies-user-service-shared/kotlin/user-modules";
+export const routes: ((app: Express, next: any) => void)[] = [
   (app: Express, next) => {
     const service = new GetUser();
-    getRoute<GetUser>(app, service, async (req, res) => {
-      const { id } = req.params;
-      const response = await service.getUser(id);
-      res.status(200).type("json").send(response.toJson());
+    getRoute<GetUser>(
+      app,
+      service,
+      requireAuth,
+      requireRole(
+        service.getRequiredAuthRole(),
+        (msg, code) => new GetUserResponse(new GetUserFailure(msg), code),
+      ),
+      async (req: AuthedRequest, res) => {
+        const response = await service.getUser(req.user!!.id);
+        res.status(response.code).type("json").send(response.toJson());
+      },
+    );
+  },
+  (app: Express, next: any) => {
+    const service = new RegisterUser();
+    getRoute<RegisterUser>(app, service, async (req, res) => {
+      const id = newId();
+      const response = await service.registerUser(
+        new RegisterUserRequest(
+          new UserDTO(
+            id,
+            "" + crypto.randomUUID(),
+            "" + crypto.randomUUID(),
+            AuthRole.CUSTOMER.name,
+          ),
+          "",
+          "",
+        ),
+      );
+      injectCookie(
+        res,
+        { id: id, role: AuthRole.CUSTOMER },  
+      )?.status(response.code).type("json").send(response.toJson())
+        ?? res.status(500).type('json').send(
+          new RegisterUserResponse(new RegisterUserFailure(
+            "Couldnt create token"
+          ), 500)
+        )
     });
   },
 ];

@@ -11,7 +11,7 @@ val JWT_SECRET_ALGORITHM = "HMAC256"
 
 @JsExport
 abstract class TokenProvider {
-  abstract fun generateToken(id: UUIDEntityId): GenerateTokenResult
+  abstract fun generateToken(id: UUIDEntityId, role: AuthRole): GenerateTokenResult
   abstract fun validateToken(token: String): ValidateTokenResult
   abstract fun refreshToken(expiredToken: String): RefreshTokenResult
   abstract fun revokeToken(token: String)
@@ -38,11 +38,14 @@ enum class AuthRole {
 
 @JsExport
 fun isAuthRoleGreaterThan(role: AuthRole, other: AuthRole): Boolean =
-  role.visibility > other.visibility
+  role.visibility >= other.visibility
 
 @JsExport sealed interface DecodedTokenResult
 
-@JsExport data object DecodedTokenSuccess : DecodedTokenResult
+@JsExport data class DecodedTokenSuccess(
+  val id: String,
+  val role: AuthRole,
+) : DecodedTokenResult
 
 @JsExport data object DecodedTokenFailure : DecodedTokenResult
 
@@ -59,7 +62,7 @@ val EXPIRATION_CLAIM: String = "expiration"
 
 @JsExport data class GenerateTokenSuccess(val token: String) : GenerateTokenResult
 
-@JsExport data object GenerateTokenFailure : GenerateTokenResult
+@JsExport data class GenerateTokenFailure(val reason: String) : GenerateTokenResult
 
 @JsExport sealed interface ValidateTokenResult
 

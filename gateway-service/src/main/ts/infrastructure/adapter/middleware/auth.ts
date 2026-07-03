@@ -20,17 +20,46 @@ import {
   ROLE_CLAIM,
   JWT_SECRET_ALGORITHM,
   JWT_SECRET_ENV_NAME,
+  AuthRole,
+  isAuthRoleGreaterThan,
 } from "munchies-commons/kotlin/commons-modules";
 
 interface TokenClaims {
   sub: string;
   [ID_CLAIM]: string;
   [ROLE_CLAIM]: string;
-  [EXPIRATION_CLAIM]: string;
   exp: number;
   iat?: number;
 }
 import jwt from "jsonwebtoken";
+export class AuthTokenProvider extends TokenProvider {
+  constructor(secret: string) {
+    super();
+    this.secret = secret;
+  }
+  private readonly secret: string;
+  generateToken(id: UUIDEntityId, role: AuthRole): GenerateTokenResult {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const expSeconds = nowSeconds + 60 * 60 * 24 * 7;
+
+    const payload: TokenClaims = {
+      sub: id.value,
+      [ID_CLAIM]: id.value,
+      [ROLE_CLAIM]: role.name,
+      exp: expSeconds,
+      iat: nowSeconds,
+    };
+
+    return new GenerateTokenSuccess(jwt.sign(payload, this.secret));
+  }
+  refreshToken(expiredToken: string): RefreshTokenResult {
+    return new RefreshTokenSuccess("");
+  }
+  validateToken(token: string): ValidateTokenResult {
+    return ValidateTokenSuccess;
+  }
+  revokeToken(token: string): void {}
+}
 
 export class AuthTokenDecoder extends TokenDecoder {
   private readonly secret: string | undefined = process.env.JWT_SECRET;
@@ -38,20 +67,108 @@ export class AuthTokenDecoder extends TokenDecoder {
   validateAndDecodeToken(token: string): DecodedTokenResult {
     if (!this.secret) return DecodedTokenFailure;
     try {
-      const decoded = jwt.verify(token, this.secret, {
-        algorithms: ["HS256"],
-      }) as TokenClaims;
+      const decoded = jwt.verify(token, this.secret) as TokenClaims;
 
       for (const claim of [ID_CLAIM, ROLE_CLAIM, EXPIRATION_CLAIM]) {
         if (!(claim in decoded)) {
           return DecodedTokenFailure;
         }
       }
-      console.log("", decoded);
-      return DecodedTokenSuccess;
+      console.log("decoded token: ", decoded);
+      if (decoded[ID_CLAIM])
+        return new DecodedTokenSuccess(
+          decoded[ID_CLAIM]!!?.toString(),
+          decoded[ROLE_CLAIM]!!.toString() == AuthRole.CUSTOMER.name
+            ? AuthRole.CUSTOMER
+            : AuthRole.MANAGER,
+        );
+      else return DecodedTokenFailure;
     } catch (e: any) {
       return DecodedTokenFailure;
     }
   }
+}
+console.log(process.env)
+const jwt_secret = process.env["JWT_SECRET"];
+console.log(jwt_secret);
+if (!jwt_secret) throw new Error("Cannot be missing JWT SECRET");
+const provider = new AuthTokenProvider(jwt_secret);
+const decoder = new AuthTokenDecoder();
 
+import {
+  Request as ExpressRequest,
+  NextFunction,
+  RequestHandler as ExpressRequestHandler,
+  Response as ExpressResponse,
+} from "express";
+
+export interface AuthInfo {
+  id: string;
+  role: AuthRole;
+}
+
+export interface AuthedRequest extends ExpressRequest {
+  user?: AuthInfo;
+}
+export function requireAuth(): ExpressRequestHandler {
+  return async (
+    req: AuthedRequest,
+    res: ExpressResponse,
+    next: NextFunction,
+  ) => {
+    console.log(req.headers);
+    decoder.validateAndDecodeToken("");
+    next();
+  };
+}
+
+export function requireRole<
+  Response extends {
+    toJson(): string;
+  },
+>(
+  requiredRole: AuthRole,
+  invalidRoleResponse: (msg: string, code: number) => Response,
+): ExpressRequestHandler {
+  return async (
+    req: AuthedRequest,
+    res: ExpressResponse,
+    next: NextFunction,
+  ) => {
+    const unauthorizedCode = 401;
+    if (!req.user) {
+      res
+        .status(unauthorizedCode)
+        .type("json")
+        .send(invalidRoleResponse("Missing role", unauthorizedCode).toJson());
+      return;
+    }
+    if (isAuthRoleGreaterThan(req.user?.role, requiredRole)) next();
+    else
+      res
+        .status(unauthorizedCode)
+        .type("json")
+        .send(invalidRoleResponse("Invalid role", unauthorizedCode).toJson());
+    return;
+  };
+}
+
+export function injectCookie<Response extends { toJson(): string }>(
+  res: ExpressResponse,
+  info: AuthInfo,
+): ExpressResponse | null {
+  const token = provider.generateToken(new UUIDEntityId(info.id), info.role);
+  if (token instanceof GenerateTokenFailure) {
+    return null;
+  } else {
+    const success = token as GenerateTokenSuccess;
+    res.cookie("authToken", success.token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    return res;
+  }
 }

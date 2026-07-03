@@ -9,7 +9,7 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class DeleteUserResponse(val result: DeleteUserResult) {
+class DeleteUserResponse(val result: DeleteUserResult, val code: Int) {
   fun toJson(): String = Json.encodeToString(this)
 }
 

@@ -130,10 +130,16 @@ class MicronautUserController(
   override fun getUser(@PathVariable id: String): HttpResponse<GetUserResponse> {
     return when (val res = getUser.execute(UserId(id))) {
       is GetUser.Companion.GetUserResult.Success -> HttpResponse.ok(
-        GetUserResponse(GetUserSuccess(res.user.toDTO())),
+        GetUserResponse(
+          GetUserSuccess(res.user.toDTO()),
+          HttpStatus.OK.code,
+        ),
       )
       GetUser.Companion.GetUserResult.NotFound -> HttpResponse.notFound(
-        GetUserResponse(GetUserFailure("Not Found")),
+        GetUserResponse(
+          GetUserFailure("Not Found"),
+          HttpStatus.NOT_FOUND.code,
+        ),
       )
     }
   }
@@ -167,13 +173,19 @@ class MicronautUserController(
   ): HttpResponse<RegisterUserResponse> {
     return when (val msg = RegisterUserRequestValidator().validate(request)) {
       is InvalidInput ->
-        HttpResponse.badRequest(RegisterUserResponse(RegisterUserFailure(msg.reason)))
+        HttpResponse.badRequest(
+          RegisterUserResponse(
+            RegisterUserFailure(msg.reason),
+            HttpStatus.BAD_REQUEST.code,
+          ),
+        )
       else -> {
         when (val user = request.user.toDomain()) {
           is UserDTOFactory.UserDTOFactoryResult.Failure ->
             HttpResponse.badRequest(
               RegisterUserResponse(
                 RegisterUserFailure(user.reason),
+                HttpStatus.BAD_REQUEST.code,
               ),
             )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
@@ -197,6 +209,7 @@ class MicronautUserController(
                       RegisterUserSuccess(
                         "User registered successfully",
                       ),
+                      HttpStatus.OK.code,
                     ),
                   )
               }
@@ -206,7 +219,9 @@ class MicronautUserController(
                     RegisterUserResponse(
                       RegisterUserFailure(
                         "User is already registered",
+
                       ),
+                      HttpStatus.UNAUTHORIZED.code,
                     ),
                   )
               is RegisterUser.Companion.RegisterUserResult.Failure ->
@@ -216,6 +231,7 @@ class MicronautUserController(
                       RegisterUserFailure(
                         "An error has occurred: " + res.reason,
                       ),
+                      HttpStatus.INTERNAL_SERVER_ERROR.code,
                     ),
                   )
             }
@@ -256,7 +272,9 @@ class MicronautUserController(
         LoginUserResponse(
           LoginUserFailure(
             msg.reason,
+
           ),
+          HttpStatus.BAD_REQUEST.code,
         ),
       )
       else -> {
@@ -275,6 +293,7 @@ class MicronautUserController(
                   LoginUserSuccess(
                     "User logged successfully",
                   ),
+                  HttpStatus.OK.code,
                 ),
               )
           }
@@ -284,6 +303,7 @@ class MicronautUserController(
               .body(
                 LoginUserResponse(
                   LoginUserFailure("Unauthorized"),
+                  HttpStatus.UNAUTHORIZED.code,
                 ),
               )
           else ->
@@ -293,6 +313,7 @@ class MicronautUserController(
                   LoginUserFailure(
                     "Invalid email or password",
                   ),
+                  HttpStatus.BAD_REQUEST.code,
                 ),
               )
         }
@@ -332,6 +353,7 @@ class MicronautUserController(
         HttpResponse.badRequest(
           UpdateUserPasswordResponse(
             UpdateUserPasswordFailure(msg.reason),
+            HttpStatus.BAD_REQUEST.code,
           ),
         )
       else -> {
@@ -350,6 +372,7 @@ class MicronautUserController(
                 UpdateUserPasswordSuccess(
                   "Password updated successfully",
                 ),
+                HttpStatus.OK.code,
               ),
             )
 
@@ -359,6 +382,7 @@ class MicronautUserController(
                 UpdateUserPasswordFailure(
                   "Invalid old password",
                 ),
+                HttpStatus.BAD_REQUEST.code,
               ),
             )
 
@@ -370,6 +394,7 @@ class MicronautUserController(
                   UpdateUserPasswordFailure(
                     "Unauthorized",
                   ),
+                  HttpStatus.UNAUTHORIZED.code,
                 ),
               )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UnauthorizedOperation ->
@@ -380,11 +405,21 @@ class MicronautUserController(
                   UpdateUserPasswordFailure(
                     "Unauthorized",
                   ),
+                  HttpStatus.UNAUTHORIZED.code,
+
                 ),
               )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
             HttpResponse.notFound<UpdateUserPasswordResponse>()
-              .body(UpdateUserPasswordResponse(UpdateUserPasswordFailure("Not found")))
+              .body(
+                UpdateUserPasswordResponse(
+                  UpdateUserPasswordFailure(
+                    "Not found",
+                  ),
+                  HttpStatus.NOT_FOUND.code,
+
+                ),
+              )
         }
       }
     }
@@ -419,14 +454,23 @@ class MicronautUserController(
         HttpResponse
           .badRequest(
             UpdateUserInfoResponse(
-              UpdateUserInfoFailure(msg.reason),
+              UpdateUserInfoFailure(
+                msg.reason,
+              ),
+              HttpStatus.BAD_REQUEST.code,
             ),
           )
       else -> {
         when (val user = request.user.toDomain()) {
           is UserDTOFactory.UserDTOFactoryResult.Failure ->
             HttpResponse.badRequest(
-              UpdateUserInfoResponse(UpdateUserInfoFailure(user.reason)),
+              UpdateUserInfoResponse(
+                UpdateUserInfoFailure(
+                  user.reason,
+                ),
+                HttpStatus.BAD_REQUEST.code,
+
+              ),
             )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
             when (
@@ -439,17 +483,28 @@ class MicronautUserController(
                 HttpResponse.ok(
                   UpdateUserInfoResponse(
                     UpdateUserInfoSuccess("User info updated successfully"),
+                    HttpStatus.OK.code,
                   ),
                 )
 
               is UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
                 HttpResponse
                   .notFound<UpdateUserInfoResponse>()
-                  .body(UpdateUserInfoResponse(UpdateUserInfoFailure("Not Found")))
+                  .body(
+                    UpdateUserInfoResponse(
+                      UpdateUserInfoFailure(
+                        "Not Found",
+                      ),
+                      HttpStatus.NOT_FOUND.code,
+                    ),
+                  )
 
               is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure ->
                 HttpResponse.badRequest(
-                  UpdateUserInfoResponse(UpdateUserInfoFailure(res.reason)),
+                  UpdateUserInfoResponse(
+                    UpdateUserInfoFailure(res.reason),
+                    HttpStatus.BAD_REQUEST.code,
+                  ),
                 )
             }
           }
@@ -468,7 +523,10 @@ class MicronautUserController(
   override fun deleteUser(@Body request: DeleteUserRequest): HttpResponse<DeleteUserResponse> {
     return when (val msg = DeleteUserRequestValidator().validate(request)) {
       is InvalidInput -> HttpResponse.badRequest(
-        DeleteUserResponse(DeleteUserFailure(msg.reason)),
+        DeleteUserResponse(
+          DeleteUserFailure(msg.reason),
+          HttpStatus.BAD_REQUEST.code,
+        ),
       )
       else -> {
         when (val res = deleteUser.execute(UserId(request.userId))) {
@@ -477,12 +535,18 @@ class MicronautUserController(
               DeleteUserSuccess(
                 res.user.toDTO(),
               ),
+              HttpStatus.OK.code,
             ),
           )
           DeleteUser.Companion.DeleteUserResult.NotFound ->
             HttpResponse
               .notFound<DeleteUserResponse>()
-              .body(DeleteUserResponse(DeleteUserFailure("Not Found")))
+              .body(
+                DeleteUserResponse(
+                  DeleteUserFailure("Not Found"),
+                  HttpStatus.NOT_FOUND.code,
+                ),
+              )
         }
       }
     }

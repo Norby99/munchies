@@ -8,7 +8,7 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class UpdateUserInfoResponse(val result: UpdateUserInfoResult) {
+class UpdateUserInfoResponse(val result: UpdateUserInfoResult, val code: Int) {
   fun toJson(): String = Json.encodeToString(this)
 }
 
