@@ -31,14 +31,14 @@ export class GetUser extends GetUserAPI {
             return result as GetUserFailure;
           else throw new Error(String(result));
         },
-        (result: GetUserResult) => new GetUserResponse(result),
+        (result: GetUserResult, code) => new GetUserResponse(result, code),
         (err) => new GetUserFailure(err),
       );
     } catch (e: any) {
       console.error("Something went wrong with Register");
       console.error("error is " + e);
       return Promise.resolve(
-        new GetUserResponse(new GetUserFailure(JSON.stringify(e))),
+        new GetUserResponse(new GetUserFailure(JSON.stringify(e)), 500),
       );
     }
   }
@@ -70,14 +70,14 @@ export class RegisterUser extends RegisterUserAPI {
             return result as RegisterUserSuccess;
           else return result as RegisterUserFailure;
         },
-        (result: RegisterUserResult) => new RegisterUserResponse(result),
+        (result: RegisterUserResult, code) => new RegisterUserResponse(result, code),
         (err) => new RegisterUserFailure(err),
       );
     } catch (e: any) {
       console.log("Something went wrong");
       console.log("error is " + JSON.stringify(e));
       return Promise.resolve(
-        new RegisterUserResponse(new RegisterUserFailure(JSON.stringify(e))),
+        new RegisterUserResponse(new RegisterUserFailure(JSON.stringify(e)), 500),
       );
     }
   }
@@ -108,14 +108,14 @@ export class LoginUser extends LoginUserAPI {
             return result as LoginUserSuccess;
           else return result as LoginUserFailure;
         },
-        (result: LoginUserResult) => new LoginUserResponse(result),
+        (result: LoginUserResult, code) => new LoginUserResponse(result, code),
         (err) => new LoginUserFailure(err),
       );
     } catch (e: any) {
       console.log("Something went wrong");
       console.log("error is " + JSON.stringify(e));
       return Promise.resolve(
-        new LoginUserResponse(new LoginUserFailure(JSON.stringify(e))),
+        new LoginUserResponse(new LoginUserFailure(JSON.stringify(e)), 500),
       );
     }
   }
@@ -148,7 +148,7 @@ export class UpdateUserInfo extends UpdateUserInfoAPI {
             return result as UpdateUserInfoSuccess;
           else return result as UpdateUserInfoFailure;
         },
-        (result: UpdateUserInfoResult) => new UpdateUserInfoResponse(result),
+        (result: UpdateUserInfoResult, code) => new UpdateUserInfoResponse(result, code),
         (err) => new UpdateUserInfoFailure(err),
       );
     } catch (e: any) {
@@ -157,6 +157,7 @@ export class UpdateUserInfo extends UpdateUserInfoAPI {
       return Promise.resolve(
         new UpdateUserInfoResponse(
           new UpdateUserInfoFailure(JSON.stringify(e)),
+          500
         ),
       );
     }
@@ -190,8 +191,8 @@ export class UpdateUserPassword extends UpdateUserPasswordAPI {
             return result as UpdateUserPasswordSuccess;
           else return result as UpdateUserPasswordFailure;
         },
-        (result: UpdateUserPasswordResult) =>
-          new UpdateUserPasswordResponse(result),
+        (result: UpdateUserPasswordResult, code) =>
+          new UpdateUserPasswordResponse(result, code),
         (err) => new UpdateUserPasswordFailure(err),
       );
     } catch (e: any) {
@@ -200,6 +201,7 @@ export class UpdateUserPassword extends UpdateUserPasswordAPI {
       return Promise.resolve(
         new UpdateUserPasswordResponse(
           new UpdateUserPasswordFailure(JSON.stringify(e)),
+          500
         ),
       );
     }
@@ -231,14 +233,14 @@ export class DeleteUser extends DeleteUserAPI {
             return result as DeleteUserSuccess;
           else return result as DeleteUserFailure;
         },
-        (result: DeleteUserResult) => new DeleteUserResponse(result),
+        (result: DeleteUserResult, code) => new DeleteUserResponse(result, code),
         (err) => new DeleteUserFailure(err),
       );
     } catch (e: any) {
       console.log("Something went wrong");
       console.log("error is " + JSON.stringify(e));
       return Promise.resolve(
-        new DeleteUserResponse(new DeleteUserFailure(JSON.stringify(e))),
+        new DeleteUserResponse(new DeleteUserFailure(JSON.stringify(e)), 500),
       );
     }
   }

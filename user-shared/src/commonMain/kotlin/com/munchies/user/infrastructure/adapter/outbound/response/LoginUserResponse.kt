@@ -8,7 +8,7 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class LoginUserResponse(val result: LoginUserResult) {
+class LoginUserResponse(val result: LoginUserResult, val code: Int) {
   fun toJson(): String = Json.encodeToString(this)
 }
 
