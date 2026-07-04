@@ -40,14 +40,14 @@ enum class AuthRole {
 fun isAuthRoleGreaterThan(role: AuthRole, other: AuthRole): Boolean =
   role.visibility >= other.visibility
 
-@JsExport sealed interface DecodedTokenResult
+@JsExport abstract class DecodedTokenResult
 
 @JsExport data class DecodedTokenSuccess(
   val id: String,
   val role: AuthRole,
-) : DecodedTokenResult
+) : DecodedTokenResult()
 
-@JsExport data object DecodedTokenFailure : DecodedTokenResult
+@JsExport data class DecodedTokenFailure(val reason: String) : DecodedTokenResult()
 
 @JsExport
 val ID_CLAIM: String = "id"

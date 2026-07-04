@@ -12,7 +12,7 @@ import kotlin.js.Promise
 @JsExport
 abstract class JsGetUserAPI : UserAPI.GetUserAPI<Promise<GetUserResponse>>, API() {
   override fun getMethod(): HttpMethod = HttpMethod.GET
-  override fun getPath(): String = UserServiceConfig.SERVICE_PATH + UserServiceConfig.GET_USER_PATH
+  override fun getPath(): String = UserServiceConfig.SERVICE_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun getUser(id: String): Promise<GetUserResponse>

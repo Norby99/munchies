@@ -20,7 +20,7 @@ export class GetUser extends GetUserAPI {
       const uri = process.env.USER_SERVICE_URL;
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
       return axiosRequest(
-        fillPath(uri + this.getPath(), id),
+        fillPath(uri + this.getPath() + "{id}/", id),
         this.getMethod(),
         () => "",
         getUserResponseFromJson,

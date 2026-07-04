@@ -101,13 +101,13 @@ function getRoute<Service extends API>(
 ): Express {
   switch (service.getMethod().name) {
     case HttpMethod.POST.name:
-      return app.post(convertRouteToExpress(service.getPath()), handlers);
+      return app.post(convertRouteToExpress(service.getPath()), ...handlers);
     case HttpMethod.DELETE.name:
-      return app.delete(convertRouteToExpress(service.getPath()), handlers);
+      return app.delete(convertRouteToExpress(service.getPath()), ...handlers);
     case HttpMethod.PATCH.name:
-      return app.patch(convertRouteToExpress(service.getPath()), handlers);
+      return app.patch(convertRouteToExpress(service.getPath()), ...handlers);
     default:
-      return app.get(convertRouteToExpress(service.getPath()), handlers);
+      return app.get(convertRouteToExpress(service.getPath()), ...handlers);
   }
 }
 
@@ -127,13 +127,15 @@ export const routes: ((app: Express, next: any) => void)[] = [
     getRoute<GetUser>(
       app,
       service,
-      requireAuth,
+      requireAuth(),
       requireRole(
         service.getRequiredAuthRole(),
         (msg, code) => new GetUserResponse(new GetUserFailure(msg), code),
       ),
       async (req: AuthedRequest, res) => {
+        console.info("Received: ", req)
         const response = await service.getUser(req.user!!.id);
+        console.info("Responding: ", response)
         res.status(response.code).type("json").send(response.toJson());
       },
     );
@@ -150,10 +152,11 @@ export const routes: ((app: Express, next: any) => void)[] = [
             "" + crypto.randomUUID(),
             AuthRole.CUSTOMER.name,
           ),
-          "",
-          "",
+          "password hash",
+          "salt value",
         ),
       );
+      console.log("newid: ", id)
       injectCookie(
         res,
         { id: id, role: AuthRole.CUSTOMER },  
