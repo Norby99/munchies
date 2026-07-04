@@ -2,9 +2,11 @@ import "@main/infrastructure/adapter/inbound/web/services/user";
 import express from "express";
 import expressListEndpoints from "express-list-endpoints";
 import { routes } from "./infrastructure/adapter/middleware/route";
+import cookieParser from "cookie-parser"
 async function main(): Promise<void> {
   const app = express();
   app.use(express.json());
+  app.use(cookieParser());
  
   routes.forEach(route => {
     route(app, () => {})

@@ -21,7 +21,6 @@ import {
   JWT_SECRET_ALGORITHM,
   JWT_SECRET_ENV_NAME,
   AuthRole,
-  isAuthRoleGreaterThan,
 } from "munchies-commons/kotlin/commons-modules";
 
 interface TokenClaims {
@@ -65,32 +64,28 @@ export class AuthTokenDecoder extends TokenDecoder {
   private readonly secret: string | undefined = process.env.JWT_SECRET;
 
   validateAndDecodeToken(token: string): DecodedTokenResult {
-    if (!this.secret) return DecodedTokenFailure;
+    if (!this.secret) return new DecodedTokenFailure("Absent secret");
     try {
       const decoded = jwt.verify(token, this.secret) as TokenClaims;
 
-      for (const claim of [ID_CLAIM, ROLE_CLAIM, EXPIRATION_CLAIM]) {
+      for (const claim of [ID_CLAIM, ROLE_CLAIM]) {
         if (!(claim in decoded)) {
-          return DecodedTokenFailure;
+          return new DecodedTokenFailure("Not all claims are present");
         }
       }
       console.log("decoded token: ", decoded);
-      if (decoded[ID_CLAIM])
         return new DecodedTokenSuccess(
           decoded[ID_CLAIM]!!?.toString(),
           decoded[ROLE_CLAIM]!!.toString() == AuthRole.CUSTOMER.name
             ? AuthRole.CUSTOMER
             : AuthRole.MANAGER,
         );
-      else return DecodedTokenFailure;
     } catch (e: any) {
-      return DecodedTokenFailure;
+      return new DecodedTokenFailure("error: " + e);
     }
   }
 }
-console.log(process.env)
 const jwt_secret = process.env["JWT_SECRET"];
-console.log(jwt_secret);
 if (!jwt_secret) throw new Error("Cannot be missing JWT SECRET");
 const provider = new AuthTokenProvider(jwt_secret);
 const decoder = new AuthTokenDecoder();
@@ -116,12 +111,28 @@ export function requireAuth(): ExpressRequestHandler {
     res: ExpressResponse,
     next: NextFunction,
   ) => {
-    console.log(req.headers);
-    decoder.validateAndDecodeToken("");
-    next();
+    const missingToken = 500
+    console.log("cookies", req.cookies["authToken"]);
+    if (req.cookies["authToken"] === undefined) {
+      res.status(missingToken).type("json").send({ error: "missing token"})
+      return;
+    }
+    else {  
+      const tokenRes = decoder.validateAndDecodeToken(req.cookies.authToken);
+      
+      if (tokenRes instanceof DecodedTokenSuccess) {
+        req.user = { id: tokenRes.id, role: tokenRes.role } 
+        next();
+      }
+      else {
+        console.log("Token decode was not successful")
+        res.status(missingToken).type("json").send({ error: "invalid token: " + (tokenRes as DecodedTokenFailure).toString() })
+        return;  
+      }
+    }
   };
 }
-
+import { isAuthRoleGreaterThan } from "munchies-commons/kotlin/commons-modules";
 export function requireRole<
   Response extends {
     toJson(): string;
@@ -143,7 +154,7 @@ export function requireRole<
         .send(invalidRoleResponse("Missing role", unauthorizedCode).toJson());
       return;
     }
-    if (isAuthRoleGreaterThan(req.user?.role, requiredRole)) next();
+    if (req.user?.role.visibility >= requiredRole.visibility) next();
     else
       res
         .status(unauthorizedCode)
