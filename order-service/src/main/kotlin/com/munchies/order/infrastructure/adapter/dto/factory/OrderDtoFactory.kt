@@ -12,10 +12,10 @@ import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDomain
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDto
 
-object OrderDTOFactory {
+object OrderDtoFactory {
   fun Order.toDto(): OrderDto {
     val itemsDto = items.map { it.toDto() }
     return when (this) {

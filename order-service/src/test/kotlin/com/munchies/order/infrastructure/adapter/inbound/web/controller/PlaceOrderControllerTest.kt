@@ -3,7 +3,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createPlaceOrderRequest
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe

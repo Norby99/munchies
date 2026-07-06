@@ -4,7 +4,7 @@ import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
-object OrderItemDTOFactory {
+object OrderItemDtoFactory {
   fun OrderItem.toDto(): OrderItemDto {
     return OrderItemDto(menuItemId.value, quantity)
   }

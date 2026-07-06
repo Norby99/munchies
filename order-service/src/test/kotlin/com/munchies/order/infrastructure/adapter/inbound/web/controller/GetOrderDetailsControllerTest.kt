@@ -4,7 +4,7 @@ import com.munchies.order.application.port.inbound.GetOrderDetails
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpRequest
