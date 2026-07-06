@@ -41,6 +41,10 @@ fun createDiscardOrderRequest(orderId: OrderId = defaultOrderId) = DiscardOrderR
   customerId = defaultCustomerId.value,
 )
 
+/** Creates an UpdateTakeawayOrderRequest from a TakeawayOrder.
+ * @param order The TakeawayOrder to convert to an UpdateTakeawayOrderRequest. Defaults to a new TakeawayOrder.
+ * @return An UpdateTakeawayOrderRequest with the same data as the TakeawayOrder.
+ */
 fun createUpdateTakeawayOrderRequest(order: TakeawayOrder = createTakeawayOrder()) =
   UpdateTakeawayOrderRequest(
     orderId = order.id.value,
@@ -49,6 +53,10 @@ fun createUpdateTakeawayOrderRequest(order: TakeawayOrder = createTakeawayOrder(
     customerName = order.takeawayInfo.customerName,
   )
 
+/** Creates an UpdateDeliveryOrderRequest from a DeliveryOrder.
+ * @param order The DeliveryOrder to convert to an UpdateDeliveryOrderRequest. Defaults to a new DeliveryOrder.
+ * @return An UpdateDeliveryOrderRequest with the same data as the DeliveryOrder.
+ */
 fun createUpdateDeliveryOrderRequest(order: DeliveryOrder = createDeliveryOrder()) =
   UpdateDeliveryOrderRequest(
     orderId = order.id.value,
@@ -59,6 +67,12 @@ fun createUpdateDeliveryOrderRequest(order: DeliveryOrder = createDeliveryOrder(
     customerPhone = order.deliveryInfo.customerPhone,
   )
 
+/**
+ * Creates an UpdateOrderItemsRequest from a DeliveryOrder and a list of OrderItemDto.
+ * @param order The DeliveryOrder to convert to an UpdateOrderItemsRequest. Defaults to a new DeliveryOrder.
+ * @param items The list of OrderItemDto to include in the request. Defaults to a new list of OrderItemDto.
+ * @return An UpdateOrderItemsRequest with the same data as the DeliveryOrder and the given items.
+ */
 fun createUpdateOrderItemsRequest(
   order: DeliveryOrder = createDeliveryOrder(),
   items: List<OrderItemDto> = createItemsDto(),
@@ -68,8 +82,9 @@ fun createUpdateOrderItemsRequest(
   items = items,
 )
 
-/**
- *
+/** Creates an AdvanceOrderStatusRequest from an OrderId.
+ * @param orderId The OrderId of the order to advance. Defaults to defaultOrderId
+ * @return An AdvanceOrderStatusRequest with the given OrderId.
  */
 fun createAdvanceOrderStatusRequest(orderId: OrderId = defaultOrderId) = AdvanceOrderStatusRequest(
   orderId = orderId.value,
