@@ -34,8 +34,10 @@ class CategoryTest {
     val category = Category(name = CategoryName.of("Pizzas"))
 
     val item = category.createItem(
-      name = MenuItemName.of("Margherita"),
-      description = MenuItemDescription.of("Classic"),
+      details = MenuItemDetails(
+        MenuItemName.of("Margherita"),
+        MenuItemDescription.of("Classic"),
+      ),
       price = Money(BigDecimal("8.0")),
     )
 
@@ -46,8 +48,10 @@ class CategoryTest {
   fun `should update item in category`() {
     val category = Category(name = CategoryName.of("Pizzas"))
     val item = category.createItem(
-      MenuItemName.of("Margherita"),
-      MenuItemDescription.of("Classic"),
+      MenuItemDetails(
+        MenuItemName.of("Margherita"),
+        MenuItemDescription.of("Classic"),
+      ),
       Money(BigDecimal("8.0")),
       emptyList(),
     )
@@ -98,8 +102,10 @@ class CategoryTest {
   fun `should remove item from category`() {
     val category = Category(name = CategoryName.of("Pizzas"))
     val item = category.createItem(
-      MenuItemName.of("Margherita"),
-      MenuItemDescription.of("Classic"),
+      MenuItemDetails(
+        MenuItemName.of("Margherita"),
+        MenuItemDescription.of("Classic"),
+      ),
       Money(BigDecimal("8.0")),
     )
 
