@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
 import java.time.MonthDay
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -117,5 +118,13 @@ class ValidityTest {
     assertTrue(combined.isValid(LocalDateTime.of(2024, 5, 24, 19, 0)))
     assertFalse(combined.isValid(LocalDateTime.of(2024, 5, 24, 13, 0)))
     assertFalse(combined.isValid(LocalDateTime.of(2024, 5, 23, 19, 0)))
+  }
+
+  @Test
+  fun `same periods should equal`() {
+    val period1 = Validity.period(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
+    val period2 = Validity.period(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
+
+    assertEquals(period1, period2)
   }
 }
