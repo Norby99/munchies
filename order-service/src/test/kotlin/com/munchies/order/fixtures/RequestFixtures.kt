@@ -16,20 +16,64 @@ import com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayO
  * @param order The DeliveryOrder to convert to a PlaceOrderRequest.
  * @return A PlaceOrderRequest.Delivery object with the same data as the DeliveryOrder.
  */
-fun createPlaceOrderRequest(order: DeliveryOrder = createDeliveryOrder()) = PlaceOrderRequest(
-  restaurantId = order.restaurantId.value,
-  customerId = order.customerId.value,
-  items = order.items.map {
-    OrderItemDto(
-      menuItemId = it.menuItemId.value,
-      quantity = it.quantity,
-    )
-  },
-  orderType = OrderType.DELIVERY,
-  estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime,
-  deliveryAddress = order.deliveryInfo.deliveryAddress,
-  bellName = order.deliveryInfo.bellName,
-  customerPhone = order.deliveryInfo.customerPhone,
+fun createPlaceOrderRequest(order: DeliveryOrder = createDeliveryOrder()) =
+  createTestPlaceOrderRequest(
+    orderType = OrderType.DELIVERY,
+    restaurantId = order.restaurantId.value,
+    customerId = order.customerId.value,
+    items = order.items.map {
+      OrderItemDto(
+        menuItemId = it.menuItemId.value,
+        quantity = it.quantity,
+      )
+    },
+    estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime,
+    deliveryAddress = order.deliveryInfo.deliveryAddress,
+    bellName = order.deliveryInfo.bellName,
+    customerPhone = order.deliveryInfo.customerPhone,
+  )
+
+/** Creates a PlaceOrderRequest.
+ * @param orderType The type of the order (DELIVERY, TAKEAWAY, DINE_IN).
+ * @param restaurantId The ID of the restaurant. Defaults to defaultRestaurantId.
+ * @param customerId The ID of the customer. Defaults to defaultCustomerId.
+ * @param items The list of OrderItemDto. Defaults to a new list of OrderItem
+ * @param estimatedDeliveryTime The estimated delivery time for DELIVERY orders. Optional.
+ * @param deliveryAddress The delivery address for DELIVERY orders. Optional.
+ * @param bellName The bell name for DELIVERY orders. Optional.
+ * @param customerPhone The customer phone number for DELIVERY orders. Optional.
+ * @param pickupTime The pickup time for TAKEAWAY orders. Optional.
+ * @param customerName The customer name for TAKEAWAY orders. Optional.
+ * @param tableNumber The table number for DINE_IN orders. Optional.
+ * @param numberOfGuests The number of guests for DINE_IN orders. Optional.
+ * @return A PlaceOrderRequest with the given parameters.
+ */
+fun createTestPlaceOrderRequest(
+  orderType: OrderType,
+  restaurantId: String = defaultRestaurantId.value,
+  customerId: String = defaultCustomerId.value,
+  items: List<OrderItemDto> = createItemsDto(),
+  estimatedDeliveryTime: Long? = null,
+  deliveryAddress: String? = null,
+  bellName: String? = null,
+  customerPhone: String? = null,
+  pickupTime: Long? = null,
+  customerName: String? = null,
+  tableNumber: Int? = null,
+  numberOfGuests: Int? = null,
+) = PlaceOrderRequest(
+  orderType = orderType,
+  restaurantId = restaurantId,
+  customerId = customerId,
+  items = items,
+  estimatedDeliveryTime = estimatedDeliveryTime,
+  deliveryAddress = deliveryAddress,
+  bellName = bellName,
+  customerPhone = customerPhone,
+  pickupTime = pickupTime,
+  customerName = customerName,
+  tableNumber = tableNumber,
+  numberOfGuests = numberOfGuests,
 )
 
 /** Creates a DiscardOrderRequest from an OrderId.
