@@ -7,9 +7,7 @@ import {
   GenerateTokenFailure,
   UUIDEntityId,
 } from "munchies-commons/kotlin/commons-modules";
-const jwt_secret = process.env["JWT_SECRET"];
-if (!jwt_secret) throw new Error("Cannot be missing JWT SECRET");
-const provider = new AuthTokenProvider(jwt_secret);
+const provider = new AuthTokenProvider();
 const decoder = new AuthTokenDecoder();
 
 import {
@@ -27,7 +25,9 @@ export interface AuthInfo {
 export interface AuthedRequest extends ExpressRequest {
   user?: AuthInfo;
 }
-export function requireAuth(): ExpressRequestHandler {
+export function requireAuth<Response extends { toJson(): string}>(
+    invalidRoleResponse: (msg: string, code: number) => Response,
+): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
     res: ExpressResponse,
@@ -36,7 +36,7 @@ export function requireAuth(): ExpressRequestHandler {
     const missingToken = 500;
     console.log("cookies", req.cookies["authToken"]);
     if (req.cookies["authToken"] === undefined) {
-      res.status(missingToken).type("json").send({ error: "missing token" });
+      res.status(missingToken).type("json").send(invalidRoleResponse("missing token", missingToken).toJson());
       return;
     } else {
       const tokenRes = decoder.validateAndDecodeToken(req.cookies.authToken);
@@ -49,13 +49,13 @@ export function requireAuth(): ExpressRequestHandler {
         res
           .status(missingToken)
           .type("json")
-          .send({
-            error:
-              "invalid token: " + (tokenRes as DecodedTokenFailure).toString(),
-          });
+          .send(
+            invalidRoleResponse("invalid token: " + (tokenRes as DecodedTokenFailure).toString(), missingToken).toJson(),
+          );
         return;
       }
     }
+
   };
 }
 export function requireRole<
