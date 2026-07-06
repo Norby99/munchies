@@ -6,7 +6,7 @@ export type UserDTO =
 export declare const UserDTO: typeof
   com.munchies.user.infrastructure.adapter.dto.UserDTO;
 
-
+export declare const UserServiceConfig = com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 
 export type GetUserAPI =
   com.munchies.user.infrastructure.adapter.inbound.JsGetUserAPI;
@@ -91,7 +91,7 @@ export declare const UpdateUserPasswordResponse: typeof com.munchies.user.infras
 export type UpdateUserPasswordResult = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordResult;
 export declare const UpdateUserPasswordResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordResult;
 
-export declare const updateUserPasswordResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordResponseFromJson;
+export declare const updateUserPasswordResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.updateUserPasswordResponseFromJson;
 
 export type UpdateUserPasswordSuccess = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordSuccess;
 export declare const UpdateUserPasswordSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordSuccess;

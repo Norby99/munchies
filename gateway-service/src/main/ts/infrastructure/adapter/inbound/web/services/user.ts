@@ -5,6 +5,7 @@ import {
   GetUserResult,
   GetUserSuccess,
   getUserResponseFromJson,
+  UserServiceConfig,
 } from "munchies-user-service-shared/kotlin/user-modules";
 
 import {
@@ -12,6 +13,9 @@ import {
   convertRouteToExpress,
 } from "@main/infrastructure/adapter/middleware/route";
 
+import {
+  
+} from "munchies-user-service-shared/kotlin/munchies-user-shared"
 import axios from "axios";
 import { fillPath } from "@main/infrastructure/adapter/middleware/route";
 export class GetUser extends GetUserAPI {
@@ -20,7 +24,7 @@ export class GetUser extends GetUserAPI {
       const uri = process.env.USER_SERVICE_URL;
       if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
       return axiosRequest(
-        fillPath(uri + this.getPath() + "{id}/", id),
+        fillPath(uri + this.getPath() + UserServiceConfig.GET_USER_PATH, id),
         this.getMethod(),
         () => "",
         getUserResponseFromJson,
