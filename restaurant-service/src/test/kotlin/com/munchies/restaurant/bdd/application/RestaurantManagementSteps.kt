@@ -1,88 +1,95 @@
 package com.munchies.restaurant.bdd.application
 
-import com.munchies.restaurant.application.RestaurantApplicationService
 import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantResult
-import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantUseCase
-import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantResult
-import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantUseCase
-import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
-import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantUseCase
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantResult
-import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantUseCase
-import com.munchies.restaurant.domain.aggregate.Restaurant
-import com.munchies.restaurant.domain.repository.RestaurantRepository
-import com.munchies.restaurant.infrastructure.persistence.InMemoryRestaurantRepository
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.types.beInstanceOf
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
-/**
- * Step definitions for Restaurant Creation and Configuration BDD scenarios
- */
-class RestaurantManagementSteps {
+@Singleton
+class RestaurantManagementSteps @Inject constructor(
+  private val context: RestaurantContext,
+  private val helper: RestaurantHelper,
+) {
 
-  private val restaurantRepository: RestaurantRepository by lazy { InMemoryRestaurantRepository() }
-
-  private val restaurantApplicationService: RestaurantApplicationService by lazy {
-    RestaurantApplicationService(
-      createRestaurantUseCase = CreateRestaurantUseCase(restaurantRepository),
-      updateRestaurantUseCase = UpdateRestaurantUseCase(restaurantRepository),
-      getRestaurantUseCase = GetRestaurantUseCase(restaurantRepository),
-      deleteRestaurantUseCase = DeleteRestaurantUseCase(restaurantRepository),
-    )
-  }
-
-  private var currentUserId: String = "user-123"
-  private var managerId: String? = null
-  private var restaurantName: String? = null
-  private var restaurantAddress: String? = null
-  private var restaurantPhone: String? = null
-  private var restaurantEmail: String? = null
-  private var createdRestaurantId: String? = null
-  private var lastCreationResult: CreateRestaurantResult? = null
-  private var lastUpdateResult: UpdateRestaurantResult? = null
-  private var lastDeleteResult: DeleteRestaurantResult? = null
-  private var retrievedRestaurant: Restaurant? = null
-
-  @Given(
-    "I created a restaurant with name {string}, address {string}, phone {string}," +
-      " and email {string}",
-  )
-  fun createdRestaurantWithAllDetails(name: String, address: String, phone: String, email: String) {
-    createAndStoreRestaurant(name, address, phone, email)
-  }
-
-  @And("I am the manager of the restaurant")
-  fun iAmTheManagerOfTheRestaurant() {
-    currentUserId = managerId ?: throw AssertionError(
-      "Manager ID should be set after restaurant creation",
-    )
-  }
-
+  // Scenario: Create a new restaurant
   @When(
     "I create a restaurant with name {string}, address {string}, phone {string}," +
       " and email {string}",
   )
-  fun createRestaurantWithFullDetails(name: String, address: String, phone: String, email: String) {
-    createAndStoreRestaurant(name, address, phone, email)
+  fun createRestaurant(name: String, address: String, phone: String, email: String) {
+    context.restaurantName = name
+    context.restaurantAddress = address
+    context.restaurantPhone = phone
+    context.restaurantEmail = email
+    val command = CreateRestaurantCommand(
+      managerId = context.currentUserId,
+      name = name,
+      address = address,
+      phone = phone,
+      email = email,
+    )
+    val result = helper.createRestaurant(command)
+    context.lastResult = result
+    context.createdRestaurantId = (result as? CreateRestaurantResult.Success)?.restaurantId
+      ?: throw AssertionError("Restaurant creation should be successful")
+    context.managerId = context.currentUserId
+  }
+
+  @Then("the restaurant should be created successfully")
+  fun restaurantCreatedSuccessfully() {
+    context.lastResult should beInstanceOf<CreateRestaurantResult.Success>()
+    val result = context.lastResult as CreateRestaurantResult.Success
+    result.restaurantId.shouldNotBeBlank()
+  }
+
+  // Scenario: Retrieve created restaurant details
+  @Given(
+    "I created a restaurant with name {string}, address {string}, phone {string}," +
+      " and email {string}",
+  )
+  fun createdRestaurant(name: String, address: String, phone: String, email: String) {
+    createRestaurant(name, address, phone, email)
   }
 
   @When("I retrieve the restaurant details")
   fun retrieveRestaurantDetails() {
-    requireNotNull(createdRestaurantId) { "Restaurant must be created before retrieval" }
-    val result = runBlocking {
-      restaurantApplicationService.getRestaurantDetails(
-        GetRestaurantCommand(createdRestaurantId!!),
-      )
-    }
-    retrievedRestaurant = (result as? GetRestaurantResult.Success)?.restaurant
+    val id =
+      requireNotNull(context.createdRestaurantId) { "Restaurant must be created before retrieval" }
+    val result = helper.getRestaurantDetails(id)
+    context.lastResult = result
+    context.retrievedRestaurant = (result as? GetRestaurantResult.Success)?.restaurant
+  }
+
+  @Then("the restaurant details should match the created information")
+  fun restaurantDetailsMatchCreatedInformation() {
+    requireNotNull(context.createdRestaurantId) { "Restaurant ID should exist" }
+    val restaurant =
+      requireNotNull(context.retrievedRestaurant) { "Restaurant details should be retrievable" }
+
+    restaurant.name.value shouldBe context.restaurantName
+    restaurant.address.value shouldBe context.restaurantAddress
+    restaurant.phone.value shouldBe context.restaurantPhone
+    restaurant.email.value shouldBe context.restaurantEmail
+  }
+
+  // Scenario: Update restaurant information
+  @And("I am the manager of the restaurant")
+  fun iAmTheManagerOfTheRestaurant() {
+    context.currentUserId = context.managerId ?: throw AssertionError(
+      "Manager ID should be set after restaurant creation",
+    )
   }
 
   @When(
@@ -90,140 +97,58 @@ class RestaurantManagementSteps {
       " and email {string}",
   )
   fun updateRestaurantWithFullDetails(name: String, address: String, phone: String, email: String) {
-    restaurantName = name
-    restaurantAddress = address
-    restaurantPhone = phone
-    restaurantEmail = email
+    context.restaurantName = name
+    context.restaurantAddress = address
+    context.restaurantPhone = phone
+    context.restaurantEmail = email
 
-    requireNotNull(createdRestaurantId) { "Restaurant must be created before update" }
+    val id =
+      requireNotNull(context.createdRestaurantId) { "Restaurant must be created before update" }
 
     val command = UpdateRestaurantCommand(
-      restaurantId = createdRestaurantId!!,
-      managerId = currentUserId,
+      restaurantId = id,
+      managerId = context.currentUserId,
       name = name,
       address = address,
       phone = phone,
       email = email,
     )
-    lastUpdateResult = runBlocking { restaurantApplicationService.updateRestaurant(command) }
-  }
-
-  @When("I delete the restaurant")
-  fun deleteRestaurant() {
-    requireNotNull(createdRestaurantId) { "Restaurant must be created before deletion" }
-    lastDeleteResult = runBlocking {
-      val command = DeleteRestaurantCommand(createdRestaurantId!!, currentUserId)
-      restaurantApplicationService.deleteRestaurant(command)
-    }
-  }
-
-  @Then("the restaurant should be created successfully")
-  fun restaurantCreatedSuccessfully() {
-    val result = lastCreationResult as? CreateRestaurantResult.Success
-      ?: throw AssertionError("Restaurant creation should be successful")
-
-    createdRestaurantId = result.restaurantId
-    Assertions.assertFalse(
-      result.restaurantId.isBlank(),
-      "Restaurant ID should not be blank",
-    )
-  }
-
-  @Then("the restaurant details should match the created information")
-  fun restaurantDetailsMatchCreatedInformation() {
-    requireNotNull(createdRestaurantId) { "Restaurant ID should exist" }
-    requireNotNull(retrievedRestaurant) { "Restaurant details should be retrievable" }
-
-    with(retrievedRestaurant!!) {
-      Assertions.assertEquals(restaurantName, name.value, "Restaurant name should match")
-      Assertions.assertEquals(
-        restaurantAddress,
-        address.value,
-        "Restaurant address should match",
-      )
-      Assertions.assertEquals(restaurantPhone, phone.value, "Restaurant phone should match")
-      Assertions.assertEquals(restaurantEmail, email.value, "Restaurant email should match")
-    }
+    context.lastResult = helper.updateRestaurant(command)
   }
 
   @Then("the restaurant update should be successful")
   fun restaurantUpdateSuccessful() {
-    Assertions.assertNotNull(lastUpdateResult, "Update result should not be null")
-    Assertions.assertTrue(
-      lastUpdateResult is UpdateRestaurantResult.Success,
-      "Restaurant update should be successful",
-    )
+    context.lastResult should beInstanceOf<UpdateRestaurantResult.Success>()
 
-    retrievedRestaurant = runBlocking {
-      val result = restaurantApplicationService.getRestaurantDetails(
-        GetRestaurantCommand(createdRestaurantId!!),
-      )
-      (result as? GetRestaurantResult.Success)?.restaurant
-    }
+    val id = requireNotNull(context.createdRestaurantId) { "Restaurant ID should exist" }
+    val detailsResult = helper.getRestaurantDetails(id)
+    context.retrievedRestaurant = (detailsResult as? GetRestaurantResult.Success)?.restaurant
 
-    with(
-      retrievedRestaurant ?: throw AssertionError("Restaurant should be retrievable after update"),
-    ) {
-      Assertions.assertEquals(restaurantName, name.value, "Restaurant name should be updated")
-      Assertions.assertEquals(
-        restaurantAddress,
-        address.value,
-        "Restaurant address should be updated",
-      )
-      Assertions.assertEquals(
-        restaurantPhone,
-        phone.value,
-        "Restaurant phone should be updated",
-      )
-      Assertions.assertEquals(
-        restaurantEmail,
-        email.value,
-        "Restaurant email should be updated",
-      )
-    }
+    val restaurant =
+      requireNotNull(
+        context.retrievedRestaurant,
+      ) { "Restaurant should be retrievable after update" }
+
+    restaurant.name.value shouldBe context.restaurantName
+    restaurant.address.value shouldBe context.restaurantAddress
+    restaurant.phone.value shouldBe context.restaurantPhone
+    restaurant.email.value shouldBe context.restaurantEmail
+  }
+
+  // Scenario: Delete restaurant
+  @When("I delete the restaurant")
+  fun deleteRestaurant() {
+    val id =
+      requireNotNull(context.createdRestaurantId) { "Restaurant must be created before deletion" }
+    context.lastResult = helper.deleteRestaurant(id, context.currentUserId)
   }
 
   @Then("the restaurant should be deleted successfully")
   fun restaurantDeletedSuccessfully() {
-    lastDeleteResult as? DeleteRestaurantResult.Success
-      ?: throw AssertionError("Restaurant deletion should be successful")
+    context.lastResult should beInstanceOf<DeleteRestaurantResult.Success>()
 
-    requireNotNull(createdRestaurantId) { "Restaurant ID should exist" }
-    val deletedResult = runBlocking {
-      restaurantApplicationService.getRestaurantDetails(
-        GetRestaurantCommand(createdRestaurantId!!),
-      )
-    }
-    Assertions.assertEquals(
-      GetRestaurantResult.NotFound,
-      deletedResult,
-      "Deleted restaurant should not be retrievable",
-    )
-  }
-
-  private fun createAndStoreRestaurant(
-    name: String,
-    address: String,
-    phone: String,
-    email: String,
-  ) {
-    restaurantName = name
-    restaurantAddress = address
-    restaurantPhone = phone
-    restaurantEmail = email
-
-    val command = CreateRestaurantCommand(
-      managerId = currentUserId,
-      name = name,
-      address = address,
-      phone = phone,
-      email = email,
-    )
-
-    lastCreationResult = runBlocking { restaurantApplicationService.createRestaurant(command) }
-
-    createdRestaurantId = (lastCreationResult as? CreateRestaurantResult.Success)?.restaurantId
-      ?: throw AssertionError("Restaurant creation should be successful")
-    managerId = currentUserId
+    val id = requireNotNull(context.createdRestaurantId) { "Restaurant ID should exist" }
+    val deletedResult = helper.getRestaurantDetails(id)
+    deletedResult shouldBe GetRestaurantResult.NotFound
   }
 }
