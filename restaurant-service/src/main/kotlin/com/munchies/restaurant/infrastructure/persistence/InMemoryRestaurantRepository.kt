@@ -9,6 +9,7 @@ import com.munchies.restaurant.domain.valueobject.restaurant.Address
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
+import jakarta.inject.Singleton
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  * In-memory implementation of Restaurant Repository
  * Used for testing and as placeholder for real persistence
  */
+@Singleton
 class InMemoryRestaurantRepository : RestaurantRepository {
   private val restaurants = ConcurrentHashMap<String, RestaurantEntity>()
 
