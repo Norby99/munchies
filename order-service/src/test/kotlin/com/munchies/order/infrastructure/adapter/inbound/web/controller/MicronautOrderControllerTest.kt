@@ -122,16 +122,9 @@ class MicronautOrderControllerTest {
     exception.status shouldBe HttpStatus.NOT_FOUND
   }
 
-  /*
-  is PlaceOrder.Result.Success ->
-         HttpResponse.ok("Order placed successfully with ID: ${res.order.orderId}")
-       is PlaceOrder.Result.Failure.InvalidDate ->
-         HttpResponse.badRequest("Invalid date for order type")
-       is PlaceOrder.Result.Failure.EmptyItems ->
-         HttpResponse.badRequest("Order must contain at least one item")
-       is PlaceOrder.Result.Failure.InvalidItemQuantity ->
-         HttpResponse.badRequest("Item quantity must be greater than zero")
-   */
+  // ==========================================
+  // TEST: POST /orders
+  // ==========================================
 
   @Test
   fun `placeOrder should return 200 OK and order ID on success`() {
@@ -151,6 +144,70 @@ class MicronautOrderControllerTest {
     )
     response.status shouldBe HttpStatus.OK
     response.body() shouldBeEqual "Order placed successfully with ID: ${order.id.value}"
+  }
+
+  @Test
+  fun `placeOrder should return 400 Bad Request on InvalidDate`() {
+    val order = createDeliveryOrder()
+    val requestBody = createPlaceOrderRequest(order)
+
+    every {
+      placeOrderMock.execute(any())
+    } returns PlaceOrder.Result.Failure.InvalidDate
+
+    val exception = assertThrows(HttpClientResponseException::class.java) {
+      client.toBlocking().exchange(
+        HttpRequest.POST(
+          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
+          mapper.writeValueAsString(requestBody),
+        ),
+        String::class.java,
+      )
+    }
+
+    exception.status shouldBe HttpStatus.BAD_REQUEST
+  }
+
+  @Test
+  fun `placeOrder should return 400 Bad Request on EmptyItems`() {
+    val order = createDeliveryOrder()
+    val requestBody = createPlaceOrderRequest(order)
+
+    every {
+      placeOrderMock.execute(any())
+    } returns PlaceOrder.Result.Failure.EmptyItems
+
+    val exception = assertThrows(HttpClientResponseException::class.java) {
+      client.toBlocking().exchange(
+        HttpRequest.POST(
+          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
+          mapper.writeValueAsString(requestBody),
+        ),
+        String::class.java,
+      )
+    }
+
+    exception.status shouldBe HttpStatus.BAD_REQUEST
+  }
+
+  @Test
+  fun `placeOrder should return 400 Bad Request on InvalidItemQuantity`() {
+    val order = createDeliveryOrder()
+    val requestBody = createPlaceOrderRequest(order)
+
+    every {
+      placeOrderMock.execute(any())
+    } returns PlaceOrder.Result.Failure.InvalidItemQuantity
+
+    val exception = assertThrows(HttpClientResponseException::class.java) {
+      client.toBlocking().exchange(
+        HttpRequest.POST(
+          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
+          mapper.writeValueAsString(requestBody),
+        ),
+        String::class.java,
+      )
+    }
   }
 
   // ==========================================
@@ -196,4 +253,39 @@ class MicronautOrderControllerTest {
 
     exception.status shouldBe HttpStatus.BAD_REQUEST
   }
+
+  @Test
+  fun `POST advance status should return 404 Not Found on OrderNotFound`() {
+    val requestBody = AdvanceOrderStatusRequest(defaultOrderId.value)
+
+    every {
+      advanceOrderStatusMock.execute(any())
+    } returns AdvanceOrderStatus.Result.Failure.OrderNotFound
+
+    val exception = assertThrows(HttpClientResponseException::class.java) {
+      client.toBlocking().exchange(
+        HttpRequest.POST(
+          "/${OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH}",
+          requestBody,
+        ),
+        String::class.java,
+      )
+    }
+
+    exception.status shouldBe HttpStatus.NOT_FOUND
+  }
+
+  // ==========================================
+  // TEST: POST orders/{id}/discard
+  // ==========================================
+
+  /*
+  is DiscardOrder.Result.Success -> HttpResponse.ok("Order discarded")
+      is DiscardOrder.Result.Failure.OrderNotFound -> HttpResponse.notFound()
+      is DiscardOrder.Result.Failure.Unauthorized ->
+        HttpResponse.badRequest("Unauthorized to discard this order")
+      is DiscardOrder.Result.Failure.OrderNotCancellable ->
+        HttpResponse.badRequest("Cannot discard this order")
+   */
+
 }
