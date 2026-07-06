@@ -18,6 +18,7 @@ graph TB
   :gateway-service[gateway-service]:::unknown
   :commons[commons]:::unknown
 
+  :gateway-service -.->|jsImplementation| :commons
   :gateway-service -.->|jsImplementation| :notification-shared
   :gateway-service -.->|jsImplementation| :payment-shared
   :gateway-service -.->|jsImplementation| :table-reservation-shared
