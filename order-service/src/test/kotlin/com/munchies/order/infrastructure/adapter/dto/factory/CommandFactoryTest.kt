@@ -3,6 +3,7 @@ package com.munchies.order.infrastructure.adapter.dto.factory
 import com.munchies.order.application.port.inbound.command.PlaceOrderCommand
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.RestaurantId
+import com.munchies.order.fixtures.Address1
 import com.munchies.order.fixtures.createTestPlaceOrderRequest
 import com.munchies.order.fixtures.futureTime
 import com.munchies.order.infrastructure.adapter.dto.OrderType
@@ -17,15 +18,15 @@ class CommandFactoryTest {
   private fun baseDeliveryRequest() = createTestPlaceOrderRequest(
     orderType = OrderType.DELIVERY,
     estimatedDeliveryTime = futureTime,
-    deliveryAddress = "Via Roma 1, Bologna",
-    bellName = "Rossi",
-    customerPhone = "+391234567890",
+    deliveryAddress = Address1.deliveryAddress,
+    bellName = Address1.bellName,
+    customerPhone = Address1.customerPhone,
   )
 
   private fun baseTakeawayRequest() = createTestPlaceOrderRequest(
     orderType = OrderType.TAKEAWAY,
     pickupTime = futureTime,
-    customerName = "Mario Rossi",
+    customerName = Address1.bellName,
   )
 
   private fun baseDineInRequest() = createTestPlaceOrderRequest(
