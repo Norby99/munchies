@@ -6,6 +6,7 @@ const _outbound = _user.infrastructure.adapter.outbound;
 
 module.exports = {
   UserDTO: _user.infrastructure.adapter.dto.UserDTO,
+  UserServiceConfig: _user.infrastructure.adapter.inbound.web.config.UserServiceConfig,
   
   GetUserAPI: _inbound.JsGetUserAPI,
   GetUserResponse: _outbound.response.GetUserResponse,
