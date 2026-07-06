@@ -2,6 +2,7 @@ package com.munchies.order.fixtures
 
 import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
 val orderItem1 = OrderItem(MenuItemId("item-1"), 2)
 val orderItem2 = OrderItem(MenuItemId("item-2"), 3)
@@ -20,3 +21,11 @@ fun createInvalidItemsZeroCount(): List<OrderItem> = listOf(orderItem1, invalidO
 
 /** An item list containing one item with negative quantity. */
 fun createInvalidItemsNegativeCount(): List<OrderItem> = listOf(orderItem1, invalidOrderItem2)
+
+/** Creates a list of OrderItemDto from a list of OrderItem. */
+fun createItemsDto(items: List<OrderItem> = createNewItems()): List<OrderItemDto> = items.map {
+  OrderItemDto(
+    menuItemId = it.menuItemId.value,
+    quantity = it.quantity,
+  )
+}
