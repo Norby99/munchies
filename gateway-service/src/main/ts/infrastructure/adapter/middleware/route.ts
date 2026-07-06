@@ -127,7 +127,9 @@ export const routes: ((app: Express, next: any) => void)[] = [
     getRoute<GetUser>(
       app,
       service,
-      requireAuth(),
+      requireAuth(
+        (msg, code) => new GetUserResponse(new GetUserFailure(msg), code),
+      ),
       requireRole(
         service.getRequiredAuthRole(),
         (msg, code) => new GetUserResponse(new GetUserFailure(msg), code),

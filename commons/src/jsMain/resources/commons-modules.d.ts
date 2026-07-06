@@ -34,22 +34,6 @@ export declare const GenerateTokenSuccess: typeof com.munchies.commons.domain.po
 export type GenerateTokenFailure = typeof com.munchies.commons.domain.port.GenerateTokenFailure;
 export declare const GenerateTokenFailure: typeof com.munchies.commons.domain.port.GenerateTokenFailure;
 
-export type ValidateTokenResult = com.munchies.commons.domain.port.ValidateTokenResult;
-
-export type ValidateTokenSuccess = typeof com.munchies.commons.domain.port.ValidateTokenSuccess;
-export declare const ValidateTokenSuccess: typeof com.munchies.commons.domain.port.ValidateTokenSuccess;
-
-export type ValidateTokenFailure = typeof com.munchies.commons.domain.port.ValidateTokenFailure;
-export declare const ValidateTokenFailure: typeof com.munchies.commons.domain.port.ValidateTokenFailure;
-
-export type RefreshTokenResult = com.munchies.commons.domain.port.RefreshTokenResult;
-
-export type RefreshTokenSuccess = com.munchies.commons.domain.port.RefreshTokenSuccess;
-export declare const RefreshTokenSuccess: typeof com.munchies.commons.domain.port.RefreshTokenSuccess;
-
-export type RefreshTokenFailure = typeof com.munchies.commons.domain.port.RefreshTokenFailure;
-export declare const RefreshTokenFailure: typeof com.munchies.commons.domain.port.RefreshTokenFailure;
-
 export type HttpMethod =
   com.munchies.commons.infrastructure.adapter.HttpMethod;
 export declare const HttpMethod: typeof com.munchies.commons.infrastructure.adapter.HttpMethod;

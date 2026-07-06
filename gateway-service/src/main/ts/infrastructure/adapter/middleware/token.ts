@@ -4,21 +4,12 @@ import {
   GenerateTokenResult,
   GenerateTokenSuccess,
   GenerateTokenFailure,
-  ValidateTokenResult,
-  ValidateTokenSuccess,
-  ValidateTokenFailure,
-  RefreshTokenResult,
-  RefreshTokenSuccess,
-  RefreshTokenFailure,
-  DecodedTokenResult,
   TokenDecoder,
   DecodedTokenSuccess,
   DecodedTokenFailure,
+  DecodedTokenResult,
   ID_CLAIM,
-  EXPIRATION_CLAIM,
   ROLE_CLAIM,
-  JWT_SECRET_ALGORITHM,
-  JWT_SECRET_ENV_NAME,
   AuthRole,
 } from "munchies-commons/kotlin/commons-modules";
 
@@ -30,13 +21,12 @@ interface TokenClaims {
   iat?: number;
 }
 import jwt from "jsonwebtoken";
+import { getTokenRepository, TokenRepository } from "../outbound/token-repository";
 export class AuthTokenProvider extends TokenProvider {
-  constructor(secret: string) {
-    super();
-    this.secret = secret;
-  }
-  private readonly secret: string;
+  private readonly secret: string | undefined = process.env.JWT_SECRET;
+  private readonly repository: TokenRepository<string> = getTokenRepository();
   generateToken(id: UUIDEntityId, role: AuthRole): GenerateTokenResult {
+    if(!this.secret) return new GenerateTokenFailure("Secret is missing")
     const nowSeconds = Math.floor(Date.now() / 1000);
     const expSeconds = nowSeconds + 60 * 60 * 24 * 7;
 
@@ -48,15 +38,15 @@ export class AuthTokenProvider extends TokenProvider {
       iat: nowSeconds,
     };
 
-    return new GenerateTokenSuccess(jwt.sign(payload, this.secret));
+    const token = jwt.sign(payload, this.secret)
+    if(this.repository.isRevoked(token)) return new GenerateTokenFailure("Token is revoked") 
+    this.repository.add(token);
+    return new GenerateTokenSuccess(token);
   }
-  refreshToken(expiredToken: string): RefreshTokenResult {
-    return new RefreshTokenSuccess("");
+  
+  revokeToken(token: string): void {
+    this.repository.revoke(token);
   }
-  validateToken(token: string): ValidateTokenResult {
-    return ValidateTokenSuccess;
-  }
-  revokeToken(token: string): void {}
 }
 
 export class AuthTokenDecoder extends TokenDecoder {
