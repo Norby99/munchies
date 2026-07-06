@@ -5,6 +5,7 @@ import com.munchies.restaurant.domain.aggregate.CategoryId
 import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.aggregate.MenuId
 import com.munchies.restaurant.domain.aggregate.MenuItem
+import com.munchies.restaurant.domain.aggregate.MenuItemDetails
 import com.munchies.restaurant.domain.aggregate.MenuItemId
 import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.Money
@@ -38,8 +39,10 @@ class UpdateMenuItemTest {
     val item =
       MenuItem(
         id = MenuItemId(),
-        name = MenuItemName.of("Old Name"),
-        description = MenuItemDescription.of("Old Desc"),
+        details = MenuItemDetails(
+          MenuItemName.of("Old Name"),
+          MenuItemDescription.of("Old Desc"),
+        ),
         price = Money(BigDecimal("10.0")),
         variations = emptyList(),
       )
@@ -86,7 +89,7 @@ class UpdateMenuItemTest {
         item.name.value shouldBe "New Name"
         item.description.value shouldBe "New Desc"
         item.price.amount shouldBe BigDecimal("15.00")
-        item.variations shouldBe variations
+        item.variations shouldBe variations.map { it.toDomain() }
       }
       else -> {
         assert(false) { "Expected Success, but got $result" }

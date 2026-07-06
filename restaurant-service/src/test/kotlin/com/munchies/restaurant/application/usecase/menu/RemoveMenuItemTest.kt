@@ -5,6 +5,7 @@ import com.munchies.restaurant.domain.aggregate.CategoryId
 import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.aggregate.MenuId
 import com.munchies.restaurant.domain.aggregate.MenuItem
+import com.munchies.restaurant.domain.aggregate.MenuItemDetails
 import com.munchies.restaurant.domain.aggregate.MenuItemId
 import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.Money
@@ -39,8 +40,10 @@ class RemoveMenuItemTest {
     val item =
       MenuItem(
         id = itemId,
-        name = MenuItemName.of("Pasta"),
-        description = MenuItemDescription.of("Good pasta"),
+        details = MenuItemDetails(
+          MenuItemName.of("Pasta"),
+          MenuItemDescription.of("Good pasta"),
+        ),
         price = Money(BigDecimal("12.00")),
       )
     val categoryId = CategoryId()

@@ -44,8 +44,10 @@ class CreateMenuItemUseCase(private val menuRepository: MenuRepository) :
 
     return runCatching {
       val item = category.createItem(
-        MenuItemName.of(command.name),
-        MenuItemDescription.of(command.description),
+        MenuItemDetails(
+          MenuItemName.of(command.name),
+          MenuItemDescription.of(command.description),
+        ),
         Money(command.price),
         command.variations.map { it.toDomain() },
       )
