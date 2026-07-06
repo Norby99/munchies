@@ -28,7 +28,6 @@ export type GetUserFailure = com.munchies.user.infrastructure.adapter.outbound.r
 export declare const GetUserFailure: typeof com.munchies.user.infrastructure.adapter.outbound.response.GetUserFailure;
 
 
-
 export type RegisterUserAPI =
   com.munchies.user.infrastructure.adapter.inbound.JsRegisterUserAPI;
 export declare const RegisterUserAPI: typeof
@@ -44,6 +43,7 @@ export type RegisterUserResult = com.munchies.user.infrastructure.adapter.outbou
 export declare const RegisterUserResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserResult;
 
 export declare const registerUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.registerUserResponseFromJson;
+export declare const registerUserRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.registerUserRequestFromJson;
 
 export type RegisterUserSuccess = com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserSuccess;
 export declare const RegisterUserSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.RegisterUserSuccess;
@@ -67,7 +67,8 @@ export declare const LoginUserResponse: typeof com.munchies.user.infrastructure.
 export type LoginUserResult = com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResult;
 export declare const LoginUserResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResult;
 
-export declare const loginUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResponseFromJson;
+export declare const loginUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.loginUserResponseFromJson;
+export declare const loginUserRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.loginUserRequestFromJson;
 
 export type LoginUserSuccess = com.munchies.user.infrastructure.adapter.outbound.response.LoginUserSuccess;
 export declare const LoginUserSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.LoginUserSuccess;
@@ -92,6 +93,7 @@ export type UpdateUserPasswordResult = com.munchies.user.infrastructure.adapter.
 export declare const UpdateUserPasswordResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordResult;
 
 export declare const updateUserPasswordResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.updateUserPasswordResponseFromJson;
+export declare const updateUserPasswordRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.updateUserPasswordRequestFromJson;
 
 export type UpdateUserPasswordSuccess = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordSuccess;
 export declare const UpdateUserPasswordSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserPasswordSuccess;
@@ -115,7 +117,8 @@ export declare const UpdateUserInfoResponse: typeof com.munchies.user.infrastruc
 export type UpdateUserInfoResult = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserInfoResult;
 export declare const UpdateUserInfoResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserInfoResult;
 
-export declare const updateUserInfoResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserInfoResponseFromJson;
+export declare const updateUserInfoResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.updateUserInfoResponseFromJson;
+export declare const updateUserInfoRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.updateUserInfoRequestFromJson;
 
 export type UpdateUserInfoSuccess = com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserInfoSuccess;
 export declare const UpdateUserInfoSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.UpdateUserInfoSuccess;
@@ -139,7 +142,8 @@ export declare const DeleteUserResponse: typeof com.munchies.user.infrastructure
 export type DeleteUserResult = com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserResult;
 export declare const DeleteUserResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserResult;
 
-export declare const deleteUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserResponseFromJson;
+export declare const deleteUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.deleteUserResponseFromJson;
+export declare const deleteUserRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.deleteUserRequestFromJson;
 
 export type DeleteUserSuccess = com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserSuccess;
 export declare const DeleteUserSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserSuccess;

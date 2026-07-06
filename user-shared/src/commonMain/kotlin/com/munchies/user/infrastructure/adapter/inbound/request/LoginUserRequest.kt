@@ -14,3 +14,6 @@ data class LoginUserRequest(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun loginUserRequestFromJson(json: String): LoginUserRequest = Json.decodeFromString(json)
