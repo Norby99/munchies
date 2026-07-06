@@ -21,27 +21,31 @@ class MenuItemTest {
   @Test
   fun `should update menu item details correctly`() {
     val item = MenuItem(
-      name = MenuItemName.of("Pizza"),
-      description = MenuItemDescription.of("Diavola"),
+      details = MenuItemDetails(
+        MenuItemName.of("Diavola"),
+        MenuItemDescription.of("With spicy salami"),
+      ),
       price = Money(BigDecimal("10.0")),
     )
 
-    val newName = MenuItemName.of("Vegan Pizza")
+    val newName = MenuItemName.of("Vegan Diavola")
     val newDescription = MenuItemDescription.of("No cheese")
     val newPrice = Money(BigDecimal("12.0"))
 
     item.update(MenuItemDetails(newName, newDescription), newPrice)
 
-    assertEquals(newName, item.name)
-    assertEquals(newDescription, item.description)
+    assertEquals(newName, item.details.name)
+    assertEquals(newDescription, item.details.description)
     assertEquals(newPrice, item.price)
   }
 
   @Test
   fun `should add variation to menu item`() {
     val item = MenuItem(
-      name = MenuItemName.of("Pizza"),
-      description = MenuItemDescription.of("Diavola"),
+      details = MenuItemDetails(
+        MenuItemName.of("Diavola"),
+        MenuItemDescription.of("With spicy salami"),
+      ),
       price = Money(BigDecimal("10.0")),
     )
 
@@ -62,8 +66,10 @@ class MenuItemTest {
     val variation = Variation(VariationName("Size"))
       .option("Large", Money(2))
     val item = MenuItem(
-      name = MenuItemName.of("Pizza"),
-      description = MenuItemDescription.of("Diavola"),
+      details = MenuItemDetails(
+        MenuItemName.of("Diavola"),
+        description = MenuItemDescription.of("With spicy salami"),
+      ),
       price = Money(BigDecimal("10.0")),
       variations = listOf(variation),
     )
@@ -71,7 +77,7 @@ class MenuItemTest {
     val newVariation = Variation(VariationName("New Size"))
       .option("Large", Money(3))
     item.update(
-      MenuItemDetails(item.name, item.description),
+      item.details,
       item.price,
       listOf(newVariation),
     )
@@ -83,8 +89,10 @@ class MenuItemTest {
   @Test
   fun `should check validity correctly`() {
     val item = MenuItem(
-      name = MenuItemName.of("Pizza"),
-      description = MenuItemDescription.of("Diavola"),
+      details = MenuItemDetails(
+        MenuItemName.of("Diavola"),
+        MenuItemDescription.of("With spicy salami"),
+      ),
       price = Money(BigDecimal("10.0")),
       validity = Validity.from(LocalDate.of(2025, 1, 1)),
     )
@@ -96,14 +104,16 @@ class MenuItemTest {
   @Test
   fun `should update validity`() {
     val item = MenuItem(
-      name = MenuItemName.of("Pizza"),
-      description = MenuItemDescription.of("Diavola"),
+      details = MenuItemDetails(
+        MenuItemName.of("With spicy salami"),
+        MenuItemDescription.of("With spicy ham"),
+      ),
       price = Money(BigDecimal("10.0")),
     )
     val newValidity = Validity.from(LocalDate.of(2025, 1, 1))
 
     item.update(
-      MenuItemDetails(item.name, item.description),
+      item.details,
       item.price,
       item.variations,
       newValidity,

@@ -19,15 +19,15 @@ data class MenuItemDetails(val name: MenuItemName, val description: MenuItemDesc
 
 class MenuItem internal constructor(
   override val id: MenuItemId = MenuItemId(),
-  var name: MenuItemName,
-  var description: MenuItemDescription,
+  var details: MenuItemDetails,
   var price: Money,
   variations: List<Variation> = emptyList(),
   var validity: Validity = Validity.always,
 ) : Entity<MenuItemId>(id) {
   private val _variations = variations.toMutableList()
   val variations: List<Variation> get() = _variations.toList()
-  private var details = MenuItemDetails(name, description)
+  val name get() = details.name
+  val description get() = details.description
 
   fun update(
     details: MenuItemDetails,
@@ -68,15 +68,13 @@ class Category internal constructor(
   }
 
   fun createItem(
-    name: MenuItemName,
-    description: MenuItemDescription,
+    details: MenuItemDetails,
     price: Money,
     variations: List<Variation> = emptyList(),
     validity: Validity = Validity.always,
   ): MenuItem {
     val item = MenuItem(
-      name = name,
-      description = description,
+      details = details,
       price = price,
       variations = variations,
       validity = validity,
