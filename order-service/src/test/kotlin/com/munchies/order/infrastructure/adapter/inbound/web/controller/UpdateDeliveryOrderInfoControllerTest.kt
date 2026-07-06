@@ -27,7 +27,7 @@ class UpdateDeliveryOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update delivery order info should return 200 OK on success`() {
-    val requestBody = createUpdateDeliveryOrderRequest(defaultOrderId)
+    val requestBody = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfoMock.execute(any())
@@ -50,7 +50,7 @@ class UpdateDeliveryOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update delivery order info should return 404 Not Found on OrderNotFound`() {
-    val requestBody = createUpdateDeliveryOrderRequest(defaultOrderId)
+    val requestBody = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfoMock.execute(any())
@@ -76,7 +76,7 @@ class UpdateDeliveryOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update delivery order info should return 400 Bad Request on Unauthorized`() {
-    val requestBody = createUpdateDeliveryOrderRequest(defaultOrderId)
+    val requestBody = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfoMock.execute(any())
@@ -102,7 +102,7 @@ class UpdateDeliveryOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update delivery order info should return 400 Bad Request on InvalidDate`() {
-    val requestBody = createUpdateDeliveryOrderRequest(defaultOrderId)
+    val requestBody = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfoMock.execute(any())

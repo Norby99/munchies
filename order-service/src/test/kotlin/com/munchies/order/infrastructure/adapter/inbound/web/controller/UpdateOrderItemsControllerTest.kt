@@ -27,7 +27,7 @@ class UpdateOrderItemsControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update order items should return 200 OK on success`() {
-    val requestBody = createUpdateOrderItemsRequest(defaultOrderId)
+    val requestBody = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItemsMock.execute(any())
@@ -45,7 +45,7 @@ class UpdateOrderItemsControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update order items should return 404 Not Found on OrderNotFound`() {
-    val requestBody = createUpdateOrderItemsRequest(defaultOrderId)
+    val requestBody = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItemsMock.execute(any())
@@ -66,7 +66,7 @@ class UpdateOrderItemsControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update order items should return 400 Bad Request on Unauthorized`() {
-    val requestBody = createUpdateOrderItemsRequest(defaultOrderId)
+    val requestBody = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItemsMock.execute(any())
@@ -87,7 +87,7 @@ class UpdateOrderItemsControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update order items should return 400 Bad Request on EmptyItems`() {
-    val requestBody = createUpdateOrderItemsRequest(defaultOrderId)
+    val requestBody = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItemsMock.execute(any())
