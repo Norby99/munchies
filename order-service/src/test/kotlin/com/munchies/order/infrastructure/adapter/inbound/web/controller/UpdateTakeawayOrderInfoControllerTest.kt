@@ -27,7 +27,7 @@ class UpdateTakeawayOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update takeaway order info should return 200 OK on success`() {
-    val requestBody = createUpdateTakeawayOrderRequest(defaultOrderId)
+    val requestBody = createUpdateTakeawayOrderRequest()
 
     every {
       updateTakeawayOrderInfoMock.execute(any())
@@ -50,7 +50,7 @@ class UpdateTakeawayOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update takeaway order info should return 404 Not Found on OrderNotFound`() {
-    val requestBody = createUpdateTakeawayOrderRequest(defaultOrderId)
+    val requestBody = createUpdateTakeawayOrderRequest()
 
     every {
       updateTakeawayOrderInfoMock.execute(any())
@@ -76,7 +76,7 @@ class UpdateTakeawayOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update takeaway order info should return 400 Bad Request on Unauthorized`() {
-    val requestBody = createUpdateTakeawayOrderRequest(defaultOrderId)
+    val requestBody = createUpdateTakeawayOrderRequest()
 
     every {
       updateTakeawayOrderInfoMock.execute(any())
@@ -102,7 +102,7 @@ class UpdateTakeawayOrderInfoControllerTest : BaseOrderControllerTest() {
 
   @Test
   fun `PATCH update takeaway order info should return 400 Bad Request on InvalidDate`() {
-    val requestBody = createUpdateTakeawayOrderRequest(defaultOrderId)
+    val requestBody = createUpdateTakeawayOrderRequest()
 
     every {
       updateTakeawayOrderInfoMock.execute(any())

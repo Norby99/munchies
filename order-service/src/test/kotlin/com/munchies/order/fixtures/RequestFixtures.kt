@@ -71,7 +71,6 @@ fun createUpdateOrderItemsRequest(
 /**
  *
  */
-fun createAdvanceOrderStatusRequest(order: DeliveryOrder = createDeliveryOrder()) =
-  AdvanceOrderStatusRequest(
-    orderId = order.id.value,
-  )
+fun createAdvanceOrderStatusRequest(orderId: OrderId = defaultOrderId) = AdvanceOrderStatusRequest(
+  orderId = orderId.value,
+)
