@@ -5,7 +5,7 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.infrastructure.adapter.dto.OrderType.*
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDTOFactory.toDomain
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
 object CommandFactory {

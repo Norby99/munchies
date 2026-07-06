@@ -7,8 +7,8 @@ import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
@@ -30,12 +30,12 @@ class GetOrderDetailsUseCaseTest {
 
   @BeforeEach
   fun setUp() {
-    mockkObject(OrderDTOFactory)
+    mockkObject(OrderDtoFactory)
   }
 
   @AfterEach
   fun tearDown() {
-    unmockkObject(OrderDTOFactory)
+    unmockkObject(OrderDtoFactory)
   }
 
   @Test

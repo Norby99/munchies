@@ -17,13 +17,13 @@ import com.munchies.order.fixtures.createDineInOrderDto
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.createTakeawayOrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDomain
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDTOFactory.toDto
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDomain
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-class OrderDTOFactoryTest {
+class OrderDtoFactoryTest {
 
   @Test
   fun `toDto should map DeliveryOrder to OrderDto-Delivery`() {
