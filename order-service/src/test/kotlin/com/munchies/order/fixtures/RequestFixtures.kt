@@ -2,6 +2,7 @@ package com.munchies.order.fixtures
 
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
@@ -10,7 +11,6 @@ import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderReque
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest
-import java.time.Instant
 
 /** Creates a PlaceOrderRequest.Delivery object from a DeliveryOrder.
  * @param order The DeliveryOrder to convert to a PlaceOrderRequest.
@@ -41,44 +41,37 @@ fun createDiscardOrderRequest(orderId: OrderId = defaultOrderId) = DiscardOrderR
   customerId = defaultCustomerId.value,
 )
 
-fun createUpdateTakeawayOrderRequest(
-  orderId: OrderId = defaultOrderId,
-  pickupTime: Long = Instant.now().plusSeconds(3600).toEpochMilli(),
-  customerName: String = "John Doe",
-) = UpdateTakeawayOrderRequest(
-  orderId = orderId.value,
-  customerId = defaultCustomerId.value,
-  pickupTime = pickupTime,
-  customerName = customerName,
-)
+fun createUpdateTakeawayOrderRequest(order: TakeawayOrder = createTakeawayOrder()) =
+  UpdateTakeawayOrderRequest(
+    orderId = order.id.value,
+    customerId = order.customerId.value,
+    pickupTime = order.takeawayInfo.pickupTime,
+    customerName = order.takeawayInfo.customerName,
+  )
 
-fun createUpdateDeliveryOrderRequest(
-  orderId: OrderId = defaultOrderId,
-  estimatedDeliveryTime: Long = Instant.now().plusSeconds(3600).toEpochMilli(),
-  deliveryAddress: String = "Via Roma 1, Milano",
-  bellName: String = "Rossi",
-  customerPhone: String = "1234567890",
-) = UpdateDeliveryOrderRequest(
-  orderId = orderId.value,
-  customerId = defaultCustomerId.value,
-  estimatedDeliveryTime = estimatedDeliveryTime,
-  deliveryAddress = deliveryAddress,
-  bellName = bellName,
-  customerPhone = customerPhone,
-)
+fun createUpdateDeliveryOrderRequest(order: DeliveryOrder = createDeliveryOrder()) =
+  UpdateDeliveryOrderRequest(
+    orderId = order.id.value,
+    customerId = order.customerId.value,
+    estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime,
+    deliveryAddress = order.deliveryInfo.deliveryAddress,
+    bellName = order.deliveryInfo.bellName,
+    customerPhone = order.deliveryInfo.customerPhone,
+  )
 
 fun createUpdateOrderItemsRequest(
-  orderId: OrderId = defaultOrderId,
+  order: DeliveryOrder = createDeliveryOrder(),
   items: List<OrderItemDto> = createItemsDto(),
 ) = UpdateOrderItemsRequest(
-  orderId = orderId.value,
-  customerId = defaultCustomerId.value,
+  orderId = order.id.value,
+  customerId = order.customerId.value,
   items = items,
 )
 
 /**
  *
  */
-fun createAdvanceOrderStatusRequest(orderId: OrderId = defaultOrderId) = AdvanceOrderStatusRequest(
-  orderId = orderId.value,
-)
+fun createAdvanceOrderStatusRequest(order: DeliveryOrder = createDeliveryOrder()) =
+  AdvanceOrderStatusRequest(
+    orderId = order.id.value,
+  )
