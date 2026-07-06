@@ -15,3 +15,6 @@ data class RegisterUserRequest(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun registerUserRequestFromJson(json: String): RegisterUserRequest = Json.decodeFromString(json)

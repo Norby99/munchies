@@ -90,10 +90,7 @@ export function fillPath(path: string, ...values: (string | number)[]): string {
 }
 
 import { API } from "munchies-commons/kotlin/commons-modules";
-import {
-  Express,
-  RequestHandler,
-} from "express";
+import { Express, RequestHandler } from "express";
 function getRoute<Service extends API>(
   app: Express,
   service: Service,
@@ -120,6 +117,7 @@ import {
   UserDTO,
   RegisterUserResponse,
   RegisterUserFailure,
+  registerUserRequestFromJson,
 } from "munchies-user-service-shared/kotlin/user-modules";
 export const routes: ((app: Express, next: any) => void)[] = [
   (app: Express, next) => {
@@ -135,9 +133,9 @@ export const routes: ((app: Express, next: any) => void)[] = [
         (msg, code) => new GetUserResponse(new GetUserFailure(msg), code),
       ),
       async (req: AuthedRequest, res) => {
-        console.info("Received: ", req)
+        console.info("Received: ", req);
         const response = await service.getUser(req.user!!.id);
-        console.info("Responding: ", response)
+        console.info("Responding: ", response);
         res.status(response.code).type("json").send(response.toJson());
       },
     );
@@ -146,28 +144,35 @@ export const routes: ((app: Express, next: any) => void)[] = [
     const service = new RegisterUser();
     getRoute<RegisterUser>(app, service, async (req, res) => {
       const id = newId();
-      const response = await service.registerUser(
-        new RegisterUserRequest(
-          new UserDTO(
-            id,
-            "" + crypto.randomUUID(),
-            "" + crypto.randomUUID(),
-            AuthRole.CUSTOMER.name,
-          ),
-          "password hash",
-          "salt value",
-        ),
-      );
-      console.log("newid: ", id)
-      injectCookie(
-        res,
-        { id: id, role: AuthRole.CUSTOMER },  
-      )?.status(response.code).type("json").send(response.toJson())
-        ?? res.status(500).type('json').send(
-          new RegisterUserResponse(new RegisterUserFailure(
-            "Couldnt create token"
-          ), 500)
-        )
+
+      const parsedRequest = req.body
+        ? registerUserRequestFromJson(req.body)
+        : new RegisterUserRequest(
+            new UserDTO(
+              id,
+              "" + crypto.randomUUID(),
+              "" + crypto.randomUUID(),
+              AuthRole.CUSTOMER.name,
+            ),
+            "password hash",
+            "salt value",
+          );
+
+      const response = await service.registerUser(parsedRequest);
+      console.log("newid: ", id);
+      injectCookie(res, { id: id, role: AuthRole.CUSTOMER })
+        ?.status(response.code)
+        .type("json")
+        .send(response.toJson()) ??
+        res
+          .status(500)
+          .type("json")
+          .send(
+            new RegisterUserResponse(
+              new RegisterUserFailure("Couldnt create token"),
+              500,
+            ),
+          );
     });
   },
 ];

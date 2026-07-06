@@ -13,3 +13,6 @@ data class UpdateUserInfoRequest(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun updateUserInfoRequestFromJson(json: String): UpdateUserInfoRequest = Json.decodeFromString(json)

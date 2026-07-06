@@ -12,3 +12,6 @@ data class DeleteUserRequest(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun deleteUserRequestFromJson(json: String): DeleteUserRequest = Json.decodeFromString(json)

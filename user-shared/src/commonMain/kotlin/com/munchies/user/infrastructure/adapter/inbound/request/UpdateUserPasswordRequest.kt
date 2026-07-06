@@ -16,3 +16,7 @@ data class UpdateUserPasswordRequest(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun updateUserPasswordRequestFromJson(json: String): UpdateUserPasswordRequest =
+  Json.decodeFromString(json)
