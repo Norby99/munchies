@@ -5,6 +5,8 @@ import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantCo
 import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantResult
 import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsCommand
+import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantCommand
@@ -16,22 +18,23 @@ import kotlinx.coroutines.runBlocking
 
 @Singleton
 class RestaurantContext {
-  var currentUserId: String = "user-123"
   var managerId: String? = null
-  var restaurantName: String? = null
-  var restaurantAddress: String? = null
-  var restaurantPhone: String? = null
-  var restaurantEmail: String? = null
-  var createdRestaurantId: String? = null
+  var restaurantId: String? = null
   var lastResult: Any? = null
-  var retrievedRestaurant: Restaurant? = null
 }
 
 @Singleton
 class RestaurantHelper @Inject constructor(
   private val service: RestaurantService,
 ) {
-  fun createRestaurant(command: CreateRestaurantCommand): CreateRestaurantResult {
+  fun createRestaurant(
+    managerId: String,
+    name: String,
+    address: String,
+    phone: String,
+    email: String,
+  ): CreateRestaurantResult {
+    val command = CreateRestaurantCommand(managerId, name, address, phone, email)
     return runBlocking { service.createRestaurant(command) }
   }
 
@@ -41,7 +44,16 @@ class RestaurantHelper @Inject constructor(
 
   fun getRestaurantDetails(restaurantId: String): GetRestaurantResult {
     val command = GetRestaurantCommand(restaurantId)
-    return runBlocking { service.getRestaurantDetails(command) }
+    return runBlocking { service.getRestaurant(command) }
+  }
+
+  fun getManagerRestaurants(managerId: String): List<Restaurant> {
+    val command = GetManagerRestaurantsCommand(managerId)
+    val result = runBlocking { service.getManagerRestaurants(command) }
+    require(result is GetManagerRestaurantsResult.Success) {
+      "Failed to retrieve manager's restaurants"
+    }
+    return result.restaurants
   }
 
   fun deleteRestaurant(restaurantId: String, managerId: String): DeleteRestaurantResult {
