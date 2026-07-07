@@ -5,6 +5,7 @@ import com.munchies.restaurant.application.usecase.menu.*
 import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.menu.Validity
+import com.munchies.restaurant.domain.valueobject.menu.Validity.Period
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -14,7 +15,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.beInstanceOf
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
-import java.time.LocalDate
+import java.time.LocalDate.parse
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.assertThrows
 
@@ -44,9 +45,10 @@ class MenuSteps @Inject constructor(
 
   @And("the restaurant should have a {string} menu valid from {word} to {word}")
   fun restaurantShouldHaveAMenuNamed(name: String, start: String, end: String) {
-    require(restaurantHasAMenuLike(name, start, end)) {
-      "Restaurant doesn't have a $name menu with validity from $start to $end"
-    }
+    getRestaurantMenus(context.restaurantId).any {
+      it.name.value == name &&
+        it.validity == Period(parse(start), parse(end))
+    } shouldBe true
   }
 
   // --- Scenario: Retrieve a menu ---
@@ -75,7 +77,7 @@ class MenuSteps @Inject constructor(
     val menu = (context.lastResult as GetMenuResult.Success).menu
     menu.name.value shouldBe name
     menu.validity shouldBe
-      Validity.period(LocalDate.parse(start), LocalDate.parse(end))
+      Validity.period(parse(start), parse(end))
   }
 
   // --- Scenario: Update an existing menu ---
@@ -86,10 +88,7 @@ class MenuSteps @Inject constructor(
     val command = UpdateMenuCommand(
       menuId = context.menuId,
       name = newName,
-      validity = ValidityConfig.Period(
-        LocalDate.parse(start),
-        LocalDate.parse(end),
-      ),
+      validity = ValidityConfig.Period(parse(start), parse(end)),
     )
     context.lastResult = runBlocking { service.updateMenu(command) }
   }
@@ -125,12 +124,6 @@ class MenuSteps @Inject constructor(
     check(result is GetMenuResult.Success)
     check(result.menu.name.value == menuName) { "Context doesn't have a $menuName menu" }
   }
-
-  private fun restaurantHasAMenuLike(name: String, start: String, end: String): Boolean =
-    getRestaurantMenus(context.restaurantId).any {
-      it.name.value == name &&
-        it.validity == Validity.Period(LocalDate.parse(start), LocalDate.parse(end))
-    }
 
   private fun getRestaurantMenus(id: String): List<Menu> {
     val result = runBlocking {
