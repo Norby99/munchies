@@ -32,6 +32,8 @@ data class DeliveryOrder(
 
   override fun copyWithStatus(status: OrderStatus) = copy(status = status)
 
+  override fun copyWithItems(items: List<OrderItem>) = copy(items = items)
+
   /**
    * Updates the delivery information of the order.
    *

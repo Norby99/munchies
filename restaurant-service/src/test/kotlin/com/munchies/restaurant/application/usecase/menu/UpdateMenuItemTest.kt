@@ -5,6 +5,7 @@ import com.munchies.restaurant.domain.aggregate.CategoryId
 import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.aggregate.MenuId
 import com.munchies.restaurant.domain.aggregate.MenuItem
+import com.munchies.restaurant.domain.aggregate.MenuItemDetails
 import com.munchies.restaurant.domain.aggregate.MenuItemId
 import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.Money
@@ -12,13 +13,13 @@ import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.menu.CategoryName
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemDescription
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemName
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import java.math.BigDecimal
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -34,23 +35,41 @@ class UpdateMenuItemTest {
   }
 
   @Test
-  fun `should update menu item successfully when menu and category exist`() = runBlocking {
+  fun `should update menu item successfully when menu and category exist`(): Unit = runBlocking {
     val item =
       MenuItem(
         id = MenuItemId(),
-        name = MenuItemName.of("Old Name"),
-        description = MenuItemDescription.of("Old Desc"),
+        details = MenuItemDetails(
+          MenuItemName.of("Old Name"),
+          MenuItemDescription.of("Old Desc"),
+        ),
         price = Money(BigDecimal("10.0")),
+        variations = emptyList(),
       )
-    val category =
-      spyk(
-        Category(id = CategoryId(), name = CategoryName.of("Mains"), items = mutableListOf(item)),
-      )
-    val menu =
-      spyk(
-        Menu(id = MenuId(), restaurantId = RestaurantId(), categories = listOf(category)),
-      )
+    val category = spyk(
+      Category(
+        id = CategoryId(),
+        name = CategoryName.of("Mains"),
+        items = mutableListOf(item),
+      ),
+    )
+    val menu = spyk(
+      Menu(
+        id = MenuId(),
+        restaurantId = RestaurantId(),
+        categories = listOf(category),
+      ),
+    )
 
+    val variations = listOf(
+      VariationDto(
+        "Size",
+        listOf(
+          VariationOptionDto("Normal", BigDecimal("0.00")),
+          VariationOptionDto("Large", BigDecimal("2.00")),
+        ),
+      ),
+    )
     val command = UpdateMenuItemCommand(
       menuId = menu.id.value,
       categoryId = category.id.value,
@@ -58,6 +77,7 @@ class UpdateMenuItemTest {
       name = "New Name",
       description = "New Desc",
       price = BigDecimal("15.00"),
+      variations = variations,
     )
 
     coEvery { menuRepository.findById(any()) } returns menu
@@ -66,9 +86,10 @@ class UpdateMenuItemTest {
     when (val result = updateMenuItemUseCase(command)) {
       is UpdateMenuItemResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
-        assertEquals("New Name", item.name.value)
-        assertEquals("New Desc", item.description.value)
-        assertEquals(BigDecimal("15.00"), item.price.amount)
+        item.name.value shouldBe "New Name"
+        item.description.value shouldBe "New Desc"
+        item.price.amount shouldBe BigDecimal("15.00")
+        item.variations shouldBe variations.map { it.toDomain() }
       }
       else -> {
         assert(false) { "Expected Success, but got $result" }

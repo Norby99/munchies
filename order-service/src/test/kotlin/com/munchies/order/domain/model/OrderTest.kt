@@ -2,6 +2,7 @@ package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.UpdateResult
 import com.munchies.order.fixtures.createDeliveryOrder
+import com.munchies.order.fixtures.createDineInOrder
 import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createInvalidItemsNegativeCount
 import com.munchies.order.fixtures.createInvalidItemsZeroCount
@@ -34,6 +35,18 @@ class OrderTest {
     val orderCompleted = createDeliveryOrder(OrderStatus.COMPLETED)
     val cancelResultCompleted = orderCompleted.cancel()
     cancelResultCompleted shouldBeEqual Order.CancelResult.Failure.InvalidTransition
+  }
+
+  @Test
+  fun `cancel should succeed and update status to CANCELLED when order is PENDING`() {
+    val order = createDineInOrder(OrderStatus.PENDING)
+
+    val result = order.cancel()
+
+    result.shouldBeInstanceOf<Order.CancelResult.Success>()
+    val cancelledOrder = result.order
+
+    cancelledOrder.status shouldBeEqual OrderStatus.CANCELLED
   }
 
   @Test

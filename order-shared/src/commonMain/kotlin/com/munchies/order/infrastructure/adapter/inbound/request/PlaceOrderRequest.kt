@@ -1,35 +1,31 @@
 package com.munchies.order.infrastructure.adapter.inbound.request
 
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
+import com.munchies.order.infrastructure.adapter.dto.OrderType
+import kotlin.js.JsExport
+import kotlinx.serialization.Serializable
 
-sealed interface PlaceOrderRequest {
-  val restaurantId: String
-  val customerId: String
-  val items: List<OrderItemDto>
+// TODO: ricordarsi di validare i campi null
 
-  data class Delivery(
-    override val restaurantId: String,
-    override val customerId: String,
-    override val items: List<OrderItemDto>,
-    val estimatedDeliveryTime: Long,
-    val deliveryAddress: String,
-    val bellName: String,
-    val customerPhone: String,
-  ) : PlaceOrderRequest
+@JsExport
+@Serializable
+data class PlaceOrderRequest(
+  val restaurantId: String,
+  val customerId: String,
+  val items: List<OrderItemDto>,
+  val orderType: OrderType,
 
-  data class Takeaway(
-    override val restaurantId: String,
-    override val customerId: String,
-    override val items: List<OrderItemDto>,
-    val pickupTime: Long,
-    val customerName: String,
-  ) : PlaceOrderRequest
+  // Delivery
+  val estimatedDeliveryTime: Long? = null,
+  val deliveryAddress: String? = null,
+  val bellName: String? = null,
+  val customerPhone: String? = null,
 
-  data class DineIn(
-    override val restaurantId: String,
-    override val customerId: String,
-    override val items: List<OrderItemDto>,
-    val tableNumber: Int,
-    val numberOfGuests: Int,
-  ) : PlaceOrderRequest
-}
+  // Takeaway
+  val pickupTime: Long? = null,
+  val customerName: String? = null,
+
+  // DineIn
+  val tableNumber: Int? = null,
+  val numberOfGuests: Int? = null,
+)
