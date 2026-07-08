@@ -33,4 +33,6 @@ dependencies {
 
   implementation(fromPluginToDependency(libs.plugins.node))
   implementation(fromPluginToDependency(libs.plugins.docker))
+
+  implementation(fromPluginToDependency(libs.plugins.compose))
 }

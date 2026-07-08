@@ -18,6 +18,7 @@ snakeyaml = "2.6"
 dokka = "2.2.0"
 node = "7.1.0"
 docker = "9.4.0"
+compose = "0.17.12"
 kotlinx-serialization = "1.6.3"
 mockk = "1.13.17"
 cucumber = "7.34.4"
@@ -28,7 +29,7 @@ java-jwt = "4.5.2"
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-allopen = { id= "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
+allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut" }
@@ -38,9 +39,9 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 micronaut-testResources = { id = "io.micronaut.test-resources", version.ref = "micronaut" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-node = { id = "com.github.node-gradle.node", version.ref  = "node" }
+node = { id = "com.github.node-gradle.node", version.ref = "node" }
 docker = { id = "com.bmuschko.docker-remote-api", version.ref = "docker" }
-
+compose = { id = "com.avast.gradle.docker-compose", version.ref = "compose" }
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
@@ -51,10 +52,10 @@ jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 mockito = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito" }
-micronaut-buildtools = { module = "io.micronaut.testresources:micronaut-test-resources-build-tools", version.ref = "micronaut-buildtools"  }
+micronaut-buildtools = { module = "io.micronaut.testresources:micronaut-test-resources-build-tools", version.ref = "micronaut-buildtools" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk"}
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
 cucumber-junit = { module = "io.cucumber:cucumber-junit", version.ref = "cucumber" }
 cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
@@ -62,19 +63,19 @@ junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.re
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
-java-jwt = { module = "com.auth0:java-jwt" , version.ref = "java-jwt"}
+java-jwt = { module = "com.auth0:java-jwt", version.ref = "java-jwt" }
 
 [bundles]
 junit = [
-  "junit-jupiter-api",
-  "junit-jupiter-params",
-  "junit-platform-suite"
+    "junit-jupiter-api",
+    "junit-jupiter-params",
+    "junit-platform-suite"
 ]
 
 cucumber = [
-  "cucumber-java",
-  "cucumber-junit",
-  "cucumber-junit-platform-engine"
+    "cucumber-java",
+    "cucumber-junit",
+    "cucumber-junit-platform-engine"
 ]
 
 micronaut-serialization = [
