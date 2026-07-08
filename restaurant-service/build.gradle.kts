@@ -12,7 +12,7 @@ dependencies {
   testImplementation(testFixtures(project(":architecture-rules")))
 
   // Cucumber BDD
-  testImplementation("io.cucumber:cucumber-java:7.28.2")
+  testImplementation("io.cucumber:cucumber-java:7.29.0")
   testImplementation("io.cucumber:cucumber-junit:7.15.0")
   testImplementation("io.cucumber:cucumber-junit-platform-engine:7.15.0")
 
