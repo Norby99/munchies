@@ -1,4 +1,3 @@
-
 import utils.*
 
 plugins {
@@ -8,6 +7,9 @@ plugins {
 
   id("k8s.task")
   id("k8s.info")
+
+  id("compose.task")
+  id("compose.info")
 }
 
 apply(plugin = "linter-convention")
