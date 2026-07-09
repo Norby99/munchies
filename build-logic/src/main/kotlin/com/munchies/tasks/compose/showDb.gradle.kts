@@ -1,4 +1,4 @@
-package compose
+package com.munchies.tasks.compose
 
 import com.bmuschko.gradle.docker.tasks.container.DockerExecContainer
 
