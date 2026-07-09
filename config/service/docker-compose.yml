@@ -4,6 +4,9 @@ x-service-common: &service-common
   networks:
     - default
 
+x-service-env: &service-env
+  MICRONAUT_ENVIRONMENTS: prod
+
 x-kafka-dependency: &kafka-dependency
   kafka:
     condition: service_healthy
@@ -25,6 +28,7 @@ services:
         condition: service_healthy
     environment:
       <<: *kafka-env
+      <<: *service-env
       MONGODB_URI: mongodb://munchies-mongo-order-service:27017/order-service
 
   user-service:
@@ -40,8 +44,8 @@ services:
         condition: service_healthy
     environment:
       <<: *kafka-env
+      <<: *service-env
       JWT_SECRET: blastimus_prime
-      MICRONAUT_ENVIRONMENTS: prod
       GATEWAY_SERVICE_URL: http://gateway-service:8080
       PAYMENT_SERVICE_URL: http://payment-service:8080
       MONGODB_URI: mongodb://munchies-mongo-user-service:27017/user-service
@@ -59,6 +63,7 @@ services:
         condition: service_healthy
     environment:
       <<: *kafka-env
+      <<: *service-env
       USER_SERVICE_URL: http://user-service:8080
       MONGODB_URI: mongodb://munchies-mongo-payment-service:27017/payment-service
 
@@ -75,6 +80,7 @@ services:
         condition: service_healthy
     environment:
       <<: *kafka-env
+      <<: *service-env
       MONGODB_URI: mongodb://munchies-mongo-notification-service:27017/notification-service
 
   table-reservation-service:
@@ -90,6 +96,7 @@ services:
         condition: service_healthy
     environment:
       <<: *kafka-env
+      <<: *service-env
       MONGODB_URI: mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
 
   gateway-service:
@@ -105,6 +112,7 @@ services:
         condition: service_healthy
     environment:
       <<: *kafka-env
+      <<: *service-env
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
       MONGODB_URI: mongodb://munchies-mongo-gateway-service:27017/gateway-service
