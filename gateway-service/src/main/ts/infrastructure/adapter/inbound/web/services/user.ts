@@ -13,9 +13,7 @@ import {
   convertRouteToExpress,
 } from "@main/infrastructure/adapter/middleware/route";
 
-import {
-  
-} from "munchies-user-service-shared/kotlin/munchies-user-shared"
+import { com } from "munchies-user-service-shared/kotlin/munchies-user-shared";
 import axios from "axios";
 import { fillPath } from "@main/infrastructure/adapter/middleware/route";
 export class GetUser extends GetUserAPI {
@@ -74,14 +72,18 @@ export class RegisterUser extends RegisterUserAPI {
             return result as RegisterUserSuccess;
           else return result as RegisterUserFailure;
         },
-        (result: RegisterUserResult, code) => new RegisterUserResponse(result, code),
+        (result: RegisterUserResult, code) =>
+          new RegisterUserResponse(result, code),
         (err) => new RegisterUserFailure(err),
       );
     } catch (e: any) {
       console.log("Something went wrong");
       console.log("error is " + JSON.stringify(e));
       return Promise.resolve(
-        new RegisterUserResponse(new RegisterUserFailure(JSON.stringify(e)), 500),
+        new RegisterUserResponse(
+          new RegisterUserFailure(JSON.stringify(e)),
+          500,
+        ),
       );
     }
   }
@@ -152,7 +154,8 @@ export class UpdateUserInfo extends UpdateUserInfoAPI {
             return result as UpdateUserInfoSuccess;
           else return result as UpdateUserInfoFailure;
         },
-        (result: UpdateUserInfoResult, code) => new UpdateUserInfoResponse(result, code),
+        (result: UpdateUserInfoResult, code) =>
+          new UpdateUserInfoResponse(result, code),
         (err) => new UpdateUserInfoFailure(err),
       );
     } catch (e: any) {
@@ -161,7 +164,7 @@ export class UpdateUserInfo extends UpdateUserInfoAPI {
       return Promise.resolve(
         new UpdateUserInfoResponse(
           new UpdateUserInfoFailure(JSON.stringify(e)),
-          500
+          500,
         ),
       );
     }
@@ -205,7 +208,7 @@ export class UpdateUserPassword extends UpdateUserPasswordAPI {
       return Promise.resolve(
         new UpdateUserPasswordResponse(
           new UpdateUserPasswordFailure(JSON.stringify(e)),
-          500
+          500,
         ),
       );
     }
@@ -237,7 +240,8 @@ export class DeleteUser extends DeleteUserAPI {
             return result as DeleteUserSuccess;
           else return result as DeleteUserFailure;
         },
-        (result: DeleteUserResult, code) => new DeleteUserResponse(result, code),
+        (result: DeleteUserResult, code) =>
+          new DeleteUserResponse(result, code),
         (err) => new DeleteUserFailure(err),
       );
     } catch (e: any) {
@@ -245,6 +249,43 @@ export class DeleteUser extends DeleteUserAPI {
       console.log("error is " + JSON.stringify(e));
       return Promise.resolve(
         new DeleteUserResponse(new DeleteUserFailure(JSON.stringify(e)), 500),
+      );
+    }
+  }
+}
+
+import {
+  EmailVerificationAPI,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
+  VerifyEmailFailure,
+  VerifyEmailResult,
+  VerifyEmailSuccess,
+  verifyEmailResponseFromJson,
+} from "munchies-user-service-shared/kotlin/user-modules";
+export class VerifyEmail extends EmailVerificationAPI {
+  verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    try {
+      const uri = process.env.USER_SERVICE_URL;
+      if (!uri) throw new Error("USER_SERVICE_URL is not defined in .env");
+      
+      return axiosRequest(
+        uri + this.getPath(),
+        this.getMethod(),
+        request.toJson,
+        verifyEmailResponseFromJson,
+        (result: VerifyEmailResult) => {
+          if (result.type == VerifyEmailSuccess.name) return result as VerifyEmailSuccess
+          else return result as VerifyEmailFailure
+        },
+        (result: VerifyEmailResult, code: number) => new VerifyEmailResponse(result, code),
+        (err) => new VerifyEmailFailure(err)
+      )
+    } catch (e: any) {
+      console.log("Something went wrong");
+      console.log("error is " + JSON.stringify(e));
+      return Promise.resolve(
+        new VerifyEmailResponse(new VerifyEmailFailure(JSON.stringify(e)), 500),
       );
     }
   }

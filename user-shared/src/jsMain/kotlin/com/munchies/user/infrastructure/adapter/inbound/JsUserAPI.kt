@@ -3,7 +3,6 @@ package com.munchies.user.infrastructure.adapter.inbound
 import com.munchies.commons.domain.port.AuthRole
 import com.munchies.commons.infrastructure.adapter.API
 import com.munchies.commons.infrastructure.adapter.HttpMethod
-import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.outbound.response.*
@@ -75,11 +74,12 @@ abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<Promise<DeleteUserRespons
 }
 
 @JsExport
-abstract class JsEmailVerificationAPI : UserAPI.EmailVerificationAPI<UserDTO>, API() {
+abstract class JsEmailVerificationAPI :
+  UserAPI.EmailVerificationAPI<Promise<VerifyEmailResponse>>, API() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.VERIFY_EMAIL_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun verifyEmail(request: VerifyEmailRequest): UserDTO
+  abstract override fun verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse>
 }
