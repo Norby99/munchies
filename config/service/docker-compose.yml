@@ -73,14 +73,13 @@ services:
     build:
       context: notification-service/build/docker/main
     image: munchies-notification-service:latest
-    ports: [ "8084:8080" ]
+    #? no need for port mapping (no API exposed)
     depends_on:
       <<: *kafka-dependency
       munchies-mongo-notification-service:
         condition: service_healthy
     environment:
-      <<: *kafka-env
-      <<: *service-env
+      <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-mongo-notification-service:27017/notification-service
 
   #  table-reservation-service:
