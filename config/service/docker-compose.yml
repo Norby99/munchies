@@ -83,21 +83,20 @@ services:
       <<: *service-env
       MONGODB_URI: mongodb://munchies-mongo-notification-service:27017/notification-service
 
-  table-reservation-service:
-    <<: *service-common
-    container_name: munchies-table-reservation-service
-    build:
-      context: table-reservation-service/build/docker/main
-    image: munchies-table-reservation-service:latest
-    ports: [ "8085:8080" ]
-    depends_on:
-      <<: *kafka-dependency
-      munchies-mongo-table-reservation-service:
-        condition: service_healthy
-    environment:
-      <<: *kafka-env
-      <<: *service-env
-      MONGODB_URI: mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
+  #  table-reservation-service:
+  #    <<: *service-common
+  #    container_name: munchies-table-reservation-service
+  #    build:
+  #      context: table-reservation-service/build/docker/main
+  #    image: munchies-table-reservation-service:latest
+  #    ports: [ "8085:8080" ]
+  #    depends_on:
+  #      <<: *kafka-dependency
+  #      munchies-mongo-table-reservation-service:
+  #        condition: service_healthy
+  #    environment:
+  #      <<: [ *kafka-env, *service-env ]
+  #      MONGODB_URI: mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
 
   gateway-service:
     <<: *service-common

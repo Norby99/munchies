@@ -34,12 +34,12 @@ services:
     volumes: [ "mongo_notification_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
-  munchies-mongo-table-reservation-service:
-    image: mongo:7.0
-    container_name: munchies-mongo-table-reservation-service
-    ports: [ "27022:27017" ]
-    volumes: [ "mongo_table_reservation_data:/data/db" ]
-    healthcheck: *mongo-healthcheck
+  #  munchies-mongo-table-reservation-service:
+  #    image: mongo:7.0
+  #    container_name: munchies-mongo-table-reservation-service
+  #    ports: [ "27022:27017" ]
+  #    volumes: [ "mongo_table_reservation_data:/data/db" ]
+  #    healthcheck: *mongo-healthcheck
 
   munchies-mongo-gateway-service:
     image: mongo:7.0
