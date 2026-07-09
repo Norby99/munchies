@@ -19,7 +19,7 @@ module.exports = {
   RegisterUserRequest: _inbound.request.RegisterUserRequest,
   RegisterUserResponse: _outbound.response.RegisterUserResponse,
   registerUserResponseFromJson: _outbound.response.registerUserResponseFromJson,
-  registerUserResponseFromJson: _inbound.request.registerUserRequestFromJson,
+  registerUserRequestFromJson: _inbound.request.registerUserRequestFromJson,
   RegisterUserResult: _outbound.response.RegisterUserResult,
   RegisterUserSuccess: _outbound.response.RegisterUserSuccess,
   RegisterUserFailure: _outbound.response.RegisterUserFailure,
