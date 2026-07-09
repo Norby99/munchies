@@ -109,5 +109,7 @@ class PlaceOrderControllerTest : BaseOrderControllerTest() {
         String::class.java,
       )
     }
+
+    exception.status shouldBe HttpStatus.BAD_REQUEST
   }
 }
