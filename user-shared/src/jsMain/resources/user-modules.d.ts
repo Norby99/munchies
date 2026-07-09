@@ -151,3 +151,26 @@ export declare const DeleteUserSuccess: typeof com.munchies.user.infrastructure.
 export type DeleteUserFailure = com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserFailure;
 export declare const DeleteUserFailure: typeof com.munchies.user.infrastructure.adapter.outbound.response.DeleteUserFailure;
 
+export type EmailVerificationAPI =
+    com.munchies.user.infrastructure.adapter.inbound.JsEmailVerificationAPI;
+export declare const EmailVerificationAPI: typeof
+    com.munchies.user.infrastructure.adapter.inbound.JsEmailVerificationAPI;
+
+export type VerifyEmailRequest = com.munchies.user.infrastructure.adapter.inbound.request.VerifyEmailRequest;
+export declare const VerifyEmailRequest: typeof com.munchies.user.infrastructure.adapter.inbound.request.VerifyEmailRequest;
+
+export type VerifyEmailResponse = com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailResponse;
+export declare const VerifyEmailResponse: typeof com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailResponse;
+
+export type VerifyEmailResult = com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailResult;
+export declare const VerifyEmailResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailResult;
+
+export declare const verifyEmailResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.verifyEmailResponseFromJson;
+export declare const verifyEmailRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.verifyEmailRequestFromJson;
+
+export type VerifyEmailSuccess = com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailSuccess;
+export declare const VerifyEmailSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailSuccess;
+
+export type VerifyEmailFailure = com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailFailure;
+export declare const VerifyEmailFailure: typeof com.munchies.user.infrastructure.adapter.outbound.response.VerifyEmailFailure;
+

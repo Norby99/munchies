@@ -58,6 +58,21 @@ import jakarta.inject.Inject
 @SerdeImport(GetUserResponse::class)
 @SerdeImport(GetUserSuccess::class)
 @SerdeImport(GetUserFailure::class)
+@SerdeImport(UpdateUserInfoResponse::class)
+@SerdeImport(UpdateUserInfoResult::class)
+@SerdeImport(UpdateUserInfoRequest::class)
+@SerdeImport(UpdateUserInfoSuccess::class)
+@SerdeImport(UpdateUserInfoFailure::class)
+@SerdeImport(UpdateUserPasswordResponse::class)
+@SerdeImport(UpdateUserPasswordResult::class)
+@SerdeImport(UpdateUserPasswordRequest::class)
+@SerdeImport(UpdateUserPasswordSuccess::class)
+@SerdeImport(UpdateUserPasswordFailure::class)
+@SerdeImport(VerifyEmailResponse::class)
+@SerdeImport(VerifyEmailResult::class)
+@SerdeImport(VerifyEmailRequest::class)
+@SerdeImport(VerifyEmailSuccess::class)
+@SerdeImport(VerifyEmailFailure::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
@@ -81,7 +96,7 @@ class MicronautUserController(
   UserAPI.UpdateUserPasswordAPI<HttpResponse<UpdateUserPasswordResponse>>,
   UserAPI.UpdateUserInfoAPI<HttpResponse<UpdateUserInfoResponse>>,
   UserAPI.DeleteUserAPI<HttpResponse<DeleteUserResponse>>,
-  UserAPI.EmailVerificationAPI<HttpResponse<UserDTO>> {
+  UserAPI.EmailVerificationAPI<HttpResponse<VerifyEmailResponse>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
   private val loginUser: LoginUser = services.loginUser
@@ -376,7 +391,7 @@ class MicronautUserController(
               ),
             )
 
-          UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
+          is UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
             HttpResponse.badRequest(
               UpdateUserPasswordResponse(
                 UpdateUserPasswordFailure(
@@ -417,7 +432,6 @@ class MicronautUserController(
                     "Not found",
                   ),
                   HttpStatus.NOT_FOUND.code,
-
                 ),
               )
         }
@@ -559,22 +573,37 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "Email confirmed successfully")
   @ApiResponse(responseCode = "404", description = "User not found or otk not valid")
-  override fun verifyEmail(@QueryValue id: String, @QueryValue otk: String): HttpResponse<UserDTO> {
-    val request = VerifyEmailRequest(id, otk)
+  override fun verifyEmail(@Body request: VerifyEmailRequest): HttpResponse<VerifyEmailResponse> {
+    val request = VerifyEmailRequest(request.id, request.otk)
     return when (val msg = VerifyEmailRequestValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest<UserDTO>().status(
-        HttpStatus.BAD_REQUEST,
-        msg.reason,
+      is InvalidInput -> HttpResponse.badRequest(
+        VerifyEmailResponse(
+          VerifyEmailFailure(msg.reason),
+          HttpStatus.BAD_REQUEST.code,
+        ),
       )
       else -> {
         when (verifyUserEmail.execute(request.id, request.otk)) {
           is VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail -> {
             emailConfirmationKafkaClient.confirmEmail(
-              UserEmailConfirmationNotification(request.id, USER_CONFIRMATION_KEY).toJson(),
+              UserEmailConfirmationNotification(
+                request.id,
+                USER_CONFIRMATION_KEY,
+              ).toJson(),
             )
-            HttpResponse.ok()
+            HttpResponse.ok(
+              VerifyEmailResponse(
+                VerifyEmailSuccess("Confirmed email successfully"),
+                HttpStatus.OK.code,
+              ),
+            )
           }
-          else -> HttpResponse.notFound()
+          else -> HttpResponse.notFound<VerifyEmailResponse>().body(
+            VerifyEmailResponse(
+              VerifyEmailFailure("Not found"),
+              HttpStatus.NOT_FOUND.code,
+            ),
+          )
         }
       }
     }

@@ -59,4 +59,13 @@ module.exports = {
   DeleteUserResult: _outbound.response.DeleteUserResult,
   DeleteUserSuccess: _outbound.response.DeleteUserSuccess,
   DeleteUserFailure: _outbound.response.DeleteUserFailure,
+
+  EmailVerificationAPI: _inbound.JsEmailVerificationAPI,
+  VerifyEmailRequest: _inbound.request.VerifyEmailRequest,
+  VerifyEmailResponse: _outbound.response.VerifyEmailResponse,
+  verifyEmailResponseFromJson: _outbound.response.verifyEmailResponseFromJson,
+  verifyEmailRequestFromJson: _inbound.request.verifyEmailRequestFromJson,
+  VerifyEmailResult: _outbound.response.VerifyEmailResult,
+  VerifyEmailSuccess: _outbound.response.VerifyEmailSuccess,
+  VerifyEmailFailure: _outbound.response.VerifyEmailFailure,
 }

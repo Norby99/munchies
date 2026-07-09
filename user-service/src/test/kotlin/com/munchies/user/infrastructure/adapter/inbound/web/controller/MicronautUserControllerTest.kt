@@ -416,9 +416,10 @@ class MicronautUserControllerTest {
       ),
     )
 
-    val response = controller.verifyEmail(userId, "otk")
+    val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.body().result.shouldBeInstanceOf<VerifyEmailFailure>()
   }
 
   @Test
@@ -441,8 +442,9 @@ class MicronautUserControllerTest {
       ),
     )
 
-    val response = controller.verifyEmail(userId, "fakeOtk")
+    val response = controller.verifyEmail(VerifyEmailRequest(userId, "fakeOtk"))
 
+    response.body().result.shouldBeInstanceOf<VerifyEmailFailure>()
     response.status shouldBe HttpStatus.NOT_FOUND
   }
 
@@ -469,9 +471,10 @@ class MicronautUserControllerTest {
       emailConfirmationKafkaClient = notificationClient,
     )
 
-    val response = controller.verifyEmail(userId, "otk")
+    val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
     verify(notificationClient).confirmEmail(any())
     response.status shouldBe HttpStatus.OK
+    response.body().result.shouldBeInstanceOf<VerifyEmailSuccess>()
     repo.findById(UserId(userId)) shouldNotBe null
     repo.findById(UserId(userId))!!.profile.email.isVerified shouldBe true
   }
