@@ -9,7 +9,7 @@ plugins {
   id("k8s.info")
 
   id("compose.task")
-  id("compose.info")
+  id("compose.showDb")
 }
 
 apply(plugin = "linter-convention")
