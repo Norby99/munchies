@@ -27,8 +27,7 @@ services:
       munchies-mongo-order-service:
         condition: service_healthy
     environment:
-      <<: *kafka-env
-      <<: *service-env
+      <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-mongo-order-service:27017/order-service
 
   user-service:
@@ -43,8 +42,7 @@ services:
       munchies-mongo-user-service:
         condition: service_healthy
     environment:
-      <<: *kafka-env
-      <<: *service-env
+      <<: [ *kafka-env, *service-env ]
       JWT_SECRET: blastimus_prime
       GATEWAY_SERVICE_URL: http://gateway-service:8080
       PAYMENT_SERVICE_URL: http://payment-service:8080
@@ -62,8 +60,7 @@ services:
       munchies-mongo-payment-service:
         condition: service_healthy
     environment:
-      <<: *kafka-env
-      <<: *service-env
+      <<: [ *kafka-env, *service-env ]
       USER_SERVICE_URL: http://user-service:8080
       MONGODB_URI: mongodb://munchies-mongo-payment-service:27017/payment-service
 
@@ -109,8 +106,7 @@ services:
       munchies-mongo-gateway-service:
         condition: service_healthy
     environment:
-      <<: *kafka-env
-      <<: *service-env
+      <<: [ *kafka-env, *service-env ]
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
       MONGODB_URI: mongodb://munchies-mongo-gateway-service:27017/gateway-service
