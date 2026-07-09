@@ -81,5 +81,5 @@ abstract class JsEmailVerificationAPI : UserAPI.EmailVerificationAPI<UserDTO>, A
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun verifyEmail(id: String, otk: String): UserDTO
+  abstract override fun verifyEmail(request: VerifyEmailRequest): UserDTO
 }

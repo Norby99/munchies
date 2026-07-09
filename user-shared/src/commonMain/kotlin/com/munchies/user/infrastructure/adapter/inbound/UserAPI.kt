@@ -94,7 +94,6 @@ object UserAPI {
   }
 
   interface EmailVerificationAPI<Response> {
-
-    fun verifyEmail(id: String, otk: String): Response
+    fun verifyEmail(request: VerifyEmailRequest): Response
   }
 }
