@@ -1,4 +1,4 @@
-package compose
+package com.munchies.tasks.compose
 
 import com.avast.gradle.dockercompose.ComposeExtension
 import utils.ProjectLanguage

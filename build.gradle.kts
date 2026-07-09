@@ -8,8 +8,8 @@ plugins {
   id("k8s.task")
   id("k8s.info")
 
-  id("compose.task")
-  id("compose.showDb")
+  id("com.munchies.tasks.compose.task")
+  id("com.munchies.tasks.compose.showDb")
 }
 
 apply(plugin = "linter-convention")
