@@ -1,17 +1,13 @@
-import "@main/infrastructure/adapter/inbound/web/services/user";
 import express from "express";
 import expressListEndpoints from "express-list-endpoints";
-import { routes } from "./infrastructure/adapter/middleware/route";
 import cookieParser from "cookie-parser"
+import { applyRoutes } from "./infrastructure/adapter/middleware/routes/routes";
 async function main(): Promise<void> {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
  
-  routes.forEach(route => {
-    route(app, () => {})
-  })
-  
+  applyRoutes(app);
   
   const PORT = process.env.PORT ?? 8080;
   app.listen(PORT, () => {
