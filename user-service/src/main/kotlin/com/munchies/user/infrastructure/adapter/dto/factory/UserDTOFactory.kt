@@ -1,7 +1,9 @@
 package com.munchies.user.infrastructure.adapter.dto.factory
 
+import com.munchies.commons.domain.port.AuthRole
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserProfile
+import com.munchies.user.domain.model.UserRole
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 
 /**
@@ -15,6 +17,13 @@ object UserDTOFactory {
   sealed interface UserDTOFactoryResult {
     data class Success(val user: User) : UserDTOFactoryResult
     data class Failure(val reason: String) : UserDTOFactoryResult
+  }
+
+  fun UserRole.toAuthRole(): AuthRole  {
+    return when (this) {
+      UserRole.MANAGER -> AuthRole.MANAGER
+      UserRole.CUSTOMER -> AuthRole.CUSTOMER
+    }
   }
 
   /**

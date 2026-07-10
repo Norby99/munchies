@@ -2,9 +2,7 @@ package com.munchies.user.application.usecase
 
 import com.munchies.user.application.port.inbound.LoginUser
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
-import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult.BlockedLogin
-import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult.Failure
-import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult.Success
+import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult.*
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.port.PasswordHasher
@@ -34,7 +32,7 @@ class LoginUserUseCase(
     when {
       isBlocked(timeProvider()) -> BlockedLogin
       passwordHasher.hash(password = providedPassword, salt = salt) == passwordHash ->
-        Success(user.id.value)
+        Success(user.id.value, user.profile.role)
       else -> Failure
     }
 

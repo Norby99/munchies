@@ -4,6 +4,7 @@ import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.usecase.VerifyUserEmailUseCase
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.UserRole
 import com.munchies.user.domain.model.exampleUser
 import com.munchies.user.domain.model.update
 import com.munchies.user.domain.port.PasswordHasher
@@ -175,7 +176,7 @@ class MicronautUserControllerTest {
     val userDTO = validUserDto
     val loginUseCase = mock<LoginUser> {
       on { execute(userDTO.email, userDTO.username, "valid-password") } doReturn
-        LoginUser.Companion.LoginResult.Success("login-success-id")
+        LoginUser.Companion.LoginResult.Success("login-success-id", UserRole.MANAGER)
     }
     val controller = getController(
       fakeServices.copy(loginUser = loginUseCase),

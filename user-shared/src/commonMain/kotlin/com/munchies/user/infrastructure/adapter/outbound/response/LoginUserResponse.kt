@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
+import com.munchies.commons.domain.port.AuthRole
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -24,7 +25,7 @@ sealed class LoginUserResult {
 @JsExport
 @Serializable
 @SerialName("LoginUserSuccess")
-class LoginUserSuccess(val res: String) : LoginUserResult() {
+class LoginUserSuccess(val id: String, val role: AuthRole) : LoginUserResult() {
   override val type: String
     get() = "LoginUserSuccess"
 }
