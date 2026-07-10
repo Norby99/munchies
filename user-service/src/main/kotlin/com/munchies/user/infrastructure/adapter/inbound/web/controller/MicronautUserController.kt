@@ -1,5 +1,4 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
-
 import com.munchies.commons.domain.port.InvalidInput
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
 import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
@@ -9,6 +8,7 @@ import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toAuthRole
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDomain
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI
@@ -306,7 +306,8 @@ class MicronautUserController(
               .ok(
                 LoginUserResponse(
                   LoginUserSuccess(
-                    "User logged successfully",
+                    result.userId,
+                    result.role.toAuthRole(),
                   ),
                   HttpStatus.OK.code,
                 ),

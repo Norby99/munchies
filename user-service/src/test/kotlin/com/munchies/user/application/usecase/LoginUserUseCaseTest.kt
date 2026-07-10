@@ -43,6 +43,7 @@ class LoginUserUseCaseTest {
   val validUserId = UserId(validId)
   val invalidUserId = UserId(invalidId)
   val validUsername = "validUsername"
+  val validRole = UserRole.CUSTOMER
   val invalidUsername = "invalidUsername"
   val validEmail = "validEmail"
   val invalidEmail = "invalidEmail"
@@ -51,7 +52,7 @@ class LoginUserUseCaseTest {
     profile = UserProfile(
       username = validUsername,
       email = Email(validEmail),
-      role = UserRole.CUSTOMER,
+      role = validRole,
     ),
   )
 
@@ -64,10 +65,10 @@ class LoginUserUseCaseTest {
     val useCase = fakeLoginUserUserUseCase()
 
     val result = useCase.execute(validEmail, validUsername, validPassword)
-    result shouldBe LoginResult.Success(validId)
+    result shouldBe LoginResult.Success(validId, validRole)
 
     val result2 = useCase.execute(validEmail, validUsername, validPassword)
-    result2 shouldBe LoginResult.Success(validId)
+    result2 shouldBe LoginResult.Success(validId, validRole)
   }
 
   @Test
