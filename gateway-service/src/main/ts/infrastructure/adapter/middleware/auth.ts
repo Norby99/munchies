@@ -22,6 +22,17 @@ export interface AuthInfo {
   role: AuthRole;
 }
 
+export function parseAuthRoleString(role: string): AuthRole {
+  switch (role.toUpperCase()) {
+    case AuthRole.CUSTOMER.name.toUpperCase():
+      return AuthRole.CUSTOMER;
+    case AuthRole.MANAGER.name.toUpperCase():
+      return AuthRole.MANAGER;
+    default:
+      throw new Error("Unexpected Role");
+  } 
+}
+
 export interface AuthedRequest extends ExpressRequest {
   user?: AuthInfo;
 }
