@@ -26,7 +26,8 @@ configure<ComposeExtension> {
   // true -> prints the output of the containers to the console [for debugging]
   captureContainersOutput.set(false)
   // false -> wipes all the data volumes on composeDown
-  removeVolumes.set(false)
+  // in this case, we want to wipe the volumes only when the reset property is set
+  removeVolumes.set(project.hasProperty("reset"))
   // false -> containers are not removed on composeDown, speed up the next composeUp
   stopContainers.set(true)
 
