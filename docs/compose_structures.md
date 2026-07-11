@@ -28,6 +28,14 @@ To stop the running services:
 ./gradlew composeDown
 ```
 
+### Delete Volumes
+
+To delete the volumes associated with the services:
+
+```bash
+./gradlew composeDown -Preset
+```
+
 ## Logging and Debugging
 
 ### Service Logs
