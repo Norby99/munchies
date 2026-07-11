@@ -12,7 +12,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 
-class AdvanceOrderStatusUseCaseTest {
+class AdvanceOrderStatusUseCaseUnitTest {
 
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = AdvanceOrderStatusUseCase(repository)

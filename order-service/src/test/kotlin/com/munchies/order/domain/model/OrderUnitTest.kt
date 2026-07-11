@@ -11,7 +11,7 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-class OrderTest {
+class OrderUnitTest {
 
   @Test
   fun `order should be cancellable only when in pending status`() {

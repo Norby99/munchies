@@ -15,7 +15,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 
-class UpdateOrderItemsUseCaseTest {
+class UpdateOrderItemsUseCaseUnitTest {
 
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = UpdateOrderItemsUseCase(repository)

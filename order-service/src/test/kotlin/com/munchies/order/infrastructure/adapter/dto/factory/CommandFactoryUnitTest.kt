@@ -13,7 +13,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
-class CommandFactoryTest {
+class CommandFactoryUnitTest {
 
   private fun baseDeliveryRequest() = createTestPlaceOrderRequest(
     orderType = OrderType.DELIVERY,
