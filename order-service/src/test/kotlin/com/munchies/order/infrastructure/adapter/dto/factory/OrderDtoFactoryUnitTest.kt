@@ -23,7 +23,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-class OrderDtoFactoryTest {
+class OrderDtoFactoryUnitTest {
 
   @Test
   fun `toDto should map DeliveryOrder to OrderDto-Delivery`() {
