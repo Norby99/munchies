@@ -5,6 +5,7 @@ import utils.libs
 
 plugins {
   id("jvm-test-suite")
+  id("org.jetbrains.kotlinx.kover")
 }
 
 testing {
@@ -62,4 +63,16 @@ listOf("integrationTest", "componentTest").forEach { suiteName ->
 
 tasks.named("check") {
   dependsOn("integrationTest", "componentTest")
+}
+
+val testTasksToExclude = listOf("integrationTest", "componentTest")
+kover {
+  currentProject {
+    instrumentation {
+      disabledForTestTasks.addAll(testTasksToExclude)
+    }
+    sources {
+      excludedSourceSets.addAll(testTasksToExclude)
+    }
+  }
 }
