@@ -25,7 +25,7 @@ tasks.withType<Detekt>().configureEach {
   config.setFrom(files("${rootDir.path}/config/detekt/detekt.yml"))
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
   useJUnitPlatform()
   testLogging {
     val testOutput = (
@@ -35,7 +35,6 @@ tasks.test {
       )
       .toString()
       .lowercase()
-
     when (testOutput) {
       "all" -> {
         showStandardStreams = true
