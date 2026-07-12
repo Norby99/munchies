@@ -11,11 +11,8 @@ import {
   loginUserResponseFromJson,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthRole, HttpMethod } from "munchies-commons/kotlin/commons-modules";
-import { com } from "munchies-user-service-shared";
-import { AuthedRequest, injectCookie, parseAuthRoleString } from "../../auth";
-import { RequestHandler, Response } from "express";
-import { ParamsDictionary } from "express-serve-static-core";
-import { ParsedQs } from "qs";
+import { AuthedRequest, injectCookie } from "../../auth";
+import { Response } from "express";
 class InternalLoginUserRoute
   extends LoginUserAPI
   implements
@@ -32,7 +29,7 @@ class InternalLoginUserRoute
     super();
     this.service = this;
     this.path = this.service.getPath();
-    this.authRole = this.service.getRequiredAuthRole();
+    this.authRole = null;
     this.method = this.service.getMethod();
   }
   authRole: AuthRole | null;
