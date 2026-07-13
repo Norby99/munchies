@@ -21,7 +21,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-class OrderDocumentFactoryTest {
+class OrderDocumentFactoryUnitTest {
 
   @Test
   fun `toDocument should map DeliveryOrder to OrderDocument with DELIVERY type`() {

@@ -2,6 +2,7 @@ import utils.libs
 
 plugins {
   id("kotlin-jvm")
+  id("test-suites")
   id("org.jetbrains.kotlin.plugin.allopen")
   id("com.google.devtools.ksp")
   id("com.gradleup.shadow")

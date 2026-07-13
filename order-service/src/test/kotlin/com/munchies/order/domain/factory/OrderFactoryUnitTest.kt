@@ -17,7 +17,7 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-class OrderFactoryTest {
+class OrderFactoryUnitTest {
 
   @Test
   fun `createDelivery should succeed with PENDING status when items and date are valid`() {

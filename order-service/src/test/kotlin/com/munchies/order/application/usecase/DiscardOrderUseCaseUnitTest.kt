@@ -14,7 +14,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 
-class DiscardOrderUseCaseTest {
+class DiscardOrderUseCaseUnitTest {
 
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = DiscardOrderUseCase(repository)

@@ -1,9 +1,57 @@
+x-mongo-healthcheck: &mongo-healthcheck
+  test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+  interval: 5s
+  timeout: 3s
+  retries: 10
+  start_period: 5s
+
 services:
-  {{MONGO_SERVICE_NAME}}:
+  munchies-mongo-order-service:
     image: mongo:7.0
-    container_name: {{MONGO_SERVICE_NAME}}
-    ports: ["{{MONGO_PORT}}:27017"]
-    volumes: [{{MONGO_VOLUME_NAME}}:/data/db]
+    container_name: munchies-mongo-order-service
+    ports: [ "27018:27017" ]
+    volumes: [ "mongo_order_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
+
+  munchies-mongo-user-service:
+    image: mongo:7.0
+    container_name: munchies-mongo-user-service
+    ports: [ "27019:27017" ]
+    volumes: [ "mongo_user_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
+
+  munchies-mongo-payment-service:
+    image: mongo:7.0
+    container_name: munchies-mongo-payment-service
+    ports: [ "27020:27017" ]
+    volumes: [ "mongo_payment_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
+
+  munchies-mongo-notification-service:
+    image: mongo:7.0
+    container_name: munchies-mongo-notification-service
+    ports: [ "27021:27017" ]
+    volumes: [ "mongo_notification_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
+
+  #  munchies-mongo-table-reservation-service:
+  #    image: mongo:7.0
+  #    container_name: munchies-mongo-table-reservation-service
+  #    ports: [ "27022:27017" ]
+  #    volumes: [ "mongo_table_reservation_data:/data/db" ]
+  #    healthcheck: *mongo-healthcheck
+
+  munchies-mongo-gateway-service:
+    image: mongo:7.0
+    container_name: munchies-mongo-gateway-service
+    ports: [ "27023:27017" ]
+    volumes: [ "mongo_gateway_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
 
 volumes:
-  {{MONGO_VOLUME_NAME}}:
+  mongo_order_data:
+  mongo_user_data:
+  mongo_payment_data:
+  mongo_notification_data:
+  mongo_table_reservation_data:
+  mongo_gateway_data:

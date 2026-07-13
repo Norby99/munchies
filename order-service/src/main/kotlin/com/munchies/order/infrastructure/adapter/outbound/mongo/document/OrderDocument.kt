@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.outbound.mongo.document
 
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
+import io.micronaut.serde.annotation.Serdeable
 
 /**
  * Represents the MongoDB document for storing order information.
@@ -37,11 +38,13 @@ data class OrderDocument(
 /**
  * Embedded document representing a single item within an order.
  */
+@Serdeable
 data class OrderItemDocument(
   val menuItemId: String,
   val quantity: Int,
 )
 
+@Serdeable
 data class DeliveryInfoDocument(
   val estimatedDeliveryTime: Long,
   val deliveryAddress: String,
@@ -49,11 +52,13 @@ data class DeliveryInfoDocument(
   val customerPhone: String,
 )
 
+@Serdeable
 data class TableInfoDocument(
   val tableNumber: Int,
   val numberOfGuests: Int,
 )
 
+@Serdeable
 data class TakeawayInfoDocument(
   val pickupTime: Long,
   val customerName: String,

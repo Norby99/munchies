@@ -9,7 +9,7 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
-class DeliveryOrderTest {
+class DeliveryOrderUnitTest {
 
   @Test
   fun `nextStatus of pending should be preparing`() {

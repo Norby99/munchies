@@ -12,15 +12,15 @@ dependencies {
   testImplementation(testFixtures(project(":architecture-rules")))
 
   // Cucumber BDD
-  testImplementation("io.cucumber:cucumber-java:7.15.0")
-  testImplementation("io.cucumber:cucumber-junit:7.15.0")
-  testImplementation("io.cucumber:cucumber-junit-platform-engine:7.15.0")
+  testImplementation("io.cucumber:cucumber-java:7.34.4")
+  testImplementation("io.cucumber:cucumber-junit:7.34.4")
+  testImplementation("io.cucumber:cucumber-junit-platform-engine:7.18.1")
 
   // JUnit 5
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-  testImplementation("org.junit.platform:junit-platform-suite:1.10.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.5")
+  testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.5")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.5")
+  testImplementation("org.junit.platform:junit-platform-suite:1.10.5")
 
   // For injections
   kspTest("io.micronaut:micronaut-inject-java")
