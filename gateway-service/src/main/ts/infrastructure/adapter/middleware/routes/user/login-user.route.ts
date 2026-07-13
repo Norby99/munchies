@@ -9,6 +9,7 @@ import {
   LoginUserSuccess,
   loginUserRequestFromJson,
   loginUserResponseFromJson,
+  GetUserResponse,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthRole, HttpMethod } from "munchies-commons/kotlin/commons-modules";
 import { AuthedRequest, injectCookie } from "../../auth";
@@ -38,20 +39,9 @@ class InternalLoginUserRoute
   service: LoginUserAPI;
 
   generateErrorResponse(reason: string, code: number): LoginUserResponse {
-    return this.generateResponse(this.generateFailure(reason), code);
+    return new GetUserResponse(this.generateFailure(reason), code);
   }
-  generateFailure(reason: string): LoginUserFailure {
-    return new LoginUserFailure(reason);
-  }
-  generateResponse(result: LoginUserResult, code: number): LoginUserResponse {
-    return new LoginUserResponse(result, code);
-  }
-  parseRequest(json: string): LoginUserRequest {
-    return loginUserRequestFromJson(json);
-  }
-  parseResponse(json: string): LoginUserResponse {
-    return loginUserResponseFromJson(json);
-  }
+
   parseResult(result: LoginUserResult): LoginUserSuccess | LoginUserFailure {
     if (result.type === LoginUserSuccess.name) {
       return result as LoginUserSuccess;
@@ -66,7 +56,15 @@ class InternalLoginUserRoute
     if (!uri)
       return this.generateErrorResponse("Missing User Service URL", 500);
 
-    return await internalAxiosRequest(uri + this.path, this, request);
+    return await internalAxiosRequest(
+      uri + this.path,
+      this.getMethod(),
+      request.toJson(),
+      this.parseResponse,
+      this.parseResult,
+      this.generateResponse,
+      this.generateFailure
+    );
   }
   request(request: LoginUserRequest): Promise<LoginUserResponse> {
     return this.loginUser(request);
@@ -82,7 +80,7 @@ export class LoginUserRoute implements RouteDefinition<
     this.path = this.internalRoute.path;
     this.method = this.internalRoute.method;
     this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.generateFailure;
+    this.onAuthFail = this.internalRoute.service.generateFailure;
   }
   internalRoute: InternalRoute<
     any,
@@ -98,17 +96,17 @@ export class LoginUserRoute implements RouteDefinition<
   onAuthFail: (msg: string) => LoginUserFailure;
 
   forward: (req: AuthedRequest) => Promise<LoginUserResponse> = (req) => {
-    const request = this.internalRoute.parseRequest(req.body);
+    const request = this.internalRoute.service.parseRequest(req.body.toString());
     return this.internalRoute.request(request);
   };
-  
+
   respond: (req: AuthedRequest, res: Response) => void = async (req, res) => {
     const response = await this.forward(req);
     switch (response.result.type) {
       case LoginUserSuccess.name:
-        const result = response.result as LoginUserSuccess
-        injectCookie(res, {id: result.id, role: result.role });
-        break;  
+        const result = response.result as LoginUserSuccess;
+        injectCookie(res, { id: result.id, role: result.role });
+        break;
     }
     res.status(response.code).type("json").send(response.toJson());
   };

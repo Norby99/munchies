@@ -1,26 +1,17 @@
 import { Response as ExpressResponse } from "express";
 import { HttpMethod, AuthRole } from "munchies-commons/kotlin/commons-modules";
 import {
+  GetUserRequest,
   GetUserAPI,
   GetUserResponse,
   GetUserFailure,
   GetUserResult,
   GetUserSuccess,
-  getUserResponseFromJson,
   UserServiceConfig,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthedRequest } from "../../auth";
 import { RouteDefinition, InternalRoute } from "../route-definition";
 import { internalAxiosRequest } from "../internal-client";
-class GetUserRequest {
-  private readonly value: string;
-  constructor(value: string = "") {
-    this.value = value;
-  }
-  toJson(): string {
-    return this.value;
-  }
-}
 import { fillPath } from "../routes";
 class InternalGetUserRoute
   extends GetUserAPI
@@ -41,26 +32,13 @@ class InternalGetUserRoute
     this.authRole = this.service.getRequiredAuthRole();
     this.method = this.service.getMethod();
   }
-
   service: GetUserAPI;
   path: string;
   authRole: AuthRole | null;
   method: HttpMethod;
-  generateResponse(result: GetUserResult, code: number): GetUserResponse {
-    return new GetUserResponse(result, code);
-  }
 
   generateErrorResponse(reason: string, code: number): GetUserResponse {
     return new GetUserResponse(this.generateFailure(reason), code);
-  }
-  generateFailure(reason: string): GetUserFailure {
-    return new GetUserFailure(reason);
-  }
-  parseRequest(json: string): GetUserRequest {
-    return new GetUserRequest(json);
-  }
-  parseResponse(json: string): GetUserResponse {
-    return getUserResponseFromJson(json);
   }
   parseResult(result: GetUserResult): GetUserFailure | GetUserSuccess {
     if (result.type === GetUserSuccess.name) {
@@ -83,8 +61,12 @@ class InternalGetUserRoute
 
     return await internalAxiosRequest(
       fillPath(uri + this.path + UserServiceConfig.GET_USER_PATH, id),
-      this,
-      new GetUserRequest(""),
+      this.getMethod(),
+      "id",
+      this.parseResponse,
+      this.parseResult,
+      this.generateResponse,
+      this.generateFailure,
     );
   }
 }
@@ -98,9 +80,10 @@ export class GetUserRoute implements RouteDefinition<
     this.path = this.internalRoute.path;
     this.method = this.internalRoute.method;
     this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.generateFailure;
+    this.onAuthFail = this.internalRoute.service.generateFailure;
   }
   internalRoute: InternalRoute<any, any, any, any, any, any>;
+
   path: string = UserServiceConfig.SERVICE_PATH;
   method: HttpMethod;
   authRole: AuthRole | null;

@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser"
 import { applyRoutes } from "./infrastructure/adapter/middleware/routes/routes";
 async function main(): Promise<void> {
   const app = express();
-  app.use(express.json());
+  app.use(express.raw({ type: "application/json"}));
   app.use(cookieParser());
  
   applyRoutes(app);
@@ -17,7 +17,6 @@ async function main(): Promise<void> {
       console.log(`${methods.join(',').padEnd(10)} ${path}`);
     })
   });
-  
 }
 
 main();

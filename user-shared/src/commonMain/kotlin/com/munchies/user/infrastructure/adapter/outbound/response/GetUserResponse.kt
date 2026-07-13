@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -10,10 +11,10 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 open class GetUserResponse(
-  val result: GetUserResult,
-  val code: Int,
-) {
-  fun toJson(): String = Json.encodeToString(this)
+  override val result: GetUserResult,
+  override val code: Int,
+) : WebResponse<GetUserResult>() {
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport

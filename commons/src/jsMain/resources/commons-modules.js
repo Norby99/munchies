@@ -25,4 +25,8 @@ module.exports = {
   DecodedTokenSuccess: _commons.domain.port.DecodedTokenSuccess,
   DecodedTokenFailure: _commons.domain.port.DecodedTokenFailure,
   API: _commons.infrastructure.adapter.API,
+  JsonEncodable: _commons.infrastructure.adapter.JsonEncodable,
+  WebResponse: _commons.infrastructure.adapter.WebResponse,
+  ResponseResult: _commons.infrastructure.adapter.ResponseResult,
+  WebFailure: _commons.infrastructure.adapter.WebFailure,
 };

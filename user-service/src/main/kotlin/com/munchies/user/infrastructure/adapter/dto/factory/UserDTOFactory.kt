@@ -19,7 +19,7 @@ object UserDTOFactory {
     data class Failure(val reason: String) : UserDTOFactoryResult
   }
 
-  fun UserRole.toAuthRole(): AuthRole  {
+  fun UserRole.toAuthRole(): AuthRole {
     return when (this) {
       UserRole.MANAGER -> AuthRole.MANAGER
       UserRole.CUSTOMER -> AuthRole.CUSTOMER
