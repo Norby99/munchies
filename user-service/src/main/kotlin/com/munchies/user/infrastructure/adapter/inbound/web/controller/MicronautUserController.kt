@@ -540,8 +540,8 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "User deleted successfully")
   @ApiResponse(responseCode = "404", description = "User not found")
-  override fun deleteUser(@Body request: DeleteUserRequest): HttpResponse<DeleteUserResponse> {
-    return when (val msg = DeleteUserRequestValidator().validate(request)) {
+  override fun deleteUser(@PathVariable id: String): HttpResponse<DeleteUserResponse> {
+    return when (val msg = DeleteUserRequestValidator().validate(DeleteUserRequest(id))) {
       is InvalidInput -> HttpResponse.badRequest(
         DeleteUserResponse(
           DeleteUserFailure(msg.reason),
@@ -549,7 +549,7 @@ class MicronautUserController(
         ),
       )
       else -> {
-        when (val res = deleteUser.execute(UserId(request.userId))) {
+        when (val res = deleteUser.execute(UserId(id))) {
           is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
             DeleteUserResponse(
               DeleteUserSuccess(

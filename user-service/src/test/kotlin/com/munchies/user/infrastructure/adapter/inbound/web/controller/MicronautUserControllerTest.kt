@@ -380,7 +380,7 @@ class MicronautUserControllerTest {
 
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser(DeleteUserRequest(userId.value))
+    val response = controller.deleteUser((userId.value))
     response.status shouldBe HttpStatus.OK
     response.body().result.shouldBeInstanceOf<DeleteUserSuccess>()
     verify(deleteUseCase).execute(userId)
@@ -394,7 +394,7 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser(DeleteUserRequest(userId.value))
+    val response = controller.deleteUser((userId.value))
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.body().result.shouldBeInstanceOf<DeleteUserFailure>()

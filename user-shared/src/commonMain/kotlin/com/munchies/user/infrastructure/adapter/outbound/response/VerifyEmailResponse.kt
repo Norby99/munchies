@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -8,11 +9,12 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
+@SerialName("VerifyEmailResponse")
 class VerifyEmailResponse(
-  val result: VerifyEmailResult,
-  val code: Int,
-) {
-  fun toJson(): String = Json.encodeToString(this)
+  override val result: VerifyEmailResult,
+  override val code: Int,
+) : WebResponse<VerifyEmailResult>() {
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport

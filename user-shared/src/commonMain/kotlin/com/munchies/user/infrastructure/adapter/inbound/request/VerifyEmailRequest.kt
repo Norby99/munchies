@@ -1,14 +1,17 @@
 package com.munchies.user.infrastructure.adapter.inbound.request
 
+import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import kotlin.js.JsExport
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-data class VerifyEmailRequest(val id: String, val otk: String) {
-  fun toJson() = Json.encodeToString(this)
+@SerialName("VerifyEmailRequest")
+data class VerifyEmailRequest(val id: String, val otk: String) : JsonEncodable() {
+  override fun toJson() = Json.encodeToString(this)
 }
 
 @JsExport

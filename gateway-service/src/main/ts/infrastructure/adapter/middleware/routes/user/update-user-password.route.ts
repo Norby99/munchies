@@ -1,28 +1,29 @@
+
 import { Response as ExpressResponse } from "express";
 import { HttpMethod, AuthRole } from "munchies-commons/kotlin/commons-modules";
 import {
-  GetUserRequest,
-  GetUserAPI,
-  GetUserResponse,
-  GetUserFailure,
-  GetUserResult,
-  GetUserSuccess,
+  UpdateUserPasswordRequest,
+  UpdateUserPasswordAPI,
+  UpdateUserPasswordResponse,
+  UpdateUserPasswordFailure,
+  UpdateUserPasswordResult,
+  UpdateUserPasswordSuccess,
   UserServiceConfig,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthedRequest } from "../../auth";
 import { RouteDefinition, InternalRoute } from "../route-definition";
 import { internalAxiosRequest } from "../internal-client";
 import { fillPath } from "../routes";
-class InternalGetUserRoute
-  extends GetUserAPI
+class InternalUpdateUserPasswordRoute
+  extends UpdateUserPasswordAPI
   implements
     InternalRoute<
-      GetUserAPI,
-      GetUserRequest,
-      GetUserResponse,
-      GetUserResult,
-      GetUserSuccess,
-      GetUserFailure
+      UpdateUserPasswordAPI,
+      UpdateUserPasswordRequest,
+      UpdateUserPasswordResponse,
+      UpdateUserPasswordResult,
+      UpdateUserPasswordSuccess,
+      UpdateUserPasswordFailure
     >
 {
   constructor() {
@@ -32,38 +33,39 @@ class InternalGetUserRoute
     this.authRole = this.service.getRequiredAuthRole();
     this.method = this.service.getMethod();
   }
-  service: GetUserAPI;
+  service: UpdateUserPasswordAPI;
   path: string;
   authRole: AuthRole | null;
   method: HttpMethod;
 
-  generateErrorResponse(reason: string, code: number): GetUserResponse {
-    return new GetUserResponse(this.generateFailure(reason), code);
+  generateErrorResponse(reason: string, code: number): UpdateUserPasswordResponse {
+    return new UpdateUserPasswordResponse(this.generateFailure(reason), code);
   }
-  parseResult(result: GetUserResult): GetUserFailure | GetUserSuccess {
-    if (result.type === GetUserSuccess.name) {
-      return result as GetUserSuccess;
-    } else if (result.type === GetUserFailure.name) {
-      return result as GetUserFailure;
+  parseResult(result: UpdateUserPasswordResult): UpdateUserPasswordFailure | UpdateUserPasswordSuccess {
+    if (result.type === UpdateUserPasswordSuccess.name) {
+      return result as UpdateUserPasswordSuccess;
+    } else if (result.type === UpdateUserPasswordFailure.name) {
+      return result as UpdateUserPasswordFailure;
     } else {
       return this.generateFailure("Invalid Type in Result");
     }
   }
 
-  request(request: GetUserRequest): Promise<GetUserResponse> {
-    return this.getUser(request.id);
-    
+  request(request: UpdateUserPasswordRequest): Promise<UpdateUserPasswordResponse> {
+    return this.updateUserPassword(request);
   }
 
-  async getUser(id: string): Promise<GetUserResponse> {
+  async updateUserPassword(request: UpdateUserPasswordRequest): Promise<UpdateUserPasswordResponse> {
+    
+    
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
       return this.generateErrorResponse("Missing User Service URL", 500);
 
     return await internalAxiosRequest(
-      fillPath(uri + this.path, id),
+      uri + this.path,
       this.getMethod(),
-      "id",
+      request.toJson(),
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
@@ -72,12 +74,12 @@ class InternalGetUserRoute
   }
 }
 
-export class GetUserRoute implements RouteDefinition<
-  GetUserResponse,
-  GetUserFailure
+export class UpdateUserPasswordRoute implements RouteDefinition<
+  UpdateUserPasswordResponse,
+  UpdateUserPasswordFailure
 > {
   constructor() {
-    this.internalRoute = new InternalGetUserRoute();
+    this.internalRoute = new InternalUpdateUserPasswordRoute();
     this.path = this.internalRoute.path;
     this.method = this.internalRoute.method;
     this.authRole = this.internalRoute.authRole;
@@ -88,12 +90,14 @@ export class GetUserRoute implements RouteDefinition<
   path: string = UserServiceConfig.SERVICE_PATH;
   method: HttpMethod;
   authRole: AuthRole | null;
-  onAuthFail: (msg: string) => GetUserFailure;
-  forward: (req: AuthedRequest) => Promise<GetUserResponse> = (
+  onAuthFail: (msg: string) => UpdateUserPasswordFailure;
+  forward: (req: AuthedRequest) => Promise<UpdateUserPasswordResponse> = (
     req: AuthedRequest,
   ) => {
     const id = req.user!!.id;
-    return this.internalRoute.request(new GetUserRequest(id));
+    let request = this.internalRoute.service.parseRequest(req.body.toString()) 
+    request = request.copy(id);
+    return this.internalRoute.request(request);
   };
   respond: (req: AuthedRequest, res: ExpressResponse) => void = async (
     req,
