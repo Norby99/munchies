@@ -33,9 +33,8 @@ class MongoOrderRepositoryIntegrationTest {
     context = ApplicationContext.run(
       mapOf(
         "mongodb.uri" to "${mongo.connectionString}/order-service",
-        "mongodb.package-names" to listOf(
+        "mongodb.package-names[0]" to
           "com.munchies.order.infrastructure.adapter.outbound.mongo.document",
-        ),
       ),
       "prod",
     )
