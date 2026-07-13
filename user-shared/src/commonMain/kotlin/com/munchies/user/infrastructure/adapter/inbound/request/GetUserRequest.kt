@@ -9,12 +9,10 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-@SerialName("DeleteUserRequest")
-data class DeleteUserRequest(
-  val userId: String,
-) : JsonEncodable() {
+@SerialName("GetUserRequest")
+class GetUserRequest(val id: String) : JsonEncodable() {
   override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport
-fun deleteUserRequestFromJson(json: String): DeleteUserRequest = Json.decodeFromString(json)
+fun getUserRequestFromJson(json: String): GetUserRequest = Json.decodeFromString(json)

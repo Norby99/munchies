@@ -1,5 +1,7 @@
 package com.munchies.user.application.port.inbound
 
+import com.munchies.user.domain.model.UserRole
+
 interface LoginUser {
   /**
    * Authenticates a user based on the provided email and password.
@@ -13,7 +15,7 @@ interface LoginUser {
 
   companion object {
     sealed interface LoginResult {
-      data class Success(val userId: String) : LoginResult
+      data class Success(val userId: String, val role: UserRole) : LoginResult
       data object Failure : LoginResult
       data object BlockedLogin : LoginResult
     }

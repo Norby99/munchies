@@ -87,14 +87,13 @@ object UserAPI {
     /**
      * Deletes a user account.
      *
-     * @param request user deletion input data.
+     * @param id user deletion id.
      * @return operation response.
      */
-    fun deleteUser(request: DeleteUserRequest): Response
+    fun deleteUser(id: String): Response
   }
 
   interface EmailVerificationAPI<Response> {
-
-    fun verifyEmail(id: String, otk: String): Response
+    fun verifyEmail(request: VerifyEmailRequest): Response
   }
 }

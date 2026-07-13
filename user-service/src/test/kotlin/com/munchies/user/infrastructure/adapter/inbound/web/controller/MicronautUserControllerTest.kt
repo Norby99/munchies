@@ -1,11 +1,10 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.commons.domain.port.GenerateTokenSuccess
-import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.usecase.VerifyUserEmailUseCase
 import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.UserRole
 import com.munchies.user.domain.model.exampleUser
 import com.munchies.user.domain.model.update
 import com.munchies.user.domain.port.PasswordHasher
@@ -45,12 +44,10 @@ class MicronautUserControllerTest {
   private fun getController(
     services: UserServices = fakeServices,
     emailConfirmationKafkaClient: EmailConfirmationClient = mock(),
-    tokenProvider: TokenProvider = mock(),
   ) = MicronautUserController(
     services = services,
     emailConfirmationKafkaClient = emailConfirmationKafkaClient,
     paymentClient = mock(),
-    tokenProvider = tokenProvider,
   )
 
   private val validUser = exampleUser
@@ -115,9 +112,6 @@ class MicronautUserControllerTest {
     }
     val controller = getController(
       fakeServices.copy(registerUser = registerUseCase),
-      tokenProvider = mock {
-        on { generateToken(any()) } doReturn GenerateTokenSuccess("sometoken")
-      },
     )
 
     val response = controller.registerUser(
@@ -129,7 +123,6 @@ class MicronautUserControllerTest {
     )
 
     response.status shouldBe HttpStatus.OK
-    response.cookies.all.shouldNotBeEmpty()
     response.body().result.shouldBeInstanceOf<RegisterUserSuccess>()
   }
 
@@ -183,13 +176,10 @@ class MicronautUserControllerTest {
     val userDTO = validUserDto
     val loginUseCase = mock<LoginUser> {
       on { execute(userDTO.email, userDTO.username, "valid-password") } doReturn
-        LoginUser.Companion.LoginResult.Success("login-success-id")
+        LoginUser.Companion.LoginResult.Success("login-success-id", UserRole.MANAGER)
     }
     val controller = getController(
       fakeServices.copy(loginUser = loginUseCase),
-      tokenProvider = mock {
-        on { generateToken(any()) } doReturn GenerateTokenSuccess("sometoken")
-      },
     )
 
     val response = controller
@@ -197,7 +187,6 @@ class MicronautUserControllerTest {
 
     response.status shouldBe HttpStatus.OK
     response.body().result.shouldBeInstanceOf<LoginUserSuccess>()
-    response.cookies.all.shouldNotBeEmpty()
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
   }
 
@@ -391,7 +380,7 @@ class MicronautUserControllerTest {
 
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser(DeleteUserRequest(userId.value))
+    val response = controller.deleteUser((userId.value))
     response.status shouldBe HttpStatus.OK
     response.body().result.shouldBeInstanceOf<DeleteUserSuccess>()
     verify(deleteUseCase).execute(userId)
@@ -405,7 +394,7 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser(DeleteUserRequest(userId.value))
+    val response = controller.deleteUser((userId.value))
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.body().result.shouldBeInstanceOf<DeleteUserFailure>()
@@ -428,9 +417,10 @@ class MicronautUserControllerTest {
       ),
     )
 
-    val response = controller.verifyEmail(userId, "otk")
+    val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.body().result.shouldBeInstanceOf<VerifyEmailFailure>()
   }
 
   @Test
@@ -453,8 +443,9 @@ class MicronautUserControllerTest {
       ),
     )
 
-    val response = controller.verifyEmail(userId, "fakeOtk")
+    val response = controller.verifyEmail(VerifyEmailRequest(userId, "fakeOtk"))
 
+    response.body().result.shouldBeInstanceOf<VerifyEmailFailure>()
     response.status shouldBe HttpStatus.NOT_FOUND
   }
 
@@ -481,9 +472,10 @@ class MicronautUserControllerTest {
       emailConfirmationKafkaClient = notificationClient,
     )
 
-    val response = controller.verifyEmail(userId, "otk")
+    val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
     verify(notificationClient).confirmEmail(any())
     response.status shouldBe HttpStatus.OK
+    response.body().result.shouldBeInstanceOf<VerifyEmailSuccess>()
     repo.findById(UserId(userId)) shouldNotBe null
     repo.findById(UserId(userId))!!.profile.email.isVerified shouldBe true
   }

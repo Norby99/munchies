@@ -1,4 +1,4 @@
-# `:order-service`
+# `:order-shared`
 
 ## Module dependency graph
 
@@ -12,11 +12,6 @@ config:
 ---
 graph TB
   :order-shared[order-shared]:::unknown
-  :order-service[order-service]:::unknown
-  :commons[commons]:::unknown
-
-  :order-service -.-> :commons
-  :order-service -.-> :order-shared
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

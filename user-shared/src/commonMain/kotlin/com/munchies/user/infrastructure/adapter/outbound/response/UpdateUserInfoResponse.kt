@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -8,8 +9,12 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class UpdateUserInfoResponse(val result: UpdateUserInfoResult) {
-  fun toJson(): String = Json.encodeToString(this)
+@SerialName("UpdateUserInfoResponse")
+class UpdateUserInfoResponse(
+  override val result: UpdateUserInfoResult,
+  override val code: Int,
+) : WebResponse<UpdateUserInfoResult>() {
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport

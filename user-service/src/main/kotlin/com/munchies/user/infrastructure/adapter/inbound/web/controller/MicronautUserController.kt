@@ -1,9 +1,5 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
-
-import com.munchies.commons.domain.port.GenerateTokenFailure
-import com.munchies.commons.domain.port.GenerateTokenSuccess
 import com.munchies.commons.domain.port.InvalidInput
-import com.munchies.commons.domain.port.TokenProvider
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
 import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import com.munchies.user.application.port.inbound.*
@@ -12,6 +8,7 @@ import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory
+import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toAuthRole
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDomain
 import com.munchies.user.infrastructure.adapter.inbound.UserAPI
@@ -27,8 +24,6 @@ import com.munchies.user.infrastructure.adapter.validator.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
-import io.micronaut.http.cookie.Cookie
-import io.micronaut.http.cookie.SameSite
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.SerdeImport
@@ -50,11 +45,39 @@ import jakarta.inject.Inject
  */
 @ExecuteOn(TaskExecutors.BLOCKING)
 @SerdeImport(UserDTO::class)
+@SerdeImport(GetUserResult::class)
+@SerdeImport(GetUserRequest::class)
+@SerdeImport(GetUserResponse::class)
+@SerdeImport(GetUserFailure::class)
+@SerdeImport(GetUserSuccess::class)
 @SerdeImport(RegisterUserRequest::class)
+@SerdeImport(RegisterUserResponse::class)
+@SerdeImport(RegisterUserResult::class)
+@SerdeImport(RegisterUserFailure::class)
+@SerdeImport(RegisterUserSuccess::class)
 @SerdeImport(LoginUserRequest::class)
+@SerdeImport(LoginUserResponse::class)
+@SerdeImport(LoginUserResult::class)
+@SerdeImport(LoginUserFailure::class)
+@SerdeImport(LoginUserSuccess::class)
 @SerdeImport(GetUserResponse::class)
 @SerdeImport(GetUserSuccess::class)
 @SerdeImport(GetUserFailure::class)
+@SerdeImport(UpdateUserInfoResponse::class)
+@SerdeImport(UpdateUserInfoResult::class)
+@SerdeImport(UpdateUserInfoRequest::class)
+@SerdeImport(UpdateUserInfoSuccess::class)
+@SerdeImport(UpdateUserInfoFailure::class)
+@SerdeImport(UpdateUserPasswordResponse::class)
+@SerdeImport(UpdateUserPasswordResult::class)
+@SerdeImport(UpdateUserPasswordRequest::class)
+@SerdeImport(UpdateUserPasswordSuccess::class)
+@SerdeImport(UpdateUserPasswordFailure::class)
+@SerdeImport(VerifyEmailResponse::class)
+@SerdeImport(VerifyEmailResult::class)
+@SerdeImport(VerifyEmailRequest::class)
+@SerdeImport(VerifyEmailSuccess::class)
+@SerdeImport(VerifyEmailFailure::class)
 @Controller(
   port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
@@ -71,8 +94,6 @@ class MicronautUserController(
 
   @Inject
   private val emailConfirmationKafkaClient: EmailConfirmationClient,
-
-  @Inject val tokenProvider: TokenProvider,
 ) :
   UserAPI.GetUserAPI<HttpResponse<GetUserResponse>>,
   UserAPI.RegisterUserAPI<HttpResponse<RegisterUserResponse>>,
@@ -80,7 +101,7 @@ class MicronautUserController(
   UserAPI.UpdateUserPasswordAPI<HttpResponse<UpdateUserPasswordResponse>>,
   UserAPI.UpdateUserInfoAPI<HttpResponse<UpdateUserInfoResponse>>,
   UserAPI.DeleteUserAPI<HttpResponse<DeleteUserResponse>>,
-  UserAPI.EmailVerificationAPI<HttpResponse<UserDTO>> {
+  UserAPI.EmailVerificationAPI<HttpResponse<VerifyEmailResponse>> {
   private val getUser: GetUser = services.getUser
   private val registerUser: RegisterUser = services.registerUser
   private val loginUser: LoginUser = services.loginUser
@@ -129,10 +150,16 @@ class MicronautUserController(
   override fun getUser(@PathVariable id: String): HttpResponse<GetUserResponse> {
     return when (val res = getUser.execute(UserId(id))) {
       is GetUser.Companion.GetUserResult.Success -> HttpResponse.ok(
-        GetUserResponse(GetUserSuccess(res.user.toDTO())),
+        GetUserResponse(
+          GetUserSuccess(res.user.toDTO()),
+          HttpStatus.OK.code,
+        ),
       )
       GetUser.Companion.GetUserResult.NotFound -> HttpResponse.notFound(
-        GetUserResponse(GetUserFailure("Not Found")),
+        GetUserResponse(
+          GetUserFailure("Not Found"),
+          HttpStatus.NOT_FOUND.code,
+        ),
       )
     }
   }
@@ -166,13 +193,19 @@ class MicronautUserController(
   ): HttpResponse<RegisterUserResponse> {
     return when (val msg = RegisterUserRequestValidator().validate(request)) {
       is InvalidInput ->
-        HttpResponse.badRequest(RegisterUserResponse(RegisterUserFailure(msg.reason)))
+        HttpResponse.badRequest(
+          RegisterUserResponse(
+            RegisterUserFailure(msg.reason),
+            HttpStatus.BAD_REQUEST.code,
+          ),
+        )
       else -> {
         when (val user = request.user.toDomain()) {
           is UserDTOFactory.UserDTOFactoryResult.Failure ->
             HttpResponse.badRequest(
               RegisterUserResponse(
                 RegisterUserFailure(user.reason),
+                HttpStatus.BAD_REQUEST.code,
               ),
             )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
@@ -190,33 +223,15 @@ class MicronautUserController(
                 )
             ) {
               is RegisterUser.Companion.RegisterUserResult.Success -> {
-                when (val token = tokenProvider.generateToken(user.user.id)) {
-                  is GenerateTokenSuccess -> {
-                    HttpResponse
-                      .ok(
-                        RegisterUserResponse(
-                          RegisterUserSuccess(
-                            "User registered successfully",
-                          ),
-                        ),
-                      )
-                      .cookie(
-                        Cookie.of("authToken", token.token)
-                          .httpOnly(true)
-                          .secure(true)
-                          .sameSite(SameSite.Strict)
-                          .path(UserServiceConfig.SERVICE_PATH),
-                      )
-                  }
-                  else ->
-                    HttpResponse.serverError(
-                      RegisterUserResponse(
-                        RegisterUserFailure(
-                          "Couldn't generate token",
-                        ),
+                HttpResponse
+                  .ok(
+                    RegisterUserResponse(
+                      RegisterUserSuccess(
+                        res.user.toDTO(),
                       ),
-                    )
-                }
+                      HttpStatus.OK.code,
+                    ),
+                  )
               }
               is RegisterUser.Companion.RegisterUserResult.UserIsAlreadyRegistered ->
                 HttpResponse
@@ -224,7 +239,9 @@ class MicronautUserController(
                     RegisterUserResponse(
                       RegisterUserFailure(
                         "User is already registered",
+
                       ),
+                      HttpStatus.UNAUTHORIZED.code,
                     ),
                   )
               is RegisterUser.Companion.RegisterUserResult.Failure ->
@@ -234,6 +251,7 @@ class MicronautUserController(
                       RegisterUserFailure(
                         "An error has occurred: " + res.reason,
                       ),
+                      HttpStatus.INTERNAL_SERVER_ERROR.code,
                     ),
                   )
             }
@@ -274,7 +292,9 @@ class MicronautUserController(
         LoginUserResponse(
           LoginUserFailure(
             msg.reason,
+
           ),
+          HttpStatus.BAD_REQUEST.code,
         ),
       )
       else -> {
@@ -287,33 +307,16 @@ class MicronautUserController(
             )
         ) {
           is LoginResult.Success -> {
-            when (val token = tokenProvider.generateToken(UserId(result.userId))) {
-              is GenerateTokenSuccess ->
-                HttpResponse
-                  .ok(
-                    LoginUserResponse(
-                      LoginUserSuccess(
-                        "User logged successfully",
-                      ),
-                    ),
-                  )
-                  .cookie(
-                    Cookie.of("authToken", token.token)
-                      .httpOnly(true)
-                      .secure(true)
-                      .sameSite(SameSite.Strict)
-                      .path(UserServiceConfig.SERVICE_PATH),
-                  )
-              is GenerateTokenFailure ->
-                HttpResponse
-                  .serverError(
-                    LoginUserResponse(
-                      LoginUserFailure(
-                        "Couldn't create token",
-                      ),
-                    ),
-                  )
-            }
+            HttpResponse
+              .ok(
+                LoginUserResponse(
+                  LoginUserSuccess(
+                    result.userId,
+                    result.role.toAuthRole(),
+                  ),
+                  HttpStatus.OK.code,
+                ),
+              )
           }
           is LoginResult.BlockedLogin ->
             HttpResponse
@@ -321,6 +324,7 @@ class MicronautUserController(
               .body(
                 LoginUserResponse(
                   LoginUserFailure("Unauthorized"),
+                  HttpStatus.UNAUTHORIZED.code,
                 ),
               )
           else ->
@@ -330,6 +334,7 @@ class MicronautUserController(
                   LoginUserFailure(
                     "Invalid email or password",
                   ),
+                  HttpStatus.BAD_REQUEST.code,
                 ),
               )
         }
@@ -369,6 +374,7 @@ class MicronautUserController(
         HttpResponse.badRequest(
           UpdateUserPasswordResponse(
             UpdateUserPasswordFailure(msg.reason),
+            HttpStatus.BAD_REQUEST.code,
           ),
         )
       else -> {
@@ -387,15 +393,17 @@ class MicronautUserController(
                 UpdateUserPasswordSuccess(
                   "Password updated successfully",
                 ),
+                HttpStatus.OK.code,
               ),
             )
 
-          UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
+          is UpdateUserPassword.Companion.UpdateUserPasswordResult.WrongCredentials ->
             HttpResponse.badRequest(
               UpdateUserPasswordResponse(
                 UpdateUserPasswordFailure(
                   "Invalid old password",
                 ),
+                HttpStatus.BAD_REQUEST.code,
               ),
             )
 
@@ -407,6 +415,7 @@ class MicronautUserController(
                   UpdateUserPasswordFailure(
                     "Unauthorized",
                   ),
+                  HttpStatus.UNAUTHORIZED.code,
                 ),
               )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UnauthorizedOperation ->
@@ -417,11 +426,20 @@ class MicronautUserController(
                   UpdateUserPasswordFailure(
                     "Unauthorized",
                   ),
+                  HttpStatus.UNAUTHORIZED.code,
+
                 ),
               )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
             HttpResponse.notFound<UpdateUserPasswordResponse>()
-              .body(UpdateUserPasswordResponse(UpdateUserPasswordFailure("Not found")))
+              .body(
+                UpdateUserPasswordResponse(
+                  UpdateUserPasswordFailure(
+                    "Not found",
+                  ),
+                  HttpStatus.NOT_FOUND.code,
+                ),
+              )
         }
       }
     }
@@ -456,14 +474,23 @@ class MicronautUserController(
         HttpResponse
           .badRequest(
             UpdateUserInfoResponse(
-              UpdateUserInfoFailure(msg.reason),
+              UpdateUserInfoFailure(
+                msg.reason,
+              ),
+              HttpStatus.BAD_REQUEST.code,
             ),
           )
       else -> {
         when (val user = request.user.toDomain()) {
           is UserDTOFactory.UserDTOFactoryResult.Failure ->
             HttpResponse.badRequest(
-              UpdateUserInfoResponse(UpdateUserInfoFailure(user.reason)),
+              UpdateUserInfoResponse(
+                UpdateUserInfoFailure(
+                  user.reason,
+                ),
+                HttpStatus.BAD_REQUEST.code,
+
+              ),
             )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
             when (
@@ -476,17 +503,28 @@ class MicronautUserController(
                 HttpResponse.ok(
                   UpdateUserInfoResponse(
                     UpdateUserInfoSuccess("User info updated successfully"),
+                    HttpStatus.OK.code,
                   ),
                 )
 
               is UpdateUserInfo.Companion.UpdateUserInfoResult.UserNotFound ->
                 HttpResponse
                   .notFound<UpdateUserInfoResponse>()
-                  .body(UpdateUserInfoResponse(UpdateUserInfoFailure("Not Found")))
+                  .body(
+                    UpdateUserInfoResponse(
+                      UpdateUserInfoFailure(
+                        "Not Found",
+                      ),
+                      HttpStatus.NOT_FOUND.code,
+                    ),
+                  )
 
               is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure ->
                 HttpResponse.badRequest(
-                  UpdateUserInfoResponse(UpdateUserInfoFailure(res.reason)),
+                  UpdateUserInfoResponse(
+                    UpdateUserInfoFailure(res.reason),
+                    HttpStatus.BAD_REQUEST.code,
+                  ),
                 )
             }
           }
@@ -502,24 +540,33 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "User deleted successfully")
   @ApiResponse(responseCode = "404", description = "User not found")
-  override fun deleteUser(@Body request: DeleteUserRequest): HttpResponse<DeleteUserResponse> {
-    return when (val msg = DeleteUserRequestValidator().validate(request)) {
+  override fun deleteUser(@PathVariable id: String): HttpResponse<DeleteUserResponse> {
+    return when (val msg = DeleteUserRequestValidator().validate(DeleteUserRequest(id))) {
       is InvalidInput -> HttpResponse.badRequest(
-        DeleteUserResponse(DeleteUserFailure(msg.reason)),
+        DeleteUserResponse(
+          DeleteUserFailure(msg.reason),
+          HttpStatus.BAD_REQUEST.code,
+        ),
       )
       else -> {
-        when (val res = deleteUser.execute(UserId(request.userId))) {
+        when (val res = deleteUser.execute(UserId(id))) {
           is DeleteUser.Companion.DeleteUserResult.Success -> HttpResponse.ok(
             DeleteUserResponse(
               DeleteUserSuccess(
                 res.user.toDTO(),
               ),
+              HttpStatus.OK.code,
             ),
           )
           DeleteUser.Companion.DeleteUserResult.NotFound ->
             HttpResponse
               .notFound<DeleteUserResponse>()
-              .body(DeleteUserResponse(DeleteUserFailure("Not Found")))
+              .body(
+                DeleteUserResponse(
+                  DeleteUserFailure("Not Found"),
+                  HttpStatus.NOT_FOUND.code,
+                ),
+              )
         }
       }
     }
@@ -532,22 +579,37 @@ class MicronautUserController(
   )
   @ApiResponse(responseCode = "200", description = "Email confirmed successfully")
   @ApiResponse(responseCode = "404", description = "User not found or otk not valid")
-  override fun verifyEmail(@QueryValue id: String, @QueryValue otk: String): HttpResponse<UserDTO> {
-    val request = VerifyEmailRequest(id, otk)
+  override fun verifyEmail(@Body request: VerifyEmailRequest): HttpResponse<VerifyEmailResponse> {
+    val request = VerifyEmailRequest(request.id, request.otk)
     return when (val msg = VerifyEmailRequestValidator().validate(request)) {
-      is InvalidInput -> HttpResponse.badRequest<UserDTO>().status(
-        HttpStatus.BAD_REQUEST,
-        msg.reason,
+      is InvalidInput -> HttpResponse.badRequest(
+        VerifyEmailResponse(
+          VerifyEmailFailure(msg.reason),
+          HttpStatus.BAD_REQUEST.code,
+        ),
       )
       else -> {
         when (verifyUserEmail.execute(request.id, request.otk)) {
           is VerifyUserEmail.Companion.VerifyUserEmailResult.ConfirmedEmail -> {
             emailConfirmationKafkaClient.confirmEmail(
-              UserEmailConfirmationNotification(request.id, USER_CONFIRMATION_KEY).toJson(),
+              UserEmailConfirmationNotification(
+                request.id,
+                USER_CONFIRMATION_KEY,
+              ).toJson(),
             )
-            HttpResponse.ok()
+            HttpResponse.ok(
+              VerifyEmailResponse(
+                VerifyEmailSuccess("Confirmed email successfully"),
+                HttpStatus.OK.code,
+              ),
+            )
           }
-          else -> HttpResponse.notFound()
+          else -> HttpResponse.notFound<VerifyEmailResponse>().body(
+            VerifyEmailResponse(
+              VerifyEmailFailure("Not found"),
+              HttpStatus.NOT_FOUND.code,
+            ),
+          )
         }
       }
     }

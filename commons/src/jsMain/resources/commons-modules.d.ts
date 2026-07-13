@@ -34,22 +34,38 @@ export declare const GenerateTokenSuccess: typeof com.munchies.commons.domain.po
 export type GenerateTokenFailure = typeof com.munchies.commons.domain.port.GenerateTokenFailure;
 export declare const GenerateTokenFailure: typeof com.munchies.commons.domain.port.GenerateTokenFailure;
 
-export type ValidateTokenResult = com.munchies.commons.domain.port.ValidateTokenResult;
-
-export type ValidateTokenSuccess = typeof com.munchies.commons.domain.port.ValidateTokenSuccess;
-export declare const ValidateTokenSuccess: typeof com.munchies.commons.domain.port.ValidateTokenSuccess;
-
-export type ValidateTokenFailure = typeof com.munchies.commons.domain.port.ValidateTokenFailure;
-export declare const ValidateTokenFailure: typeof com.munchies.commons.domain.port.ValidateTokenFailure;
-
-export type RefreshTokenResult = com.munchies.commons.domain.port.RefreshTokenResult;
-
-export type RefreshTokenSuccess = com.munchies.commons.domain.port.RefreshTokenSuccess;
-export declare const RefreshTokenSuccess: typeof com.munchies.commons.domain.port.RefreshTokenSuccess;
-
-export type RefreshTokenFailure = typeof com.munchies.commons.domain.port.RefreshTokenFailure;
-export declare const RefreshTokenFailure: typeof com.munchies.commons.domain.port.RefreshTokenFailure;
-
 export type HttpMethod =
   com.munchies.commons.infrastructure.adapter.HttpMethod;
 export declare const HttpMethod: typeof com.munchies.commons.infrastructure.adapter.HttpMethod;
+
+export type AuthRole =
+  com.munchies.commons.domain.port.AuthRole;
+export declare const AuthRole: typeof com.munchies.commons.domain.port.AuthRole;
+
+export type TokenDecoder = com.munchies.commons.domain.port.TokenDecoder;
+export declare const TokenDecoder: typeof com.munchies.commons.domain.port.TokenDecoder;
+
+export type DecodedTokenResult = com.munchies.commons.domain.port.DecodedTokenResult;
+
+export type DecodedTokenSuccess = com.munchies.commons.domain.port.DecodedTokenSuccess;
+export declare const DecodedTokenSuccess: typeof com.munchies.commons.domain.port.DecodedTokenSuccess;
+
+export type DecodedTokenFailure = typeof com.munchies.commons.domain.port.DecodedTokenFailure;
+export declare const DecodedTokenFailure: typeof com.munchies.commons.domain.port.DecodedTokenFailure;
+
+export declare const isAuthRoleGreaterThan: typeof com.munchies.commons.domain.port.isAuthRoleGreaterThan;
+
+export type API = com.munchies.commons.infrastructure.adapter.API
+export declare const API: typeof com.munchies.commons.infrastructure.adapter.API;
+
+export type JsonEncodable = com.munchies.commons.infrastructure.adapter.JsonEncodable;
+export declare const JsonEncodable: typeof com.munchies.commons.infrastructure.adapter.JsonEncodable;
+
+export type WebResponse = com.munchies.commons.infrastructure.adapter.WebResponse;
+export declare const WebResponse: typeof com.munchies.commons.infrastructure.adapter.WebResponse;
+
+export type ResponseResult = com.munchies.commons.infrastructure.adapter.ResponseResult;
+export declare const ResponseResult: typeof com.munchies.commons.infrastructure.adapter.ResponseResult;
+
+export type WebFailure = com.munchies.commons.infrastructure.adapter.WebFailure;
+export declare const WebFailure: typeof com.munchies.commons.infrastructure.adapter.WebFailure;

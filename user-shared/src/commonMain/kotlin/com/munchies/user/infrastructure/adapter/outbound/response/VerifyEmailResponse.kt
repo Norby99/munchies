@@ -1,7 +1,6 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
 import com.munchies.commons.infrastructure.adapter.WebResponse
-import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,34 +9,36 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-open class GetUserResponse(
-  override val result: GetUserResult,
+@SerialName("VerifyEmailResponse")
+class VerifyEmailResponse(
+  override val result: VerifyEmailResult,
   override val code: Int,
-) : WebResponse<GetUserResult>() {
+) : WebResponse<VerifyEmailResult>() {
   override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport
-fun getUserResponseFromJson(json: String): GetUserResponse = Json.decodeFromString(json)
+fun verifyEmailResponseFromJson(jsonString: String): VerifyEmailResponse =
+  Json.decodeFromString(jsonString)
 
 @JsExport
 @Serializable
-sealed class GetUserResult {
+sealed class VerifyEmailResult {
   abstract val type: String
 }
 
 @JsExport
 @Serializable
-@SerialName("GetUserSuccess")
-class GetUserSuccess(val user: UserDTO) : GetUserResult() {
+@SerialName("VerifyEmailSuccess")
+class VerifyEmailSuccess(val msg: String) : VerifyEmailResult() {
   override val type: String
-    get() = "GetUserSuccess"
+    get() = "VerifyEmailSuccess"
 }
 
 @JsExport
 @Serializable
-@SerialName("GetUserFailure")
-class GetUserFailure(val reason: String) : GetUserResult() {
+@SerialName("VerifyEmailFailure")
+class VerifyEmailFailure(val reason: String) : VerifyEmailResult() {
   override val type: String
-    get() = "GetUserFailure"
+    get() = "VerifyEmailFailure"
 }
