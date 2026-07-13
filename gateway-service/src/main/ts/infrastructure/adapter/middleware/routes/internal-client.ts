@@ -5,9 +5,6 @@ const axiosClient = axios.create({
   transformResponse: [(data) => data],
   headers: {
     "Content-Type": "application/json",
-    common: {
-      "Content-Type": "application/json",
-    },
   },
   validateStatus: (status: number) => status <= 500,
 });
@@ -22,7 +19,11 @@ axiosClient.interceptors.response.use((response) => {
   return response;
 });
 
-import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
+import {
+  HttpMethod,
+  JsonEncodable,
+  WebResponse,
+} from "munchies-commons/kotlin/commons-modules";
 function axiosMethodChooser(
   base: AxiosInstance,
   uri: string,
@@ -49,13 +50,13 @@ async function request<
 >(
   uri: string,
   httpMethod: HttpMethod,
-  toJson: () => string,
+  body: string,
   fromJson: (json: string) => Response,
   toResult: (result: Result) => Success | Failure,
   toResponse: (result: Success | Failure, code: number) => Response,
   toFailure: (err: string) => Failure,
 ): Promise<Response> {
-  return axiosMethodChooser(axiosClient, uri, httpMethod, toJson())
+  return axiosMethodChooser(axiosClient, uri, httpMethod, body)
     .then((value) => {
       console.log("received data: ", value.data);
       const response = fromJson(value.data);
@@ -64,7 +65,7 @@ async function request<
     .catch((err) => {
       console.error("-----Error-----");
       console.error("when " + httpMethod.name + " to " + uri);
-      console.error("with: " + toJson());
+      console.error("with: " + body);
       console.error("result err: ", err);
       console.error("-----End Error-----");
       return toResponse(toFailure(JSON.stringify(err)), 500);
@@ -75,23 +76,27 @@ import { API } from "munchies-commons/kotlin/commons-modules";
 import { InternalRoute } from "./route-definition";
 export function internalAxiosRequest<
   Service extends API,
-  Request extends { toJson(): string },
-  Response extends { toJson(): string; result: Result; code: number },
+  Request extends JsonEncodable,
+  Response extends WebResponse,
   Result extends { type: string },
   Success extends Result,
   Failure extends Result & { reason: string },
-  >(
+>(
   uri: string,
-  route: InternalRoute<Service, Request, Response, Result, Success, Failure>,
-  input: Request,
+  httpMethod: HttpMethod,
+  body: string,
+  fromJson: (json: string) => Response,
+  toResult: (result: Result) => Success | Failure,
+  toResponse: (result: Success | Failure, code: number) => Response,
+  toFailure: (err: string) => Failure,
 ): Promise<Response> {
   return request(
     uri,
-    route.service.getMethod(),
-    input.toJson,
-    route.parseResponse,
-    route.parseResult,
-    route.generateResponse,
-    route.generateFailure
-  )
+    httpMethod,
+    body,
+    fromJson,
+    toResult,
+    toResponse,
+    toFailure,
+  );
 }

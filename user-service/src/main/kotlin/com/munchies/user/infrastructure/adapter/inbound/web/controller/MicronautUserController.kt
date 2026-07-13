@@ -45,6 +45,11 @@ import jakarta.inject.Inject
  */
 @ExecuteOn(TaskExecutors.BLOCKING)
 @SerdeImport(UserDTO::class)
+@SerdeImport(GetUserResult::class)
+@SerdeImport(GetUserRequest::class)
+@SerdeImport(GetUserResponse::class)
+@SerdeImport(GetUserFailure::class)
+@SerdeImport(GetUserSuccess::class)
 @SerdeImport(RegisterUserRequest::class)
 @SerdeImport(RegisterUserResponse::class)
 @SerdeImport(RegisterUserResult::class)
@@ -222,7 +227,7 @@ class MicronautUserController(
                   .ok(
                     RegisterUserResponse(
                       RegisterUserSuccess(
-                        "User registered successfully",
+                        res.user.toDTO(),
                       ),
                       HttpStatus.OK.code,
                     ),

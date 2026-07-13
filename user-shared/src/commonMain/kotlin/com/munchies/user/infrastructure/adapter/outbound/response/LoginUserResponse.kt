@@ -1,6 +1,7 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
 import com.munchies.commons.domain.port.AuthRole
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -9,8 +10,12 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class LoginUserResponse(val result: LoginUserResult, val code: Int) {
-  fun toJson(): String = Json.encodeToString(this)
+@SerialName("LoginUserResponse")
+class LoginUserResponse(
+  override val result: LoginUserResult,
+  override val code: Int,
+) : WebResponse<LoginUserResult>() {
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport

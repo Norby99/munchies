@@ -58,3 +58,14 @@ export declare const isAuthRoleGreaterThan: typeof com.munchies.commons.domain.p
 export type API = com.munchies.commons.infrastructure.adapter.API
 export declare const API: typeof com.munchies.commons.infrastructure.adapter.API;
 
+export type JsonEncodable = com.munchies.commons.infrastructure.adapter.JsonEncodable;
+export declare const JsonEncodable: typeof com.munchies.commons.infrastructure.adapter.JsonEncodable;
+
+export type WebResponse = com.munchies.commons.infrastructure.adapter.WebResponse;
+export declare const WebResponse: typeof com.munchies.commons.infrastructure.adapter.WebResponse;
+
+export type ResponseResult = com.munchies.commons.infrastructure.adapter.ResponseResult;
+export declare const ResponseResult: typeof com.munchies.commons.infrastructure.adapter.ResponseResult;
+
+export type WebFailure = com.munchies.commons.infrastructure.adapter.WebFailure;
+export declare const WebFailure: typeof com.munchies.commons.infrastructure.adapter.WebFailure;

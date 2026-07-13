@@ -2,11 +2,11 @@ import {
   RegisterUserAPI,
   RegisterUserFailure,
   RegisterUserRequest,
-  registerUserRequestFromJson,
   RegisterUserResponse,
   registerUserResponseFromJson,
   RegisterUserResult,
   RegisterUserSuccess,
+  UserDTO,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import {
   HttpMethod,
@@ -42,24 +42,10 @@ class InternalRegisterUserRoute
   authRole: AuthRole | null;
   method: HttpMethod;
 
-  parseRequest(json: string): RegisterUserRequest {
-    return registerUserRequestFromJson(json);
-  }
-  generateFailure(reason: string): RegisterUserFailure {
-    return new RegisterUserFailure(reason);
-  }
   generateErrorResponse(reason: string, code: number): RegisterUserResponse {
     return this.generateResponse(this.generateFailure(reason), code);
   }
-  generateResponse(
-    result: RegisterUserResult,
-    code: number,
-  ): RegisterUserResponse {
-    return new RegisterUserResponse(result, code);
-  }
-  parseResponse(json: string): RegisterUserResponse {
-    return registerUserResponseFromJson(json);
-  }
+
   parseResult(
     result: RegisterUserResult,
   ): RegisterUserSuccess | RegisterUserFailure {
@@ -77,7 +63,15 @@ class InternalRegisterUserRoute
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
       return this.generateErrorResponse("Missing User Service URL", 500);
-    return await internalAxiosRequest(uri + this.path, this, request);
+    return await internalAxiosRequest(
+      uri + this.path,
+      this.getMethod(),
+      request.toJson(),
+      this.parseResponse,
+      this.parseResult,
+      this.generateResponse,
+      this.generateFailure,
+    );
   }
   request(request: RegisterUserRequest): Promise<RegisterUserResponse> {
     return this.registerUser(request);
@@ -93,7 +87,7 @@ export class RegisterUserRoute implements RouteDefinition<
     this.path = this.internalRoute.path;
     this.method = this.internalRoute.method;
     this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.generateFailure;
+    this.onAuthFail = this.internalRoute.service.generateFailure;
   }
 
   internalRoute: InternalRoute<
@@ -110,17 +104,17 @@ export class RegisterUserRoute implements RouteDefinition<
   authRole: AuthRole | null;
   onAuthFail: (msg: string) => RegisterUserFailure;
   forward: (req: AuthedRequest) => Promise<RegisterUserResponse> = (req) => {
-    const request = this.internalRoute.parseRequest(req.body);
+    let request = this.internalRoute.service.parseRequest(req.body.toString());
     return this.internalRoute.request(request);
   };
   respond: (req: AuthedRequest, res: Response) => void = async (req, res) => {
     const response = await this.forward(req);
-    const request = this.internalRoute.parseRequest(req.body);
     switch (response.result.type) {
       case RegisterUserSuccess.name:
-        const id = request.user.id === "" ? newId() : request.user.id;
+        const result = response.result as RegisterUserSuccess;
+        const id = result.user.id;
         try {
-          const role = parseAuthRoleString(request.user.role);
+          const role = parseAuthRoleString(result.user.role);
           injectCookie(res, { id: id, role: role });
         } catch (_: any) {
           res

@@ -9,6 +9,8 @@ module.exports = {
   UserServiceConfig: _user.infrastructure.adapter.inbound.web.config.UserServiceConfig,
   
   GetUserAPI: _inbound.JsGetUserAPI,
+  GetUserRequest: _inbound.request.GetUserRequest,
+  getUserRequestFromJson: _inbound.request.getUserRequestFromJson,
   GetUserResponse: _outbound.response.GetUserResponse,
   getUserResponseFromJson: _outbound.response.getUserResponseFromJson,
   GetUserResult: _outbound.response.GetUserResult,

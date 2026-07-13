@@ -13,6 +13,9 @@ export type GetUserAPI =
 export declare const GetUserAPI: typeof
   com.munchies.user.infrastructure.adapter.inbound.JsGetUserAPI;
 
+export type GetUserRequest = com.munchies.user.infrastructure.adapter.inbound.request.GetUserRequest;
+export declare const GetUserRequest: typeof com.munchies.user.infrastructure.adapter.inbound.request.GetUserRequest;
+
 export type GetUserResponse = com.munchies.user.infrastructure.adapter.outbound.response.GetUserResponse;
 export declare const GetUserResponse: typeof com.munchies.user.infrastructure.adapter.outbound.response.GetUserResponse;
 
@@ -20,6 +23,7 @@ export type GetUserResult = com.munchies.user.infrastructure.adapter.outbound.re
 export declare const GetUserResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.GetUserResult;
 
 export declare const getUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.getUserResponseFromJson;
+export declare const getUserRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.getUserRequestFromJson;
 
 export type GetUserSuccess = com.munchies.user.infrastructure.adapter.outbound.response.GetUserSuccess;
 export declare const GetUserSuccess: typeof com.munchies.user.infrastructure.adapter.outbound.response.GetUserSuccess;
