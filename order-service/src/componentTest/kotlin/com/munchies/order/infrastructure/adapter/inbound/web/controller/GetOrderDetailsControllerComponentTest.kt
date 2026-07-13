@@ -1,27 +1,35 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.application.port.inbound.GetOrderDetails
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
-import io.micronaut.test.annotation.MockBean
-import io.mockk.every
-import io.mockk.mockk
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
+@MicronautTest(environments = ["prod"], transactional = false)
 class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
-  private val getOrderDetailsMock = mockk<GetOrderDetails>()
+  @Inject
+  lateinit var orderRepository: MongoOrderRepository
 
-  @MockBean(GetOrderDetails::class)
-  fun getOrderDetails(): GetOrderDetails = getOrderDetailsMock
+  @Inject
+  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
+
+  @AfterEach
+  fun cleanupMongo() {
+    mongoCrudOrderRepository.deleteAll()
+  }
 
   // ==========================================
   // TEST: GET /orders/{id}
@@ -29,8 +37,10 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
   @Test
   fun `getOrderDetails should return 200 OK and DTO when found`() {
-    val realDto = createSampleOrder().toDto()
-    every { getOrderDetailsMock.execute(any()) } returns GetOrderDetails.Result.Success(realDto)
+    val order = createSampleOrder()
+    orderRepository.save(order)
+
+    val realDto = order.toDto()
 
     val response = client.toBlocking().exchange(
       HttpRequest.GET<Any>(realDto.orderId),
@@ -43,16 +53,10 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
   @Test
   fun `getOrderDetails should return 404 Not Found when use case returns OrderNotFound`() {
-    every {
-      getOrderDetailsMock.execute(
-        any(),
-      )
-    } returns GetOrderDetails.Result.Failure.OrderNotFound
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange<Any, Any>(HttpRequest.GET(defaultOrderId.value))
     }
 
-    exception.status shouldBe HttpStatus.NOT_FOUND
+    response.status shouldBe HttpStatus.NOT_FOUND
   }
 }

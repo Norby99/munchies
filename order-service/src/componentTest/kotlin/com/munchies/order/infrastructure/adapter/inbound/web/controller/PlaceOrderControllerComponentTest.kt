@@ -1,27 +1,38 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.application.port.inbound.PlaceOrder
+import com.munchies.order.domain.model.OrderId
+import com.munchies.order.fixtures.createDeliveryInfo
 import com.munchies.order.fixtures.createDeliveryOrder
+import com.munchies.order.fixtures.createEmptyItems
+import com.munchies.order.fixtures.createInvalidItemsNegativeCount
 import com.munchies.order.fixtures.createPlaceOrderRequest
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
+import com.munchies.order.fixtures.pastTime
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import io.kotest.matchers.equals.shouldBeEqual
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
-import io.micronaut.test.annotation.MockBean
-import io.mockk.every
-import io.mockk.mockk
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
+@MicronautTest(environments = ["prod"], transactional = false)
 class PlaceOrderControllerComponentTest : BaseOrderController() {
 
-  private val placeOrderMock = mockk<PlaceOrder>()
+  @Inject
+  lateinit var orderRepository: MongoOrderRepository
 
-  @MockBean(PlaceOrder::class)
-  fun placeOrder(): PlaceOrder = placeOrderMock
+  @Inject
+  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
+
+  @AfterEach
+  fun cleanupMongo() {
+    mongoCrudOrderRepository.deleteAll()
+  }
 
   // ==========================================
   // TEST: POST /orders
@@ -32,10 +43,6 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val order = createDeliveryOrder()
     val requestBody = createPlaceOrderRequest(order)
 
-    every {
-      placeOrderMock.execute(any())
-    } returns PlaceOrder.Result.Success(order.toDto())
-
     val response = client.toBlocking().exchange(
       HttpRequest.POST(
         "/${OrderServiceConfig.PLACE_ORDER_PATH}",
@@ -43,20 +50,23 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
       ),
       String::class.java,
     )
+
+    val generatedId =
+      OrderId(response.body()!!.substringAfter("Order placed successfully with ID: "))
+    val savedOrder = orderRepository.findById(generatedId)
+
     response.status shouldBe HttpStatus.OK
-    response.body() shouldBeEqual "Order placed successfully with ID: ${order.id.value}"
+
+    savedOrder shouldBe order.copy(id = generatedId)
   }
 
   @Test
   fun `placeOrder should return 400 Bad Request on InvalidDate`() {
-    val order = createDeliveryOrder()
+    val order =
+      createDeliveryOrder(deliveryInfo = createDeliveryInfo(estimatedDeliveryTime = pastTime))
     val requestBody = createPlaceOrderRequest(order)
 
-    every {
-      placeOrderMock.execute(any())
-    } returns PlaceOrder.Result.Failure.InvalidDate
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.POST(
           "/${OrderServiceConfig.PLACE_ORDER_PATH}",
@@ -66,19 +76,15 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 
   @Test
   fun `placeOrder should return 400 Bad Request on EmptyItems`() {
-    val order = createDeliveryOrder()
+    val order = createDeliveryOrder(items = createEmptyItems())
     val requestBody = createPlaceOrderRequest(order)
 
-    every {
-      placeOrderMock.execute(any())
-    } returns PlaceOrder.Result.Failure.EmptyItems
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.POST(
           "/${OrderServiceConfig.PLACE_ORDER_PATH}",
@@ -88,19 +94,15 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 
   @Test
   fun `placeOrder should return 400 Bad Request on InvalidItemQuantity`() {
-    val order = createDeliveryOrder()
+    val order = createDeliveryOrder(items = createInvalidItemsNegativeCount())
     val requestBody = createPlaceOrderRequest(order)
 
-    every {
-      placeOrderMock.execute(any())
-    } returns PlaceOrder.Result.Failure.InvalidItemQuantity
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.POST(
           "/${OrderServiceConfig.PLACE_ORDER_PATH}",
@@ -110,6 +112,6 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 }

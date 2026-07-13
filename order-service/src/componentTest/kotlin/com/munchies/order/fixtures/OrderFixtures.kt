@@ -12,8 +12,11 @@ val futureTime: Long get() = fixedNow + 60_000
 // ---------- IDs ----------
 
 val defaultOrderId: OrderId get() = OrderId("o-1")
+val secondaryOrderId: OrderId get() = OrderId("o-2")
 val defaultRestaurantId: RestaurantId get() = RestaurantId("r-1")
+val secondaryRestaurantId: RestaurantId get() = RestaurantId("r-2")
 val defaultCustomerId: CustomerId get() = CustomerId("c-1")
+val secondaryCustomerId: CustomerId get() = CustomerId("c-2")
 
 // ---------- Reusable contact presets ----------
 

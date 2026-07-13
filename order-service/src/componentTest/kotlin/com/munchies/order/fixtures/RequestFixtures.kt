@@ -1,5 +1,6 @@
 package com.munchies.order.fixtures
 
+import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.TakeawayOrder
@@ -80,9 +81,12 @@ fun createTestPlaceOrderRequest(
  * @param orderId The OrderId of the order to discard. Defaults to defaultOrderId.
  * @return A DiscardOrderRequest with the given OrderId and defaultCustomerId.
  */
-fun createDiscardOrderRequest(orderId: OrderId = defaultOrderId) = DiscardOrderRequest(
+fun createDiscardOrderRequest(
+  orderId: OrderId = defaultOrderId,
+  customerId: CustomerId = defaultCustomerId,
+) = DiscardOrderRequest(
   orderId = orderId.value,
-  customerId = defaultCustomerId.value,
+  customerId = customerId.value,
 )
 
 /** Creates an UpdateTakeawayOrderRequest from a TakeawayOrder.

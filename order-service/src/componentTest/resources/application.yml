@@ -3,11 +3,3 @@ micronaut:
     name: order-service
   openapi:
     enabled: true
-
-mongodb:
-  uri: mongodb://localhost:27017/order-service
-
-endpoints:
-  health:
-    enabled: true
-    sensitive: false

@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
@@ -7,9 +8,12 @@ import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.serde.annotation.SerdeImport
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import io.micronaut.test.support.TestPropertyProvider
 import jakarta.inject.Inject
+import org.junit.jupiter.api.TestInstance
+import org.testcontainers.containers.MongoDBContainer
 
+@SerdeImport(OrderId::class)
 @SerdeImport(OrderDto::class)
 @SerdeImport(OrderDto.Delivery::class)
 @SerdeImport(OrderDto.Takeaway::class)
@@ -23,8 +27,22 @@ import jakarta.inject.Inject
 @SerdeImport(UpdateOrderItemsRequest::class)
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
-@MicronautTest
-abstract class BaseOrderController {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+abstract class BaseOrderController : TestPropertyProvider {
+
+  companion object {
+    private val mongo: MongoDBContainer by lazy {
+      MongoDBContainer("mongo:7.0").apply { start() }
+    }
+  }
+
+  override fun getProperties(): MutableMap<String, String> = mutableMapOf(
+    "mongodb.uri" to "${mongo.connectionString}/order-service",
+    "mongodb.package-names[0]" to
+      "com.munchies.order.infrastructure.adapter.outbound.mongo.document",
+    // assigning a random port to avoid conflicts when running multiple tests in parallel
+    "micronaut.server.port" to "-1",
+  )
 
   @Inject
   @field:Client(

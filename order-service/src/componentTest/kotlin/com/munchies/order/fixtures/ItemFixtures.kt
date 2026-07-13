@@ -6,12 +6,16 @@ import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
 val orderItem1 = OrderItem(MenuItemId("item-1"), 2)
 val orderItem2 = OrderItem(MenuItemId("item-2"), 3)
+val orderItem3 = OrderItem(MenuItemId("item-3"), 1)
 
 val invalidOrderItem1 = OrderItem(MenuItemId("item-1"), 0)
 val invalidOrderItem2 = OrderItem(MenuItemId("item-2"), -1)
 
 /** A valid, non-empty list of order items. */
 fun createNewItems(): List<OrderItem> = listOf(orderItem1, orderItem2)
+
+/** A valid, non-empty list of order items with more items than createNewItems(). */
+fun createNewItemsBigger(): List<OrderItem> = listOf(orderItem1, orderItem2, orderItem3)
 
 /** An empty item list — used to test the EmptyItems failure case. */
 fun createEmptyItems(): List<OrderItem> = emptyList()
