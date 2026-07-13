@@ -1,11 +1,9 @@
 import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
 import { RouteDefinition } from "./route-definition";
 import { userRoutes } from "./user/user.routes";
-import { Express } from "express"
+import { Express, NextFunction, Request, Response } from "express";
 
-const routes: RouteDefinition<any, any>[] = [
- ...userRoutes, 
-]
+const routes: RouteDefinition<any, any>[] = [...userRoutes];
 
 export function fillPath(path: string, ...values: (string | number)[]): string {
   let i = 0;
@@ -41,14 +39,33 @@ function createRoute(
   }
 }
 
+function logRequests(): RequestHandler {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    console.log("req.body", req.body);
+    next();
+  };
+}
+
+type AsyncHandler = (req: Request,
+  res: Response,
+  next: NextFunction
+) => unknown | Promise<unknown>
+
+export function catchError(handler: AsyncHandler): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(handler(req, res, next)).catch(next)
+  }
+}
 export function applyRoutes(app: Express) {
   for (const r of routes) {
-    const method = r.method
-    const path = r.path
-    const handlers: RequestHandler[] = []
-    r.authRole ? handlers.push(requireAuth(r.onAuthFail)) : {}
-    r.authRole ? handlers.push(requireRole(r.authRole, r.onAuthFail)) : {}
-    handlers.push(r.respond)
+    const method = r.method;
+    const path = r.path;
+    const handlers: RequestHandler[] = [logRequests()];
+    if (r.authRole) {
+      handlers.push(requireAuth(r.onAuthFail));
+      handlers.push(requireRole(r.authRole, r.onAuthFail));
+    }
+    handlers.push(catchError(r.respond));
     createRoute(app, path, method, ...handlers);
   }
 }
