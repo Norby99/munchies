@@ -1,62 +1,76 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo
+import com.munchies.order.domain.model.TakeawayOrder
+import com.munchies.order.fixtures.Address2
+import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.createUpdateTakeawayOrderRequest
 import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.fixtures.pastTime
+import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
-import io.micronaut.test.annotation.MockBean
-import io.mockk.every
-import io.mockk.mockk
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
+@MicronautTest(environments = ["prod"], transactional = false)
 class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
 
-  private val updateTakeawayOrderInfoMock = mockk<UpdateTakeawayOrderInfo>()
+  @Inject
+  lateinit var orderRepository: MongoOrderRepository
 
-  @MockBean(UpdateTakeawayOrderInfo::class)
-  fun updateTakeawayOrderInfo(): UpdateTakeawayOrderInfo = updateTakeawayOrderInfoMock
+  @Inject
+  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
 
-  // ==========================================
-  // TEST: PATCH orders/{id}/takeaway
-  // ==========================================
+  @AfterEach
+  fun cleanupMongo() {
+    mongoCrudOrderRepository.deleteAll()
+  }
 
   @Test
   fun `PATCH update takeaway order info should return 200 OK on success`() {
-    val requestBody = createUpdateTakeawayOrderRequest()
+    val initialOrder = createTakeawayOrder()
+    val newOrder = initialOrder.copy(
+      takeawayInfo = initialOrder.takeawayInfo.copy(customerName = Address2.bellName),
+    )
 
-    every {
-      updateTakeawayOrderInfoMock.execute(any())
-    } returns UpdateTakeawayOrderInfo.Result.Success
+    orderRepository.save(initialOrder)
+
+    val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
     val response = client.toBlocking().exchange(
       HttpRequest.PATCH(
         "/${
           OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
             "{id}",
-            defaultOrderId.value,
+            initialOrder.id.value,
           )
         }",
         mapper.writeValueAsString(requestBody),
       ),
       String::class.java,
     )
+
     response.status shouldBe HttpStatus.OK
+
+    val updatedOrder = orderRepository.findById(initialOrder.id) as TakeawayOrder
+    updatedOrder.takeawayInfo shouldBe newOrder.takeawayInfo
+    updatedOrder.takeawayInfo shouldNotBe initialOrder.takeawayInfo
   }
 
   @Test
   fun `PATCH update takeaway order info should return 404 Not Found on OrderNotFound`() {
     val requestBody = createUpdateTakeawayOrderRequest()
 
-    every {
-      updateTakeawayOrderInfoMock.execute(any())
-    } returns UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.PATCH(
           "/${
@@ -71,24 +85,25 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
       )
     }
 
-    exception.status shouldBe HttpStatus.NOT_FOUND
+    response.status shouldBe HttpStatus.NOT_FOUND
   }
 
   @Test
   fun `PATCH update takeaway order info should return 400 Bad Request on Unauthorized`() {
-    val requestBody = createUpdateTakeawayOrderRequest()
+    val initialOrder = createTakeawayOrder()
+    val newOrder = initialOrder.copy(customerId = secondaryCustomerId)
 
-    every {
-      updateTakeawayOrderInfoMock.execute(any())
-    } returns UpdateTakeawayOrderInfo.Result.Failure.Unauthorized
+    orderRepository.save(initialOrder)
 
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val requestBody = createUpdateTakeawayOrderRequest(newOrder)
+
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.PATCH(
           "/${
             OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
               "{id}",
-              defaultOrderId.value,
+              initialOrder.id.value,
             )
           }",
           mapper.writeValueAsString(requestBody),
@@ -97,24 +112,29 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 
   @Test
   fun `PATCH update takeaway order info should return 400 Bad Request on InvalidDate`() {
-    val requestBody = createUpdateTakeawayOrderRequest()
+    val initialOrder = createTakeawayOrder()
+    val newOrder = initialOrder.copy(
+      takeawayInfo = initialOrder.takeawayInfo.copy(
+        pickupTime = pastTime,
+      ),
+    )
 
-    every {
-      updateTakeawayOrderInfoMock.execute(any())
-    } returns UpdateTakeawayOrderInfo.Result.Failure.InvalidDate
+    orderRepository.save(initialOrder)
 
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val requestBody = createUpdateTakeawayOrderRequest(newOrder)
+
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.PATCH(
           "/${
             OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
               "{id}",
-              defaultOrderId.value,
+              initialOrder.id.value,
             )
           }",
           mapper.writeValueAsString(requestBody),
@@ -123,6 +143,6 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 }

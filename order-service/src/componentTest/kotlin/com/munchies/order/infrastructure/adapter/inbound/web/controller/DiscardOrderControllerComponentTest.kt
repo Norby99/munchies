@@ -1,26 +1,38 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.application.port.inbound.DiscardOrder
+import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createDiscardOrderRequest
 import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.fixtures.secondaryCustomerId
+import com.munchies.order.fixtures.secondaryOrderId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
+import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
-import io.micronaut.test.annotation.MockBean
-import io.mockk.every
-import io.mockk.mockk
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
+@MicronautTest(environments = ["prod"], transactional = false)
 class DiscardOrderControllerComponentTest : BaseOrderController() {
 
-  private val discardOrderMock = mockk<DiscardOrder>()
+  @Inject
+  lateinit var orderRepository: MongoOrderRepository
 
-  @MockBean(DiscardOrder::class)
-  fun discardOrder(): DiscardOrder = discardOrderMock
+  @Inject
+  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
+
+  @AfterEach
+  fun cleanupMongo() {
+    mongoCrudOrderRepository.deleteAll()
+  }
 
   // ==========================================
   // TEST: POST orders/{id}/discard
@@ -28,16 +40,12 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
 
   @Test
   fun `POST discard order should return 200 OK on success`() {
-    val requestBody = createDiscardOrderRequest(defaultOrderId)
-
-    every {
-      discardOrderMock.execute(any())
-    } returns DiscardOrder.Result.Success
+    orderRepository.save(createDeliveryOrder())
 
     val response = client.toBlocking().exchange(
       HttpRequest.POST(
         "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-        mapper.writeValueAsString(requestBody),
+        mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
       ),
       String::class.java,
     )
@@ -47,64 +55,52 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
 
   @Test
   fun `POST discard order should return 404 Not Found on OrderNotFound`() {
-    val requestBody = createDiscardOrderRequest(defaultOrderId)
+    orderRepository.save(createDeliveryOrder())
 
-    every {
-      discardOrderMock.execute(any())
-    } returns DiscardOrder.Result.Failure.OrderNotFound
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.POST(
-          "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(requestBody),
+          "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", secondaryOrderId.value)}",
+          mapper.writeValueAsString(createDiscardOrderRequest(secondaryOrderId)),
         ),
         String::class.java,
       )
     }
 
-    exception.status shouldBe HttpStatus.NOT_FOUND
+    response.status shouldBe HttpStatus.NOT_FOUND
   }
 
   @Test
   fun `POST discard order should return 400 Bad Request on Unauthorized`() {
-    val requestBody = createDiscardOrderRequest(defaultOrderId)
+    orderRepository.save(createDeliveryOrder())
 
-    every {
-      discardOrderMock.execute(any())
-    } returns DiscardOrder.Result.Failure.Unauthorized
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.POST(
           "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(requestBody),
+          mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId, secondaryCustomerId)),
         ),
         String::class.java,
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 
   @Test
   fun `POST discard order should return 400 Bad Request on OrderNotCancellable`() {
-    val requestBody = createDiscardOrderRequest(defaultOrderId)
+    orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
-    every {
-      discardOrderMock.execute(any())
-    } returns DiscardOrder.Result.Failure.OrderNotCancellable
-
-    val exception = assertThrows(HttpClientResponseException::class.java) {
+    val response = assertThrows(HttpClientResponseException::class.java) {
       client.toBlocking().exchange(
         HttpRequest.POST(
           "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(requestBody),
+          mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
         ),
         String::class.java,
       )
     }
 
-    exception.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.BAD_REQUEST
   }
 }
