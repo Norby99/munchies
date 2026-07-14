@@ -55,7 +55,6 @@ import jakarta.inject.Inject
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
 @Controller(
-  port = OrderServiceConfig.SERVICE_PORT.toString(),
   value = OrderServiceConfig.SERVICE_PATH,
 )
 class MicronautOrderController(
