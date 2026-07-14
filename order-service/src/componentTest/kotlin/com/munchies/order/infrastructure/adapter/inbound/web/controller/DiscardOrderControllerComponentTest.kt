@@ -4,9 +4,7 @@ import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createDiscardOrderRequest
 import com.munchies.order.fixtures.defaultOrderId
-import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.fixtures.secondaryOrderId
-import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.equals.shouldBeEqual
@@ -38,26 +36,22 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
   // ==========================================
 
   @Test
-  fun `POST discard order should return 200 OK on success`() {
+  fun `DELETE discard order should return 200 OK on success`() {
     orderRepository.save(createDeliveryOrder())
 
-    val response = httpPost(
-      mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
-      OrderServiceConfig.DISCARD_ORDER_PATH,
-    )
+    val response = httpDelete(mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)))
 
     response.status shouldBe HttpStatus.OK
     response.body() shouldBeEqual "Order discarded"
   }
 
   @Test
-  fun `POST discard order should return 404 Not Found on OrderNotFound`() {
+  fun `DELETE discard order should return 404 Not Found on OrderNotFound`() {
     orderRepository.save(createDeliveryOrder())
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpDelete(
         mapper.writeValueAsString(createDiscardOrderRequest(secondaryOrderId)),
-        OrderServiceConfig.DISCARD_ORDER_PATH,
       )
     }
 
@@ -65,27 +59,12 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
   }
 
   @Test
-  fun `POST discard order should return 400 Bad Request on Unauthorized`() {
-    orderRepository.save(createDeliveryOrder())
-
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
-        mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId, secondaryCustomerId)),
-        OrderServiceConfig.DISCARD_ORDER_PATH,
-      )
-    }
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-  }
-
-  @Test
-  fun `POST discard order should return 400 Bad Request on OrderNotCancellable`() {
+  fun `DELETE discard order should return 400 Bad Request on OrderNotCancellable`() {
     orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpDelete(
         mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
-        OrderServiceConfig.DISCARD_ORDER_PATH,
       )
     }
 

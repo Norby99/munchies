@@ -79,4 +79,9 @@ abstract class BaseOrderController : TestPropertyProvider {
     HttpRequest.GET<Any>("${baseUrl()}$endPoint"),
     OrderDto.Takeaway::class.java,
   )
+
+  fun httpDelete(request: String): HttpResponse<String> = client.toBlocking().exchange(
+    HttpRequest.DELETE("${baseUrl()}${OrderServiceConfig.DISCARD_ORDER_PATH}", request),
+    String::class.java,
+  )
 }
