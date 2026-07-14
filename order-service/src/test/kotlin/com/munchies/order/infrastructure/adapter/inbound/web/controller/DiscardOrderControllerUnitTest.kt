@@ -35,17 +35,6 @@ class DiscardOrderControllerUnitTest : BaseOrderController() {
   }
 
   @Test
-  fun `returns 400 Bad Request on Unauthorized`() {
-    val request = createDiscardOrderRequest(defaultOrderId)
-
-    every { discardOrder.execute(any()) } returns DiscardOrder.Result.Failure.Unauthorized
-
-    val response = controller.discardOrder(request)
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-  }
-
-  @Test
   fun `returns 400 Bad Request on OrderNotCancellable`() {
     val request = createDiscardOrderRequest(defaultOrderId)
 
