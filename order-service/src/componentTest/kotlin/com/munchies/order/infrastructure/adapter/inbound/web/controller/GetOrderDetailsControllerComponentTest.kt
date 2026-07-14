@@ -2,13 +2,11 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -42,9 +40,8 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
     val realDto = order.toDto()
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.GET<Any>(realDto.orderId),
-      OrderDto.Takeaway::class.java,
+    val response = httpGet(
+      realDto.orderId,
     )
 
     response.status shouldBe HttpStatus.OK
@@ -54,7 +51,7 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
   @Test
   fun `getOrderDetails should return 404 Not Found when use case returns OrderNotFound`() {
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange<Any, Any>(HttpRequest.GET(defaultOrderId.value))
+      httpGet(defaultOrderId.value)
     }
 
     response.status shouldBe HttpStatus.NOT_FOUND

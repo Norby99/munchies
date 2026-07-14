@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createAdvanceOrderStatusRequest
 import com.munchies.order.fixtures.createDeliveryOrder
@@ -9,7 +10,6 @@ import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.Mongo
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -38,29 +38,27 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
 
   @Test
   fun `POST advance order status should return 200 OK on success`() {
-    orderRepository.save(createDeliveryOrder(status = OrderStatus.PENDING))
+    val order = createDeliveryOrder(status = OrderStatus.PENDING)
+    orderRepository.save(order)
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.POST(
-        "/${OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH.replace("{id}", defaultOrderId.value)}",
-        mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
-      ),
-      String::class.java,
+    val response = httpPost(
+      createAdvanceOrderStatusRequest(defaultOrderId),
+      OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
     )
 
     response.status shouldBe HttpStatus.OK
     response.body() shouldBeEqual "Order status advanced"
+
+    val updatedOrder = orderRepository.findById(order.id) as DeliveryOrder
+    updatedOrder.status shouldBe OrderStatus.PREPARING
   }
 
   @Test
   fun `POST advance order status should return 404 Not Found on OrderNotFound`() {
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
+        OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
       )
     }
 
@@ -72,12 +70,9 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
+        OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
       )
     }
     response.status shouldBe HttpStatus.BAD_REQUEST

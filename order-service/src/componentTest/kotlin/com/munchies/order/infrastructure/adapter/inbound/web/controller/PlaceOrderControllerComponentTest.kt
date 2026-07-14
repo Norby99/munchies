@@ -11,7 +11,6 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -43,12 +42,9 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val order = createDeliveryOrder()
     val requestBody = createPlaceOrderRequest(order)
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.POST(
-        "/${OrderServiceConfig.PLACE_ORDER_PATH}",
-        mapper.writeValueAsString(requestBody),
-      ),
-      String::class.java,
+    val response = httpPost(
+      mapper.writeValueAsString(requestBody),
+      OrderServiceConfig.PLACE_ORDER_PATH,
     )
 
     val generatedId =
@@ -67,12 +63,9 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val requestBody = createPlaceOrderRequest(order)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.PLACE_ORDER_PATH,
       )
     }
 
@@ -85,12 +78,9 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val requestBody = createPlaceOrderRequest(order)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.PLACE_ORDER_PATH,
       )
     }
 
@@ -103,12 +93,9 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val requestBody = createPlaceOrderRequest(order)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.PLACE_ORDER_PATH}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.PLACE_ORDER_PATH,
       )
     }
 
