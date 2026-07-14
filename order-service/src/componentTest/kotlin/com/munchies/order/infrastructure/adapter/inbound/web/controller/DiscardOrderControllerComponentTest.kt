@@ -11,7 +11,6 @@ import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.Mongo
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -42,13 +41,11 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
   fun `POST discard order should return 200 OK on success`() {
     orderRepository.save(createDeliveryOrder())
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.POST(
-        "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-        mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
-      ),
-      String::class.java,
+    val response = httpPost(
+      mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
+      OrderServiceConfig.DISCARD_ORDER_PATH,
     )
+
     response.status shouldBe HttpStatus.OK
     response.body() shouldBeEqual "Order discarded"
   }
@@ -58,12 +55,9 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder())
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", secondaryOrderId.value)}",
-          mapper.writeValueAsString(createDiscardOrderRequest(secondaryOrderId)),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(createDiscardOrderRequest(secondaryOrderId)),
+        OrderServiceConfig.DISCARD_ORDER_PATH,
       )
     }
 
@@ -75,12 +69,9 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder())
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId, secondaryCustomerId)),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId, secondaryCustomerId)),
+        OrderServiceConfig.DISCARD_ORDER_PATH,
       )
     }
 
@@ -92,12 +83,9 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.POST(
-          "/${OrderServiceConfig.DISCARD_ORDER_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
-        ),
-        String::class.java,
+      httpPost(
+        mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
+        OrderServiceConfig.DISCARD_ORDER_PATH,
       )
     }
 

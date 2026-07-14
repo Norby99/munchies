@@ -13,7 +13,6 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -55,17 +54,9 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.PATCH(
-        "/${
-          OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH.replace(
-            "{id}",
-            newOrder.id.value,
-          )
-        }",
-        mapper.writeValueAsString(requestBody),
-      ),
-      String::class.java,
+    val response = httpPatch(
+      mapper.writeValueAsString(requestBody),
+      OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
     )
 
     response.status shouldBe HttpStatus.OK
@@ -91,17 +82,9 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${
-            OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH.replace(
-              "{id}",
-              newOrder.id.value,
-            )
-          }",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
     }
 
@@ -118,17 +101,9 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${
-            OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH.replace(
-              "{id}",
-              newOrder.id.value,
-            )
-          }",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
     }
 
@@ -147,17 +122,9 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${
-            OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH.replace(
-              "{id}",
-              newOrder.id.value,
-            )
-          }",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
     }
 

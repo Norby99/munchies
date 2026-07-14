@@ -7,13 +7,11 @@ import com.munchies.order.fixtures.createItemsDto
 import com.munchies.order.fixtures.createNewItems
 import com.munchies.order.fixtures.createNewItemsBigger
 import com.munchies.order.fixtures.createUpdateOrderItemsRequest
-import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -49,12 +47,9 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     val requestBody =
       createUpdateOrderItemsRequest(initialOrder, createItemsDto(createNewItemsBigger()))
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.PATCH(
-        "/${OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH.replace("{id}", initialOrder.id.value)}",
-        mapper.writeValueAsString(requestBody),
-      ),
-      String::class.java,
+    val response = httpPatch(
+      mapper.writeValueAsString(requestBody),
+      OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
     )
 
     response.status shouldBe HttpStatus.OK
@@ -68,12 +63,9 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateOrderItemsRequest()
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH.replace("{id}", defaultOrderId.value)}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
       )
     }
 
@@ -90,12 +82,9 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateOrderItemsRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH.replace("{id}", initialOrder.id.value)}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
       )
     }
 
@@ -112,12 +101,9 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
       createUpdateOrderItemsRequest(initialOrder, createItemsDto(createEmptyItems()))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH.replace("{id}", initialOrder.id.value)}",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
       )
     }
 

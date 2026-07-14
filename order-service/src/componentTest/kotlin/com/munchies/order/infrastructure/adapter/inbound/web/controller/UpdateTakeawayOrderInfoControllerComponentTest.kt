@@ -4,7 +4,6 @@ import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.fixtures.Address2
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.createUpdateTakeawayOrderRequest
-import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.pastTime
 import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
@@ -12,7 +11,6 @@ import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.Mongo
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -46,17 +44,9 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
-    val response = client.toBlocking().exchange(
-      HttpRequest.PATCH(
-        "/${
-          OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
-            "{id}",
-            initialOrder.id.value,
-          )
-        }",
-        mapper.writeValueAsString(requestBody),
-      ),
-      String::class.java,
+    val response = httpPatch(
+      mapper.writeValueAsString(requestBody),
+      OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
     )
 
     response.status shouldBe HttpStatus.OK
@@ -71,17 +61,9 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateTakeawayOrderRequest()
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${
-            OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
-              "{id}",
-              defaultOrderId.value,
-            )
-          }",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
       )
     }
 
@@ -98,17 +80,9 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${
-            OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
-              "{id}",
-              initialOrder.id.value,
-            )
-          }",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
       )
     }
 
@@ -129,17 +103,9 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      client.toBlocking().exchange(
-        HttpRequest.PATCH(
-          "/${
-            OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH.replace(
-              "{id}",
-              initialOrder.id.value,
-            )
-          }",
-          mapper.writeValueAsString(requestBody),
-        ),
-        String::class.java,
+      httpPatch(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
       )
     }
 

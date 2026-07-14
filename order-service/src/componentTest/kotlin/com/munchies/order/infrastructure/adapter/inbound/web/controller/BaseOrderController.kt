@@ -4,8 +4,11 @@ import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import io.micronaut.http.HttpRequest
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
+import io.micronaut.runtime.server.EmbeddedServer
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.serde.annotation.SerdeImport
 import io.micronaut.test.support.TestPropertyProvider
@@ -40,16 +43,40 @@ abstract class BaseOrderController : TestPropertyProvider {
     "mongodb.uri" to "${mongo.connectionString}/order-service",
     "mongodb.package-names[0]" to
       "com.munchies.order.infrastructure.adapter.outbound.mongo.document",
-    // assigning a random port to avoid conflicts when running multiple tests in parallel
-    "micronaut.server.port" to "-1",
   )
 
   @Inject
-  @field:Client(
-    "http://localhost:${OrderServiceConfig.SERVICE_PORT}${OrderServiceConfig.SERVICE_PATH}",
-  )
+  @field:Client("/")
   lateinit var client: HttpClient
 
   @Inject
   lateinit var mapper: ObjectMapper
+
+  @Inject
+  lateinit var embeddedServer: EmbeddedServer
+
+  fun baseUrl(): String =
+    "http://localhost:${embeddedServer.port}${OrderServiceConfig.SERVICE_PATH}"
+
+  fun httpPost(request: Any, endPoint: String): HttpResponse<String> = client.toBlocking().exchange(
+    HttpRequest.POST(
+      "${baseUrl()}$endPoint",
+      request,
+    ),
+    String::class.java,
+  )
+
+  fun httpPatch(request: Any, endPoint: String): HttpResponse<String> =
+    client.toBlocking().exchange(
+      HttpRequest.PATCH(
+        "${baseUrl()}$endPoint",
+        request,
+      ),
+      String::class.java,
+    )
+
+  fun httpGet(endPoint: String): HttpResponse<OrderDto.Takeaway> = client.toBlocking().exchange(
+    HttpRequest.GET<Any>("${baseUrl()}$endPoint"),
+    OrderDto.Takeaway::class.java,
+  )
 }
