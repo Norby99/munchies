@@ -2,11 +2,9 @@ package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
-import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
-import com.munchies.order.fixtures.defaultCustomerId
 import com.munchies.order.fixtures.defaultOrderId
 import io.kotest.matchers.equals.shouldBeEqual
 import io.mockk.every
@@ -19,7 +17,7 @@ class DiscardOrderUseCaseUnitTest {
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = DiscardOrderUseCase(repository)
 
-  private val command = DiscardOrderCommand(defaultOrderId, defaultCustomerId)
+  private val command = DiscardOrderCommand(defaultOrderId)
 
   @Test
   fun `execute should return OrderNotFound when order does not exist`() {
@@ -28,20 +26,6 @@ class DiscardOrderUseCaseUnitTest {
     val result = useCase.execute(command)
 
     result shouldBeEqual DiscardOrder.Result.Failure.OrderNotFound
-    verify(exactly = 0) { repository.update(any()) }
-  }
-
-  @Test
-  fun `execute should return Unauthorized when order belongs to a different customer`() {
-    val differentCustomerId = CustomerId("wrong-customer-456")
-    val orderOfAnotherCustomer = createSampleOrder(OrderStatus.PENDING)
-      .copy(customerId = differentCustomerId)
-
-    every { repository.findById(command.orderId) } returns orderOfAnotherCustomer
-
-    val result = useCase.execute(command)
-
-    result shouldBeEqual DiscardOrder.Result.Failure.Unauthorized
     verify(exactly = 0) { repository.update(any()) }
   }
 
@@ -73,7 +57,6 @@ class DiscardOrderUseCaseUnitTest {
         withArg { updatedOrder ->
           updatedOrder.status shouldBeEqual OrderStatus.CANCELLED
           updatedOrder.id shouldBeEqual command.orderId
-          updatedOrder.customerId shouldBeEqual command.customerId
         },
       )
     }
