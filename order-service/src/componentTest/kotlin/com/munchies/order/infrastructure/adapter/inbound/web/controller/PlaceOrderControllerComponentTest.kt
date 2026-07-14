@@ -42,7 +42,7 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val order = createDeliveryOrder()
     val requestBody = createPlaceOrderRequest(order)
 
-    val response = httpPost(
+    val response = httpCalls.httpPost(
       mapper.writeValueAsString(requestBody),
       OrderServiceConfig.PLACE_ORDER_PATH,
     )
@@ -63,7 +63,7 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val requestBody = createPlaceOrderRequest(order)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpCalls.httpPost(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.PLACE_ORDER_PATH,
       )
@@ -78,7 +78,7 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val requestBody = createPlaceOrderRequest(order)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpCalls.httpPost(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.PLACE_ORDER_PATH,
       )
@@ -93,7 +93,7 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
     val requestBody = createPlaceOrderRequest(order)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpCalls.httpPost(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.PLACE_ORDER_PATH,
       )

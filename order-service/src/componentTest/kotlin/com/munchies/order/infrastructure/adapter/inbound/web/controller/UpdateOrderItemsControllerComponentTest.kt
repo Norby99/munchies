@@ -47,7 +47,7 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     val requestBody =
       createUpdateOrderItemsRequest(initialOrder, createItemsDto(createNewItemsBigger()))
 
-    val response = httpPatch(
+    val response = httpCalls.httpPatch(
       mapper.writeValueAsString(requestBody),
       OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
     )
@@ -63,7 +63,7 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateOrderItemsRequest()
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
       )
@@ -82,7 +82,7 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateOrderItemsRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
       )
@@ -101,7 +101,7 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
       createUpdateOrderItemsRequest(initialOrder, createItemsDto(createEmptyItems()))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
       )

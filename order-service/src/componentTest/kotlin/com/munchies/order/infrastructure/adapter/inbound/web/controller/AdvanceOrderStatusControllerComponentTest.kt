@@ -41,7 +41,7 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     val order = createDeliveryOrder(status = OrderStatus.PENDING)
     orderRepository.save(order)
 
-    val response = httpPost(
+    val response = httpCalls.httpPost(
       createAdvanceOrderStatusRequest(defaultOrderId),
       OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
     )
@@ -56,7 +56,7 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
   @Test
   fun `POST advance order status should return 404 Not Found on OrderNotFound`() {
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpCalls.httpPost(
         mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
         OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
       )
@@ -70,7 +70,7 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPost(
+      httpCalls.httpPost(
         mapper.writeValueAsString(createAdvanceOrderStatusRequest(defaultOrderId)),
         OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
       )
