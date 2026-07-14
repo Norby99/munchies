@@ -22,7 +22,6 @@ interface DiscardOrder {
    * - `Success`: The order was successfully discarded.
    * - `Failure`: The attempt to discard the order failed, with specific reasons:
    *  - `OrderNotFound`: No order exists with the provided identifier.
-   *  - `Unauthorized`: The user does not have permission to discard the order.
    *  - `OrderNotCancellable`: The order cannot be discarded because it has already been processed
    *  or is in a state that does not allow cancellation.
    */
@@ -30,7 +29,6 @@ interface DiscardOrder {
     data object Success : Result
     sealed interface Failure : Result {
       data object OrderNotFound : Failure
-      data object Unauthorized : Failure
       data object OrderNotCancellable : Failure
     }
   }

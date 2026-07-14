@@ -49,8 +49,7 @@ object CommandFactory {
   fun AdvanceOrderStatusRequest.toCommand(): AdvanceOrderStatusCommand =
     AdvanceOrderStatusCommand(OrderId(orderId))
 
-  fun DiscardOrderRequest.toCommand(): DiscardOrderCommand =
-    DiscardOrderCommand(OrderId(orderId), CustomerId(customerId))
+  fun DiscardOrderRequest.toCommand(): DiscardOrderCommand = DiscardOrderCommand(OrderId(orderId))
 
   fun UpdateOrderItemsRequest.toCommand(): UpdateOrderItemsCommand = UpdateOrderItemsCommand(
     orderId = OrderId(orderId),

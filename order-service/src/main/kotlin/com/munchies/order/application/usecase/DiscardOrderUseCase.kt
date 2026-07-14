@@ -12,7 +12,6 @@ class DiscardOrderUseCase(private val repository: OrderRepository) : DiscardOrde
     val order = repository.findById(command.orderId)
     return when {
       order == null -> OrderNotFound
-      order.customerId != command.customerId -> Unauthorized
       else -> when (val result = order.cancel()) {
         is Order.CancelResult.Failure.InvalidTransition -> OrderNotCancellable
         is Order.CancelResult.Success -> {
