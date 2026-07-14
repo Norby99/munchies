@@ -44,7 +44,7 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
-    val response = httpPatch(
+    val response = httpCalls.httpPatch(
       mapper.writeValueAsString(requestBody),
       OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
     )
@@ -61,7 +61,7 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateTakeawayOrderRequest()
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
       )
@@ -80,7 +80,7 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
       )
@@ -103,7 +103,7 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateTakeawayOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH,
       )

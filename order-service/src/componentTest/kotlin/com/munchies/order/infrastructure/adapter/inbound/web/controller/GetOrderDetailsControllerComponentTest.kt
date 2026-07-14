@@ -40,7 +40,7 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
     val realDto = order.toDto()
 
-    val response = httpGet(
+    val response = httpCalls.httpGet(
       realDto.orderId,
     )
 
@@ -51,7 +51,7 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
   @Test
   fun `getOrderDetails should return 404 Not Found when use case returns OrderNotFound`() {
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpGet(defaultOrderId.value)
+      httpCalls.httpGet(defaultOrderId.value)
     }
 
     response.status shouldBe HttpStatus.NOT_FOUND

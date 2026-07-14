@@ -54,7 +54,7 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
-    val response = httpPatch(
+    val response = httpCalls.httpPatch(
       mapper.writeValueAsString(requestBody),
       OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
     )
@@ -82,7 +82,7 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
@@ -101,7 +101,7 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
@@ -122,7 +122,7 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpPatch(
+      httpCalls.httpPatch(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )

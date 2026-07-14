@@ -4,8 +4,6 @@ import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import io.micronaut.http.HttpRequest
-import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.runtime.server.EmbeddedServer
@@ -55,33 +53,8 @@ abstract class BaseOrderController : TestPropertyProvider {
   @Inject
   lateinit var embeddedServer: EmbeddedServer
 
-  fun baseUrl(): String =
+  val httpCalls: HttpCalls by lazy { HttpCalls(baseUrl(), client) }
+
+  private fun baseUrl(): String =
     "http://localhost:${embeddedServer.port}${OrderServiceConfig.SERVICE_PATH}"
-
-  fun httpPost(request: Any, endPoint: String): HttpResponse<String> = client.toBlocking().exchange(
-    HttpRequest.POST(
-      "${baseUrl()}$endPoint",
-      request,
-    ),
-    String::class.java,
-  )
-
-  fun httpPatch(request: Any, endPoint: String): HttpResponse<String> =
-    client.toBlocking().exchange(
-      HttpRequest.PATCH(
-        "${baseUrl()}$endPoint",
-        request,
-      ),
-      String::class.java,
-    )
-
-  fun httpGet(endPoint: String): HttpResponse<OrderDto.Takeaway> = client.toBlocking().exchange(
-    HttpRequest.GET<Any>("${baseUrl()}$endPoint"),
-    OrderDto.Takeaway::class.java,
-  )
-
-  fun httpDelete(request: String): HttpResponse<String> = client.toBlocking().exchange(
-    HttpRequest.DELETE("${baseUrl()}${OrderServiceConfig.DISCARD_ORDER_PATH}", request),
-    String::class.java,
-  )
 }

@@ -39,7 +39,8 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
   fun `DELETE discard order should return 200 OK on success`() {
     orderRepository.save(createDeliveryOrder())
 
-    val response = httpDelete(mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)))
+    val response =
+      httpCalls.httpDelete(mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)))
 
     response.status shouldBe HttpStatus.OK
     response.body() shouldBeEqual "Order discarded"
@@ -50,7 +51,7 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder())
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpDelete(
+      httpCalls.httpDelete(
         mapper.writeValueAsString(createDiscardOrderRequest(secondaryOrderId)),
       )
     }
@@ -63,7 +64,7 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
     val response = assertThrows(HttpClientResponseException::class.java) {
-      httpDelete(
+      httpCalls.httpDelete(
         mapper.writeValueAsString(createDiscardOrderRequest(defaultOrderId)),
       )
     }
