@@ -20,6 +20,7 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Patch
 import io.micronaut.http.annotation.PathVariable
@@ -174,19 +175,19 @@ class MicronautOrderController(
   }
 
   /**
-   * Handles `POST orders/{id}/discard`.
+   * Handles `Delete orders/{id}/discard`.
    *
    * Cancels/discards an order if it is still in a cancellable state.
    *
    * Response mapping:
    * - `200 OK` when order is discarded successfully
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` when order cannot be canceled or unauthorized
+   * - `400 Bad Request` when order cannot be canceled
    *
    * @param request Request containing order and customer identifiers.
    * @return An HTTP response representing the discard result.
    */
-  @Post(OrderServiceConfig.DISCARD_ORDER_PATH)
+  @Delete(OrderServiceConfig.DISCARD_ORDER_PATH)
   @Operation(
     summary = "Discard/Cancel an order",
     description = "Cancels an order if it is still in a cancellable state.",
@@ -200,8 +201,6 @@ class MicronautOrderController(
     ) {
       is DiscardOrder.Result.Success -> HttpResponse.ok("Order discarded")
       is DiscardOrder.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is DiscardOrder.Result.Failure.Unauthorized ->
-        HttpResponse.badRequest("Unauthorized to discard this order")
       is DiscardOrder.Result.Failure.OrderNotCancellable ->
         HttpResponse.badRequest("Cannot discard this order")
     }
