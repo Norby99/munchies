@@ -2,6 +2,12 @@ package com.munchies.order.infrastructure.adapter.inbound.web.config
 
 import kotlin.js.JsExport
 
+/**
+ * Configuration object for the Order Service.
+ *
+ * This object contains constants that define the service name, service path, service port,
+ * and various endpoint paths for handling order-related operations.
+ */
 @JsExport
 object OrderServiceConfig {
   const val SERVICE_NAME = "order-service"
