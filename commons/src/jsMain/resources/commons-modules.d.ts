@@ -69,3 +69,12 @@ export declare const ResponseResult: typeof com.munchies.commons.infrastructure.
 
 export type WebFailure = com.munchies.commons.infrastructure.adapter.WebFailure;
 export declare const WebFailure: typeof com.munchies.commons.infrastructure.adapter.WebFailure;
+
+export type Notification = com.munchies.commons.domain.port.Notification;
+export declare const Notification: typeof com.munchies.commons.domain.port.Notification;
+
+export type NotificationObserver = com.munchies.commons.domain.port.NotificationObserver;
+export declare const NotificationObserver: typeof com.munchies.commons.domain.port.NotificationObserver;
+
+export type NotificationSubject = com.munchies.commons.domain.port.NotificationSubject;
+export declare const NotificationSubject: typeof com.munchies.commons.domain.port.NotificationSubject;
