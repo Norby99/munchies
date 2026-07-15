@@ -7,7 +7,7 @@ import jakarta.inject.Inject
 import jakarta.inject.Singleton
 
 @Singleton
-class UserContext() {
+class UserContext {
   lateinit var id: UserId
   lateinit var profile: UserProfile
   lateinit var email: String
