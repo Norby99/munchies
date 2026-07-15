@@ -11,6 +11,14 @@ import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 
+/**
+ * Use case implementation for placing an order.
+ *
+ * This class handles the business logic for creating a new order based on the provided command.
+ * It interacts with the OrderRepository to save the order and returns the result of the operation.
+ *
+ * @property repository The repository used to access order data.
+ */
 class PlaceOrderUseCase(
   private val repository: OrderRepository,
 ) : PlaceOrder {
