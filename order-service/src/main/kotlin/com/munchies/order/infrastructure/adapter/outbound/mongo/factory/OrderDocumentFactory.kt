@@ -3,12 +3,25 @@ package com.munchies.order.infrastructure.adapter.outbound.mongo.factory
 import com.munchies.order.domain.model.*
 import com.munchies.order.infrastructure.adapter.outbound.mongo.document.*
 
+/**
+ * Factory object for converting between Order domain models and OrderDocument representations.
+ *
+ * This factory provides methods to convert Order objects to OrderDocument objects for persistence
+ * in a MongoDB database, and vice versa. It handles different types of orders (Delivery, DineIn,
+ * Takeaway) and their associated information.
+ */
 object OrderDocumentFactory {
 
   private const val DELIVERY = "DELIVERY"
   private const val DINE_IN = "DINE_IN"
   private const val TAKEAWAY = "TAKEAWAY"
 
+  /**
+   * Converts an Order domain model to an OrderDocument for persistence.
+   *
+   * @receiver The Order domain model to convert.
+   * @return The corresponding OrderDocument representation.
+   */
   fun Order.toDocument(): OrderDocument = when (this) {
     is DeliveryOrder -> OrderDocument(
       id = this.id.value,
@@ -39,6 +52,12 @@ object OrderDocumentFactory {
     )
   }
 
+  /**
+   * Converts an OrderDocument to an Order domain model.
+   *
+   * @receiver The OrderDocument to convert.
+   * @return The corresponding Order domain model, or null if conversion fails.
+   */
   fun OrderDocument.toNullableDomain(): Order? = runCatching {
     val id = OrderId(this.id)
     val restaurantId = RestaurantId(this.restaurantId)

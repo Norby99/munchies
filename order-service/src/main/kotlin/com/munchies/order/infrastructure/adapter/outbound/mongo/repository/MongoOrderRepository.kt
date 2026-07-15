@@ -11,9 +11,21 @@ import io.micronaut.data.mongodb.annotation.MongoRepository
 import io.micronaut.data.repository.CrudRepository
 import jakarta.inject.Singleton
 
+/**
+ * MongoDB repository interface for performing CRUD operations on OrderDocument entities.
+ *
+ * This interface extends the CrudRepository provided by Micronaut Data, allowing for basic
+ * CRUD operations on OrderDocument entities stored in a MongoDB database.
+ */
 @MongoRepository
 sealed interface MongoCrudOrderRepository : CrudRepository<OrderDocument, String>
 
+/**
+ * MongoDB implementation of the OrderRepository interface.
+ *
+ * This class provides methods to interact with the MongoDB database for Order entities.
+ * It uses the MongoCrudOrderRepository to perform CRUD operations on OrderDocument entities.
+ */
 @Singleton
 @Requires(env = ["prod"])
 class MongoOrderRepository(
