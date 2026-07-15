@@ -41,7 +41,7 @@ tasks.register("prepareOpenApiSpecs") {
             "openapi/"
           },
         ).get().asFile
-    val targetName = "${getServiceName(subproject.parent!!)}.yml"
+    val targetName = "${getServiceName(subproject)}.yml"
     sourcePath to targetName
   }
   val outputDir = rootProject.layout.buildDirectory.dir("openapi/").get().asFile
