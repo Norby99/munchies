@@ -16,13 +16,11 @@ import jakarta.inject.Singleton
 @Factory
 class TestServicesFactory {
 
-
   @Singleton
-  fun memoryUserRepository(): UserRepository =
-    object : MemoryUserRepository {
-      override val repository: InMemoryRepository<UserId, User> =
-        InMemoryRepository()
-    }
+  fun memoryUserRepository(): UserRepository = object : MemoryUserRepository {
+    override val repository: InMemoryRepository<UserId, User> =
+      InMemoryRepository()
+  }
 
   @Singleton
   fun memoryUserCredentialsRepository(): UserCredentialsRepository =
@@ -33,6 +31,4 @@ class TestServicesFactory {
 
   @Singleton
   fun hasher(): PasswordHasher = KotlinPasswordHasher()
-
-
 }
