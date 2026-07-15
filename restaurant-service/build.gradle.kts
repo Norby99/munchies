@@ -14,7 +14,7 @@ dependencies {
   // Cucumber BDD
   testImplementation("io.cucumber:cucumber-java:7.34.4")
   testImplementation("io.cucumber:cucumber-junit:7.34.4")
-  testImplementation("io.cucumber:cucumber-junit-platform-engine:7.30.0")
+  testImplementation("io.cucumber:cucumber-junit-platform-engine:7.34.4")
 
   // JUnit 5
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.5")
