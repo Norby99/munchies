@@ -55,6 +55,10 @@ abstract class BaseOrderController : TestPropertyProvider {
 
   val httpCalls: HttpCalls by lazy { HttpCalls(baseUrl(), client) }
 
+  /**
+   * @return the base URL for the order service, including the embedded server
+   * port and service path.
+   */
   private fun baseUrl(): String =
     "http://localhost:${embeddedServer.port}${OrderServiceConfig.SERVICE_PATH}"
 }

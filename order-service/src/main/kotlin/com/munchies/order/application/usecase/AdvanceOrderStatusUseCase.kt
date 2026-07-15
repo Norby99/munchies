@@ -5,6 +5,15 @@ import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCom
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.ports.OrderRepository
 
+/**
+ * Use case implementation for advancing the status of an order.
+ *
+ * This class handles the business logic for transitioning an order to its next status
+ * in the order processing workflow. It interacts with the OrderRepository to retrieve
+ * and update order data.
+ *
+ * @property repository The repository used to access and modify order data.
+ */
 class AdvanceOrderStatusUseCase(private val repository: OrderRepository) : AdvanceOrderStatus {
 
   override fun execute(command: AdvanceOrderStatusCommand): AdvanceOrderStatus.Result {
