@@ -12,7 +12,7 @@ import io.micronaut.serde.annotation.SerdeImport
 import io.micronaut.test.support.TestPropertyProvider
 import jakarta.inject.Inject
 import org.junit.jupiter.api.TestInstance
-import org.testcontainers.containers.MongoDBContainer
+import org.testcontainers.mongodb.MongoDBContainer
 
 @SerdeImport(OrderId::class)
 @SerdeImport(OrderDto::class)
