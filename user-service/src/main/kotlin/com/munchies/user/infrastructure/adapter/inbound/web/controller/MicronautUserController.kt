@@ -1,4 +1,5 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
+
 import com.munchies.commons.domain.port.InvalidInput
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
 import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
@@ -92,6 +93,10 @@ class MicronautUserController(
   @Inject
   private val paymentClient: PaymentService,
 
+  /**
+   * Kafka producer/client used to emit email confirmation events after a user
+   * successfully verifies their email address.
+   */
   @Inject
   private val emailConfirmationKafkaClient: EmailConfirmationClient,
 ) :
@@ -102,14 +107,50 @@ class MicronautUserController(
   UserAPI.UpdateUserInfoAPI<HttpResponse<UpdateUserInfoResponse>>,
   UserAPI.DeleteUserAPI<HttpResponse<DeleteUserResponse>>,
   UserAPI.EmailVerificationAPI<HttpResponse<VerifyEmailResponse>> {
+  /**
+   * Application use case for retrieving a user by identifier.
+   */
   private val getUser: GetUser = services.getUser
+
+  /**
+   * Application use case for registering a new user.
+   */
   private val registerUser: RegisterUser = services.registerUser
+
+  /**
+   * Application use case for authenticating a user.
+   */
   private val loginUser: LoginUser = services.loginUser
+
+  /**
+   * Application use case for updating a user's password.
+   */
   private val updateUserPassword: UpdateUserPassword = services.updateUserPassword
+
+  /**
+   * Application use case for updating user profile data.
+   */
   private val updateUserInfo: UpdateUserInfo = services.updateUserInfo
+
+  /**
+   * Application use case for deleting a user.
+   */
   private val deleteUser: DeleteUser = services.deleteUser
+
+  /**
+   * Application use case for verifying a user's email address.
+   */
   private val verifyUserEmail: VerifyUserEmail = services.verifyUserEmail
 
+  /**
+   * Lightweight diagnostic endpoint that exercises the payment client.
+   *
+   * This method is not part of the user API contract. It appears to be a
+   * temporary or debugging-oriented endpoint that invokes the payment service
+   * with placeholder data and returns the raw payment response.
+   *
+   * @return an HTTP 200 response containing the payment service result.
+   */
   @Get("/")
   fun get(): HttpResponse<ProcessPaymentResponse> {
     println("GET / called")
@@ -239,7 +280,6 @@ class MicronautUserController(
                     RegisterUserResponse(
                       RegisterUserFailure(
                         "User is already registered",
-
                       ),
                       HttpStatus.UNAUTHORIZED.code,
                     ),
@@ -292,7 +332,6 @@ class MicronautUserController(
         LoginUserResponse(
           LoginUserFailure(
             msg.reason,
-
           ),
           HttpStatus.BAD_REQUEST.code,
         ),
@@ -427,7 +466,6 @@ class MicronautUserController(
                     "Unauthorized",
                   ),
                   HttpStatus.UNAUTHORIZED.code,
-
                 ),
               )
           is UpdateUserPassword.Companion.UpdateUserPasswordResult.UserNotFound ->
@@ -489,7 +527,6 @@ class MicronautUserController(
                   user.reason,
                 ),
                 HttpStatus.BAD_REQUEST.code,
-
               ),
             )
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
@@ -533,6 +570,15 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles `DELETE users/{id}/`.
+   *
+   * Validates the incoming identifier and delegates deletion to the application layer.
+   * The endpoint returns the deleted user payload when the operation succeeds.
+   *
+   * @param id The user identifier from the path.
+   * @return An HTTP response indicating whether the user was deleted.
+   */
   @Delete(UserServiceConfig.DELETE_USER_PATH)
   @Operation(
     summary = "Deletes a user.",
@@ -572,6 +618,15 @@ class MicronautUserController(
     }
   }
 
+  /**
+   * Handles email verification using the one-time key received by the user.
+   *
+   * On successful verification, the controller emits a confirmation event to
+   * Kafka so downstream services can react to the confirmed email state.
+   *
+   * @param request Verification payload containing the user identifier and OTP/key.
+   * @return An HTTP response indicating confirmation success or failure.
+   */
   @Get(UserServiceConfig.VERIFY_EMAIL_PATH)
   @Operation(
     summary = "Confirm a user's email address",
