@@ -44,6 +44,9 @@ data class OrderItemDocument(
   val quantity: Int,
 )
 
+/**
+ * Embedded document representing delivery information for a delivery order.
+ */
 @Serdeable
 data class DeliveryInfoDocument(
   val estimatedDeliveryTime: Long,
@@ -52,12 +55,18 @@ data class DeliveryInfoDocument(
   val customerPhone: String,
 )
 
+/**
+ * Embedded document representing table information for a dine-in order.
+ */
 @Serdeable
 data class TableInfoDocument(
   val tableNumber: Int,
   val numberOfGuests: Int,
 )
 
+/**
+ * Embedded document representing takeaway information for a takeaway order.
+ */
 @Serdeable
 data class TakeawayInfoDocument(
   val pickupTime: Long,

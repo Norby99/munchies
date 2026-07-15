@@ -8,8 +8,17 @@ import com.munchies.order.infrastructure.adapter.dto.OrderType.*
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
+/**
+ * Factory object to convert inbound request DTOs into domain command objects.
+ */
 object CommandFactory {
 
+  /**
+   * Converts a [PlaceOrderRequest] into a corresponding [PlaceOrderCommand].
+   * The conversion is based on the order type specified in the request.
+   *
+   * @throws IllegalArgumentException if required fields for the specific order type are missing.
+   */
   fun PlaceOrderRequest.toCommand(): PlaceOrderCommand = when (this.orderType) {
     DELIVERY -> PlaceOrderCommand.Delivery(
       restaurantId = RestaurantId(restaurantId),
@@ -46,17 +55,29 @@ object CommandFactory {
     )
   }
 
+  /**
+   * Converts an [AdvanceOrderStatusRequest] into a corresponding [AdvanceOrderStatusCommand].
+   */
   fun AdvanceOrderStatusRequest.toCommand(): AdvanceOrderStatusCommand =
     AdvanceOrderStatusCommand(OrderId(orderId))
 
+  /**
+   * Converts a [DiscardOrderRequest] into a corresponding [DiscardOrderCommand].
+   */
   fun DiscardOrderRequest.toCommand(): DiscardOrderCommand = DiscardOrderCommand(OrderId(orderId))
 
+  /**
+   * Converts an [UpdateOrderItemsRequest] into a corresponding [UpdateOrderItemsCommand].
+   */
   fun UpdateOrderItemsRequest.toCommand(): UpdateOrderItemsCommand = UpdateOrderItemsCommand(
     orderId = OrderId(orderId),
     customerId = CustomerId(customerId),
     items = items.map { it.toDomain() },
   )
 
+  /**
+   * Converts an [UpdateDeliveryOrderRequest] into a corresponding [UpdateDeliveryOrderCommand].
+   */
   fun UpdateDeliveryOrderRequest.toCommand(): UpdateDeliveryOrderCommand =
     UpdateDeliveryOrderCommand(
       orderId = OrderId(orderId),
@@ -67,6 +88,9 @@ object CommandFactory {
       customerPhone = customerPhone,
     )
 
+  /**
+   * Converts an [UpdateTakeawayOrderRequest] into a corresponding [UpdateTakeawayOrderCommand].
+   */
   fun UpdateTakeawayOrderRequest.toCommand(): UpdateTakeawayOrderCommand =
     UpdateTakeawayOrderCommand(
       orderId = OrderId(orderId),

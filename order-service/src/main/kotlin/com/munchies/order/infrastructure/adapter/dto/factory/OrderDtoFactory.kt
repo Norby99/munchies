@@ -15,6 +15,12 @@ import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDto
 
+/**
+ * Factory object for converting between Order domain models and Order DTOs.
+ *
+ * This factory provides methods to convert Order objects to their corresponding DTO representations
+ * and vice versa. It handles different types of orders, including Delivery, Takeaway, and DineIn orders.
+ */
 object OrderDtoFactory {
   fun Order.toDto(): OrderDto {
     val itemsDto = items.map { it.toDto() }
@@ -51,6 +57,14 @@ object OrderDtoFactory {
     }
   }
 
+  /**
+   * Converts an OrderDto to its corresponding Order domain model.
+   *
+   * This function maps the fields of the DTO to the appropriate domain model,
+   * handling different types of orders based on the DTO subtype.
+   *
+   * @return The corresponding Order domain model.
+   */
   fun OrderDto.toDomain(): Order {
     val domainItems = items.map { it.toDomain() }
     val domainId = OrderId(orderId)
