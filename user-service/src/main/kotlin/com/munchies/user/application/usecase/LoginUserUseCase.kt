@@ -10,6 +10,12 @@ import com.munchies.user.domain.port.TimeProvider
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
 
+/**
+ * Authenticates a user using either email or username and validates the provided password.
+ *
+ * The use case coordinates user lookup, credential retrieval, lockout checks,
+ * and password verification while keeping transport concerns outside the application layer.
+ */
 class LoginUserUseCase(
   private val userRepository: UserRepository,
   private val credentialsRepository: UserCredentialsRepository,

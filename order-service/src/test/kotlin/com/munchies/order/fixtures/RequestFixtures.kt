@@ -78,11 +78,10 @@ fun createTestPlaceOrderRequest(
 
 /** Creates a DiscardOrderRequest from an OrderId.
  * @param orderId The OrderId of the order to discard. Defaults to defaultOrderId.
- * @return A DiscardOrderRequest with the given OrderId and defaultCustomerId.
+ * @return A DiscardOrderRequest with the given OrderId.
  */
 fun createDiscardOrderRequest(orderId: OrderId = defaultOrderId) = DiscardOrderRequest(
   orderId = orderId.value,
-  customerId = defaultCustomerId.value,
 )
 
 /** Creates an UpdateTakeawayOrderRequest from a TakeawayOrder.

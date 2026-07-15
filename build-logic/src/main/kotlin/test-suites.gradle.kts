@@ -15,9 +15,11 @@ testing {
       dependencies {
         implementation(libs().kotest)
         implementation(libs().mockk)
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.testcontainers:mongodb")
-        implementation("org.testcontainers:junit-jupiter")
+        implementation(libs().micronaut.test.junit5)
+        implementation(libs().testcontainers.core)
+        implementation(libs().testcontainers.mongodb)
+        implementation(libs().testcontainers.kafka)
+        implementation(libs().testcontainers.junit.jupiter)
       }
       targets {
         all { testTask.configure { shouldRunAfter("test") } }
@@ -29,10 +31,11 @@ testing {
       dependencies {
         implementation(libs().kotest)
         implementation(libs().mockk)
-        implementation("io.micronaut.test:micronaut-test-junit5")
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.testcontainers:mongodb")
-        implementation("org.testcontainers:junit-jupiter")
+        implementation(libs().micronaut.test.junit5)
+        implementation(libs().testcontainers.core)
+        implementation(libs().testcontainers.mongodb)
+        implementation(libs().testcontainers.kafka)
+        implementation(libs().testcontainers.junit.jupiter)
       }
       targets {
         all { testTask.configure { shouldRunAfter("integrationTest") } }

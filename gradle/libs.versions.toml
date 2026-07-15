@@ -25,6 +25,8 @@ cucumber = "7.34.4"
 junit = "5.14.4"
 junit-platform = "1.14.4"
 java-jwt = "4.6.0"
+micronaut-test = "4.5.0"
+testcontainers = "2.0.5"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -64,6 +66,11 @@ junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", vers
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "java-jwt" }
+micronaut-test-junit5 = { module = "io.micronaut.test:micronaut-test-junit5", version.ref = "micronaut-test" }
+testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-mongodb = { module = "org.testcontainers:testcontainers-mongodb", version.ref = "testcontainers" }
+testcontainers-kafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
 
 [bundles]
 junit = [
@@ -82,4 +89,11 @@ micronaut-serialization = [
     "micronaut-kotlin-runtime",
     "micronaut-serde-jackson",
     "jackson-module-kotlin",
+]
+
+testcontainers = [
+    "testcontainers-core",
+    "testcontainers-mongodb",
+    "testcontainers-kafka",
+    "testcontainers-junit-jupiter",
 ]

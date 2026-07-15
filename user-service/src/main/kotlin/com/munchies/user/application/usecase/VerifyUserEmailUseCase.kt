@@ -8,6 +8,11 @@ import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserRepository
 
+/**
+ * Verifies a user's email address by comparing the provided one-time key with the expected value.
+ *
+ * On success, the user is marked as verified and the updated aggregate is persisted.
+ */
 class VerifyUserEmailUseCase(
   private val userRepository: UserRepository,
   private val hasher: PasswordHasher,

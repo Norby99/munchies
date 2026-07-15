@@ -29,4 +29,7 @@ module.exports = {
   WebResponse: _commons.infrastructure.adapter.WebResponse,
   ResponseResult: _commons.infrastructure.adapter.ResponseResult,
   WebFailure: _commons.infrastructure.adapter.WebFailure,
+  Notification: _commons.domain.port.Notification,
+  NotificationObserver: _commons.domain.port.NotificationObserver,
+  NotificationSubject: _commons.domain.port.NotificationSubject
 };

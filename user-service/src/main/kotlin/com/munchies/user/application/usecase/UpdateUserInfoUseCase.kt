@@ -7,6 +7,11 @@ import com.munchies.user.application.port.inbound.UpdateUserInfo.Companion.Updat
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.port.UserRepository
 
+/**
+ * Updates the persisted user profile information for an existing user.
+ *
+ * The use case validates that the user exists before rebuilding and saving the aggregate.
+ */
 class UpdateUserInfoUseCase(
   private val userRepository: UserRepository,
 ) : UpdateUserInfo {

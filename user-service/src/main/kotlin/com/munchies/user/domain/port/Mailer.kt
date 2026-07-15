@@ -1,5 +1,8 @@
 package com.munchies.user.domain.port
 
+/**
+ * Abstraction for sending notification emails from the user domain.
+ */
 interface Mailer {
   fun sendMail(destination: String, contents: String): MailerResult
 

@@ -7,6 +7,14 @@ import com.munchies.order.application.port.inbound.command.UpdateTakeawayOrderCo
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.domain.ports.OrderRepository
 
+/**
+ * Use case implementation for updating the information of a takeaway order.
+ *
+ * This class handles the business logic for updating the pickup time and customer name
+ * of a takeaway order. It interacts with the OrderRepository to retrieve and update order data.
+ *
+ * @property repository The repository used to access and modify order data.
+ */
 class UpdateTakeawayOrderInfoUseCase(
   private val repository: OrderRepository,
 ) : UpdateTakeawayOrderInfo {
