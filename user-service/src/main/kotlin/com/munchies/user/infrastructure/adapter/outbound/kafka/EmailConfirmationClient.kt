@@ -5,6 +5,9 @@ import io.micronaut.configuration.kafka.annotation.KafkaClient
 import io.micronaut.configuration.kafka.annotation.Topic
 import io.micronaut.serde.annotation.SerdeImport
 
+/**
+ * Kafka client used to publish email confirmation events for downstream consumers.
+ */
 @SerdeImport
 @KafkaClient
 interface EmailConfirmationClient {
