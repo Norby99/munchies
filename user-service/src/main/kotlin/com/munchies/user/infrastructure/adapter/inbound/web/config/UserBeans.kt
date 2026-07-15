@@ -7,6 +7,13 @@ import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
 @Factory
+/**
+ * Micronaut factory that wires application use cases to their concrete
+ * infrastructure dependencies.
+ *
+ * Each method is annotated with @Singleton so the returned use case instance
+ * will be managed by the Micronaut context.
+ */
 class UserBeans {
 
   @Singleton

@@ -4,6 +4,13 @@ import com.munchies.user.domain.port.Mailer
 import jakarta.inject.Singleton
 
 @Singleton
+/**
+ * Development-only implementation of [Mailer] that simulates sending email.
+ *
+ * This fake mailer allows local testing of flows that trigger email sending
+ * without requiring an external SMTP service. It performs simple validation
+ * of input arguments and returns an appropriate [Mailer.MailerResult].
+ */
 class FakeMailer : Mailer {
   override fun sendMail(destination: String, contents: String): Mailer.Companion.MailerResult {
     return when (destination) {

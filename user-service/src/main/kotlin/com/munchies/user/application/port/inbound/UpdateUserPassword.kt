@@ -1,5 +1,8 @@
 package com.munchies.user.application.port.inbound
 
+/**
+ * Inbound port for changing a user's password after validating the current credentials.
+ */
 interface UpdateUserPassword {
   fun execute(
     id: String,

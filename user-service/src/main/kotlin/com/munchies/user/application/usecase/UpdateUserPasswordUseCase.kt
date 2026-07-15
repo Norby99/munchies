@@ -6,6 +6,11 @@ import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.port.*
 
+/**
+ * Updates a user's password after validating identity, lockout state, and the current password.
+ *
+ * The use case also resets credential counters and lock metadata when the password update succeeds.
+ */
 class UpdateUserPasswordUseCase(
   private val userRepository: UserRepository,
   private val credentialsRepository: UserCredentialsRepository,

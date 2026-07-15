@@ -5,6 +5,9 @@ import jakarta.inject.Singleton
 import java.security.MessageDigest
 
 @Singleton
+/**
+ * Concrete [PasswordHasher] implementation using SHA-256.
+ */
 class KotlinPasswordHasher : PasswordHasher {
   override fun hash(password: String, salt: String): String {
     val input = password + salt
