@@ -8,7 +8,7 @@ plugins {
   id("com.diffplug.spotless")
 }
 
-private fun ktlintConfigOverride(ktlint: BaseKotlinExtension.KtlintConfig)  {
+private fun ktlintConfigOverride(ktlint: BaseKotlinExtension.KtlintConfig) {
   ktlint.editorConfigOverride(
     mapOf(
       "ktlint_standard_no-wildcard-imports" to "disabled",
@@ -42,8 +42,13 @@ fun configureSpotlessForJs(project: Project) {
   project.configure<SpotlessExtension> {
     typescript {
       target("src/**/*.ts")
-      targetExclude("**/node_modules/**/*.ts", "**/dist/**/*.ts", "build/**")
-      BiomeTs("2.1.0")
+      targetExclude(
+        "**/node_modules/**/*.ts",
+        "**/dist/**/*.ts",
+        "build/**",
+        "**/resources/*.js",
+      )
+      prettier()
     }
     javascript {
       target("src/**/*.js")
@@ -52,9 +57,14 @@ fun configureSpotlessForJs(project: Project) {
         "**/dist/**/*.js",
         "**/*.cjs.js",
         "**/*.min.js",
+        "**/resources/*.d.ts",
       )
-      BiomeJs("2.1.0")
+      prettier()
     }
+  }
+
+  project.tasks.matching { it.name.startsWith("spotless") }.configureEach {
+    dependsOn(project.tasks.named("npmInstall"))
   }
 
   /*project.pluginManager.withPlugin("com.github.node-gradle.node") {
