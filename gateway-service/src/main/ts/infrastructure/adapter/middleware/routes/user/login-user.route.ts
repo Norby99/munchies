@@ -71,10 +71,9 @@ class InternalLoginUserRoute
   }
 }
 
-export class LoginUserRoute implements RouteDefinition<
-  LoginUserResponse,
-  LoginUserFailure
-> {
+export class LoginUserRoute
+  implements RouteDefinition<LoginUserResponse, LoginUserFailure>
+{
   constructor() {
     this.internalRoute = new InternalLoginUserRoute();
     this.path = this.internalRoute.path;
@@ -96,7 +95,9 @@ export class LoginUserRoute implements RouteDefinition<
   onAuthFail: (msg: string) => LoginUserFailure;
 
   forward: (req: AuthedRequest) => Promise<LoginUserResponse> = (req) => {
-    const request = this.internalRoute.service.parseRequest(req.body.toString());
+    const request = this.internalRoute.service.parseRequest(
+      req.body.toString()
+    );
     return this.internalRoute.request(request);
   };
 

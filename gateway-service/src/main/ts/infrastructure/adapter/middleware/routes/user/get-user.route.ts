@@ -52,7 +52,6 @@ class InternalGetUserRoute
 
   request(request: GetUserRequest): Promise<GetUserResponse> {
     return this.getUser(request.id);
-    
   }
 
   async getUser(id: string): Promise<GetUserResponse> {
@@ -67,15 +66,14 @@ class InternalGetUserRoute
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
-      this.generateFailure,
+      this.generateFailure
     );
   }
 }
 
-export class GetUserRoute implements RouteDefinition<
-  GetUserResponse,
-  GetUserFailure
-> {
+export class GetUserRoute
+  implements RouteDefinition<GetUserResponse, GetUserFailure>
+{
   constructor() {
     this.internalRoute = new InternalGetUserRoute();
     this.path = this.internalRoute.path;
@@ -90,14 +88,14 @@ export class GetUserRoute implements RouteDefinition<
   authRole: AuthRole | null;
   onAuthFail: (msg: string) => GetUserFailure;
   forward: (req: AuthedRequest) => Promise<GetUserResponse> = (
-    req: AuthedRequest,
+    req: AuthedRequest
   ) => {
     const id = req.user!!.id;
     return this.internalRoute.request(new GetUserRequest(id));
   };
   respond: (req: AuthedRequest, res: ExpressResponse) => void = async (
     req,
-    res,
+    res
   ) => {
     const response = await this.forward(req);
     res.status(response.code).type("json").send(response.toJson());

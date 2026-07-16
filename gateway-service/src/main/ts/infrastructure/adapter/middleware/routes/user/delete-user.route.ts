@@ -66,15 +66,14 @@ class InternalDeleteUserRoute
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
-      this.generateFailure,
+      this.generateFailure
     );
   }
 }
 
-export class DeleteUserRoute implements RouteDefinition<
-  DeleteUserResponse,
-  DeleteUserFailure
-> {
+export class DeleteUserRoute
+  implements RouteDefinition<DeleteUserResponse, DeleteUserFailure>
+{
   constructor() {
     this.internalRoute = new InternalDeleteUserRoute();
     this.path = this.internalRoute.path;
@@ -89,14 +88,14 @@ export class DeleteUserRoute implements RouteDefinition<
   authRole: AuthRole | null;
   onAuthFail: (msg: string) => DeleteUserFailure;
   forward: (req: AuthedRequest) => Promise<DeleteUserResponse> = (
-    req: AuthedRequest,
+    req: AuthedRequest
   ) => {
     const id = req.user!!.id;
     return this.internalRoute.request(new DeleteUserRequest(id));
   };
   respond: (req: AuthedRequest, res: ExpressResponse) => void = async (
     req,
-    res,
+    res
   ) => {
     const response = await this.forward(req);
     res.status(response.code).type("json").send(response.toJson());

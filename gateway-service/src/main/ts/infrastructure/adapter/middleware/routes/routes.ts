@@ -46,15 +46,16 @@ function logRequests(): RequestHandler {
   };
 }
 
-type AsyncHandler = (req: Request,
+type AsyncHandler = (
+  req: Request,
   res: Response,
   next: NextFunction
-) => unknown | Promise<unknown>
+) => unknown | Promise<unknown>;
 
 export function catchError(handler: AsyncHandler): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(handler(req, res, next)).catch(next)
-  }
+    Promise.resolve(handler(req, res, next)).catch(next);
+  };
 }
 export function applyRoutes(app: Express) {
   for (const r of routes) {

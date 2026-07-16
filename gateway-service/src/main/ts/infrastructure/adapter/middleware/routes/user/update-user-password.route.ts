@@ -1,4 +1,3 @@
-
 import { Response as ExpressResponse } from "express";
 import { HttpMethod, AuthRole } from "munchies-commons/kotlin/commons-modules";
 import {
@@ -38,10 +37,15 @@ class InternalUpdateUserPasswordRoute
   authRole: AuthRole | null;
   method: HttpMethod;
 
-  generateErrorResponse(reason: string, code: number): UpdateUserPasswordResponse {
+  generateErrorResponse(
+    reason: string,
+    code: number
+  ): UpdateUserPasswordResponse {
     return new UpdateUserPasswordResponse(this.generateFailure(reason), code);
   }
-  parseResult(result: UpdateUserPasswordResult): UpdateUserPasswordFailure | UpdateUserPasswordSuccess {
+  parseResult(
+    result: UpdateUserPasswordResult
+  ): UpdateUserPasswordFailure | UpdateUserPasswordSuccess {
     if (result.type === UpdateUserPasswordSuccess.name) {
       return result as UpdateUserPasswordSuccess;
     } else if (result.type === UpdateUserPasswordFailure.name) {
@@ -51,13 +55,15 @@ class InternalUpdateUserPasswordRoute
     }
   }
 
-  request(request: UpdateUserPasswordRequest): Promise<UpdateUserPasswordResponse> {
+  request(
+    request: UpdateUserPasswordRequest
+  ): Promise<UpdateUserPasswordResponse> {
     return this.updateUserPassword(request);
   }
 
-  async updateUserPassword(request: UpdateUserPasswordRequest): Promise<UpdateUserPasswordResponse> {
-    
-    
+  async updateUserPassword(
+    request: UpdateUserPasswordRequest
+  ): Promise<UpdateUserPasswordResponse> {
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
       return this.generateErrorResponse("Missing User Service URL", 500);
@@ -69,15 +75,15 @@ class InternalUpdateUserPasswordRoute
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
-      this.generateFailure,
+      this.generateFailure
     );
   }
 }
 
-export class UpdateUserPasswordRoute implements RouteDefinition<
-  UpdateUserPasswordResponse,
-  UpdateUserPasswordFailure
-> {
+export class UpdateUserPasswordRoute
+  implements
+    RouteDefinition<UpdateUserPasswordResponse, UpdateUserPasswordFailure>
+{
   constructor() {
     this.internalRoute = new InternalUpdateUserPasswordRoute();
     this.path = this.internalRoute.path;
@@ -92,16 +98,16 @@ export class UpdateUserPasswordRoute implements RouteDefinition<
   authRole: AuthRole | null;
   onAuthFail: (msg: string) => UpdateUserPasswordFailure;
   forward: (req: AuthedRequest) => Promise<UpdateUserPasswordResponse> = (
-    req: AuthedRequest,
+    req: AuthedRequest
   ) => {
     const id = req.user!!.id;
-    let request = this.internalRoute.service.parseRequest(req.body.toString()) 
+    let request = this.internalRoute.service.parseRequest(req.body.toString());
     request = request.copy(id);
     return this.internalRoute.request(request);
   };
   respond: (req: AuthedRequest, res: ExpressResponse) => void = async (
     req,
-    res,
+    res
   ) => {
     const response = await this.forward(req);
     res.status(response.code).type("json").send(response.toJson());
