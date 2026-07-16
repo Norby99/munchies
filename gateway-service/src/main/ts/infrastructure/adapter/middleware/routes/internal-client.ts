@@ -28,7 +28,7 @@ function axiosMethodChooser(
   base: AxiosInstance,
   uri: string,
   method: HttpMethod,
-  body: string = "",
+  body: string = ""
 ): Promise<AxiosResponse> {
   switch (method.name) {
     case HttpMethod.POST.name:
@@ -46,7 +46,7 @@ async function request<
   Response extends { result: Result; code: number },
   Result extends { type: string },
   Success extends Result,
-  Failure extends Result,
+  Failure extends Result
 >(
   uri: string,
   httpMethod: HttpMethod,
@@ -54,7 +54,7 @@ async function request<
   fromJson: (json: string) => Response,
   toResult: (result: Result) => Success | Failure,
   toResponse: (result: Success | Failure, code: number) => Response,
-  toFailure: (err: string) => Failure,
+  toFailure: (err: string) => Failure
 ): Promise<Response> {
   return axiosMethodChooser(axiosClient, uri, httpMethod, body)
     .then((value) => {
@@ -80,7 +80,7 @@ export function internalAxiosRequest<
   Response extends WebResponse,
   Result extends { type: string },
   Success extends Result,
-  Failure extends Result & { reason: string },
+  Failure extends Result & { reason: string }
 >(
   uri: string,
   httpMethod: HttpMethod,
@@ -88,7 +88,7 @@ export function internalAxiosRequest<
   fromJson: (json: string) => Response,
   toResult: (result: Result) => Success | Failure,
   toResponse: (result: Success | Failure, code: number) => Response,
-  toFailure: (err: string) => Failure,
+  toFailure: (err: string) => Failure
 ): Promise<Response> {
   return request(
     uri,
@@ -97,6 +97,6 @@ export function internalAxiosRequest<
     fromJson,
     toResult,
     toResponse,
-    toFailure,
+    toFailure
   );
 }

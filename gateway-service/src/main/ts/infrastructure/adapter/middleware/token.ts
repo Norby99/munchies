@@ -21,12 +21,15 @@ interface TokenClaims {
   iat?: number;
 }
 import jwt from "jsonwebtoken";
-import { getTokenRepository, TokenRepository } from "../outbound/token-repository";
+import {
+  getTokenRepository,
+  TokenRepository,
+} from "../outbound/token-repository";
 export class AuthTokenProvider extends TokenProvider {
   private readonly secret: string | undefined = process.env.JWT_SECRET;
   private readonly repository: TokenRepository<string> = getTokenRepository();
   generateToken(id: UUIDEntityId, role: AuthRole): GenerateTokenResult {
-    if(!this.secret) return new GenerateTokenFailure("Secret is missing")
+    if (!this.secret) return new GenerateTokenFailure("Secret is missing");
     const nowSeconds = Math.floor(Date.now() / 1000);
     const expSeconds = nowSeconds + 60 * 60 * 24 * 7;
 
@@ -38,12 +41,13 @@ export class AuthTokenProvider extends TokenProvider {
       iat: nowSeconds,
     };
 
-    const token = jwt.sign(payload, this.secret)
-    if(this.repository.isRevoked(token)) return new GenerateTokenFailure("Token is revoked") 
+    const token = jwt.sign(payload, this.secret);
+    if (this.repository.isRevoked(token))
+      return new GenerateTokenFailure("Token is revoked");
     this.repository.add(token);
     return new GenerateTokenSuccess(token);
   }
-  
+
   revokeToken(token: string): void {
     this.repository.revoke(token);
   }
@@ -67,7 +71,7 @@ export class AuthTokenDecoder extends TokenDecoder {
         decoded[ID_CLAIM]!!?.toString(),
         decoded[ROLE_CLAIM]!!.toString() == AuthRole.CUSTOMER.name
           ? AuthRole.CUSTOMER
-          : AuthRole.MANAGER,
+          : AuthRole.MANAGER
       );
     } catch (e: any) {
       return new DecodedTokenFailure("error: " + e);

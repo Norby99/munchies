@@ -30,24 +30,27 @@ export function parseAuthRoleString(role: string): AuthRole {
       return AuthRole.MANAGER;
     default:
       throw new Error("Unexpected Role");
-  } 
+  }
 }
 
 export interface AuthedRequest extends ExpressRequest {
   user?: AuthInfo;
 }
-export function requireAuth<Response extends { toJson(): string}>(
-    invalidRoleResponse: (msg: string, code: number) => Response,
+export function requireAuth<Response extends { toJson(): string }>(
+  invalidRoleResponse: (msg: string, code: number) => Response
 ): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
     res: ExpressResponse,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const missingToken = 500;
     console.log("cookies", req.cookies["authToken"]);
     if (req.cookies["authToken"] === undefined) {
-      res.status(missingToken).type("json").send(invalidRoleResponse("missing token", missingToken).toJson());
+      res
+        .status(missingToken)
+        .type("json")
+        .send(invalidRoleResponse("missing token", missingToken).toJson());
       return;
     } else {
       const tokenRes = decoder.validateAndDecodeToken(req.cookies.authToken);
@@ -61,26 +64,28 @@ export function requireAuth<Response extends { toJson(): string}>(
           .status(missingToken)
           .type("json")
           .send(
-            invalidRoleResponse("invalid token: " + (tokenRes as DecodedTokenFailure).toString(), missingToken).toJson(),
+            invalidRoleResponse(
+              "invalid token: " + (tokenRes as DecodedTokenFailure).toString(),
+              missingToken
+            ).toJson()
           );
         return;
       }
     }
-
   };
 }
 export function requireRole<
   Response extends {
     toJson(): string;
-  },
+  }
 >(
   requiredRole: AuthRole,
-  invalidRoleResponse: (msg: string, code: number) => Response,
+  invalidRoleResponse: (msg: string, code: number) => Response
 ): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
     res: ExpressResponse,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const unauthorizedCode = 401;
     if (!req.user) {
@@ -102,7 +107,7 @@ export function requireRole<
 
 export function injectCookie<Response extends { toJson(): string }>(
   res: ExpressResponse,
-  info: AuthInfo,
+  info: AuthInfo
 ): ExpressResponse | null {
   const token = provider.generateToken(new UUIDEntityId(info.id), info.role);
   if (token instanceof GenerateTokenFailure) {
