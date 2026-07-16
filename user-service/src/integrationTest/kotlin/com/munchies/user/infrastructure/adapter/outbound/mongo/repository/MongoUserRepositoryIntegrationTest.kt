@@ -87,7 +87,7 @@ class MongoUserRepositoryIntegrationTest {
   }
 
   @Test
-  fun `delete function removes user from db`()  {
+  fun `delete function removes user from db`() {
     val user = UserFixtures.exampleUser
     repository.save(user)
     val found = repository.findById(user.id)
@@ -100,7 +100,7 @@ class MongoUserRepositoryIntegrationTest {
   }
 
   @Test
-  fun `a user may be found by its username or email`()  {
+  fun `a user may be found by its username or email`() {
     val user = UserFixtures.exampleUser
     repository.save(user)
 
