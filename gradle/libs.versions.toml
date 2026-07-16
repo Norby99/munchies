@@ -27,6 +27,7 @@ junit-platform = "1.14.4"
 java-jwt = "4.6.0"
 micronaut-test = "4.10.3"
 testcontainers = "2.0.5"
+vanniktech-maven-publish = "0.35.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -44,6 +45,7 @@ dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 node = { id = "com.github.node-gradle.node", version.ref = "node" }
 docker = { id = "com.bmuschko.docker-remote-api", version.ref = "docker" }
 compose = { id = "com.avast.gradle.docker-compose", version.ref = "compose" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
