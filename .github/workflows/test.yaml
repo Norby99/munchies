@@ -40,3 +40,6 @@ jobs:
 
       - name: Run tests with Gradle
         run: ./gradlew test integrationTest componentTest -PtestOutput=all
+
+      - name: Check code linting
+        run: ./gradlew spotlessCheck
