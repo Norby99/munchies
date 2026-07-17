@@ -15,7 +15,7 @@ import {
   VerifyEmailFailure,
   VerifyEmailSuccess,
   verifyEmailRequestFromJson,
-  verifyEmailResponseFromJson
+  verifyEmailResponseFromJson,
 } from "munchies-user-service-shared/kotlin/user-modules";
 
 class InternalVerifyEmailRoute
@@ -47,7 +47,7 @@ class InternalVerifyEmailRoute
   }
 
   parseResult(
-    result: VerifyEmailResult,
+    result: VerifyEmailResult
   ): VerifyEmailSuccess | VerifyEmailFailure {
     if (result.type === VerifyEmailSuccess.name) {
       return result as VerifyEmailSuccess;
@@ -68,7 +68,7 @@ class InternalVerifyEmailRoute
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
-      this.generateFailure,
+      this.generateFailure
     );
   }
   request(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
@@ -76,10 +76,9 @@ class InternalVerifyEmailRoute
   }
 }
 
-export class VerifyEmailRoute implements RouteDefinition<
-  VerifyEmailResponse,
-  VerifyEmailFailure
-> {
+export class VerifyEmailRoute
+  implements RouteDefinition<VerifyEmailResponse, VerifyEmailFailure>
+{
   constructor() {
     this.internalRoute = new InternalVerifyEmailRoute();
     this.path = this.internalRoute.path;

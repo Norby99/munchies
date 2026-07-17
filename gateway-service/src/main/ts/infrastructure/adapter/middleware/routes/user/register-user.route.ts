@@ -47,7 +47,7 @@ class InternalRegisterUserRoute
   }
 
   parseResult(
-    result: RegisterUserResult,
+    result: RegisterUserResult
   ): RegisterUserSuccess | RegisterUserFailure {
     if (result.type === RegisterUserSuccess.name) {
       return result as RegisterUserSuccess;
@@ -58,7 +58,7 @@ class InternalRegisterUserRoute
     }
   }
   async registerUser(
-    request: RegisterUserRequest,
+    request: RegisterUserRequest
   ): Promise<RegisterUserResponse> {
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
@@ -70,7 +70,7 @@ class InternalRegisterUserRoute
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
-      this.generateFailure,
+      this.generateFailure
     );
   }
   request(request: RegisterUserRequest): Promise<RegisterUserResponse> {
@@ -78,10 +78,9 @@ class InternalRegisterUserRoute
   }
 }
 
-export class RegisterUserRoute implements RouteDefinition<
-  RegisterUserResponse,
-  RegisterUserFailure
-> {
+export class RegisterUserRoute
+  implements RouteDefinition<RegisterUserResponse, RegisterUserFailure>
+{
   constructor() {
     this.internalRoute = new InternalRegisterUserRoute();
     this.path = this.internalRoute.path;
@@ -123,7 +122,7 @@ export class RegisterUserRoute implements RouteDefinition<
             .send(
               this.internalRoute
                 .generateErrorResponse("Invalid Role", 500)
-                .toJson(),
+                .toJson()
             );
         }
         break;

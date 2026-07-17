@@ -1,4 +1,3 @@
-
 import { Response as ExpressResponse } from "express";
 import { HttpMethod, AuthRole } from "munchies-commons/kotlin/commons-modules";
 import {
@@ -41,7 +40,9 @@ class InternalUpdateUserInfoRoute
   generateErrorResponse(reason: string, code: number): UpdateUserInfoResponse {
     return new UpdateUserInfoResponse(this.generateFailure(reason), code);
   }
-  parseResult(result: UpdateUserInfoResult): UpdateUserInfoFailure | UpdateUserInfoSuccess {
+  parseResult(
+    result: UpdateUserInfoResult
+  ): UpdateUserInfoFailure | UpdateUserInfoSuccess {
     if (result.type === UpdateUserInfoSuccess.name) {
       return result as UpdateUserInfoSuccess;
     } else if (result.type === UpdateUserInfoFailure.name) {
@@ -55,8 +56,9 @@ class InternalUpdateUserInfoRoute
     return this.updateUserInfo(request);
   }
 
-  async updateUserInfo(request: UpdateUserInfoRequest): Promise<UpdateUserInfoResponse> {
-    
+  async updateUserInfo(
+    request: UpdateUserInfoRequest
+  ): Promise<UpdateUserInfoResponse> {
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
       return this.generateErrorResponse("Missing User Service URL", 500);
@@ -68,15 +70,14 @@ class InternalUpdateUserInfoRoute
       this.parseResponse,
       this.parseResult,
       this.generateResponse,
-      this.generateFailure,
+      this.generateFailure
     );
   }
 }
 
-export class UpdateUserInfoRoute implements RouteDefinition<
-  UpdateUserInfoResponse,
-  UpdateUserInfoFailure
-> {
+export class UpdateUserInfoRoute
+  implements RouteDefinition<UpdateUserInfoResponse, UpdateUserInfoFailure>
+{
   constructor() {
     this.internalRoute = new InternalUpdateUserInfoRoute();
     this.path = this.internalRoute.path;
@@ -91,16 +92,16 @@ export class UpdateUserInfoRoute implements RouteDefinition<
   authRole: AuthRole | null;
   onAuthFail: (msg: string) => UpdateUserInfoFailure;
   forward: (req: AuthedRequest) => Promise<UpdateUserInfoResponse> = (
-    req: AuthedRequest,
+    req: AuthedRequest
   ) => {
     const id = req.user!!.id;
-    let request = this.internalRoute.service.parseRequest(req.body.toString()) 
+    let request = this.internalRoute.service.parseRequest(req.body.toString());
     request = request.copy(request.user.copy(id));
     return this.internalRoute.request(request);
   };
   respond: (req: AuthedRequest, res: ExpressResponse) => void = async (
     req,
-    res,
+    res
   ) => {
     const response = await this.forward(req);
     res.status(response.code).type("json").send(response.toJson());

@@ -27,7 +27,7 @@ export interface InternalRoute<
   Response extends JsonEncodable,
   Result extends { type: string },
   Success extends Result,
-  Failure extends Result & { reason: string },
+  Failure extends Result & { reason: string }
 > {
   service: Service;
   path: string;
