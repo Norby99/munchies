@@ -51,7 +51,6 @@ class GetUserControllerComponentTest : BaseUserController() {
     userRepository.findById(user.id).shouldNotBeNull()
 
     try {
-
       val response =
         httpCalls.get(
           user.id.value,
@@ -60,9 +59,8 @@ class GetUserControllerComponentTest : BaseUserController() {
 
       response.body()
         .result.shouldBeInstanceOf<GetUserSuccess>().user shouldBeEqual user.toDTO()
-    } catch (e: HttpClientResponseException){
+    } catch (e: HttpClientResponseException) {
       println(e.cause)
     }
-
   }
 }
