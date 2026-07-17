@@ -18,6 +18,7 @@ if (project.getProjectType() != ProjectType.UTILS) {
         rootProject.layout.buildDirectory
           .dir("docs/html"),
       )
+      failOnWarning = true
     }
   }
 }
