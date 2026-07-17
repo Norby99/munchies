@@ -7,12 +7,12 @@ import io.micronaut.serde.annotation.Serdeable
 /**
  * Represents the MongoDB document for storing order information.
  *
- * Since [Order] is a sealed hierarchy with three subtypes, this document uses
+ * Since [orderType] is a sealed hierarchy with three subtypes, this document uses
  * a discriminator field [orderType] plus mutually-exclusive optional fields
  * to flatten the hierarchy into a single MongoDB collection.
  *
  * @property id The unique identifier for the order document. This is the primary key.
- * @property orderType Discriminator indicating which [Order] subtype this document represents.
+ * @property orderType Discriminator indicating which [String] subtype this document represents.
  * @property restaurantId The identifier of the restaurant the order belongs to.
  * @property customerId The identifier of the customer who placed the order.
  * @property status The current status of the order (e.g., "PENDING", "PREPARING").

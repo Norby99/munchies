@@ -1,12 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.application.port.inbound.AdvanceOrderStatus
-import com.munchies.order.application.port.inbound.DiscardOrder
-import com.munchies.order.application.port.inbound.GetOrderDetails
-import com.munchies.order.application.port.inbound.PlaceOrder
-import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
-import com.munchies.order.application.port.inbound.UpdateOrderItems
-import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo
+import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
@@ -18,13 +12,7 @@ import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.Body
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Patch
-import io.micronaut.http.annotation.PathVariable
-import io.micronaut.http.annotation.Post
+import io.micronaut.http.annotation.*
 import io.micronaut.serde.annotation.SerdeImport
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -88,7 +76,7 @@ class MicronautOrderController(
    * - `200 OK` with the order DTO if the order is found
    * - `404 Not Found` if the order does not exist
    *
-   * @param request The order identifier received from the path.
+   * @param id The order identifier received from the path.
    * @return An HTTP response containing the order DTO or a not-found status.
    */
   @Get(OrderServiceConfig.GET_ORDER_PATH)
