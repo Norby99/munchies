@@ -48,7 +48,7 @@ fun configureSpotlessForJs(project: Project) {
         "build/**",
         "**/resources/*.js",
       )
-      prettier()
+      // prettier()
     }
     javascript {
       target("src/**/*.js")
@@ -59,12 +59,8 @@ fun configureSpotlessForJs(project: Project) {
         "**/*.min.js",
         "**/resources/*.d.ts",
       )
-      prettier()
+      // prettier()
     }
-  }
-
-  project.tasks.matching { it.name.startsWith("spotless") }.configureEach {
-    dependsOn(project.tasks.named("npmInstall"))
   }
 
   /*project.pluginManager.withPlugin("com.github.node-gradle.node") {
