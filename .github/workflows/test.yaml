@@ -43,3 +43,6 @@ jobs:
 
       - name: Check code linting
         run: ./gradlew spotlessCheck
+
+      - name: Check dokka documentation
+        run: ./gradlew dokkaGeneratePublicationHtml
