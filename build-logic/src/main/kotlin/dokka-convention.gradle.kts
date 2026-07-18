@@ -25,11 +25,32 @@ if (project.getProjectType() != ProjectType.UTILS) {
 
   if (project.getProjectType() == ProjectType.SERVICE) {
     project.tasks.dokkaGeneratePublicationHtml {
+      for (item in rootProject.subprojects) {
+        if (item.getProjectType() == ProjectType.SHARED) {
+          val sharedName = "${getServiceName(item)}-shared"
+          val jsDokkaTaskName = "dokkaGeneratePublicationHtml"
+          val sharedProject = project(":$sharedName")
 
-      val jsDokkaTaskName = ":${getServiceName(project)}-shared:jsDokkaJavadocJar"
-      if (tasks.named(jsDokkaTaskName).isPresent) {
-        dependsOn(jsDokkaTaskName)
+          if (sharedProject.tasks.findByName(jsDokkaTaskName) != null) {
+            dependsOn(":$sharedName:$jsDokkaTaskName")
+          }
+        }
       }
     }
+  }
+}
+
+tasks.matching {
+  "CInteropMetadataDependencyTransformationTask" in (it::class.qualifiedName ?: "")
+}.configureEach {
+  enabled = false
+}
+
+tasks.matching {
+  "CInteropMetadataDependencyTransformationTask" in (it::class.qualifiedName ?: "")
+}.configureEach {
+  // disable the IDE task when generating documentation
+  enabled = gradle.taskGraph.allTasks.none {
+    it is org.jetbrains.dokka.gradle.AbstractDokkaTask
   }
 }
