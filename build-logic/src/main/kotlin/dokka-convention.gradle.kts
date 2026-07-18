@@ -25,7 +25,11 @@ if (project.getProjectType() != ProjectType.UTILS) {
 
   if (project.getProjectType() == ProjectType.SERVICE) {
     project.tasks.dokkaGeneratePublicationHtml {
-      dependsOn(":${getServiceName(project)}-shared:jsDokkaJavadocJar")
+
+      val jsDokkaTaskName = ":${getServiceName(project)}-shared:jsDokkaJavadocJar"
+      if (tasks.named(jsDokkaTaskName).isPresent) {
+        dependsOn(jsDokkaTaskName)
+      }
     }
   }
 }
