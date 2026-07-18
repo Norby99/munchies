@@ -1,4 +1,5 @@
 import utils.ProjectType
+import utils.getProjectName
 import utils.getProjectType
 import utils.getServiceName
 
@@ -19,6 +20,12 @@ if (project.getProjectType() != ProjectType.UTILS) {
           .dir("docs/html"),
       )
       failOnWarning = true
+    }
+  }
+
+  if (project.getProjectType() == ProjectType.SERVICE) {
+    project.tasks.dokkaGeneratePublicationHtml {
+      dependsOn(":${getProjectName(project)}-shared:jsDokkaJavadocJar")
     }
   }
 }
