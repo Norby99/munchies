@@ -25,7 +25,7 @@ if (project.getProjectType() != ProjectType.UTILS) {
 
   if (project.getProjectType() == ProjectType.SERVICE) {
     project.tasks.dokkaGeneratePublicationHtml {
-      dependsOn(":${getProjectName(project)}-shared:jsDokkaJavadocJar")
+      dependsOn(":${getServiceName(project)}-shared:jsDokkaJavadocJar")
     }
   }
 }
