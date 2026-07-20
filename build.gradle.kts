@@ -27,6 +27,12 @@ subprojects {
   apply(plugin = "linter-convention")
 }
 
+dokka {
+  dokkaPublications.html {
+    outputDirectory.set(layout.buildDirectory.dir("docs/html"))
+  }
+}
+
 tasks.register("prepareOpenApiSpecs") {
   val serviceProjects = subprojects.filter { it.getProjectType() == ProjectType.SERVICE }
   dependsOn(serviceProjects.map { "${it.path}:build" })
