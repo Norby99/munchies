@@ -6,7 +6,14 @@ mavenPublishing {
   publishToMavenCentral()
   signAllPublications()
 
+  coordinates(
+    groupId = "io.github.norby99",
+    version = (findProperty("versionName") as String?) ?: project.version.toString(),
+  )
+
   pom {
+    name.set(project.name)
+    description.set("${project.name} module of the Munchies microservices platform")
     url.set("https://github.com/Norby99/munchies")
     licenses {
       license {
