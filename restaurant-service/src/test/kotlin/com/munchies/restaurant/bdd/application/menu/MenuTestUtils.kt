@@ -5,11 +5,10 @@ import com.munchies.restaurant.application.usecase.menu.CreateMenuCommand
 import com.munchies.restaurant.application.usecase.menu.CreateMenuResult
 import com.munchies.restaurant.application.usecase.menu.GetMenuCommand
 import com.munchies.restaurant.application.usecase.menu.GetMenuResult
-import com.munchies.restaurant.application.usecase.menu.ValidityConfig
+import com.munchies.restaurant.application.usecase.menu.ValidityInput
 import com.munchies.restaurant.domain.aggregate.Category
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
-import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 
 @Singleton
@@ -25,23 +24,20 @@ class MenuContext {
 class MenuHelper @Inject constructor(private val service: MenuService) {
   fun createMenu(restaurantId: String, name: String, start: String, end: String): CreateMenuResult {
     val command = CreateMenuCommand(
-      restaurantId,
-      name,
-      validity = ValidityConfig.Period(
-        LocalDate.parse(start),
-        LocalDate.parse(end),
-      ),
+      restaurantId = restaurantId,
+      name = name,
+      validity = ValidityInput.Period(start, end),
     )
     return runBlocking { service.createMenu(command) }
   }
 
-  fun getMenu(menuId: String): GetMenuResult {
-    val command = GetMenuCommand(menuId)
+  fun getMenu(restaurantId: String, menuId: String): GetMenuResult {
+    val command = GetMenuCommand(restaurantId, menuId)
     return runBlocking { service.getMenu(command) }
   }
 
-  fun getCategory(menuId: String, categoryId: String): Category {
-    val command = GetMenuCommand(menuId)
+  fun getCategory(restaurantId: String, menuId: String, categoryId: String): Category {
+    val command = GetMenuCommand(restaurantId, menuId)
     val result = runBlocking { service.getMenu(command) }
     check(result is GetMenuResult.Success) { "Retrieve menu failed" }
     return result.menu.categories.first { it.id.value == categoryId }

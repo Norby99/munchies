@@ -17,25 +17,31 @@ import org.junit.jupiter.api.Test
 class RemoveMenuTest {
 
   private lateinit var menuRepository: MenuRepository
-  private lateinit var removeMenuUseCase: RemoveMenuUseCase
+  private lateinit var deleteMenuUseCase: DeleteMenuUseCase
 
   @BeforeEach
   fun setUp() {
     menuRepository = mockk()
-    removeMenuUseCase = RemoveMenuUseCase(menuRepository)
+    deleteMenuUseCase = DeleteMenuUseCase(menuRepository)
   }
 
   @Test
   fun `should remove menu successfully when menu exists`() = runBlocking {
-    val menu = spyk(Menu.create(RestaurantId(), MenuName.of("Main Menu"), Validity.always))
+    val menu = spyk(
+      Menu.create(
+        restaurantId = RestaurantId(),
+        name = MenuName.of("Main Menu"),
+        validity = Validity.always,
+      ),
+    )
     val menuId = menu.id
-    val command = RemoveMenuCommand(menuId.value)
+    val command = DeleteMenuCommand(menu.restaurantId.value, menuId.value)
 
     coEvery { menuRepository.findById(any()) } returns menu
     coEvery { menuRepository.delete(any()) } returns Unit
 
-    when (val result = removeMenuUseCase(command)) {
-      is RemoveMenuResult.Success -> {
+    when (val result = deleteMenuUseCase(command)) {
+      is DeleteMenuResult.Success -> {
         coVerify(exactly = 1) { menuRepository.delete(menuId) }
       }
       else -> assert(false) { "Expected Success, but got $result" }
@@ -44,12 +50,12 @@ class RemoveMenuTest {
 
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
-    val command = RemoveMenuCommand(MenuId().value)
+    val command = DeleteMenuCommand(RestaurantId().value, MenuId().value)
 
     coEvery { menuRepository.findById(any()) } returns null
 
-    when (val result = removeMenuUseCase(command)) {
-      is RemoveMenuResult.MenuNotFound -> {
+    when (val result = deleteMenuUseCase(command)) {
+      is DeleteMenuResult.MenuNotFound -> {
         coVerify(exactly = 0) { menuRepository.delete(any()) }
       }
       else -> assert(false) { "Expected MenuNotFound, but got $result" }

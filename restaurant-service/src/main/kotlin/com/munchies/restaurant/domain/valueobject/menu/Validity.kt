@@ -16,11 +16,15 @@ sealed interface Validity {
   fun combine(other: Validity): Validity = And(this, other)
 
   companion object {
-    fun period(start: LocalDate, end: LocalDate): Validity = Period(start, end)
-    fun yearly(start: MonthDay, end: MonthDay): Validity = Yearly(start, end)
-    fun weekly(vararg days: DayOfWeek): Validity = Weekly(days.toSet())
-    fun from(start: LocalDate): Validity = Period(start, LocalDate.MAX)
-    fun until(end: LocalDate): Validity = Period(LocalDate.MIN, end)
+    fun period(start: String, end: String): Validity =
+      Period(LocalDate.parse(start), LocalDate.parse(end))
+    fun yearly(startMonth: Int, startDay: Int, endMonth: Int, endDay: Int): Validity = Yearly(
+      MonthDay.of(startMonth, startDay),
+      MonthDay.of(endMonth, endDay),
+    )
+    fun weekly(days: List<Int>): Validity = Weekly(days.map { DayOfWeek.of(it) }.toSet())
+    fun from(start: String): Validity = Period(LocalDate.parse(start), LocalDate.MAX)
+    fun until(end: String): Validity = Period(LocalDate.MIN, LocalDate.parse(end))
     val always: Validity = Always
 
     fun hours(start: LocalTime, end: LocalTime): Validity = Hours(start, end)
