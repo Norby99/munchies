@@ -57,13 +57,13 @@ class MenuSteps @Inject constructor(
   fun givenRestaurantHasAMenuNamed(name: String, start: String, end: String) {
     val result = helper.createMenu(context.restaurantId, name, start, end)
     check(result is CreateMenuResult.Success) { "Menu creation failed" }
-    context.menuId = result.menuId
+    context.menuId = result.menu.id.value
   }
 
   @When("I retrieve the menu details for {string}")
   fun whenRetrieveMenuDetails(menuName: String) {
     checkMenuExistence(menuName)
-    val command = GetMenuCommand(context.menuId)
+    val command = GetMenuCommand(context.restaurantId, context.menuId)
     context.lastResult = runBlocking { service.getMenu(command) }
   }
 
@@ -76,8 +76,7 @@ class MenuSteps @Inject constructor(
   fun thenMenuDetailsMatch(name: String, start: String, end: String) {
     val menu = (context.lastResult as GetMenuResult.Success).menu
     menu.name.value shouldBe name
-    menu.validity shouldBe
-      Validity.period(parse(start), parse(end))
+    menu.validity shouldBe Validity.period(start, end)
   }
 
   // --- Scenario: Update an existing menu ---
@@ -86,9 +85,10 @@ class MenuSteps @Inject constructor(
   fun whenUpdateMenuName(name: String, newName: String, start: String, end: String) {
     checkMenuExistence(name)
     val command = UpdateMenuCommand(
+      restaurantId = context.restaurantId,
       menuId = context.menuId,
       name = newName,
-      validity = ValidityConfig.Period(parse(start), parse(end)),
+      validity = ValidityInput.Period(start, end),
     )
     context.lastResult = runBlocking { service.updateMenu(command) }
   }
@@ -103,24 +103,26 @@ class MenuSteps @Inject constructor(
   @When("I remove the {string} menu")
   fun removeMenu(name: String) {
     checkMenuExistence(name)
-    val command = RemoveMenuCommand(context.menuId)
-    context.lastResult = runBlocking { service.removeMenu(command) }
+    val command = DeleteMenuCommand(context.restaurantId, context.menuId)
+    context.lastResult = runBlocking { service.deleteMenu(command) }
   }
 
   @Then("the menu should be removed successfully")
   fun menuRemovedSuccessfully() {
-    context.lastResult should beInstanceOf<RemoveMenuResult.Success>()
+    context.lastResult should beInstanceOf<DeleteMenuResult.Success>()
   }
 
   @And("the restaurant should have no {string} menu")
   fun restaurantShouldHaveNoMenu(menuName: String) {
-    val result = runBlocking { service.getMenu(GetMenuCommand(context.menuId)) }
+    val result = runBlocking {
+      service.getMenu(GetMenuCommand(context.restaurantId, context.menuId))
+    }
     check(result is GetMenuResult.MenuNotFound) { "Menu still exists" }
     assertThrows<IllegalStateException> { checkMenuExistence(menuName) }
   }
 
   private fun checkMenuExistence(menuName: String) {
-    val result = helper.getMenu(context.menuId)
+    val result = helper.getMenu(context.restaurantId, context.menuId)
     check(result is GetMenuResult.Success)
     check(result.menu.name.value == menuName) { "Context doesn't have a $menuName menu" }
   }

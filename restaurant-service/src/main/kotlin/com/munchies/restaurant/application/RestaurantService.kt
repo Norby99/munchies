@@ -11,6 +11,7 @@ import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResul
 import com.munchies.restaurant.application.usecase.restaurant.RestaurantUseCases
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantResult
+import jakarta.inject.Singleton
 
 interface RestaurantService {
   suspend fun createRestaurant(command: CreateRestaurantCommand): CreateRestaurantResult
@@ -22,6 +23,7 @@ interface RestaurantService {
   ): GetManagerRestaurantsResult
 }
 
+@Singleton
 internal class RestaurantApplicationService(
   private val restaurantUseCases: RestaurantUseCases,
 ) : RestaurantService {

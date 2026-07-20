@@ -9,7 +9,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -37,9 +36,10 @@ class UpdateMenuTest {
       )
 
     val command = UpdateMenuCommand(
+      restaurantId = menu.restaurantId.value,
       menuId = menu.id.value,
       name = "Spring Menu",
-      validity = ValidityConfig.Period(LocalDate.of(2027, 3, 1), LocalDate.of(2027, 5, 31)),
+      validity = ValidityInput.Period("2027-3-1", "2027-5-31"),
     )
 
     coEvery { menuRepository.findById(any()) } returns menu
@@ -57,9 +57,10 @@ class UpdateMenuTest {
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
     val command = UpdateMenuCommand(
+      restaurantId = RestaurantId().value,
       menuId = MenuId().value,
       name = "Spring Menu",
-      validity = null,
+      validity = ValidityInput.Always,
     )
 
     coEvery { menuRepository.findById(any()) } returns null
@@ -84,9 +85,10 @@ class UpdateMenuTest {
       )
 
     val command = UpdateMenuCommand(
+      restaurantId = menu.restaurantId.value,
       menuId = menu.id.value,
       name = "   ",
-      validity = null,
+      validity = ValidityInput.Always,
     )
 
     coEvery { menuRepository.findById(any()) } returns menu

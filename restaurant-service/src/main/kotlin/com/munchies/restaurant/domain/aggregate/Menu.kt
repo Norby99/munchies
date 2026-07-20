@@ -89,11 +89,12 @@ class Category internal constructor(
     price: Money,
     newVariations: List<Variation> = emptyList(),
     validity: Validity = Validity.always,
-  ) {
+  ): MenuItem {
     val item = _items.find { it.id == itemId } ?: throw IllegalArgumentException(
       "Item not found",
     )
     item.update(details, price, newVariations, validity)
+    return item
   }
 
   fun removeItem(itemId: MenuItemId) {
@@ -135,7 +136,7 @@ class Menu internal constructor(
     category.update(name, newVariations)
   }
 
-  fun removeCategory(categoryId: CategoryId) {
+  fun deleteCategory(categoryId: CategoryId) {
     _categories.removeIf { it.id == categoryId }
   }
 
@@ -159,19 +160,5 @@ class Menu internal constructor(
 
     fun create(restaurantId: RestaurantId, name: MenuName, validity: Validity): Menu =
       Menu(id = MenuId(), restaurantId = restaurantId, name = name, validity = validity)
-
-    fun fromDatabase(
-      id: MenuId,
-      restaurantId: RestaurantId,
-      name: MenuName,
-      categories: List<Category>,
-      validity: Validity,
-    ): Menu = Menu(
-      id = id,
-      restaurantId = restaurantId,
-      name = name,
-      categories = categories,
-      validity = validity,
-    )
   }
 }

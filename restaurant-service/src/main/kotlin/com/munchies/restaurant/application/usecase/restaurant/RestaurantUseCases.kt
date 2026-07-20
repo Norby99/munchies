@@ -10,7 +10,9 @@ import com.munchies.restaurant.domain.valueobject.restaurant.Address
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
+import jakarta.inject.Singleton
 
+@Singleton
 data class RestaurantUseCases(val repository: RestaurantRepository) {
   val create = CreateRestaurantUseCase(repository)
   val update = UpdateRestaurantUseCase(repository)
@@ -125,8 +127,8 @@ class CreateRestaurantUseCase(
 // --- Update Restaurant ---
 
 data class UpdateRestaurantCommand(
-  val restaurantId: String,
   val managerId: String,
+  val restaurantId: String,
   val name: String,
   val address: String,
   val phone: String,
