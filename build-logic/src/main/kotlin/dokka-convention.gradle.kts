@@ -7,7 +7,7 @@ plugins {
   id("org.jetbrains.dokka")
 }
 
-if (project.getProjectType() != ProjectType.UTILS) {
+if (project.getProjectType() == ProjectType.SERVICE) {
 
   dokka {
     moduleName = getServiceName(project) + "-" + project.getProjectType().toString().lowercase()
@@ -37,20 +37,5 @@ if (project.getProjectType() != ProjectType.UTILS) {
         }
       }
     }
-  }
-}
-
-tasks.matching {
-  "CInteropMetadataDependencyTransformationTask" in (it::class.qualifiedName ?: "")
-}.configureEach {
-  enabled = false
-}
-
-tasks.matching {
-  "CInteropMetadataDependencyTransformationTask" in (it::class.qualifiedName ?: "")
-}.configureEach {
-  // disable the IDE task when generating documentation
-  enabled = gradle.taskGraph.allTasks.none {
-    it is org.jetbrains.dokka.gradle.AbstractDokkaTask
   }
 }
