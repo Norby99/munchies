@@ -18,6 +18,10 @@ class InMemoryMenuRepository : MenuRepository {
     return menus[id.value]
   }
 
+  override suspend fun findByIdAndRestaurantId(id: MenuId, restaurantId: RestaurantId): Menu? {
+    return menus[id.value]?.takeIf { it.restaurantId.value == restaurantId.value }
+  }
+
   override suspend fun findAllByRestaurantId(restaurantId: RestaurantId): List<Menu> {
     return menus.values.filter { it.restaurantId.value == restaurantId.value }
   }
