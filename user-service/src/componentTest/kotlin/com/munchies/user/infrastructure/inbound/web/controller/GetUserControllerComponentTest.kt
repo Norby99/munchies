@@ -11,7 +11,6 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 
 @MicronautTest(environments = ["prod"], transactional = false)
@@ -47,16 +46,11 @@ class GetUserControllerComponentTest : BaseUserController() {
 
     userRepository.findById(user.id).shouldNotBeNull()
 
-    try {
-      val response =
-        httpCalls.get(
-          user.id.value,
-        )
+    val response =
+      httpCalls.get(
+        user.id.value,
+      )
 
-      println(response.body())
-      // .shouldBeInstanceOf<GetUserSuccess>().user shouldBeEqual user.toDTO()
-    } catch (e: HttpClientResponseException) {
-      fail(e)
-    }
+    response.status shouldBe HttpStatus.OK
   }
 }
