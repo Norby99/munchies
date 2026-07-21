@@ -1,6 +1,5 @@
 package com.munchies.user.fixtures
 
-import com.munchies.user.infrastructure.adapter.outbound.response.GetUserResponse
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
@@ -16,12 +15,12 @@ class HttpCallHelper(val baseUrl: String, val client: HttpClient) {
       String::class.java,
     )
 
-  fun get(endPoint: String): HttpResponse<GetUserResponse> = client.toBlocking()
+  fun get(endPoint: String): HttpResponse<String> = client.toBlocking()
     .exchange(
       HttpRequest.GET<Any>(
         "${baseUrl}$endPoint",
       ),
-      GetUserResponse::class.java,
+      String::class.java,
     )
 
   fun patch(request: String, endPoint: String): HttpResponse<String> = client.toBlocking()
