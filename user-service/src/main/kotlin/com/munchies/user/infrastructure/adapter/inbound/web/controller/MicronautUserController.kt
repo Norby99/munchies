@@ -80,7 +80,6 @@ import jakarta.inject.Inject
 @SerdeImport(VerifyEmailSuccess::class)
 @SerdeImport(VerifyEmailFailure::class)
 @Controller(
-  port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
 )
 class MicronautUserController(
