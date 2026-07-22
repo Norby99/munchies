@@ -9,6 +9,7 @@ import com.munchies.restaurant.application.usecase.menu.CreateMenuResult
 import com.munchies.restaurant.application.usecase.menu.DeleteCategoryCommand
 import com.munchies.restaurant.application.usecase.menu.DeleteCategoryResult
 import com.munchies.restaurant.application.usecase.menu.DeleteMenuCommand
+import com.munchies.restaurant.application.usecase.menu.DeleteMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.DeleteMenuResult
 import com.munchies.restaurant.application.usecase.menu.GetMenuCommand
 import com.munchies.restaurant.application.usecase.menu.GetMenuResult
@@ -16,7 +17,6 @@ import com.munchies.restaurant.application.usecase.menu.GetRestaurantMenusComman
 import com.munchies.restaurant.application.usecase.menu.GetRestaurantMenusResult
 import com.munchies.restaurant.application.usecase.menu.MenuItemUseCases
 import com.munchies.restaurant.application.usecase.menu.MenuUseCases
-import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemResult
 import com.munchies.restaurant.application.usecase.menu.UpdateCategoryCommand
 import com.munchies.restaurant.application.usecase.menu.UpdateCategoryResult
@@ -37,13 +37,13 @@ interface MenuService : CategoryService, MenuItemService {
 interface CategoryService {
   suspend fun createCategory(command: CreateCategoryCommand): CreateCategoryResult
   suspend fun updateCategory(command: UpdateCategoryCommand): UpdateCategoryResult
-  suspend fun removeCategory(command: DeleteCategoryCommand): DeleteCategoryResult
+  suspend fun deleteCategory(command: DeleteCategoryCommand): DeleteCategoryResult
 }
 
 interface MenuItemService {
   suspend fun createMenuItem(command: CreateMenuItemCommand): CreateMenuItemResult
   suspend fun updateMenuItem(command: UpdateMenuItemCommand): UpdateMenuItemResult
-  suspend fun removeMenuItem(command: RemoveMenuItemCommand): RemoveMenuItemResult
+  suspend fun deleteMenuItem(command: DeleteMenuItemCommand): RemoveMenuItemResult
 }
 
 @Singleton
@@ -57,16 +57,12 @@ class MenuApplicationService(
 
   override suspend fun createMenu(command: CreateMenuCommand): CreateMenuResult =
     menuUseCases.create(command)
-
   override suspend fun updateMenu(command: UpdateMenuCommand): UpdateMenuResult =
     menuUseCases.update(command)
-
   override suspend fun deleteMenu(command: DeleteMenuCommand): DeleteMenuResult =
     menuUseCases.delete(command)
-
   override suspend fun getMenu(command: GetMenuCommand): GetMenuResult =
     menuUseCases.getMenu(command)
-
   override suspend fun getRestaurantMenus(
     command: GetRestaurantMenusCommand,
   ): GetRestaurantMenusResult = menuUseCases.getRestaurantMenus(command)
@@ -77,11 +73,10 @@ private class CategoryApplicationService(
 ) : CategoryService {
   override suspend fun createCategory(command: CreateCategoryCommand): CreateCategoryResult =
     categoryUseCases.create(command)
-
   override suspend fun updateCategory(command: UpdateCategoryCommand): UpdateCategoryResult =
     categoryUseCases.update(command)
-  override suspend fun removeCategory(command: DeleteCategoryCommand): DeleteCategoryResult =
-    categoryUseCases.remove(command)
+  override suspend fun deleteCategory(command: DeleteCategoryCommand): DeleteCategoryResult =
+    categoryUseCases.delete(command)
 }
 
 private class MenuItemApplicationService(
@@ -91,6 +86,6 @@ private class MenuItemApplicationService(
     menuItemUseCases.add(command)
   override suspend fun updateMenuItem(command: UpdateMenuItemCommand): UpdateMenuItemResult =
     menuItemUseCases.update(command)
-  override suspend fun removeMenuItem(command: RemoveMenuItemCommand): RemoveMenuItemResult =
-    menuItemUseCases.remove(command)
+  override suspend fun deleteMenuItem(command: DeleteMenuItemCommand): RemoveMenuItemResult =
+    menuItemUseCases.delete(command)
 }

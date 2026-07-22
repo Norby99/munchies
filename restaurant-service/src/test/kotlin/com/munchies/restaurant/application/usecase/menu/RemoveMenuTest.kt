@@ -34,15 +34,14 @@ class RemoveMenuTest {
         validity = Validity.always,
       ),
     )
-    val menuId = menu.id
-    val command = DeleteMenuCommand(menu.restaurantId.value, menuId.value)
+    val command = DeleteMenuCommand(menu.restaurantId.value, menu.id.value)
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.delete(any()) } returns Unit
 
     when (val result = deleteMenuUseCase(command)) {
       is DeleteMenuResult.Success -> {
-        coVerify(exactly = 1) { menuRepository.delete(menuId) }
+        coVerify(exactly = 1) { menuRepository.delete(MenuId(command.menuId)) }
       }
       else -> assert(false) { "Expected Success, but got $result" }
     }
@@ -52,7 +51,7 @@ class RemoveMenuTest {
   fun `should fail when menu does not exist`() = runBlocking {
     val command = DeleteMenuCommand(RestaurantId().value, MenuId().value)
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = deleteMenuUseCase(command)) {
       is DeleteMenuResult.MenuNotFound -> {

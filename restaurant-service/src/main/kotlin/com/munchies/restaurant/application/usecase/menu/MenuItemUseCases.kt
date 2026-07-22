@@ -18,7 +18,7 @@ import java.math.BigDecimal
 data class MenuItemUseCases(val repository: MenuRepository) {
   val add = CreateMenuItemUseCase(repository)
   val update = UpdateMenuItemUseCase(repository)
-  val remove = RemoveMenuItemUseCase(repository)
+  val delete = DeleteMenuItemUseCase(repository)
 }
 
 data class CreateMenuItemCommand(
@@ -112,7 +112,7 @@ class UpdateMenuItemUseCase(
   }
 }
 
-data class RemoveMenuItemCommand(
+data class DeleteMenuItemCommand(
   val restaurantId: String,
   val menuId: String,
   val categoryId: String,
@@ -126,10 +126,10 @@ sealed interface RemoveMenuItemResult {
   data class InvalidItem(val error: String) : RemoveMenuItemResult
 }
 
-class RemoveMenuItemUseCase(
+class DeleteMenuItemUseCase(
   private val menuRepository: MenuRepository,
-) : UseCase<RemoveMenuItemCommand, RemoveMenuItemResult> {
-  override suspend operator fun invoke(command: RemoveMenuItemCommand): RemoveMenuItemResult {
+) : UseCase<DeleteMenuItemCommand, RemoveMenuItemResult> {
+  override suspend operator fun invoke(command: DeleteMenuItemCommand): RemoveMenuItemResult {
     val menu = menuRepository.findByIdAndRestaurantId(
       MenuId(command.menuId),
       RestaurantId(command.restaurantId),

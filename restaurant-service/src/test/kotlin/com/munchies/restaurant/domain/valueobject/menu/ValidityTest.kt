@@ -16,10 +16,14 @@ class ValidityTest {
   @Test
   fun `period validity rejects when start is not strictly before end`() {
     val date = LocalDate.now()
-    assertThrows<IllegalArgumentException> { Validity.period(date, date) }
-    assertThrows<IllegalArgumentException> { Validity.period(date.plusDays(1), date) }
     assertThrows<IllegalArgumentException> {
-      Validity.period(start = LocalDate.of(2024, 12, 31), end = LocalDate.of(2024, 1, 1))
+      Validity.period(start = date.toString(), end = date.toString())
+    }
+    assertThrows<IllegalArgumentException> {
+      Validity.period(start = date.plusDays(1).toString(), end = date.toString())
+    }
+    assertThrows<IllegalArgumentException> {
+      Validity.period(start = "2024-12-31", end = "2024-01-01")
     }
   }
 
@@ -27,7 +31,7 @@ class ValidityTest {
   fun `period validity respects start and end boundaries`() {
     val start = LocalDate.of(2024, 10, 1)
     val end = LocalDate.of(2024, 10, 31)
-    val validity = Validity.period(start, end)
+    val validity = Validity.period(start.toString(), end.toString())
 
     assertFalse(validity.isValid(start.minusDays(1).atStartOfDay()))
     assertTrue(validity.isValid(start.atStartOfDay()))
@@ -40,7 +44,12 @@ class ValidityTest {
   fun `yearly validity respects start and end boundaries within the same year`() {
     val start = MonthDay.of(6, 1)
     val end = MonthDay.of(8, 31)
-    val yearly = Validity.yearly(start, end)
+    val yearly = Validity.yearly(
+      start.monthValue,
+      start.dayOfMonth,
+      end.monthValue,
+      end.dayOfMonth,
+    )
 
     assertFalse(yearly.isValid(LocalDate.of(2024, 5, 31).atStartOfDay()))
     assertTrue(yearly.isValid(LocalDate.of(2024, 6, 1).atStartOfDay()))
@@ -51,8 +60,10 @@ class ValidityTest {
   @Test
   fun `yearly validity supports wrap around across years`() {
     val validity = Validity.yearly(
-      start = MonthDay.of(Month.SEPTEMBER, 1),
-      end = MonthDay.of(Month.MAY, 31),
+      startMonth = Month.SEPTEMBER.value,
+      startDay = 1,
+      endMonth = Month.MAY.value,
+      endDay = 31,
     )
 
     assertFalse(validity.isValid(LocalDate.of(2024, 8, 31).atStartOfDay()))
@@ -64,7 +75,7 @@ class ValidityTest {
   @Test
   fun `from validity evaluates correctly at start boundary`() {
     val start = LocalDate.now()
-    val from = Validity.from(start)
+    val from = Validity.from(start.toString())
 
     assertFalse(from.isValid(start.minusDays(1).atStartOfDay()))
     assertTrue(from.isValid(start.atStartOfDay()))
@@ -74,7 +85,7 @@ class ValidityTest {
   @Test
   fun `until validity evaluates correctly at end boundary`() {
     val end = LocalDate.now()
-    val until = Validity.until(end)
+    val until = Validity.until(end.toString())
 
     assertTrue(until.isValid(end.minusDays(1).atStartOfDay()))
     assertTrue(until.isValid(end.atStartOfDay()))
@@ -111,19 +122,34 @@ class ValidityTest {
 
   @Test
   fun `composed validities with combine require all conditions to be met`() {
-    val weekday = Validity.weekly(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
+    val weekday = Validity.weekly(
+      listOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
+        .map { it.value },
+    )
     val time = Validity.hours(LocalTime.of(18, 0), LocalTime.of(22, 0))
     val combined = weekday.combine(time)
 
-    assertTrue(combined.isValid(LocalDateTime.of(2024, 5, 24, 19, 0)))
-    assertFalse(combined.isValid(LocalDateTime.of(2024, 5, 24, 13, 0)))
-    assertFalse(combined.isValid(LocalDateTime.of(2024, 5, 23, 19, 0)))
+    assertTrue(
+      combined.isValid(
+        LocalDateTime.of(2024, 5, 24, 19, 0),
+      ),
+    )
+    assertFalse(
+      combined.isValid(
+        LocalDateTime.of(2024, 5, 24, 13, 0),
+      ),
+    )
+    assertFalse(
+      combined.isValid(
+        LocalDateTime.of(2024, 5, 23, 19, 0),
+      ),
+    )
   }
 
   @Test
   fun `same periods should equal`() {
-    val period1 = Validity.period(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
-    val period2 = Validity.period(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
+    val period1 = Validity.period("2024-01-01", "2024-12-31")
+    val period2 = Validity.period("2024-01-01", "2024-12-31")
 
     assertEquals(period1, period2)
   }

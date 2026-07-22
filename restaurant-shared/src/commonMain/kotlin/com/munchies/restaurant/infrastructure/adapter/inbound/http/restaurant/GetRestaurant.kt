@@ -28,7 +28,7 @@ class GetManagerRestaurantsRequest(
 @JsExport
 @Serializable
 class GetManagerRestaurantsResponse(
-  val restaurants: List<RestaurantDto>,
+  val restaurants: Array<RestaurantDto>,
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }

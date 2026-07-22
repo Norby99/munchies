@@ -12,7 +12,7 @@ import jakarta.inject.Singleton
 data class CategoryUseCases(val repository: MenuRepository) {
   val create = CreateCategoryUseCase(repository)
   val update = UpdateCategoryUseCase(repository)
-  val remove = DeleteCategoryUseCase(repository)
+  val delete = DeleteCategoryUseCase(repository)
 }
 
 data class CreateCategoryCommand(

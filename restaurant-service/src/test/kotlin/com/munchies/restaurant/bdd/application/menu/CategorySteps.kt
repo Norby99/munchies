@@ -55,7 +55,7 @@ class CategorySteps @Inject constructor(
 
   @And("the menu should have a {string} category")
   fun menuShouldHaveCategory(categoryName: String) {
-    val result = helper.getMenu(context.restaurantId, context.menuId)
+    val result = helper.getMenu(context)
     check(result is GetMenuResult.Success) { "Retrieve menu failed" }
     result.menu.categories shouldExist { it.name.value == categoryName }
   }
@@ -72,8 +72,9 @@ class CategorySteps @Inject constructor(
 
   @When("I update the {string} category name to {string}")
   fun updateCategoryName(oldName: String, newName: String) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
-    check(category.name.value == oldName) { "Category in context doesn't have $oldName as name" }
+    check(helper.getCategory(context).name.value == oldName) {
+      "Category in context doesn't have $oldName as name"
+    }
     val command = UpdateCategoryCommand(
       context.restaurantId,
       context.menuId,
@@ -92,12 +93,12 @@ class CategorySteps @Inject constructor(
 
   @When("I remove the {string} category from the menu")
   fun removeCategory(categoryName: String) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) {
       "Category in context doesn't have $categoryName as name"
     }
     val command = DeleteCategoryCommand(context.restaurantId, context.menuId, context.categoryId)
-    context.lastResult = runBlocking { service.removeCategory(command) }
+    context.lastResult = runBlocking { service.deleteCategory(command) }
   }
 
   @Then("the category should be removed successfully")
@@ -107,7 +108,7 @@ class CategorySteps @Inject constructor(
 
   @And("the menu should have no {string} category")
   fun menuShouldHaveNoCategory(categoryName: String) {
-    val result = helper.getMenu(context.restaurantId, context.menuId)
+    val result = helper.getMenu(context)
     check(result is GetMenuResult.Success) { "Retrieve menu failed" }
     result.menu.categories.shouldForAll { it.name.value != categoryName }
   }

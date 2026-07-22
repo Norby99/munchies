@@ -31,7 +31,7 @@ class CategoryVariationSteps @Inject constructor(
 
   @When("I create in the {string} category a {string} variation with options:")
   fun createVariation(categoryName: String, variationName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     val options = optionsTable.asMaps()
@@ -55,7 +55,7 @@ class CategoryVariationSteps @Inject constructor(
 
   @And("the {string} category should have a {string} variation with options:")
   fun categoryHasVariation(categoryName: String, variationName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     val expected = optionsTable.asMaps()
@@ -71,7 +71,7 @@ class CategoryVariationSteps @Inject constructor(
 
   @Given("the {string} category has a {string} variation with options:")
   fun hasVariation(categoryName: String, variationName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     val options = optionsTable.asMaps()
@@ -91,7 +91,7 @@ class CategoryVariationSteps @Inject constructor(
 
   @When("I update the {string} variation for the {string} category to have options:")
   fun updateVariation(variationName: String, categoryName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     val newOptions = optionsTable.asMaps()
@@ -122,7 +122,7 @@ class CategoryVariationSteps @Inject constructor(
 
   @When("I remove the {string} variation from the {string} category")
   fun removeVariation(variationName: String, categoryName: String) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     val command = UpdateCategoryCommand(
@@ -144,7 +144,7 @@ class CategoryVariationSteps @Inject constructor(
 
   @And("the {string} category should have no {string} variation")
   fun categoryHasNoVariation(categoryName: String, variationName: String) {
-    val category = helper.getCategory(context.restaurantId, context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     category.variations.shouldForAll { it.name.value != variationName }

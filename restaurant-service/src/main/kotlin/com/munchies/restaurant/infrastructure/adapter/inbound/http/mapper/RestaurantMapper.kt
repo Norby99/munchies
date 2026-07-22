@@ -38,7 +38,7 @@ fun GetManagerRestaurantsRequest.toCommand(): GetManagerRestaurantsCommand =
   GetManagerRestaurantsCommand(managerId)
 
 fun GetManagerRestaurantsResult.Success.toResponse(): GetManagerRestaurantsResponse =
-  GetManagerRestaurantsResponse(restaurants.map { it.toDto() })
+  GetManagerRestaurantsResponse(restaurants.map { it.toDto() }.toTypedArray())
 
 // --- Update ---
 

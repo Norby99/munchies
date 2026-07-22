@@ -3,7 +3,7 @@ package com.munchies.restaurant.bdd.application.menu
 import com.munchies.restaurant.application.MenuService
 import com.munchies.restaurant.application.usecase.menu.CreateMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.CreateMenuItemResult
-import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemCommand
+import com.munchies.restaurant.application.usecase.menu.DeleteMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemResult
 import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemResult
@@ -33,15 +33,13 @@ class MenuItemSteps @Inject constructor(
 
   @When("I create in the {string} category a {string} item with:")
   fun createMenuItem(categoryName: String, itemName: String, details: DataTable) {
-    check(helper.getCategory(context.menuId, context.categoryId).name.value == categoryName) {
+    val category = helper.getCategory(context)
+    check(category.name.value == categoryName) {
       "Category in context doesn't have $categoryName as name"
     }
-    context.lastResult = createMenuItem(
-      context.menuId,
-      context.categoryId,
-      itemName,
-      details.asMaps().first(),
-    )
+    with(context) {
+      lastResult = createMenuItem(itemName, details.asMaps().first())
+    }
   }
 
   @Then("the item should be created successfully")
@@ -51,7 +49,7 @@ class MenuItemSteps @Inject constructor(
 
   @And("the {string} category should have a {string} item with:")
   fun categoryShouldHaveItem(categoryName: String, itemName: String, details: DataTable) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
     val detailsMap = details.asMaps().first()
     category.items shouldExist {
@@ -65,31 +63,25 @@ class MenuItemSteps @Inject constructor(
 
   @Given("the {string} category has a {string} item with:")
   fun givenCategoryHasItem(categoryName: String, itemName: String, details: DataTable) {
-    check(helper.getCategory(context.menuId, context.categoryId).name.value == categoryName) {
+    val category = helper.getCategory(context)
+    check(category.name.value == categoryName) {
       "Category in context doesn't have $categoryName as name"
     }
-    val result = createMenuItem(
-      context.menuId,
-      context.categoryId,
-      itemName,
-      details.asMaps().first(),
-    )
-    check(result is CreateMenuItemResult.Success) { "Item creation failed" }
-    context.itemId = result.itemId
+    with(context) {
+      val result = createMenuItem(itemName, details.asMaps().first())
+      check(result is CreateMenuItemResult.Success) { "Item creation failed" }
+      context.itemId = result.itemId
+    }
   }
 
   @When("I update in the {string} category the {string} item to have:")
   fun whenUpdateItemPrice(categoryName: String, itemName: String, details: DataTable) {
-    check(helper.getCategory(context.menuId, context.categoryId).name.value == categoryName) {
+    check(helper.getCategory(context).name.value == categoryName) {
       "Category in context doesn't have $categoryName as name"
     }
-    context.lastResult = updateMenuItem(
-      context.menuId,
-      context.categoryId,
-      context.itemId,
-      itemName,
-      details.asMaps().first(),
-    )
+    with(context) {
+      lastResult = updateMenuItem(itemName, details.asMaps().first())
+    }
   }
 
   @Then("the item should be updated successfully")
@@ -101,13 +93,18 @@ class MenuItemSteps @Inject constructor(
 
   @When("I remove from the {string} category the {string} item")
   fun removeMenuItem(categoryName: String, itemName: String) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) {
       "Category in context doesn't have $categoryName as name"
     }
     check(category.items.any { it.name.value == itemName }) { "No $itemName item found" }
-    val command = RemoveMenuItemCommand(context.menuId, context.categoryId, context.itemId)
-    context.lastResult = runBlocking { service.removeMenuItem(command) }
+    val command = DeleteMenuItemCommand(
+      context.restaurantId,
+      context.menuId,
+      context.categoryId,
+      context.itemId,
+    )
+    context.lastResult = runBlocking { service.deleteMenuItem(command) }
   }
 
   @Then("the item should be removed successfully")
@@ -117,20 +114,19 @@ class MenuItemSteps @Inject constructor(
 
   @And("the {string} category should have no {string} item")
   fun andCategoryHasNoMenuItem(categoryName: String, itemName: String) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
     category.items.shouldForAll { it.name.value != itemName }
   }
 
   // --- Helpers ---
 
-  private fun createMenuItem(
-    menuId: String,
-    categoryId: String,
+  private fun MenuContext.createMenuItem(
     name: String,
     details: Map<String, String>,
   ): CreateMenuItemResult {
     val command = CreateMenuItemCommand(
+      restaurantId,
       menuId,
       categoryId,
       name,
@@ -140,14 +136,12 @@ class MenuItemSteps @Inject constructor(
     return runBlocking { service.createMenuItem(command) }
   }
 
-  private fun updateMenuItem(
-    menuId: String,
-    categoryId: String,
-    itemId: String,
+  private fun MenuContext.updateMenuItem(
     name: String,
     details: Map<String, String>,
   ): UpdateMenuItemResult {
     val command = UpdateMenuItemCommand(
+      restaurantId,
       menuId,
       categoryId,
       itemId,
