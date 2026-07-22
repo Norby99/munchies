@@ -16,9 +16,9 @@ import org.testcontainers.mongodb.MongoDBContainer
 
 @SerdeImport(OrderId::class)
 @SerdeImport(OrderDto::class)
-@SerdeImport(OrderDto.Delivery::class)
-@SerdeImport(OrderDto.Takeaway::class)
-@SerdeImport(OrderDto.DineIn::class)
+@SerdeImport(Delivery::class)
+@SerdeImport(Takeaway::class)
+@SerdeImport(DineIn::class)
 @SerdeImport(OrderItemDto::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
