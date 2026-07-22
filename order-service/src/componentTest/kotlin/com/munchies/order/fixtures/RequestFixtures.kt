@@ -6,7 +6,6 @@ import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.DiscardOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
@@ -74,14 +73,6 @@ fun createTestPlaceOrderRequest(
   customerName = customerName,
   tableNumber = tableNumber,
   numberOfGuests = numberOfGuests,
-)
-
-/** Creates a DiscardOrderRequest from an OrderId.
- * @param orderId The OrderId of the order to discard. Defaults to defaultOrderId.
- * @return A DiscardOrderRequest with the given OrderId and defaultCustomerId.
- */
-fun createDiscardOrderRequest(orderId: OrderId = defaultOrderId) = DiscardOrderRequest(
-  orderId = orderId.value,
 )
 
 /** Creates an UpdateTakeawayOrderRequest from a TakeawayOrder.

@@ -1,6 +1,7 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.order.application.port.inbound.*
+import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
@@ -37,9 +38,7 @@ import jakarta.inject.Inject
 @SerdeImport(OrderItemDto::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
-@SerdeImport(GetOrderDetailsRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
-@SerdeImport(DiscardOrderRequest::class)
 @SerdeImport(UpdateOrderItemsRequest::class)
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
@@ -56,7 +55,7 @@ class MicronautOrderController(
   GetOrderDetailsAPI<String, HttpResponse<OrderDto>>,
   PlaceOrderAPI<PlaceOrderRequest, HttpResponse<String>>,
   AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, HttpResponse<String>>,
-  DiscardOrderAPI<DiscardOrderRequest, HttpResponse<String>>,
+  DiscardOrderAPI<String, HttpResponse<String>>,
   UpdateOrderItemsAPI<UpdateOrderItemsRequest, HttpResponse<String>>,
   UpdateDeliveryOrderInfoAPI<UpdateDeliveryOrderRequest, HttpResponse<String>>,
   UpdateTakeawayOrderInfoAPI<UpdateTakeawayOrderRequest, HttpResponse<String>> {
@@ -172,7 +171,7 @@ class MicronautOrderController(
    * - `404 Not Found` when order does not exist
    * - `400 Bad Request` when order cannot be canceled
    *
-   * @param request Request containing order and customer identifiers.
+   * @param id Request containing order identifiers.
    * @return An HTTP response representing the discard result.
    */
   @Delete(OrderServiceConfig.DISCARD_ORDER_PATH)
@@ -183,9 +182,9 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "200", description = "Order discarded successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Order cannot be cancelled")
-  override fun discardOrder(@Body request: DiscardOrderRequest): HttpResponse<String> {
+  override fun discardOrder(@PathVariable id: String): HttpResponse<String> {
     return when (
-      discardOrder.execute(request.toCommand())
+      discardOrder.execute(DiscardOrderCommand(OrderId(id)))
     ) {
       is DiscardOrder.Result.Success -> HttpResponse.ok("Order discarded")
       is DiscardOrder.Result.Failure.OrderNotFound -> HttpResponse.notFound()
@@ -193,6 +192,22 @@ class MicronautOrderController(
         HttpResponse.badRequest("Cannot discard this order")
     }
   }
+
+  /*@Get(OrderServiceConfig.GET_ORDER_PATH)
+  @Operation(
+    summary = "Get order by id",
+    description = "Retrieves an order by its unique identifier.",
+  )
+  @ApiResponse(responseCode = "200", description = "Found")
+  @ApiResponse(responseCode = "404", description = "Not Found")
+  override fun getOrderDetails(@PathVariable id: String): HttpResponse<OrderDto> {
+    return when (
+      val res = getOrderDetails.execute(GetOrderDetailsCommand(OrderId(id)))
+    ) {
+      is GetOrderDetails.Result.Success -> HttpResponse.ok(res.order)
+      is GetOrderDetails.Result.Failure.OrderNotFound -> HttpResponse.notFound()
+    }
+  }*/
 
   /**
    * Handles `PATCH orders/{id}/items`.

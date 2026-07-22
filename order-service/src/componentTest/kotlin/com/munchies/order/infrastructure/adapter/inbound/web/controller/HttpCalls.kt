@@ -1,7 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
@@ -61,11 +60,11 @@ class HttpCalls(val baseUrl: String, val client: HttpClient) {
   /**
    * Makes an HTTP DELETE request to the discard order endpoint with the given request body.
    *
-   * @param request The request body to be sent in the DELETE request.
+   * @param endPoint The endpoint to which the DELETE request is made.
    * @return The HttpResponse containing the response from the server.
    */
-  fun httpDelete(request: String): HttpResponse<String> = client.toBlocking().exchange(
-    HttpRequest.DELETE("${baseUrl}${OrderServiceConfig.DISCARD_ORDER_PATH}", request),
+  fun httpDelete(endPoint: String): HttpResponse<String> = client.toBlocking().exchange(
+    HttpRequest.DELETE<Any>("${baseUrl}$endPoint"),
     String::class.java,
   )
 }
