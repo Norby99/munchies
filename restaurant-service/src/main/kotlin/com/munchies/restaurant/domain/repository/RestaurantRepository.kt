@@ -12,34 +12,10 @@ import com.munchies.restaurant.domain.valueobject.UserId
 interface RestaurantRepository : Repository<RestaurantId, Restaurant> {
 
   /**
-   * Asynchronously finds a restaurant by its unique identifier.
+   * Finds all [Restaurant] entities associated with a specific manager ID.
    *
-   * @param id The unique identifier of the restaurant to find.
-   * @return The [Restaurant] if found, or null otherwise.
+   * @param managerId The ID of the manager to find restaurants for.
+   * @return A list of [Restaurant] entities associated with the given manager.
    */
-  suspend fun findByIdSuspend(id: RestaurantId): Restaurant?
-
-  /**
-   * Retrieves all restaurants associated with a specific manager.
-   *
-   * @param managerId The identifier of the manager whose restaurants are to be retrieved.
-   * @return A list of [Restaurant] entities managed by the given manager.
-   */
-  suspend fun findByManagerId(managerId: UserId): List<Restaurant>
-
-  /**
-   * Deletes a restaurant by its unique identifier.
-   *
-   * @param id The unique identifier of the restaurant to delete.
-   * @return true if the restaurant was successfully deleted, false if it did not exist.
-   */
-  suspend fun deleteById(id: RestaurantId): Boolean
-
-  /**
-   * Checks whether a restaurant exists with the given identifier.
-   *
-   * @param id The unique identifier to check for existence.
-   * @return true if a restaurant exists with the given identifier, false otherwise.
-   */
-  suspend fun existsById(id: RestaurantId): Boolean
+  fun findAllByManagerId(managerId: UserId): List<Restaurant>
 }

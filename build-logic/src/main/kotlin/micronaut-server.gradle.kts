@@ -44,6 +44,7 @@ dependencies {
   testImplementation("io.micronaut.test:micronaut-test-junit5")
 
   // Coroutines
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
   // Mockk

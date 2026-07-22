@@ -45,7 +45,7 @@ class GetRestaurantTest {
     )
 
     val command = GetRestaurantCommand(restaurantId.value)
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns restaurant
+    coEvery { restaurantRepository.findById(restaurantId) } returns restaurant
 
     val result = getRestaurantUseCase(command)
 
@@ -56,7 +56,7 @@ class GetRestaurantTest {
   fun `should return NotFound when restaurant does not exist`() = runBlocking {
     val restaurantId = RestaurantId()
     val command = GetRestaurantCommand(restaurantId.value)
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns null
+    coEvery { restaurantRepository.findById(restaurantId) } returns null
 
     val result = getRestaurantUseCase(command)
 
@@ -84,7 +84,7 @@ class GetRestaurantTest {
     )
 
     val command = GetRestaurantCommand(restaurantId.value)
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns restaurant
+    coEvery { restaurantRepository.findById(restaurantId) } returns restaurant
 
     val result = getRestaurantUseCase(command)
 

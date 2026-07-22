@@ -136,7 +136,7 @@ class DeleteMenuUseCase(
       ?: return DeleteMenuResult.MenuNotFound
 
     return runCatching {
-      menuRepository.delete(menu.id)
+      menuRepository.delete(menu)
       DeleteMenuResult.Success(menu.id.value)
     }.getOrElse { DeleteMenuResult.InvalidMenu(it.message.orEmpty()) }
   }

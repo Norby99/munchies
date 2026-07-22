@@ -41,7 +41,7 @@ class RemoveMenuTest {
 
     when (val result = deleteMenuUseCase(command)) {
       is DeleteMenuResult.Success -> {
-        coVerify(exactly = 1) { menuRepository.delete(MenuId(command.menuId)) }
+        coVerify(exactly = 1) { menuRepository.delete(menu) }
       }
       else -> assert(false) { "Expected Success, but got $result" }
     }

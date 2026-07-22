@@ -41,19 +41,19 @@ class RestaurantController(private val restaurantService: RestaurantService) {
     val command = request.toCommand()
     return when (val result = restaurantService.createRestaurant(command)) {
       is CreateRestaurantResult.Success -> HttpResponse.created(result.toResponse())
-      is CreateRestaurantResult.ValidationError -> throw ValidationException(result.error)
+      is CreateRestaurantResult.InvalidRestaurant -> throw ValidationException(result.error)
       CreateRestaurantResult.NameAlreadyExists -> throw ConflictException("Name already exists")
     }
   }
 
   @Get("/{restaurantId}")
   suspend fun getRestaurant(
-    @PathVariable restaurantId: String
+    @PathVariable restaurantId: String,
   ): HttpResponse<GetRestaurantResponse> {
     val command = GetRestaurantCommand(restaurantId)
     return when (val result = restaurantService.getRestaurant(command)) {
       is GetRestaurantResult.Success -> HttpResponse.ok(result.toResponse())
-      is GetRestaurantResult.ValidationError -> throw ValidationException(result.error)
+      is GetRestaurantResult.InvalidRestaurant -> throw ValidationException(result.error)
       GetRestaurantResult.NotFound -> throw NotFoundException("Restaurant not found")
     }
   }
@@ -77,7 +77,7 @@ class RestaurantController(private val restaurantService: RestaurantService) {
     val command = request.toCommand(restaurantId)
     return when (val result = restaurantService.updateRestaurant(command)) {
       is UpdateRestaurantResult.Success -> HttpResponse.ok(result.toResponse())
-      is UpdateRestaurantResult.ValidationError -> throw ValidationException(result.error)
+      is UpdateRestaurantResult.InvalidRestaurant -> throw ValidationException(result.error)
       is UpdateRestaurantResult.NotFound -> throw NotFoundException("Restaurant not found")
       is UpdateRestaurantResult.Unauthorized ->
         throw UnauthorizedException("Unauthorized to update restaurant")
@@ -93,7 +93,7 @@ class RestaurantController(private val restaurantService: RestaurantService) {
     val command = request.toCommand(restaurantId)
     return when (val result = restaurantService.deleteRestaurant(command)) {
       is DeleteRestaurantResult.Success -> HttpResponse.ok(result.toResponse())
-      is DeleteRestaurantResult.ValidationError -> throw ValidationException(result.error)
+      is DeleteRestaurantResult.InvalidRestaurant -> throw ValidationException(result.error)
       DeleteRestaurantResult.NotFound -> throw NotFoundException("Restaurant not found")
       DeleteRestaurantResult.Unauthorized -> throw UnauthorizedException(
         "Unauthorized to delete restaurant",

@@ -160,5 +160,13 @@ class Menu internal constructor(
 
     fun create(restaurantId: RestaurantId, name: MenuName, validity: Validity): Menu =
       Menu(id = MenuId(), restaurantId = restaurantId, name = name, validity = validity)
+
+    fun fromDatabase(
+      id: MenuId,
+      restaurantId: RestaurantId,
+      name: MenuName,
+      categories: List<Category>,
+      validity: Validity,
+    ): Menu = Menu(id, restaurantId, name, categories, validity)
   }
 }
