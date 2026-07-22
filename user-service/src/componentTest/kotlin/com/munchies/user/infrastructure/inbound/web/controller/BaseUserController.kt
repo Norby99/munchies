@@ -8,8 +8,6 @@ import com.munchies.user.infrastructure.adapter.outbound.response.*
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.runtime.server.EmbeddedServer
-import io.micronaut.scheduling.TaskExecutors
-import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.serde.annotation.SerdeImport
 import io.micronaut.test.support.TestPropertyProvider
@@ -17,7 +15,6 @@ import jakarta.inject.Inject
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.mongodb.MongoDBContainer
 
-@ExecuteOn(TaskExecutors.BLOCKING)
 @SerdeImport(UserDTO::class)
 @SerdeImport(GetUserResult::class)
 @SerdeImport(GetUserRequest::class)
@@ -52,6 +49,11 @@ import org.testcontainers.mongodb.MongoDBContainer
 @SerdeImport(VerifyEmailRequest::class)
 @SerdeImport(VerifyEmailSuccess::class)
 @SerdeImport(VerifyEmailFailure::class)
+@SerdeImport(DeleteUserRequest::class)
+@SerdeImport(DeleteUserResponse::class)
+@SerdeImport(DeleteUserResult::class)
+@SerdeImport(DeleteUserSuccess::class)
+@SerdeImport(DeleteUserFailure::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseUserController : TestPropertyProvider {
 

@@ -25,11 +25,8 @@ plugins {
 }
 
 gitHooks {
-  preCommit {
-    tasks("spotlessCheck", "detekt")
-  }
   hook("pre-push") {
-    tasks("test")
+    tasks("check")
   }
   commitMsg { conventionalCommits() }
   createHooks(overwriteExisting = true)

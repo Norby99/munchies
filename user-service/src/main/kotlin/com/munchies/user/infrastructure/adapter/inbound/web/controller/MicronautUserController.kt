@@ -79,8 +79,12 @@ import jakarta.inject.Inject
 @SerdeImport(VerifyEmailRequest::class)
 @SerdeImport(VerifyEmailSuccess::class)
 @SerdeImport(VerifyEmailFailure::class)
+@SerdeImport(DeleteUserRequest::class)
+@SerdeImport(DeleteUserResponse::class)
+@SerdeImport(DeleteUserResult::class)
+@SerdeImport(DeleteUserSuccess::class)
+@SerdeImport(DeleteUserFailure::class)
 @Controller(
-  port = UserServiceConfig.SERVICE_PORT.toString(),
   value = UserServiceConfig.SERVICE_PATH,
 )
 class MicronautUserController(
@@ -165,7 +169,6 @@ class MicronautUserController(
       ),
     )
 
-    println("Response: $response")
     return HttpResponse.ok(
       response,
     )
@@ -396,7 +399,7 @@ class MicronautUserController(
    * @param request Password update payload containing user, old password, and new password.
    * @return An HTTP response representing the update result.
    */
-  @Post(UserServiceConfig.UPDATE_USER_PASSWORD_PATH)
+  @Patch(UserServiceConfig.UPDATE_USER_PASSWORD_PATH)
   @Operation(
     summary = "Update user password",
     description = "Updates the password for a user with the provided old and new passwords.",
@@ -508,7 +511,7 @@ class MicronautUserController(
     @Body request: UpdateUserInfoRequest,
   ): HttpResponse<UpdateUserInfoResponse> {
     return when (val msg = UpdateUserInfoRequestValidator().validate(request)) {
-      is InvalidInput ->
+      is InvalidInput -> {
         HttpResponse
           .badRequest(
             UpdateUserInfoResponse(
@@ -518,9 +521,10 @@ class MicronautUserController(
               HttpStatus.BAD_REQUEST.code,
             ),
           )
+      }
       else -> {
         when (val user = request.user.toDomain()) {
-          is UserDTOFactory.UserDTOFactoryResult.Failure ->
+          is UserDTOFactory.UserDTOFactoryResult.Failure -> {
             HttpResponse.badRequest(
               UpdateUserInfoResponse(
                 UpdateUserInfoFailure(
@@ -529,6 +533,7 @@ class MicronautUserController(
                 HttpStatus.BAD_REQUEST.code,
               ),
             )
+          }
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
             when (
               val res =
@@ -555,14 +560,14 @@ class MicronautUserController(
                       HttpStatus.NOT_FOUND.code,
                     ),
                   )
-
-              is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure ->
+              is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure -> {
                 HttpResponse.badRequest(
                   UpdateUserInfoResponse(
                     UpdateUserInfoFailure(res.reason),
                     HttpStatus.BAD_REQUEST.code,
                   ),
                 )
+              }
             }
           }
         }

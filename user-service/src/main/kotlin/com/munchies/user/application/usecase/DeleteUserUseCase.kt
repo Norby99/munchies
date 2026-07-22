@@ -11,11 +11,8 @@ import com.munchies.user.domain.port.UserRepository
  * If the user does not exist, the use case returns the corresponding not-found result.
  */
 class DeleteUserUseCase(private val repository: UserRepository) : DeleteUser {
-  override fun execute(id: UserId): DeleteUserResult {
-    repository.findById(id)?.let { user ->
-      repository.delete(user)
-      return DeleteUserResult.Success(user)
-    }
-    return DeleteUserResult.NotFound
-  }
+  override fun execute(id: UserId): DeleteUserResult = repository.findById(id)?.let { user ->
+    repository.delete(user)
+    return DeleteUserResult.Success(user)
+  } ?: DeleteUserResult.NotFound
 }
