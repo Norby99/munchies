@@ -11,7 +11,10 @@ import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
+import com.munchies.order.infrastructure.adapter.dto.Delivery
+import com.munchies.order.infrastructure.adapter.dto.DineIn
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.Takeaway
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDto
 
@@ -25,7 +28,7 @@ object OrderDtoFactory {
   fun Order.toDto(): OrderDto {
     val itemsDto = items.map { it.toDto() }
     return when (this) {
-      is DeliveryOrder -> OrderDto.Delivery(
+      is DeliveryOrder -> Delivery(
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
@@ -36,7 +39,7 @@ object OrderDtoFactory {
         bellName = deliveryInfo.bellName,
         customerPhone = deliveryInfo.customerPhone,
       )
-      is TakeawayOrder -> OrderDto.Takeaway(
+      is TakeawayOrder -> Takeaway(
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
@@ -45,7 +48,7 @@ object OrderDtoFactory {
         pickupTime = takeawayInfo.pickupTime,
         customerName = takeawayInfo.customerName,
       )
-      is DineInOrder -> OrderDto.DineIn(
+      is DineInOrder -> DineIn(
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
@@ -73,7 +76,7 @@ object OrderDtoFactory {
     val domainStatus = OrderStatus.valueOf(status)
 
     return when (this) {
-      is OrderDto.Delivery -> DeliveryOrder(
+      is Delivery -> DeliveryOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
@@ -86,7 +89,7 @@ object OrderDtoFactory {
           customerPhone = customerPhone,
         ),
       )
-      is OrderDto.Takeaway -> TakeawayOrder(
+      is Takeaway -> TakeawayOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
@@ -97,7 +100,7 @@ object OrderDtoFactory {
           customerName = customerName,
         ),
       )
-      is OrderDto.DineIn -> DineInOrder(
+      is DineIn -> DineInOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
