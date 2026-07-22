@@ -79,6 +79,11 @@ import jakarta.inject.Inject
 @SerdeImport(VerifyEmailRequest::class)
 @SerdeImport(VerifyEmailSuccess::class)
 @SerdeImport(VerifyEmailFailure::class)
+@SerdeImport(DeleteUserRequest::class)
+@SerdeImport(DeleteUserResponse::class)
+@SerdeImport(DeleteUserResult::class)
+@SerdeImport(DeleteUserSuccess::class)
+@SerdeImport(DeleteUserFailure::class)
 @Controller(
   value = UserServiceConfig.SERVICE_PATH,
 )
@@ -164,7 +169,6 @@ class MicronautUserController(
       ),
     )
 
-    println("Response: $response")
     return HttpResponse.ok(
       response,
     )

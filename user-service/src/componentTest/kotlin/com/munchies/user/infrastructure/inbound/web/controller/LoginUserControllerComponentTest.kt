@@ -95,7 +95,6 @@ class LoginUserControllerComponentTest : BaseUserController() {
     val response = assertThrows(HttpClientResponseException::class.java) {
       httpCalls.post(mapper.writeValueAsString(request), UserServiceConfig.LOGIN_USER_PATH)
     }
-    println(response.response.body())
     response.status shouldBe HttpStatus.UNAUTHORIZED
   }
 
