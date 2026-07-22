@@ -511,7 +511,7 @@ class MicronautUserController(
     @Body request: UpdateUserInfoRequest,
   ): HttpResponse<UpdateUserInfoResponse> {
     return when (val msg = UpdateUserInfoRequestValidator().validate(request)) {
-      is InvalidInput ->
+      is InvalidInput -> {
         HttpResponse
           .badRequest(
             UpdateUserInfoResponse(
@@ -521,9 +521,10 @@ class MicronautUserController(
               HttpStatus.BAD_REQUEST.code,
             ),
           )
+      }
       else -> {
         when (val user = request.user.toDomain()) {
-          is UserDTOFactory.UserDTOFactoryResult.Failure ->
+          is UserDTOFactory.UserDTOFactoryResult.Failure -> {
             HttpResponse.badRequest(
               UpdateUserInfoResponse(
                 UpdateUserInfoFailure(
@@ -532,6 +533,7 @@ class MicronautUserController(
                 HttpStatus.BAD_REQUEST.code,
               ),
             )
+          }
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
             when (
               val res =
@@ -558,14 +560,14 @@ class MicronautUserController(
                       HttpStatus.NOT_FOUND.code,
                     ),
                   )
-
-              is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure ->
+              is UpdateUserInfo.Companion.UpdateUserInfoResult.Failure -> {
                 HttpResponse.badRequest(
                   UpdateUserInfoResponse(
                     UpdateUserInfoFailure(res.reason),
                     HttpStatus.BAD_REQUEST.code,
                   ),
                 )
+              }
             }
           }
         }

@@ -20,7 +20,7 @@ class UpdateUserInfoUseCase(
     return userRepository.findById(user.id)?.let {
       return when (val newUser = User.factory.create(id = user.id.value, profile = user.profile)) {
         is User.Companion.UserFactory.UserFactoryResult.Success -> {
-          userRepository.save(newUser.user)
+          userRepository.update(newUser.user)
           Success
         }
         is User.Companion.UserFactory.UserFactoryResult.Failure -> {
