@@ -1,12 +1,14 @@
-package com.munchies.user.infrastructure.adapter.inbound
+package com.munchies.order.infrastructure.adapter.inbound
 
+import com.munchies.commons.infrastructure.adapter.API
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
 @JsExport
 abstract class JsAdvanceOrderStatusAPI :
-  AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, OrderDto>
+  AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, OrderDto>,
+  API<AdvanceOrderStatusRequest, OrderDto>()
 
 @JsExport
 abstract class JsDiscardOrderAPI : DiscardOrderAPI<String, OrderDto>
