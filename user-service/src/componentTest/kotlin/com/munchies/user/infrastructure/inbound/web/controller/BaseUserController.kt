@@ -49,6 +49,11 @@ import org.testcontainers.mongodb.MongoDBContainer
 @SerdeImport(VerifyEmailRequest::class)
 @SerdeImport(VerifyEmailSuccess::class)
 @SerdeImport(VerifyEmailFailure::class)
+@SerdeImport(DeleteUserRequest::class)
+@SerdeImport(DeleteUserResponse::class)
+@SerdeImport(DeleteUserResult::class)
+@SerdeImport(DeleteUserSuccess::class)
+@SerdeImport(DeleteUserFailure::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseUserController : TestPropertyProvider {
 
