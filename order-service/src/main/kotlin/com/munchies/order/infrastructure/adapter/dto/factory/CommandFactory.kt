@@ -62,11 +62,6 @@ object CommandFactory {
     AdvanceOrderStatusCommand(OrderId(orderId))
 
   /**
-   * Converts a [DiscardOrderRequest] into a corresponding [DiscardOrderCommand].
-   */
-  fun DiscardOrderRequest.toCommand(): DiscardOrderCommand = DiscardOrderCommand(OrderId(orderId))
-
-  /**
    * Converts an [UpdateOrderItemsRequest] into a corresponding [UpdateOrderItemsCommand].
    */
   fun UpdateOrderItemsRequest.toCommand(): UpdateOrderItemsCommand = UpdateOrderItemsCommand(

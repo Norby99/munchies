@@ -26,7 +26,7 @@ sealed interface OrderAPI {
    * @param Response The type of the response object returned after discarding the order.
    */
   interface DiscardOrderAPI<Request, Response> : OrderAPI {
-    fun discardOrder(request: Request): Response
+    fun discardOrder(id: Request): Response
   }
 
   /**

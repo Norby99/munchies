@@ -18,7 +18,7 @@ object OrderServiceConfig {
   const val GET_ORDER_PATH = "{id}"
   const val PLACE_ORDER_PATH = "place"
   const val ADVANCE_ORDER_STATUS_PATH = "advance"
-  const val DISCARD_ORDER_PATH = "discard"
+  const val DISCARD_ORDER_PATH = "{id}"
   const val UPDATE_ORDER_ITEMS_PATH = "items"
   const val UPDATE_DELIVERY_ORDER_INFO_PATH = "delivery"
   const val UPDATE_TAKEAWAY_ORDER_INFO_PATH = "takeaway"
