@@ -25,7 +25,7 @@ class CreateMenuTest {
     val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "Winter Menu",
-      validity = ValidityInput.Period("2026-12-1", "2027-2-28"),
+      validity = ValidityInput.Period("2026-12-01", "2027-02-28"),
     )
 
     coEvery { menuRepository.save(any()) } returns Unit

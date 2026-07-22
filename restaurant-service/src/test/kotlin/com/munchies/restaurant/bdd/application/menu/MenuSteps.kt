@@ -122,7 +122,7 @@ class MenuSteps @Inject constructor(
   }
 
   private fun checkMenuExistence(menuName: String) {
-    val result = helper.getMenu(context.restaurantId, context.menuId)
+    val result = helper.getMenu(context)
     check(result is GetMenuResult.Success)
     check(result.menu.name.value == menuName) { "Context doesn't have a $menuName menu" }
   }

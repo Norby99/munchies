@@ -2,7 +2,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http
 
 import com.munchies.restaurant.application.MenuService
 import com.munchies.restaurant.application.usecase.menu.CreateMenuItemResult
-import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemCommand
+import com.munchies.restaurant.application.usecase.menu.DeleteMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.RemoveMenuItemResult
 import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemResult
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.NotFoundException
@@ -64,8 +64,8 @@ class MenuItemController(private val menuService: MenuService) {
     @PathVariable categoryId: String,
     @PathVariable itemId: String,
   ): HttpResponse<DeleteMenuItemResponse> {
-    val command = RemoveMenuItemCommand(restaurantId, menuId, categoryId, itemId)
-    return when (val result = menuService.removeMenuItem(command)) {
+    val command = DeleteMenuItemCommand(restaurantId, menuId, categoryId, itemId)
+    return when (val result = menuService.deleteMenuItem(command)) {
       is RemoveMenuItemResult.Success -> HttpResponse.ok(DeleteMenuItemResponse(itemId))
       is RemoveMenuItemResult.MenuNotFound -> throw NotFoundException("Menu not found")
       is RemoveMenuItemResult.CategoryNotFound -> throw NotFoundException("Category not found")

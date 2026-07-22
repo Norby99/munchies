@@ -3,6 +3,7 @@ package com.munchies.restaurant.infrastructure.adapter.dto
 import kotlin.js.JsExport
 import kotlinx.serialization.Serializable
 
+@JsExport
 @Serializable
 sealed interface ValidityDto {
   val type: String
@@ -10,7 +11,7 @@ sealed interface ValidityDto {
 
 @JsExport
 @Serializable
-data class PeriodValidity(val start: String, val end: String) : ValidityDto {
+class PeriodValidity(val start: String, val end: String) : ValidityDto {
   override val type = "period"
 }
 
@@ -27,7 +28,7 @@ class YearlyValidity(
 
 @JsExport
 @Serializable
-data class WeeklyValidity(val days: List<Int>) : ValidityDto {
+class WeeklyValidity(val days: Array<Int>) : ValidityDto {
   override val type = "weekly"
 }
 

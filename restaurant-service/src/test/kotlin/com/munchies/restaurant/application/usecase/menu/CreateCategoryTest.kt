@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AddCategoryTest {
+class CreateCategoryTest {
 
   private lateinit var menuRepository: MenuRepository
   private lateinit var createCategoryUseCase: CreateCategoryUseCase
@@ -25,14 +25,17 @@ class AddCategoryTest {
   }
 
   @Test
-  fun `should add category successfully when menu exists`() = runBlocking {
-    val menuId = MenuId()
+  fun `should create category successfully when menu exists`() = runBlocking {
     val menu =
-      spyk(Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList()))
+      spyk(Menu(id = MenuId(), restaurantId = RestaurantId(), categories = emptyList()))
 
-    val command = CreateCategoryCommand(menuId.value, "Desserts")
+    val command = CreateCategoryCommand(
+      restaurantId = menu.restaurantId.value,
+      menuId = menu.id.value,
+      name = "Desserts",
+    )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
     when (val result = createCategoryUseCase(command)) {
@@ -47,9 +50,13 @@ class AddCategoryTest {
 
   @Test
   fun `should fail with Error when menu does not exist`() = runBlocking {
-    val command = CreateCategoryCommand(MenuId().value, "Desserts")
+    val command = CreateCategoryCommand(
+      restaurantId = RestaurantId().value,
+      menuId = MenuId().value,
+      name = "Desserts",
+    )
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = createCategoryUseCase(command)) {
       is CreateCategoryResult.MenuNotFound -> {
@@ -67,9 +74,13 @@ class AddCategoryTest {
     val menu =
       spyk(Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList()))
 
-    val command = CreateCategoryCommand(menuId.value, "    ")
+    val command = CreateCategoryCommand(
+      restaurantId = menu.restaurantId.value,
+      menuId = menuId.value,
+      name = "    ",
+    )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
     when (val result = createCategoryUseCase(command)) {
       is CreateCategoryResult.InvalidCategory -> {

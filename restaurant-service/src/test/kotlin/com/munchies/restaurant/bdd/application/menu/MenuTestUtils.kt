@@ -31,15 +31,15 @@ class MenuHelper @Inject constructor(private val service: MenuService) {
     return runBlocking { service.createMenu(command) }
   }
 
-  fun getMenu(restaurantId: String, menuId: String): GetMenuResult {
-    val command = GetMenuCommand(restaurantId, menuId)
+  fun getMenu(context: MenuContext): GetMenuResult {
+    val command = GetMenuCommand(context.restaurantId, context.menuId)
     return runBlocking { service.getMenu(command) }
   }
 
-  fun getCategory(restaurantId: String, menuId: String, categoryId: String): Category {
-    val command = GetMenuCommand(restaurantId, menuId)
+  fun getCategory(context: MenuContext): Category {
+    val command = GetMenuCommand(context.restaurantId, context.menuId)
     val result = runBlocking { service.getMenu(command) }
     check(result is GetMenuResult.Success) { "Retrieve menu failed" }
-    return result.menu.categories.first { it.id.value == categoryId }
+    return result.menu.categories.first { it.id.value == context.categoryId }
   }
 }

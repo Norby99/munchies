@@ -81,7 +81,7 @@ class UpdateMenuItemTest {
       variations = variations,
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
     when (val result = updateMenuItemUseCase(command)) {
@@ -110,7 +110,7 @@ class UpdateMenuItemTest {
       price = BigDecimal("15.00"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = updateMenuItemUseCase(command)) {
       is UpdateMenuItemResult.MenuNotFound -> {
@@ -137,7 +137,7 @@ class UpdateMenuItemTest {
       price = BigDecimal("15.00"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
     when (val result = updateMenuItemUseCase(command)) {
       is UpdateMenuItemResult.CategoryNotFound -> {

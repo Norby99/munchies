@@ -129,7 +129,10 @@ class DeleteMenuUseCase(
   private val menuRepository: MenuRepository,
 ) : UseCase<DeleteMenuCommand, DeleteMenuResult> {
   override suspend operator fun invoke(command: DeleteMenuCommand): DeleteMenuResult {
-    val menu = menuRepository.findById(MenuId(command.menuId))
+    val menu = menuRepository.findByIdAndRestaurantId(
+      MenuId(command.menuId),
+      RestaurantId(command.restaurantId),
+    )
       ?: return DeleteMenuResult.MenuNotFound
 
     return runCatching {

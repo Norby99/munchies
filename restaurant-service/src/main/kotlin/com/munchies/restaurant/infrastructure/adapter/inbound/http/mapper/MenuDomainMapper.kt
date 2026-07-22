@@ -43,7 +43,7 @@ fun Menu.toSummaryDto(): MenuSummaryDto = MenuSummaryDto(
 fun ValidityDto.toInput(): ValidityInput = when (this) {
   is PeriodValidity -> ValidityInput.Period(start, end)
   is YearlyValidity -> ValidityInput.Yearly(startMonth, startDay, endMonth, endDay)
-  is WeeklyValidity -> ValidityInput.Weekly(days)
+  is WeeklyValidity -> ValidityInput.Weekly(days.toList())
   is FromValidity -> ValidityInput.From(start)
   is UntilValidity -> ValidityInput.Until(end)
   is AlwaysValidity -> ValidityInput.Always
@@ -54,7 +54,7 @@ fun ValidityDto.toInput(): ValidityInput = when (this) {
 fun ValidityInput.toDto(): ValidityDto = when (this) {
   is ValidityInput.Period -> PeriodValidity(start, end)
   is ValidityInput.Yearly -> YearlyValidity(startMonth, startDay, endMonth, endDay)
-  is ValidityInput.Weekly -> WeeklyValidity(days)
+  is ValidityInput.Weekly -> WeeklyValidity(days.toTypedArray())
   is ValidityInput.From -> FromValidity(start)
   is ValidityInput.Until -> UntilValidity(end)
   is ValidityInput.Always -> AlwaysValidity

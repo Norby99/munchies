@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 class CreateCategoryRequest(
   val name: String,
-  val variations: List<VariationDto> = emptyList(),
+  val variations: Array<VariationDto> = emptyArray(),
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }

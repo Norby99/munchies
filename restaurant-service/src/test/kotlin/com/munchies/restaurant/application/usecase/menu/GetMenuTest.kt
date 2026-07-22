@@ -9,7 +9,6 @@ import com.munchies.restaurant.domain.valueobject.menu.Validity
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
-import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,30 +26,24 @@ class GetMenuTest {
 
   @Test
   fun `should return Success with menu when menu exists`(): Unit = runBlocking {
-    val restaurantId = RestaurantId()
-    val menuId = MenuId()
-    val expectedMenu = Menu.create(
-      restaurantId = restaurantId,
+    val menu = Menu.create(
+      restaurantId = RestaurantId(),
       name = MenuName.of("Winter Menu"),
-      validity = Validity.period(
-        LocalDate.of(2026, 12, 1),
-        LocalDate.of(2027, 2, 28),
-      ),
+      validity = Validity.period("2026-12-01", "2027-02-28"),
     )
 
-    val command = GetMenuCommand(menuId.value)
-    coEvery { menuRepository.findById(menuId) } returns expectedMenu
+    val command = GetMenuCommand(menu.restaurantId.value, menu.id.value)
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
     val result = getMenuUseCase(command)
 
-    result shouldBe GetMenuResult.Success(expectedMenu)
+    result shouldBe GetMenuResult.Success(menu)
   }
 
   @Test
   fun `should return MenuNotFound when menu does not exist`(): Unit = runBlocking {
-    val menuId = MenuId()
-    val command = GetMenuCommand(menuId.value)
-    coEvery { menuRepository.findById(menuId) } returns null
+    val command = GetMenuCommand(RestaurantId().value, MenuId().value)
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     val result = getMenuUseCase(command)
 
@@ -59,20 +52,14 @@ class GetMenuTest {
 
   @Test
   fun `should return Success with all menu properties correctly`(): Unit = runBlocking {
-    val restaurantId = RestaurantId()
-    val menuId = MenuId()
-    val menuName = "Spring Menu"
-    val startDate = LocalDate.of(2027, 3, 1)
-    val endDate = LocalDate.of(2027, 5, 31)
-
     val menu = Menu.create(
-      restaurantId = restaurantId,
-      name = MenuName.of(menuName),
-      validity = Validity.period(startDate, endDate),
+      restaurantId = RestaurantId(),
+      name = MenuName.of("Spring Menu"),
+      validity = Validity.period("2027-03-01", "2027-05-31"),
     )
 
-    val command = GetMenuCommand(menuId.value)
-    coEvery { menuRepository.findById(menuId) } returns menu
+    val command = GetMenuCommand(menu.restaurantId.value, menu.id.value)
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
     val successResult = getMenuUseCase(command) as? GetMenuResult.Success
 

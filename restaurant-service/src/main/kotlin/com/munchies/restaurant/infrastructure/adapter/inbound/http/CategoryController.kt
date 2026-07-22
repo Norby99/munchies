@@ -60,7 +60,7 @@ class CategoryController(private val menuService: MenuService) {
     @PathVariable categoryId: String,
   ): HttpResponse<DeleteCategoryResponse> {
     val command = DeleteCategoryCommand(restaurantId, menuId, categoryId)
-    return when (val result = menuService.removeCategory(command)) {
+    return when (val result = menuService.deleteCategory(command)) {
       is DeleteCategoryResult.Success -> HttpResponse.ok(result.toResponse())
       is DeleteCategoryResult.MenuNotFound -> throw NotFoundException("Menu not found")
       is DeleteCategoryResult.InvalidCategory -> throw ValidationException(result.error)

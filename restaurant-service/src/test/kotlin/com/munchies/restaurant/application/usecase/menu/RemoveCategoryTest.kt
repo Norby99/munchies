@@ -44,7 +44,7 @@ class RemoveCategoryTest {
       category.id.value,
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
     when (val result = deleteCategoryUseCase(command)) {
@@ -63,7 +63,7 @@ class RemoveCategoryTest {
     val command =
       DeleteCategoryCommand(RestaurantId().value, MenuId().value, CategoryId().value)
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = deleteCategoryUseCase(command)) {
       is DeleteCategoryResult.MenuNotFound -> {

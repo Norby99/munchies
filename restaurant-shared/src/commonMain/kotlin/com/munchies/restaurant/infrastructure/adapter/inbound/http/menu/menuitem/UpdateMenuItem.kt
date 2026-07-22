@@ -13,7 +13,7 @@ class UpdateMenuItemRequest(
   val name: String,
   val description: String,
   val price: String,
-  val variations: List<VariationDto> = emptyList(),
+  val variations: Array<VariationDto> = emptyArray(),
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }

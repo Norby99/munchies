@@ -25,7 +25,7 @@ class MenuTest {
     val menu2 = Menu.create(restaurantId, customName)
     assertEquals(customName, menu2.name)
 
-    val validity = Validity.from("2025-1-1")
+    val validity = Validity.from("2025-01-01")
     val menu3 = Menu.create(restaurantId, customName, validity)
     assertEquals(validity, menu3.validity)
   }

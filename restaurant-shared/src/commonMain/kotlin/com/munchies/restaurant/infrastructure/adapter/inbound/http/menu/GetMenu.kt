@@ -21,7 +21,7 @@ fun getMenuResponseFromJson(json: String): GetMenuResponse = Json.decodeFromStri
 @JsExport
 @Serializable
 class GetRestaurantMenusResponse(
-  val menus: List<MenuSummaryDto>,
+  val menus: Array<MenuSummaryDto>,
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }

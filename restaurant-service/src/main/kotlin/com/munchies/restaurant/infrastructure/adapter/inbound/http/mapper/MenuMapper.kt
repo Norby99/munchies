@@ -28,7 +28,7 @@ fun CreateMenuResult.Success.toResponse(): CreateMenuResponse = CreateMenuRespon
 fun GetMenuResult.Success.toResponse(): GetMenuResponse = GetMenuResponse(menu.toDto())
 
 fun GetRestaurantMenusResult.Success.toResponse(): GetRestaurantMenusResponse =
-  GetRestaurantMenusResponse(menus.map { it.toSummaryDto() })
+  GetRestaurantMenusResponse(menus.map { it.toSummaryDto() }.toTypedArray())
 
 // --- Update ---
 
