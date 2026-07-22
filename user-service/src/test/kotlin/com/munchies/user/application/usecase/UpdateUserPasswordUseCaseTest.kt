@@ -286,7 +286,6 @@ class UpdateUserPasswordUseCaseTest {
 
     val updated = credentialsRepository.findById(validUserId)
     updated shouldNotBe null
-    println(updated)
     updated!!.loginAttempts shouldBe attemps + 1
   }
 
