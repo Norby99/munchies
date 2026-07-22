@@ -13,7 +13,7 @@ package com.munchies.order.infrastructure.adapter.inbound.request
 data class UpdateDeliveryOrderRequest(
   val orderId: String,
   val customerId: String,
-  val estimatedDeliveryTime: Long,
+  val estimatedDeliveryTime: String,
   val deliveryAddress: String,
   val bellName: String,
   val customerPhone: String,

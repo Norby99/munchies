@@ -33,13 +33,13 @@ data class PlaceOrderRequest(
   val orderType: OrderType,
 
   // Delivery
-  val estimatedDeliveryTime: Long? = null,
+  val estimatedDeliveryTime: String? = null,
   val deliveryAddress: String? = null,
   val bellName: String? = null,
   val customerPhone: String? = null,
 
   // Takeaway
-  val pickupTime: Long? = null,
+  val pickupTime: String? = null,
   val customerName: String? = null,
 
   // DineIn

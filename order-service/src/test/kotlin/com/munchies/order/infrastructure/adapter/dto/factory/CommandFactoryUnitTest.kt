@@ -50,7 +50,7 @@ class CommandFactoryUnitTest {
     command.restaurantId shouldBe RestaurantId(request.restaurantId)
     command.customerId shouldBe CustomerId(request.customerId)
     command.items.size shouldBe request.items.size
-    command.estimatedDeliveryTime shouldBe request.estimatedDeliveryTime
+    command.estimatedDeliveryTime shouldBe request.estimatedDeliveryTime?.toLong()
     command.deliveryAddress shouldBe request.deliveryAddress
     command.bellName shouldBe request.bellName
     command.customerPhone shouldBe request.customerPhone
@@ -115,7 +115,7 @@ class CommandFactoryUnitTest {
     command.restaurantId shouldBe RestaurantId(request.restaurantId)
     command.customerId shouldBe CustomerId(request.customerId)
     command.items.size shouldBe request.items.size
-    command.pickupTime shouldBe request.pickupTime
+    command.pickupTime shouldBe request.pickupTime?.toLong()
     command.customerName shouldBe request.customerName
   }
 
