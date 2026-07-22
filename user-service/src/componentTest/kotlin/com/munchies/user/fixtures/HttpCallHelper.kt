@@ -23,7 +23,7 @@ class HttpCallHelper(val baseUrl: String, val client: HttpClient) {
       String::class.java,
     )
 
-  fun patch(request: String, endPoint: String): HttpResponse<String> = client.toBlocking()
+  fun patch(request: Any, endPoint: String): HttpResponse<String> = client.toBlocking()
     .exchange(
       HttpRequest.PATCH<Any>(
         "${baseUrl}$endPoint",
