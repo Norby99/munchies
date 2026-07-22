@@ -23,7 +23,7 @@ class UpdateUserInfoUseCaseTest {
     val result = useCase.execute(userToUpdate)
 
     result shouldBe UpdateUserInfo.Companion.UpdateUserInfoResult.Success
-    verify(userRepository).save(userToUpdate)
+    verify(userRepository).update(userToUpdate)
   }
 
   @Test
@@ -63,7 +63,7 @@ class UpdateUserInfoUseCaseTest {
     useCase.execute(newUser)
       .shouldBeInstanceOf<UpdateUserInfo.Companion.UpdateUserInfoResult.Success>()
 
-    verify(userRepository).save(newUser)
+    verify(userRepository).update(newUser)
     verify(userRepository).findById(userToUpdate.id)
   }
 }
