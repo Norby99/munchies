@@ -399,7 +399,7 @@ class MicronautUserController(
    * @param request Password update payload containing user, old password, and new password.
    * @return An HTTP response representing the update result.
    */
-  @Post(UserServiceConfig.UPDATE_USER_PASSWORD_PATH)
+  @Patch(UserServiceConfig.UPDATE_USER_PASSWORD_PATH)
   @Operation(
     summary = "Update user password",
     description = "Updates the password for a user with the provided old and new passwords.",
