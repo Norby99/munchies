@@ -24,7 +24,7 @@ object CommandFactory {
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
-      estimatedDeliveryTime = estimatedDeliveryTime
+      estimatedDeliveryTime = estimatedDeliveryTime?.toLongOrNull()
         ?: throw IllegalArgumentException(
           "Estimated delivery time is required for delivery orders",
         ),
@@ -39,7 +39,7 @@ object CommandFactory {
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
       items = items.map { it.toDomain() },
-      pickupTime = pickupTime
+      pickupTime = pickupTime?.toLongOrNull()
         ?: throw IllegalArgumentException("Pickup time is required for takeaway orders"),
       customerName = customerName
         ?: throw IllegalArgumentException("Customer name is required for takeaway orders"),
@@ -77,7 +77,7 @@ object CommandFactory {
     UpdateDeliveryOrderCommand(
       orderId = OrderId(orderId),
       customerId = CustomerId(customerId),
-      estimatedDeliveryTime = estimatedDeliveryTime,
+      estimatedDeliveryTime = estimatedDeliveryTime.toLong(),
       deliveryAddress = deliveryAddress,
       bellName = bellName,
       customerPhone = customerPhone,
@@ -90,7 +90,7 @@ object CommandFactory {
     UpdateTakeawayOrderCommand(
       orderId = OrderId(orderId),
       customerId = CustomerId(customerId),
-      pickupTime = pickupTime,
+      pickupTime = pickupTime.toLong(),
       customerName = customerName,
     )
 }
