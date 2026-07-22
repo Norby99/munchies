@@ -53,12 +53,14 @@ object UserDTOFactory {
         this.role,
       )
     ) {
-      is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Failure,
-      -> UserDTOFactoryResult.Failure(profile.reason)
+      is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Failure -> {
+        UserDTOFactoryResult.Failure(profile.reason)
+      }
       is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Success -> {
         when (val user = User.factory.create(this.id, profile.profile)) {
-          is User.Companion.UserFactory.UserFactoryResult.Failure,
-          -> UserDTOFactoryResult.Failure(user.reason)
+          is User.Companion.UserFactory.UserFactoryResult.Failure -> {
+            UserDTOFactoryResult.Failure(user.reason)
+          }
           is User.Companion.UserFactory.UserFactoryResult.Success -> {
             UserDTOFactoryResult.Success(user.user)
           }
