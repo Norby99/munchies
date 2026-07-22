@@ -5,25 +5,25 @@ import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
 @JsExport
-interface JsAdvanceOrderStatusAPI :
+abstract class JsAdvanceOrderStatusAPI :
   AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, OrderDto>
 
 @JsExport
-interface JsDiscardOrderAPI : DiscardOrderAPI<DiscardOrderRequest, OrderDto>
+abstract class JsDiscardOrderAPI : DiscardOrderAPI<String, OrderDto>
 
 @JsExport
-interface JsGetOrderDetailsAPI : GetOrderDetailsAPI<GetOrderDetailsRequest, OrderDto>
+abstract class JsGetOrderDetailsAPI : GetOrderDetailsAPI<String, OrderDto>
 
 @JsExport
-interface JsPlaceOrderAPI : PlaceOrderAPI<PlaceOrderRequest, OrderDto>
+abstract class JsPlaceOrderAPI : PlaceOrderAPI<PlaceOrderRequest, OrderDto>
 
 @JsExport
-interface JsUpdateDeliveryOrderInfoAPI :
+abstract class JsUpdateDeliveryOrderInfoAPI :
   UpdateDeliveryOrderInfoAPI<UpdateDeliveryOrderRequest, OrderDto>
 
 @JsExport
-interface JsUpdateOrderItemsAPI : UpdateOrderItemsAPI<UpdateOrderItemsRequest, OrderDto>
+abstract class JsUpdateOrderItemsAPI : UpdateOrderItemsAPI<UpdateOrderItemsRequest, OrderDto>
 
 @JsExport
-interface JsUpdateTakeawayOrderInfoAPI :
+abstract class JsUpdateTakeawayOrderInfoAPI :
   UpdateTakeawayOrderInfoAPI<UpdateTakeawayOrderRequest, OrderDto>
