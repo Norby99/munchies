@@ -31,7 +31,7 @@ class CreateRestaurantTest {
   @Test
   fun `should create restaurant successfully when name does not exist`() = runBlocking {
     val command = validCommand()
-    coEvery { restaurantRepository.findByManagerId(any()) } returns emptyList()
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns emptyList()
     coEvery { restaurantRepository.save(any()) } returns Unit
 
     when (val result = createRestaurantUseCase(command)) {
@@ -57,7 +57,7 @@ class CreateRestaurantTest {
         email = Email.of(command.email),
       ),
     )
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existingRestaurant)
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existingRestaurant)
 
     when (val result = createRestaurantUseCase(command)) {
       is CreateRestaurantResult.NameAlreadyExists -> {
@@ -79,7 +79,7 @@ class CreateRestaurantTest {
       email = "invalid-email",
     )
     val result = createRestaurantUseCase(command)
-    assertEquals(CreateRestaurantResult.ValidationError("Email format is invalid"), result)
+    assertEquals(CreateRestaurantResult.InvalidRestaurant("Email format is invalid"), result)
   }
 
   @Test
@@ -92,7 +92,7 @@ class CreateRestaurantTest {
       email = "info@pizzapalace.com",
     )
     val result = createRestaurantUseCase(command)
-    assertEquals(CreateRestaurantResult.ValidationError("Phone number format is invalid"), result)
+    assertEquals(CreateRestaurantResult.InvalidRestaurant("Phone number format is invalid"), result)
   }
 
   @Test
@@ -105,7 +105,10 @@ class CreateRestaurantTest {
       email = "info@pizzapalace.com",
     )
     val result = createRestaurantUseCase(command)
-    assertEquals(CreateRestaurantResult.ValidationError("Restaurant name cannot be blank"), result)
+    assertEquals(
+      CreateRestaurantResult.InvalidRestaurant("Restaurant name cannot be blank"),
+      result,
+    )
   }
 
   private fun validCommand(): CreateRestaurantCommand {

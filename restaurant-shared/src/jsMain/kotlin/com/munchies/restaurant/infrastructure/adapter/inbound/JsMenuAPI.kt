@@ -1,6 +1,5 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound
 
-import com.munchies.commons.infrastructure.adapter.API
 import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
@@ -26,11 +25,10 @@ import kotlin.js.Promise
 
 @JsExport
 abstract class JsCreateMenuAPI :
-  MenuAPI.CreateMenuAPI<Promise<CreateMenuResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.CREATE_MENU_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.POST
+  MenuAPI.CreateMenuAPI<Promise<CreateMenuResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.CREATE_MENU_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.POST
   abstract override fun createMenu(
     restaurantId: String,
     request: CreateMenuRequest,
@@ -39,20 +37,20 @@ abstract class JsCreateMenuAPI :
 
 @JsExport
 abstract class JsGetMenuAPI :
-  MenuAPI.GetMenuAPI<Promise<GetMenuResponse>>, API() {
-  override fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.GET_MENU_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.GET
+  MenuAPI.GetMenuAPI<Promise<GetMenuResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.GET_MENU_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.GET
   abstract override fun getMenu(restaurantId: String, menuId: String): Promise<GetMenuResponse>
 }
 
 @JsExport
 abstract class JsGetRestaurantMenusAPI :
-  MenuAPI.GetRestaurantMenusAPI<Promise<GetRestaurantMenusResponse>>, API() {
-  override fun getPath(): String =
+  MenuAPI.GetRestaurantMenusAPI<Promise<GetRestaurantMenusResponse>> {
+  fun getPath(): String =
     MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.GET_RESTAURANT_MENUS_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.GET
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.GET
   abstract override fun getRestaurantMenus(
     restaurantId: String,
   ): Promise<GetRestaurantMenusResponse>
@@ -60,11 +58,10 @@ abstract class JsGetRestaurantMenusAPI :
 
 @JsExport
 abstract class JsUpdateMenuAPI :
-  MenuAPI.UpdateMenuAPI<Promise<UpdateMenuResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.UPDATE_MENU_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  MenuAPI.UpdateMenuAPI<Promise<UpdateMenuResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.UPDATE_MENU_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.PUT
   abstract override fun updateMenu(
     restaurantId: String,
     menuId: String,
@@ -74,11 +71,10 @@ abstract class JsUpdateMenuAPI :
 
 @JsExport
 abstract class JsDeleteMenuAPI :
-  MenuAPI.DeleteMenuAPI<Promise<DeleteMenuResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.DELETE_MENU_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.DELETE
+  MenuAPI.DeleteMenuAPI<Promise<DeleteMenuResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.DELETE_MENU_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.DELETE
   abstract override fun deleteMenu(
     restaurantId: String,
     menuId: String,
@@ -89,11 +85,10 @@ abstract class JsDeleteMenuAPI :
 
 @JsExport
 abstract class JsCreateCategoryAPI :
-  MenuAPI.CreateCategoryAPI<Promise<CreateCategoryResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.CREATE_CATEGORY_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.POST
+  MenuAPI.CreateCategoryAPI<Promise<CreateCategoryResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.CREATE_CATEGORY_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.POST
   abstract override fun createCategory(
     restaurantId: String,
     menuId: String,
@@ -103,11 +98,10 @@ abstract class JsCreateCategoryAPI :
 
 @JsExport
 abstract class JsUpdateCategoryAPI :
-  MenuAPI.UpdateCategoryAPI<Promise<UpdateCategoryResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.UPDATE_CATEGORY_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  MenuAPI.UpdateCategoryAPI<Promise<UpdateCategoryResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.UPDATE_CATEGORY_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.PUT
   abstract override fun updateCategory(
     restaurantId: String,
     menuId: String,
@@ -118,11 +112,10 @@ abstract class JsUpdateCategoryAPI :
 
 @JsExport
 abstract class JsDeleteCategoryAPI :
-  MenuAPI.DeleteCategoryAPI<Promise<DeleteCategoryResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.DELETE_CATEGORY_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.DELETE
+  MenuAPI.DeleteCategoryAPI<Promise<DeleteCategoryResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.DELETE_CATEGORY_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.DELETE
   abstract override fun deleteCategory(
     restaurantId: String,
     menuId: String,
@@ -134,11 +127,10 @@ abstract class JsDeleteCategoryAPI :
 
 @JsExport
 abstract class JsCreateMenuItemAPI :
-  MenuAPI.CreateMenuItemAPI<Promise<CreateMenuItemResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.CREATE_MENU_ITEM_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.POST
+  MenuAPI.CreateMenuItemAPI<Promise<CreateMenuItemResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.CREATE_MENU_ITEM_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.POST
   abstract override fun createMenuItem(
     restaurantId: String,
     menuId: String,
@@ -149,11 +141,10 @@ abstract class JsCreateMenuItemAPI :
 
 @JsExport
 abstract class JsUpdateMenuItemAPI :
-  MenuAPI.UpdateMenuItemAPI<Promise<UpdateMenuItemResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.UPDATE_MENU_ITEM_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  MenuAPI.UpdateMenuItemAPI<Promise<UpdateMenuItemResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.UPDATE_MENU_ITEM_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.PUT
   abstract override fun updateMenuItem(
     restaurantId: String,
     menuId: String,
@@ -165,11 +156,10 @@ abstract class JsUpdateMenuItemAPI :
 
 @JsExport
 abstract class JsRemoveMenuItemAPI :
-  MenuAPI.RemoveMenuItemAPI<Promise<DeleteMenuItemResponse>>, API() {
-  override fun getPath(): String =
-    MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.REMOVE_MENU_ITEM_PATH
-  override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.DELETE
+  MenuAPI.RemoveMenuItemAPI<Promise<DeleteMenuItemResponse>> {
+  fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.REMOVE_MENU_ITEM_PATH
+  fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
+  fun getMethod(): HttpMethod = HttpMethod.DELETE
   abstract override fun removeMenuItem(
     restaurantId: String,
     menuId: String,
