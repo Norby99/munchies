@@ -1,6 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.Takeaway
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
@@ -52,9 +52,9 @@ class HttpCalls(val baseUrl: String, val client: HttpClient) {
    * @return The HttpResponse containing the response from the server, which is expected to be
    * of type OrderDto.Takeaway.
    */
-  fun httpGet(endPoint: String): HttpResponse<OrderDto.Takeaway> = client.toBlocking().exchange(
+  fun httpGet(endPoint: String): HttpResponse<Takeaway> = client.toBlocking().exchange(
     HttpRequest.GET<Any>("${baseUrl}$endPoint"),
-    OrderDto.Takeaway::class.java,
+    Takeaway::class.java,
   )
 
   /**

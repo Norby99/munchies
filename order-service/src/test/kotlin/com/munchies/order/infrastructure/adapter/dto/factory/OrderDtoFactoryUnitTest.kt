@@ -16,7 +16,9 @@ import com.munchies.order.fixtures.createDineInOrder
 import com.munchies.order.fixtures.createDineInOrderDto
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.createTakeawayOrderDto
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.Delivery
+import com.munchies.order.infrastructure.adapter.dto.DineIn
+import com.munchies.order.infrastructure.adapter.dto.Takeaway
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import io.kotest.matchers.shouldBe
@@ -31,8 +33,8 @@ class OrderDtoFactoryUnitTest {
 
     val dto = order.toDto()
 
-    dto.shouldBeInstanceOf<OrderDto.Delivery>()
-    dto as OrderDto.Delivery
+    dto.shouldBeInstanceOf<Delivery>()
+    dto as Delivery
     dto.orderId shouldBe order.id.value
     dto.restaurantId shouldBe order.restaurantId.value
     dto.customerId shouldBe order.customerId.value
@@ -50,8 +52,8 @@ class OrderDtoFactoryUnitTest {
 
     val dto = order.toDto()
 
-    dto.shouldBeInstanceOf<OrderDto.Takeaway>()
-    dto as OrderDto.Takeaway
+    dto.shouldBeInstanceOf<Takeaway>()
+    dto as Takeaway
     dto.orderId shouldBe order.id.value
     dto.restaurantId shouldBe order.restaurantId.value
     dto.customerId shouldBe order.customerId.value
@@ -67,8 +69,8 @@ class OrderDtoFactoryUnitTest {
 
     val dto = order.toDto()
 
-    dto.shouldBeInstanceOf<OrderDto.DineIn>()
-    dto as OrderDto.DineIn
+    dto.shouldBeInstanceOf<DineIn>()
+    dto as DineIn
     dto.orderId shouldBe order.id.value
     dto.restaurantId shouldBe order.restaurantId.value
     dto.customerId shouldBe order.customerId.value

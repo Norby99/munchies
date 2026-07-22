@@ -1,7 +1,9 @@
 package com.munchies.order.fixtures
 
 import com.munchies.order.domain.model.*
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.Delivery
+import com.munchies.order.infrastructure.adapter.dto.DineIn
+import com.munchies.order.infrastructure.adapter.dto.Takeaway
 
 // ---------- Time helpers ----------
 
@@ -138,7 +140,7 @@ fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder 
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun createDeliveryOrderDto() = OrderDto.Delivery(
+fun createDeliveryOrderDto() = Delivery(
   orderId = defaultOrderId.value,
   restaurantId = defaultRestaurantId.value,
   customerId = defaultCustomerId.value,
@@ -155,7 +157,7 @@ fun createDeliveryOrderDto() = OrderDto.Delivery(
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun createTakeawayOrderDto() = OrderDto.Takeaway(
+fun createTakeawayOrderDto() = Takeaway(
   orderId = defaultOrderId.value,
   restaurantId = defaultRestaurantId.value,
   customerId = defaultCustomerId.value,
@@ -170,7 +172,7 @@ fun createTakeawayOrderDto() = OrderDto.Takeaway(
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
  */
-fun createDineInOrderDto() = OrderDto.DineIn(
+fun createDineInOrderDto() = DineIn(
   orderId = defaultOrderId.value,
   restaurantId = defaultRestaurantId.value,
   customerId = defaultCustomerId.value,

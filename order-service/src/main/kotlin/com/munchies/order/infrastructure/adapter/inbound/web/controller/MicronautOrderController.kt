@@ -4,9 +4,12 @@ import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.domain.model.OrderId
+import com.munchies.order.infrastructure.adapter.dto.Delivery
+import com.munchies.order.infrastructure.adapter.dto.DineIn
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
+import com.munchies.order.infrastructure.adapter.dto.Takeaway
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
@@ -32,9 +35,9 @@ import jakarta.inject.Inject
  * layers remain independent from transport concerns.
  */
 @SerdeImport(OrderDto::class)
-@SerdeImport(OrderDto.Delivery::class)
-@SerdeImport(OrderDto.Takeaway::class)
-@SerdeImport(OrderDto.DineIn::class)
+@SerdeImport(Delivery::class)
+@SerdeImport(Takeaway::class)
+@SerdeImport(DineIn::class)
 @SerdeImport(OrderItemDto::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
