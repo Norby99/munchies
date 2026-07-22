@@ -10,6 +10,7 @@ import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderReque
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest
+import kotlin.toString
 
 /** Creates a PlaceOrderRequest.Delivery object from a DeliveryOrder.
  * @param order The DeliveryOrder to convert to a PlaceOrderRequest.
@@ -65,11 +66,11 @@ fun createTestPlaceOrderRequest(
   restaurantId = restaurantId,
   customerId = customerId,
   items = items,
-  estimatedDeliveryTime = estimatedDeliveryTime,
+  estimatedDeliveryTime = estimatedDeliveryTime.toString(),
   deliveryAddress = deliveryAddress,
   bellName = bellName,
   customerPhone = customerPhone,
-  pickupTime = pickupTime,
+  pickupTime = pickupTime.toString(),
   customerName = customerName,
   tableNumber = tableNumber,
   numberOfGuests = numberOfGuests,
@@ -83,7 +84,7 @@ fun createUpdateTakeawayOrderRequest(order: TakeawayOrder = createTakeawayOrder(
   UpdateTakeawayOrderRequest(
     orderId = order.id.value,
     customerId = order.customerId.value,
-    pickupTime = order.takeawayInfo.pickupTime,
+    pickupTime = order.takeawayInfo.pickupTime.toString(),
     customerName = order.takeawayInfo.customerName,
   )
 
@@ -95,7 +96,7 @@ fun createUpdateDeliveryOrderRequest(order: DeliveryOrder = createDeliveryOrder(
   UpdateDeliveryOrderRequest(
     orderId = order.id.value,
     customerId = order.customerId.value,
-    estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime,
+    estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime.toString(),
     deliveryAddress = order.deliveryInfo.deliveryAddress,
     bellName = order.deliveryInfo.bellName,
     customerPhone = order.deliveryInfo.customerPhone,
