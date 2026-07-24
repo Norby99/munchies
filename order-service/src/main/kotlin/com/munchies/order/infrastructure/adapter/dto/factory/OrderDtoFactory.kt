@@ -11,10 +11,8 @@ import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
-import com.munchies.order.infrastructure.adapter.dto.Delivery
-import com.munchies.order.infrastructure.adapter.dto.DineIn
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.dto.Takeaway
+import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDto
 
@@ -28,27 +26,30 @@ object OrderDtoFactory {
   fun Order.toDto(): OrderDto {
     val itemsDto = items.map { it.toDto() }
     return when (this) {
-      is DeliveryOrder -> Delivery(
+      is DeliveryOrder -> OrderDto(
+        orderType = OrderType.DELIVERY,
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
-        estimatedDeliveryTime = deliveryInfo.estimatedDeliveryTime,
+        estimatedDeliveryTime = deliveryInfo.estimatedDeliveryTime.toString(),
         deliveryAddress = deliveryInfo.deliveryAddress,
         bellName = deliveryInfo.bellName,
         customerPhone = deliveryInfo.customerPhone,
       )
-      is TakeawayOrder -> Takeaway(
+      is TakeawayOrder -> OrderDto(
+        orderType = OrderType.TAKEAWAY,
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
-        pickupTime = takeawayInfo.pickupTime,
+        pickupTime = takeawayInfo.pickupTime.toString(),
         customerName = takeawayInfo.customerName,
       )
-      is DineInOrder -> DineIn(
+      is DineInOrder -> OrderDto(
+        orderType = OrderType.DINE_IN,
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
@@ -75,40 +76,44 @@ object OrderDtoFactory {
     val domainCustomerId = CustomerId(customerId)
     val domainStatus = OrderStatus.valueOf(status)
 
-    return when (this) {
-      is Delivery -> DeliveryOrder(
+    return when (this.orderType) {
+      OrderType.DELIVERY -> DeliveryOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
         deliveryInfo = DeliveryInfo(
-          estimatedDeliveryTime = estimatedDeliveryTime,
-          deliveryAddress = deliveryAddress,
-          bellName = bellName,
-          customerPhone = customerPhone,
+          estimatedDeliveryTime = estimatedDeliveryTime?.toLongOrNull()
+            ?: throw IllegalArgumentException("Invalid: estimatedDeliveryTime"),
+          deliveryAddress = deliveryAddress
+            ?: throw IllegalArgumentException("Invalid: deliveryAddress"),
+          bellName = bellName ?: throw IllegalArgumentException("Invalid: bellName"),
+          customerPhone = customerPhone ?: throw IllegalArgumentException("Invalid: bellName"),
         ),
       )
-      is Takeaway -> TakeawayOrder(
+      OrderType.TAKEAWAY -> TakeawayOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
         takeawayInfo = TakeawayInfo(
-          pickupTime = pickupTime,
-          customerName = customerName,
+          pickupTime = pickupTime?.toLongOrNull()
+            ?: throw IllegalArgumentException("Invalid: pickupTime"),
+          customerName = customerName ?: throw IllegalArgumentException("Invalid: customerName"),
         ),
       )
-      is DineIn -> DineInOrder(
+      OrderType.DINE_IN -> DineInOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
         tableInfo = TableInfo(
-          tableNumber = tableNumber,
-          numberOfGuests = numberOfGuests,
+          tableNumber = tableNumber ?: throw IllegalArgumentException("Invalid: tableNumber"),
+          numberOfGuests = numberOfGuests
+            ?: throw IllegalArgumentException("Invalid: numberOfGuests"),
         ),
       )
     }
