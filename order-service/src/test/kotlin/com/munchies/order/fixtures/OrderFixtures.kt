@@ -1,7 +1,7 @@
 package com.munchies.order.fixtures
 
 import com.munchies.order.domain.model.*
-import com.munchies.order.infrastructure.adapter.dto.Delivery
+import com.munchies.order.infrastructure.adapter.dto.itDelivery
 import com.munchies.order.infrastructure.adapter.dto.DineIn
 import com.munchies.order.infrastructure.adapter.dto.Takeaway
 
