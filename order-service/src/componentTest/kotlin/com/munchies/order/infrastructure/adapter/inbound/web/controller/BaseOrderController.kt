@@ -4,6 +4,7 @@ import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.runtime.server.EmbeddedServer
@@ -16,9 +17,6 @@ import org.testcontainers.mongodb.MongoDBContainer
 
 @SerdeImport(OrderId::class)
 @SerdeImport(OrderDto::class)
-@SerdeImport(Delivery::class)
-@SerdeImport(Takeaway::class)
-@SerdeImport(DineIn::class)
 @SerdeImport(OrderItemDto::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
@@ -52,6 +50,8 @@ abstract class BaseOrderController : TestPropertyProvider {
   lateinit var embeddedServer: EmbeddedServer
 
   val httpCalls: HttpCalls by lazy { HttpCalls(baseUrl(), client) }
+
+  inline fun <reified T> HttpResponse<*>.bd() = this.getBody(T::class.java).get()
 
   /**
    * @return the base URL for the order service, including the embedded server
