@@ -30,23 +30,30 @@ class CreateMenuItemTest {
 
   @Test
   fun `should add menu item successfully when menu and category exist`() = runBlocking {
-    val categoryId = CategoryId()
-    val category = spyk(Category(id = categoryId, name = CategoryName.of("Starters")))
-    val menuId = MenuId()
-    val menu =
-      spyk(
-        Menu(id = menuId, restaurantId = RestaurantId(), categories = listOf(category)),
-      )
+    val category = spyk(
+      Category(
+        id = CategoryId(),
+        name = CategoryName.of("Starters"),
+      ),
+    )
+    val menu = spyk(
+      Menu(
+        id = MenuId(),
+        restaurantId = RestaurantId(),
+        categories = listOf(category),
+      ),
+    )
 
     val command = CreateMenuItemCommand(
-      menuId = menuId.value,
-      categoryId = categoryId.value,
+      restaurantId = menu.restaurantId.value,
+      menuId = menu.id.value,
+      categoryId = category.id.value,
       name = "Salad",
       description = "Fresh green salad",
       price = BigDecimal("5.50"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
     when (val result = createMenuItemUseCase(command)) {
@@ -63,6 +70,7 @@ class CreateMenuItemTest {
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
     val command = CreateMenuItemCommand(
+      restaurantId = RestaurantId().value,
       menuId = MenuId().value,
       categoryId = CategoryId().value,
       name = "Salad",
@@ -70,7 +78,7 @@ class CreateMenuItemTest {
       price = BigDecimal("5.50"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = createMenuItemUseCase(command)) {
       is CreateMenuItemResult.MenuNotFound -> {
@@ -88,6 +96,7 @@ class CreateMenuItemTest {
     val menu = Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList())
 
     val command = CreateMenuItemCommand(
+      restaurantId = menu.restaurantId.value,
       menuId = menuId.value,
       categoryId = CategoryId().value,
       name = "Salad",
@@ -95,7 +104,7 @@ class CreateMenuItemTest {
       price = BigDecimal("5.50"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
     when (val result = createMenuItemUseCase(command)) {
       is CreateMenuItemResult.CategoryNotFound -> {

@@ -5,8 +5,9 @@ import com.munchies.restaurant.application.usecase.menu.CreateMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.CreateMenuItemResult
 import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemCommand
 import com.munchies.restaurant.application.usecase.menu.UpdateMenuItemResult
-import com.munchies.restaurant.application.usecase.menu.VariationDto
-import com.munchies.restaurant.application.usecase.menu.VariationOptionDto
+import com.munchies.restaurant.application.usecase.menu.VariationInput
+import com.munchies.restaurant.application.usecase.menu.VariationOptionInput
+import com.munchies.restaurant.application.usecase.menu.toInput
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
@@ -37,10 +38,11 @@ class MenuItemVariationSteps @Inject constructor(
     description: String,
     price: Double,
   ) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     check(category.name.value == categoryName) { "Category name mismatch" }
 
     val command = CreateMenuItemCommand(
+      restaurantId = context.restaurantId,
       menuId = context.menuId,
       categoryId = context.categoryId,
       name = itemName,
@@ -56,22 +58,23 @@ class MenuItemVariationSteps @Inject constructor(
 
   @When("I create in the {string} item a {string} variation with options:")
   fun createVariation(itemName: String, variationName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     val item = category.items.first { it.id.value == context.itemId }
     check(item.name.value == itemName) { "Item name mismatch" }
 
     val options = optionsTable.asMaps()
-      .map { VariationOptionDto(it["name"]!!, BigDecimal(it["price"]!!)) }
+      .map { VariationOptionInput(it["name"]!!, BigDecimal(it["price"]!!)) }
 
-    val oldVariations = item.variations.map(::VariationDto)
+    val oldVariations = item.variations.map { it.toInput() }
     val command = UpdateMenuItemCommand(
+      restaurantId = context.restaurantId,
       menuId = context.menuId,
       categoryId = context.categoryId,
       itemId = item.id.value,
       name = item.name.value,
       description = item.description.value,
       price = item.price.amount,
-      variations = oldVariations + VariationDto(variationName, options),
+      variations = oldVariations + VariationInput(variationName, options),
     )
     context.lastResult = runBlocking { service.updateMenuItem(command) }
   }
@@ -83,16 +86,16 @@ class MenuItemVariationSteps @Inject constructor(
 
   @And("the {string} item should have a {string} variation with options:")
   fun itemHasVariation(itemName: String, variationName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     val item = category.items.first { it.id.value == context.itemId }
     check(item.name.value == itemName) { "Item name mismatch" }
 
     val expected = optionsTable.asMaps()
-      .map { VariationOptionDto(it["name"]!!, BigDecimal(it["price"]!!)) }
+      .map { VariationOptionInput(it["name"]!!, BigDecimal(it["price"]!!)) }
 
     item.variations shouldExist { variation ->
       variation.name.value == variationName &&
-        variation.options.map(::VariationOptionDto) == expected
+        variation.options.map { it.toInput() } == expected
     }
   }
 
@@ -100,22 +103,23 @@ class MenuItemVariationSteps @Inject constructor(
 
   @Given("the {string} item has a {string} variation with options:")
   fun hasVariation(itemName: String, variationName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     val item = category.items.first { it.id.value == context.itemId }
     check(item.name.value == itemName) { "Item name mismatch" }
 
     val options = optionsTable.asMaps()
-      .map { VariationOptionDto(it["name"]!!, BigDecimal(it["price"]!!)) }
+      .map { VariationOptionInput(it["name"]!!, BigDecimal(it["price"]!!)) }
 
-    val oldVariations = item.variations.map(::VariationDto)
+    val oldVariations = item.variations.map { it.toInput() }
     val command = UpdateMenuItemCommand(
+      restaurantId = context.restaurantId,
       menuId = context.menuId,
       categoryId = context.categoryId,
       itemId = item.id.value,
       name = item.name.value,
       description = item.description.value,
       price = item.price.amount,
-      variations = oldVariations + VariationDto(variationName, options),
+      variations = oldVariations + VariationInput(variationName, options),
     )
     val result = runBlocking { service.updateMenuItem(command) }
     check(result is UpdateMenuItemResult.Success) { "Item variation creation failed" }
@@ -123,14 +127,15 @@ class MenuItemVariationSteps @Inject constructor(
 
   @When("I update the {string} variation for the {string} item to have options:")
   fun updateVariation(variationName: String, itemName: String, optionsTable: DataTable) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     val item = category.items.first { it.id.value == context.itemId }
     check(item.name.value == itemName) { "Item name mismatch" }
 
     val newOptions = optionsTable.asMaps()
-      .map { VariationOptionDto(it["name"]!!, BigDecimal(it["price"]!!)) }
+      .map { VariationOptionInput(it["name"]!!, BigDecimal(it["price"]!!)) }
 
     val command = UpdateMenuItemCommand(
+      restaurantId = context.restaurantId,
       menuId = context.menuId,
       categoryId = context.categoryId,
       itemId = item.id.value,
@@ -139,12 +144,9 @@ class MenuItemVariationSteps @Inject constructor(
       price = item.price.amount,
       variations = item.variations.map {
         if (it.name.value == variationName) {
-          VariationDto(
-            variationName,
-            newOptions,
-          )
+          VariationInput(variationName, newOptions)
         } else {
-          VariationDto(it)
+          it.toInput()
         }
       },
     )
@@ -160,18 +162,21 @@ class MenuItemVariationSteps @Inject constructor(
 
   @When("I remove the {string} variation from the {string} item")
   fun removeVariation(variationName: String, itemName: String) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     val item = category.items.first { it.id.value == context.itemId }
     check(item.name.value == itemName) { "Item name mismatch" }
 
     val command = UpdateMenuItemCommand(
+      restaurantId = context.restaurantId,
       menuId = context.menuId,
       categoryId = context.categoryId,
       itemId = item.id.value,
       name = item.name.value,
       description = item.description.value,
       price = item.price.amount,
-      variations = item.variations.filter { it.name.value != variationName }.map(::VariationDto),
+      variations = item.variations
+        .filter { it.name.value != variationName }
+        .map { it.toInput() },
     )
     context.lastResult = runBlocking { service.updateMenuItem(command) }
   }
@@ -183,7 +188,7 @@ class MenuItemVariationSteps @Inject constructor(
 
   @And("the {string} item should have no {string} variation")
   fun itemHasNoVariation(itemName: String, variationName: String) {
-    val category = helper.getCategory(context.menuId, context.categoryId)
+    val category = helper.getCategory(context)
     val item = category.items.first { it.id.value == context.itemId }
     check(item.name.value == itemName) { "Item name mismatch" }
 

@@ -26,45 +26,53 @@ import org.junit.jupiter.api.Test
 class RemoveMenuItemTest {
 
   private lateinit var menuRepository: MenuRepository
-  private lateinit var removeMenuItemUseCase: RemoveMenuItemUseCase
+  private lateinit var deleteMenuItemUseCase: DeleteMenuItemUseCase
 
   @BeforeEach
   fun setUp() {
     menuRepository = mockk()
-    removeMenuItemUseCase = RemoveMenuItemUseCase(menuRepository)
+    deleteMenuItemUseCase = DeleteMenuItemUseCase(menuRepository)
   }
 
   @Test
-  fun `should remove menu item successfully when menu and category exist`() = runBlocking {
-    val itemId = MenuItemId()
+  fun `should delete menu item successfully when menu and category exist`() = runBlocking {
     val item =
       MenuItem(
-        id = itemId,
+        id = MenuItemId(),
         details = MenuItemDetails(
           MenuItemName.of("Pasta"),
           MenuItemDescription.of("Good pasta"),
         ),
         price = Money(BigDecimal("12.00")),
       )
-    val categoryId = CategoryId()
     val category =
-      spyk(Category(id = categoryId, name = CategoryName.of("Mains"), items = mutableListOf(item)))
-    val menuId = MenuId()
+      spyk(
+        Category(
+          id = CategoryId(),
+          name = CategoryName.of("Mains"),
+          items = mutableListOf(item),
+        ),
+      )
     val menu =
       spyk(
-        Menu(id = menuId, restaurantId = RestaurantId(), categories = listOf(category)),
+        Menu(
+          id = MenuId(),
+          restaurantId = RestaurantId(),
+          categories = listOf(category),
+        ),
       )
 
-    val command = RemoveMenuItemCommand(
-      menuId = menuId.value,
-      categoryId = categoryId.value,
-      itemId = itemId.value,
+    val command = DeleteMenuItemCommand(
+      restaurantId = menu.restaurantId.value,
+      menuId = menu.id.value,
+      categoryId = category.id.value,
+      itemId = item.id.value,
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
-    when (val result = removeMenuItemUseCase(command)) {
+    when (val result = deleteMenuItemUseCase(command)) {
       is RemoveMenuItemResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
         assertEquals(0, category.items.size)
@@ -77,15 +85,16 @@ class RemoveMenuItemTest {
 
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
-    val command = RemoveMenuItemCommand(
+    val command = DeleteMenuItemCommand(
+      restaurantId = RestaurantId().value,
       menuId = MenuId().value,
       categoryId = CategoryId().value,
       itemId = MenuItemId().value,
     )
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
-    when (val result = removeMenuItemUseCase(command)) {
+    when (val result = deleteMenuItemUseCase(command)) {
       is RemoveMenuItemResult.MenuNotFound -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }
@@ -100,15 +109,16 @@ class RemoveMenuItemTest {
     val menuId = MenuId()
     val menu = Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList())
 
-    val command = RemoveMenuItemCommand(
+    val command = DeleteMenuItemCommand(
+      restaurantId = menu.restaurantId.value,
       menuId = menuId.value,
       categoryId = CategoryId().value,
       itemId = MenuItemId().value,
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
-    when (val result = removeMenuItemUseCase(command)) {
+    when (val result = deleteMenuItemUseCase(command)) {
       is RemoveMenuItemResult.CategoryNotFound -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }

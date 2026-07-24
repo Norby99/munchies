@@ -43,8 +43,8 @@ class UpdateRestaurantTest {
       email = "new@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existing)
+    coEvery { restaurantRepository.findById(any()) } returns existing
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
     coEvery { restaurantRepository.save(any()) } returns Unit
 
     when (val result = updateRestaurantUseCase(command)) {
@@ -61,7 +61,7 @@ class UpdateRestaurantTest {
   @Test
   fun `should fail with NotFound when restaurant does not exist`() = runBlocking {
     val command = validUpdateCommand()
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns null
+    coEvery { restaurantRepository.findById(any()) } returns null
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.NotFound -> {
@@ -86,7 +86,7 @@ class UpdateRestaurantTest {
       email = "new@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
+    coEvery { restaurantRepository.findById(any()) } returns existing
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.Unauthorized -> {
@@ -122,9 +122,9 @@ class UpdateRestaurantTest {
       email = "new@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
+    coEvery { restaurantRepository.findById(any()) } returns existing
     coEvery {
-      restaurantRepository.findByManagerId(
+      restaurantRepository.findAllByManagerId(
         any(),
       )
     } returns listOf(anotherRestaurantWithNewName)
@@ -151,8 +151,8 @@ class UpdateRestaurantTest {
       email = "new@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existing)
+    coEvery { restaurantRepository.findById(any()) } returns existing
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
     coEvery { restaurantRepository.save(any()) } returns Unit
 
     when (val result = updateRestaurantUseCase(command)) {
@@ -167,7 +167,7 @@ class UpdateRestaurantTest {
   }
 
   @Test
-  fun `should fail with ValidationError when email format is invalid`() = runBlocking {
+  fun `should fail with InvalidRestaurant when email format is invalid`() = runBlocking {
     val existing = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -178,18 +178,18 @@ class UpdateRestaurantTest {
       email = "invalid-email",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existing)
+    coEvery { restaurantRepository.findById(any()) } returns existing
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
 
     val result = updateRestaurantUseCase(command)
     assertEquals(
-      UpdateRestaurantResult.ValidationError("Email format is invalid"),
+      UpdateRestaurantResult.InvalidRestaurant("Email format is invalid"),
       result,
     )
   }
 
   @Test
-  fun `should fail with ValidationError when phone format is invalid`() = runBlocking {
+  fun `should fail with InvalidRestaurant when phone format is invalid`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -200,18 +200,18 @@ class UpdateRestaurantTest {
       email = "info@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existing)
+    coEvery { restaurantRepository.findById(any()) } returns existing
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
 
     val result = updateRestaurantUseCase(command)
     assertEquals(
-      UpdateRestaurantResult.ValidationError("Phone number format is invalid"),
+      UpdateRestaurantResult.InvalidRestaurant("Phone number format is invalid"),
       result,
     )
   }
 
   @Test
-  fun `should fail with ValidationError when name is empty`() = runBlocking {
+  fun `should fail with InvalidRestaurant when name is empty`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -222,18 +222,18 @@ class UpdateRestaurantTest {
       email = "info@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existing)
+    coEvery { restaurantRepository.findById(any()) } returns existing
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
 
     val result = updateRestaurantUseCase(command)
     assertEquals(
-      UpdateRestaurantResult.ValidationError("Restaurant name cannot be blank"),
+      UpdateRestaurantResult.InvalidRestaurant("Restaurant name cannot be blank"),
       result,
     )
   }
 
   @Test
-  fun `should fail with ValidationError when address is empty`() = runBlocking {
+  fun `should fail with InvalidRestaurant when address is empty`() = runBlocking {
     val existing: Restaurant = validRestaurant()
     val command = UpdateRestaurantCommand(
       restaurantId = existing.id.value,
@@ -244,12 +244,12 @@ class UpdateRestaurantTest {
       email = "info@example.com",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(any()) } returns existing
-    coEvery { restaurantRepository.findByManagerId(any()) } returns listOf(existing)
+    coEvery { restaurantRepository.findById(any()) } returns existing
+    coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
 
     val result = updateRestaurantUseCase(command)
     assertEquals(
-      UpdateRestaurantResult.ValidationError("Address cannot be blank"),
+      UpdateRestaurantResult.InvalidRestaurant("Address cannot be blank"),
       result,
     )
   }

@@ -10,7 +10,9 @@ import com.munchies.restaurant.domain.valueobject.restaurant.Address
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
+import jakarta.inject.Singleton
 
+@Singleton
 data class RestaurantUseCases(val repository: RestaurantRepository) {
   val create = CreateRestaurantUseCase(repository)
   val update = UpdateRestaurantUseCase(repository)
@@ -27,21 +29,19 @@ data class GetRestaurantCommand(
 
 sealed interface GetRestaurantResult {
   data class Success(val restaurant: Restaurant) : GetRestaurantResult
-  data class ValidationError(val error: String) : GetRestaurantResult
+  data class InvalidRestaurant(val error: String) : GetRestaurantResult
   data object NotFound : GetRestaurantResult
 }
 
 class GetRestaurantUseCase(
-  private val restaurantRepository: RestaurantRepository,
+  private val repository: RestaurantRepository,
 ) : UseCase<GetRestaurantCommand, GetRestaurantResult> {
   override suspend operator fun invoke(command: GetRestaurantCommand): GetRestaurantResult {
-    return try {
-      restaurantRepository.findByIdSuspend(RestaurantId.of(command.restaurantId))
+    return runCatching {
+      repository.findById(RestaurantId.of(command.restaurantId))
         ?.let { GetRestaurantResult.Success(it) }
         ?: GetRestaurantResult.NotFound
-    } catch (e: IllegalArgumentException) {
-      GetRestaurantResult.ValidationError(error = e.message ?: "Validation error")
-    }
+    }.getOrElse { GetRestaurantResult.InvalidRestaurant(it.message.orEmpty()) }
   }
 }
 
@@ -57,18 +57,16 @@ sealed interface GetManagerRestaurantsResult {
 }
 
 class GetManagerRestaurantsUseCase(
-  private val restaurantRepository: RestaurantRepository,
+  private val repository: RestaurantRepository,
 ) : UseCase<GetManagerRestaurantsCommand, GetManagerRestaurantsResult> {
   override suspend operator fun invoke(
     command: GetManagerRestaurantsCommand,
   ): GetManagerRestaurantsResult {
-    return try {
+    return runCatching {
       val managerId = UserId.of(command.managerId)
-      val restaurants = restaurantRepository.findByManagerId(managerId)
+      val restaurants = repository.findAllByManagerId(managerId)
       GetManagerRestaurantsResult.Success(restaurants)
-    } catch (e: IllegalArgumentException) {
-      GetManagerRestaurantsResult.ValidationError(error = e.message ?: "Validation error")
-    }
+    }.getOrElse { GetManagerRestaurantsResult.ValidationError(it.message.orEmpty()) }
   }
 }
 
@@ -84,16 +82,16 @@ data class CreateRestaurantCommand(
 
 sealed interface CreateRestaurantResult {
   data class Success(val restaurantId: String) : CreateRestaurantResult
-  data class ValidationError(val error: String) : CreateRestaurantResult
+  data class InvalidRestaurant(val error: String) : CreateRestaurantResult
   data object NameAlreadyExists : CreateRestaurantResult
 }
 
 class CreateRestaurantUseCase(
-  private val restaurantRepository: RestaurantRepository,
+  private val repository: RestaurantRepository,
 ) : UseCase<CreateRestaurantCommand, CreateRestaurantResult> {
 
   override suspend operator fun invoke(command: CreateRestaurantCommand): CreateRestaurantResult {
-    return try {
+    return runCatching {
       val managerId = UserId.of(command.managerId)
       val details = RestaurantDetails(
         name = RestaurantName.of(command.name),
@@ -102,7 +100,7 @@ class CreateRestaurantUseCase(
         email = Email.of(command.email),
       )
 
-      if (restaurantRepository.findByManagerId(managerId)
+      if (repository.findAllByManagerId(managerId)
           .any { it.details.name == details.name }
       ) {
         return CreateRestaurantResult.NameAlreadyExists
@@ -113,20 +111,18 @@ class CreateRestaurantUseCase(
         details = details,
       )
 
-      restaurantRepository.save(restaurant)
+      repository.save(restaurant)
 
       CreateRestaurantResult.Success(restaurantId = restaurant.id.value)
-    } catch (e: IllegalArgumentException) {
-      CreateRestaurantResult.ValidationError(error = e.message ?: "Validation error")
-    }
+    }.getOrElse { CreateRestaurantResult.InvalidRestaurant(it.message.orEmpty()) }
   }
 }
 
 // --- Update Restaurant ---
 
 data class UpdateRestaurantCommand(
-  val restaurantId: String,
   val managerId: String,
+  val restaurantId: String,
   val name: String,
   val address: String,
   val phone: String,
@@ -135,7 +131,7 @@ data class UpdateRestaurantCommand(
 
 sealed interface UpdateRestaurantResult {
   data class Success(val restaurantId: String) : UpdateRestaurantResult
-  data class ValidationError(val error: String) : UpdateRestaurantResult
+  data class InvalidRestaurant(val error: String) : UpdateRestaurantResult
   data object NotFound : UpdateRestaurantResult
   data object Unauthorized : UpdateRestaurantResult
   data object NameAlreadyExists : UpdateRestaurantResult
@@ -146,50 +142,29 @@ class UpdateRestaurantUseCase(
 ) : UseCase<UpdateRestaurantCommand, UpdateRestaurantResult> {
 
   override suspend operator fun invoke(command: UpdateRestaurantCommand): UpdateRestaurantResult {
-    return try {
+    return runCatching {
       val restaurantId = RestaurantId.of(command.restaurantId)
       val managerId = UserId.of(command.managerId)
-      val restaurant = repository.findByIdSuspend(restaurantId)
-        ?: return UpdateRestaurantResult.NotFound
-
-      performUpdateIfAuthorized(command, restaurant, managerId)
-    } catch (e: IllegalArgumentException) {
-      UpdateRestaurantResult.ValidationError(error = e.message ?: "Validation error")
-    }
-  }
-
-  private suspend fun performUpdateIfAuthorized(
-    command: UpdateRestaurantCommand,
-    restaurant: Restaurant,
-    managerId: UserId,
-  ): UpdateRestaurantResult {
-    return if (restaurant.managerId != managerId) {
-      UpdateRestaurantResult.Unauthorized
-    } else {
-      executeRestaurantUpdate(command, restaurant, managerId)
-    }
-  }
-
-  private suspend fun executeRestaurantUpdate(
-    command: UpdateRestaurantCommand,
-    restaurant: Restaurant,
-    managerId: UserId,
-  ): UpdateRestaurantResult {
-    val nameAlreadyTaken = repository.findByManagerId(managerId)
-      .any { it.id != restaurant.id && it.details.name == RestaurantName.of(command.name) }
-    if (nameAlreadyTaken) {
-      return UpdateRestaurantResult.NameAlreadyExists
-    }
-
-    val newDetails = RestaurantDetails(
-      name = RestaurantName.of(command.name),
-      address = Address.of(command.address),
-      phone = Phone.of(command.phone),
-      email = Email.of(command.email),
-    )
-    restaurant.updateDetails(newDetails)
-    repository.save(restaurant)
-    return UpdateRestaurantResult.Success(restaurantId = restaurant.id.value)
+      val restaurant = repository.findById(restaurantId)
+      when {
+        restaurant == null -> UpdateRestaurantResult.NotFound
+        restaurant.managerId != managerId -> UpdateRestaurantResult.Unauthorized
+        repository.findAllByManagerId(managerId)
+          .any { it.id != restaurant.id && it.details.name == RestaurantName.of(command.name) }
+        -> UpdateRestaurantResult.NameAlreadyExists
+        else -> {
+          val newDetails = RestaurantDetails(
+            name = RestaurantName.of(command.name),
+            address = Address.of(command.address),
+            phone = Phone.of(command.phone),
+            email = Email.of(command.email),
+          )
+          restaurant.updateDetails(newDetails)
+          repository.save(restaurant)
+          UpdateRestaurantResult.Success(restaurantId = restaurant.id.value)
+        }
+      }
+    }.getOrElse { UpdateRestaurantResult.InvalidRestaurant(it.message.orEmpty()) }
   }
 }
 
@@ -202,7 +177,7 @@ data class DeleteRestaurantCommand(
 
 sealed interface DeleteRestaurantResult {
   data class Success(val restaurantId: String) : DeleteRestaurantResult
-  data class ValidationError(val error: String) : DeleteRestaurantResult
+  data class InvalidRestaurant(val error: String) : DeleteRestaurantResult
   data object NotFound : DeleteRestaurantResult
   data object Unauthorized : DeleteRestaurantResult
 }
@@ -211,33 +186,16 @@ class DeleteRestaurantUseCase(
   private val repository: RestaurantRepository,
 ) : UseCase<DeleteRestaurantCommand, DeleteRestaurantResult> {
   override suspend operator fun invoke(command: DeleteRestaurantCommand): DeleteRestaurantResult {
-    return try {
-      repository.findByIdSuspend(RestaurantId.of(command.restaurantId))
-        ?.let { toDelete ->
-          validateAuthorizationAndDelete(toDelete, command)
-        }
-        ?: DeleteRestaurantResult.NotFound
-    } catch (e: IllegalArgumentException) {
-      DeleteRestaurantResult.ValidationError(error = e.message ?: "Validation error")
-    }
-  }
-
-  private suspend fun validateAuthorizationAndDelete(
-    restaurant: Restaurant,
-    command: DeleteRestaurantCommand,
-  ): DeleteRestaurantResult = if (restaurant.managerId.value != command.managerId) {
-    DeleteRestaurantResult.Unauthorized
-  } else {
-    deleteRestaurant(RestaurantId.of(command.restaurantId))
-  }
-
-  private suspend fun deleteRestaurant(id: RestaurantId): DeleteRestaurantResult =
-    repository.deleteById(id)
-      .let { success ->
-        if (success) {
-          DeleteRestaurantResult.Success(restaurantId = id.value)
-        } else {
-          DeleteRestaurantResult.NotFound
+    return runCatching {
+      val restaurant = repository.findById(RestaurantId.of(command.restaurantId))
+      when {
+        restaurant == null -> DeleteRestaurantResult.NotFound
+        restaurant.managerId.value != command.managerId -> DeleteRestaurantResult.Unauthorized
+        else -> {
+          repository.delete(restaurant)
+          DeleteRestaurantResult.Success(restaurantId = restaurant.id.value)
         }
       }
+    }.getOrElse { DeleteRestaurantResult.InvalidRestaurant(it.message.orEmpty()) }
+  }
 }

@@ -62,15 +62,16 @@ class UpdateMenuItemTest {
     )
 
     val variations = listOf(
-      VariationDto(
+      VariationInput(
         "Size",
         listOf(
-          VariationOptionDto("Normal", BigDecimal("0.00")),
-          VariationOptionDto("Large", BigDecimal("2.00")),
+          VariationOptionInput("Normal", BigDecimal("0.00")),
+          VariationOptionInput("Large", BigDecimal("2.00")),
         ),
       ),
     )
     val command = UpdateMenuItemCommand(
+      restaurantId = menu.restaurantId.value,
       menuId = menu.id.value,
       categoryId = category.id.value,
       itemId = item.id.value,
@@ -80,7 +81,7 @@ class UpdateMenuItemTest {
       variations = variations,
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
     when (val result = updateMenuItemUseCase(command)) {
@@ -100,6 +101,7 @@ class UpdateMenuItemTest {
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
     val command = UpdateMenuItemCommand(
+      restaurantId = RestaurantId().value,
       menuId = MenuId().value,
       categoryId = CategoryId().value,
       itemId = MenuItemId().value,
@@ -108,7 +110,7 @@ class UpdateMenuItemTest {
       price = BigDecimal("15.00"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = updateMenuItemUseCase(command)) {
       is UpdateMenuItemResult.MenuNotFound -> {
@@ -126,6 +128,7 @@ class UpdateMenuItemTest {
     val menu = Menu(id = menuId, restaurantId = RestaurantId(), categories = emptyList())
 
     val command = UpdateMenuItemCommand(
+      restaurantId = RestaurantId().value,
       menuId = menuId.value,
       categoryId = CategoryId().value,
       itemId = MenuItemId().value,
@@ -134,7 +137,7 @@ class UpdateMenuItemTest {
       price = BigDecimal("15.00"),
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
 
     when (val result = updateMenuItemUseCase(command)) {
       is UpdateMenuItemResult.CategoryNotFound -> {

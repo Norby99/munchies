@@ -19,31 +19,36 @@ import org.junit.jupiter.api.Test
 class RemoveCategoryTest {
 
   private lateinit var menuRepository: MenuRepository
-  private lateinit var removeCategoryUseCase: RemoveCategoryUseCase
+  private lateinit var deleteCategoryUseCase: DeleteCategoryUseCase
 
   @BeforeEach
   fun setUp() {
     menuRepository = mockk()
-    removeCategoryUseCase = RemoveCategoryUseCase(menuRepository)
+    deleteCategoryUseCase = DeleteCategoryUseCase(menuRepository)
   }
 
   @Test
   fun `should remove category successfully when menu exists`() = runBlocking {
-    val categoryId = CategoryId()
-    val category = spyk(Category(id = categoryId, name = CategoryName.of("Desserts")))
-    val menuId = MenuId()
-    val menu =
-      spyk(
-        Menu(id = menuId, restaurantId = RestaurantId(), categories = listOf(category)),
-      )
+    val category = spyk(Category(CategoryId(), CategoryName.of("Desserts")))
+    val menu = spyk(
+      Menu(
+        id = MenuId(),
+        restaurantId = RestaurantId(),
+        categories = listOf(category),
+      ),
+    )
 
-    val command = RemoveCategoryCommand(menuId = menuId.value, categoryId = categoryId.value)
+    val command = DeleteCategoryCommand(
+      menu.restaurantId.value,
+      menu.id.value,
+      category.id.value,
+    )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
-    when (val result = removeCategoryUseCase(command)) {
-      is RemoveCategoryResult.Success -> {
+    when (val result = deleteCategoryUseCase(command)) {
+      is DeleteCategoryResult.Success -> {
         coVerify(exactly = 1) { menuRepository.save(menu) }
         assertEquals(0, menu.categories.size)
       }
@@ -56,12 +61,12 @@ class RemoveCategoryTest {
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
     val command =
-      RemoveCategoryCommand(menuId = MenuId().value, categoryId = CategoryId().value)
+      DeleteCategoryCommand(RestaurantId().value, MenuId().value, CategoryId().value)
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
-    when (val result = removeCategoryUseCase(command)) {
-      is RemoveCategoryResult.MenuNotFound -> {
+    when (val result = deleteCategoryUseCase(command)) {
+      is DeleteCategoryResult.MenuNotFound -> {
         coVerify(exactly = 0) { menuRepository.save(any()) }
       }
       else -> {

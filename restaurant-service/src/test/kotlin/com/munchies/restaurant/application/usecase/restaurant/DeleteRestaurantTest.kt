@@ -50,8 +50,8 @@ class DeleteRestaurantTest {
       managerId = "user-123",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns restaurant
-    coEvery { restaurantRepository.deleteById(restaurantId) } returns true
+    coEvery { restaurantRepository.findById(restaurantId) } returns restaurant
+    coEvery { restaurantRepository.delete(restaurant) } returns Unit
 
     val result = deleteRestaurantUseCase(command)
 
@@ -59,7 +59,7 @@ class DeleteRestaurantTest {
       DeleteRestaurantResult.Success(restaurantId.value),
       result,
     )
-    coVerify(exactly = 1) { restaurantRepository.deleteById(restaurantId) }
+    coVerify(exactly = 1) { restaurantRepository.delete(restaurant) }
   }
 
   @Test
@@ -70,12 +70,12 @@ class DeleteRestaurantTest {
       managerId = "user-123",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns null
+    coEvery { restaurantRepository.findById(restaurantId) } returns null
 
     val result = deleteRestaurantUseCase(command)
 
     assertEquals(DeleteRestaurantResult.NotFound, result)
-    coVerify(exactly = 0) { restaurantRepository.deleteById(any()) }
+    coVerify(exactly = 0) { restaurantRepository.delete(any()) }
   }
 
   @Test
@@ -100,16 +100,16 @@ class DeleteRestaurantTest {
       managerId = "user-123",
     )
 
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns restaurant
+    coEvery { restaurantRepository.findById(restaurantId) } returns restaurant
 
     val result = deleteRestaurantUseCase(command)
 
     assertEquals(DeleteRestaurantResult.Unauthorized, result)
-    coVerify(exactly = 0) { restaurantRepository.deleteById(any()) }
+    coVerify(exactly = 0) { restaurantRepository.delete(any()) }
   }
 
   @Test
-  fun `should return ValidationError when restaurantId format is blank`() = runBlocking {
+  fun `should return InvalidRestaurant when restaurantId format is blank`() = runBlocking {
     val command = DeleteRestaurantCommand(
       restaurantId = "   ",
       managerId = "user-123",
@@ -118,39 +118,9 @@ class DeleteRestaurantTest {
     val result = deleteRestaurantUseCase(command)
 
     assertEquals(
-      DeleteRestaurantResult.ValidationError("RestaurantId cannot be blank"),
+      DeleteRestaurantResult.InvalidRestaurant("RestaurantId cannot be blank"),
       result,
     )
-    coVerify(exactly = 0) { restaurantRepository.findByIdSuspend(any()) }
-  }
-
-  @Test
-  fun `should return NotFound when deletion returns false`() = runBlocking {
-    val restaurantId = RestaurantId()
-    val managerId = UserId.of("user-123")
-    val restaurant = Restaurant.fromDatabase(
-      id = restaurantId,
-      managerId = managerId,
-      details = RestaurantDetails(
-        name = RestaurantName.of("Pizza Palace"),
-        address = Address.of("123 Main St"),
-        phone = Phone.of("123456789"),
-        email = Email.of("info@pizzapalace.com"),
-      ),
-      createdAt = java.time.LocalDateTime.now(),
-      updatedAt = java.time.LocalDateTime.now(),
-    )
-
-    val command = DeleteRestaurantCommand(
-      restaurantId = restaurantId.value,
-      managerId = "user-123",
-    )
-
-    coEvery { restaurantRepository.findByIdSuspend(restaurantId) } returns restaurant
-    coEvery { restaurantRepository.deleteById(restaurantId) } returns false
-
-    val result = deleteRestaurantUseCase(command)
-
-    assertEquals(DeleteRestaurantResult.NotFound, result)
+    coVerify(exactly = 0) { restaurantRepository.findById(any()) }
   }
 }
