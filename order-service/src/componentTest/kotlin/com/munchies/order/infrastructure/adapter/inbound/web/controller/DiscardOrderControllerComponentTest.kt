@@ -6,8 +6,15 @@ import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.secondaryOrderId
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
-import io.kotest.matchers.equals.shouldBeEqual
+import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponseType
+import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponseType
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
+import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -15,6 +22,7 @@ import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class DiscardOrderControllerComponentTest : BaseOrderController() {
@@ -39,10 +47,15 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     val id = defaultOrderId.value
     orderRepository.save(createDeliveryOrder())
 
-    val response = httpCalls.httpDelete(id)
+    orderRepository.findById(defaultOrderId).shouldNotBeNull()
+
+    val response = httpCalls.httpDelete<DiscardOrderResponse>(id)
 
     response.status shouldBe HttpStatus.OK
-    response.body() shouldBeEqual "Order discarded"
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().type shouldBe DiscardOrderResponseType.SUCCESS
+
+    orderRepository.findById(defaultOrderId).shouldBeNull()
   }
 
   @Test
@@ -50,11 +63,13 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     val id = secondaryOrderId.value
     orderRepository.save(createDeliveryOrder())
 
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpCalls.httpDelete(id)
-    }
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpDelete<DiscardOrderResponse>(id)
+    }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<DiscardOrderResponse>().type shouldBe DiscardOrderResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -62,10 +77,12 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     val id = defaultOrderId.value
     orderRepository.save(createDeliveryOrder(status = OrderStatus.COMPLETED))
 
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpCalls.httpDelete(id)
-    }
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpDelete<DiscardOrderResponse>(id)
+    }.response
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<DiscardOrderResponse>().type shouldBe DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
   }
 }

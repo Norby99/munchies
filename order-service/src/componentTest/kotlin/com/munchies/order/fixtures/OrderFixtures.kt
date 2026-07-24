@@ -1,9 +1,8 @@
 package com.munchies.order.fixtures
 
 import com.munchies.order.domain.model.*
-import com.munchies.order.infrastructure.adapter.dto.Delivery
-import com.munchies.order.infrastructure.adapter.dto.DineIn
-import com.munchies.order.infrastructure.adapter.dto.Takeaway
+import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.OrderType
 
 // ---------- Time helpers ----------
 
@@ -139,43 +138,40 @@ fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder 
 )
 
 /**
- * Creates a default OrderDto.Delivery with valid items, using [Address1] by default.
- * @param status The status of the order. Defaults to PENDING.
- * @param items The items of the order. Defaults to a valid non-empty list.
+ * Creates a default OrderDto ->Delivery with valid items, using [Address1] by default.
  */
-fun createDeliveryOrderDto() = Delivery(
+fun createDeliveryOrderDto() = OrderDto(
+  orderType = OrderType.DELIVERY,
   orderId = defaultOrderId.value,
   restaurantId = defaultRestaurantId.value,
   customerId = defaultCustomerId.value,
   status = OrderStatus.PENDING.name,
   items = emptyList(),
-  estimatedDeliveryTime = futureTime,
+  estimatedDeliveryTime = futureTime.toString(),
   deliveryAddress = Address1.deliveryAddress,
   bellName = Address1.bellName,
   customerPhone = Address1.customerPhone,
 )
 
 /**
- * Creates a default OrderDto.Takeaway with valid items.
- * @param status The status of the order. Defaults to PENDING.
- * @param items The items of the order. Defaults to a valid non-empty list.
+ * Creates a default OrderDto -> Takeaway with valid items.
  */
-fun createTakeawayOrderDto() = Takeaway(
+fun createTakeawayOrderDto() = OrderDto(
+  orderType = OrderType.TAKEAWAY,
   orderId = defaultOrderId.value,
   restaurantId = defaultRestaurantId.value,
   customerId = defaultCustomerId.value,
   status = OrderStatus.PENDING.name,
   items = emptyList(),
-  pickupTime = futureTime,
+  pickupTime = futureTime.toString(),
   customerName = Address1.bellName,
 )
 
 /**
- * Creates a default OrderDto.DineIn with valid items.
- * @param status The status of the order. Defaults to PENDING.
- * @param items The items of the order. Defaults to a valid non-empty list.
+ * Creates a default OrderDto -> DineIn with valid items.
  */
-fun createDineInOrderDto() = DineIn(
+fun createDineInOrderDto() = OrderDto(
+  orderType = OrderType.DINE_IN,
   orderId = defaultOrderId.value,
   restaurantId = defaultRestaurantId.value,
   customerId = defaultCustomerId.value,

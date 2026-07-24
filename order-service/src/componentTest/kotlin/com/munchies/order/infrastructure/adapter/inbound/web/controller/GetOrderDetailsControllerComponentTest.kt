@@ -5,15 +5,17 @@ import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
-import io.kotest.matchers.equals.shouldBeEqual
+import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponseType
 import io.kotest.matchers.shouldBe
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class GetOrderDetailsControllerComponentTest : BaseOrderController() {
@@ -40,20 +42,23 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
     val realDto = order.toDto()
 
-    val response = httpCalls.httpGet(
-      realDto.orderId,
-    )
+    val response = httpCalls.httpGet<GetOrderDetailsResponse>(realDto.orderId)
 
     response.status shouldBe HttpStatus.OK
-    response.body() shouldBeEqual realDto
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().type shouldBe GetOrderDetailsResponseType.SUCCESS
+    response.body().order shouldBe realDto
   }
 
   @Test
   fun `getOrderDetails should return 404 Not Found when use case returns OrderNotFound`() {
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpCalls.httpGet(defaultOrderId.value)
-    }
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpGet<GetOrderDetailsResponse>(defaultOrderId.value)
+    }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.bd<GetOrderDetailsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<GetOrderDetailsResponse>().type shouldBe GetOrderDetailsResponseType.ORDER_NOT_FOUND
+    response.bd<GetOrderDetailsResponse>().order shouldBe null
   }
 }

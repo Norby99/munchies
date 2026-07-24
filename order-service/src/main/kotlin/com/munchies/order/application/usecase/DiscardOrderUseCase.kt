@@ -23,7 +23,7 @@ class DiscardOrderUseCase(private val repository: OrderRepository) : DiscardOrde
       else -> when (val result = order.cancel()) {
         is Order.CancelResult.Failure.InvalidTransition -> OrderNotCancellable
         is Order.CancelResult.Success -> {
-          repository.update(result.order)
+          repository.delete(result.order)
           Success
         }
       }

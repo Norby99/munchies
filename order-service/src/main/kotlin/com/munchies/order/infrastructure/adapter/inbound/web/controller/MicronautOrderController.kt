@@ -119,7 +119,7 @@ class MicronautOrderController(
         GetOrderDetailsResponse(
           code = HttpStatus.OK.code,
           type = GetOrderDetailsResponseType.SUCCESS,
-          //order = res.order
+          order = res.order
         )
       )
       is GetOrderDetails.Result.Failure.OrderNotFound -> HttpResponse.notFound(
@@ -159,7 +159,7 @@ class MicronautOrderController(
         PlaceOrderResponse(
           code = HttpStatus.OK.code,
           type = PlaceOrderResponseType.SUCCESS,
-          //order = res.order
+          order = res.order
         )
       )
       is PlaceOrder.Result.Failure.InvalidDate -> HttpResponse.badRequest(
@@ -378,9 +378,9 @@ class MicronautOrderController(
         )
       )
       is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate ->
-        HttpResponse.notFound(
+        HttpResponse.badRequest(
           UpdateDeliveryOrderResponse(
-            code = HttpStatus.NOT_FOUND.code,
+            code = HttpStatus.BAD_REQUEST.code,
             type = UpdateDeliveryOrderResponseType.INVALID_DATE
           )
         )
