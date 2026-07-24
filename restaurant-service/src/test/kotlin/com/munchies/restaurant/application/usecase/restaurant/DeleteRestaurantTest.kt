@@ -123,5 +123,4 @@ class DeleteRestaurantTest {
     )
     coVerify(exactly = 0) { restaurantRepository.findById(any()) }
   }
-
 }
