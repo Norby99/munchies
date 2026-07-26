@@ -84,12 +84,10 @@ object OrderDtoFactory {
         status = domainStatus,
         items = domainItems,
         deliveryInfo = DeliveryInfo(
-          estimatedDeliveryTime = estimatedDeliveryTime?.toLongOrNull()
-            ?: throw IllegalArgumentException("Invalid: estimatedDeliveryTime"),
-          deliveryAddress = deliveryAddress
-            ?: throw IllegalArgumentException("Invalid: deliveryAddress"),
-          bellName = bellName ?: throw IllegalArgumentException("Invalid: bellName"),
-          customerPhone = customerPhone ?: throw IllegalArgumentException("Invalid: bellName"),
+          estimatedDeliveryTime = requireLongField(estimatedDeliveryTime, "estimatedDeliveryTime"),
+          deliveryAddress = requireField(deliveryAddress, "deliveryAddress"),
+          bellName = requireField(bellName, "bellName"),
+          customerPhone = requireField(customerPhone, "customerPhone"),
         ),
       )
       OrderType.TAKEAWAY -> TakeawayOrder(
@@ -99,9 +97,8 @@ object OrderDtoFactory {
         status = domainStatus,
         items = domainItems,
         takeawayInfo = TakeawayInfo(
-          pickupTime = pickupTime?.toLongOrNull()
-            ?: throw IllegalArgumentException("Invalid: pickupTime"),
-          customerName = customerName ?: throw IllegalArgumentException("Invalid: customerName"),
+          pickupTime = requireLongField(pickupTime, "pickupTime"),
+          customerName = requireField(customerName, "customerName"),
         ),
       )
       OrderType.DINE_IN -> DineInOrder(
@@ -111,11 +108,18 @@ object OrderDtoFactory {
         status = domainStatus,
         items = domainItems,
         tableInfo = TableInfo(
-          tableNumber = tableNumber ?: throw IllegalArgumentException("Invalid: tableNumber"),
-          numberOfGuests = numberOfGuests
-            ?: throw IllegalArgumentException("Invalid: numberOfGuests"),
+          tableNumber = requireField(tableNumber, "tableNumber"),
+          numberOfGuests = requireField(numberOfGuests, "numberOfGuests"),
         ),
       )
     }
   }
+
+  private fun <T> requireField(value: T?, name: String): T =
+    value ?: throw InvalidOrderDataException("Invalid: $name")
+
+  private fun requireLongField(value: String?, name: String): Long =
+    value?.toLongOrNull() ?: throw InvalidOrderDataException("Invalid: $name")
+
+  class InvalidOrderDataException(message: String) : IllegalArgumentException(message)
 }
