@@ -1,6 +1,5 @@
 package com.munchies.order.infrastructure.adapter.outbound.response
 
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,5 +14,7 @@ class AdvanceOrderStatusResponse(
 
 @Serializable
 enum class AdvanceOrderStatusResponseType {
-  SUCCESS, ORDER_NOT_FOUND, INVALID_TRANSACTION
+  SUCCESS,
+  ORDER_NOT_FOUND,
+  INVALID_TRANSACTION,
 }

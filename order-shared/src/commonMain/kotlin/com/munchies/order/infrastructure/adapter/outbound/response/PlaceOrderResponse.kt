@@ -16,5 +16,8 @@ class PlaceOrderResponse(
 
 @Serializable
 enum class PlaceOrderResponseType {
-  SUCCESS, INVALID_DATE, EMPTY_ITEMS, INVALID_ITEM_QUANTITY
+  SUCCESS,
+  INVALID_DATE,
+  EMPTY_ITEMS,
+  INVALID_ITEM_QUANTITY,
 }
