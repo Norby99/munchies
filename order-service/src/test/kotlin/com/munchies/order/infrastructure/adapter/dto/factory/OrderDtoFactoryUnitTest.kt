@@ -16,9 +16,7 @@ import com.munchies.order.fixtures.createDineInOrder
 import com.munchies.order.fixtures.createDineInOrderDto
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.createTakeawayOrderDto
-import com.munchies.order.infrastructure.adapter.dto.Delivery
-import com.munchies.order.infrastructure.adapter.dto.DineIn
-import com.munchies.order.infrastructure.adapter.dto.Takeaway
+import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import io.kotest.matchers.shouldBe
@@ -28,49 +26,46 @@ import org.junit.jupiter.api.Test
 class OrderDtoFactoryUnitTest {
 
   @Test
-  fun `toDto should map DeliveryOrder to OrderDto-Delivery`() {
+  fun `toDto should map DeliveryOrder to OrderDto`() {
     val order = createDeliveryOrder()
 
     val dto = order.toDto()
 
-    dto.shouldBeInstanceOf<Delivery>()
-    dto as Delivery
+    dto.orderType shouldBe OrderType.DELIVERY
     dto.orderId shouldBe order.id.value
     dto.restaurantId shouldBe order.restaurantId.value
     dto.customerId shouldBe order.customerId.value
     dto.status shouldBe order.status.name
     dto.items.size shouldBe order.items.size
-    dto.estimatedDeliveryTime shouldBe order.deliveryInfo.estimatedDeliveryTime
+    dto.estimatedDeliveryTime shouldBe order.deliveryInfo.estimatedDeliveryTime.toString()
     dto.deliveryAddress shouldBe order.deliveryInfo.deliveryAddress
     dto.bellName shouldBe order.deliveryInfo.bellName
     dto.customerPhone shouldBe order.deliveryInfo.customerPhone
   }
 
   @Test
-  fun `toDto should map TakeawayOrder to OrderDto-Takeaway`() {
+  fun `toDto should map TakeawayOrder to OrderDto`() {
     val order = createTakeawayOrder()
 
     val dto = order.toDto()
 
-    dto.shouldBeInstanceOf<Takeaway>()
-    dto as Takeaway
+    dto.orderType shouldBe OrderType.TAKEAWAY
     dto.orderId shouldBe order.id.value
     dto.restaurantId shouldBe order.restaurantId.value
     dto.customerId shouldBe order.customerId.value
     dto.status shouldBe order.status.name
     dto.items.size shouldBe order.items.size
-    dto.pickupTime shouldBe order.takeawayInfo.pickupTime
+    dto.pickupTime shouldBe order.takeawayInfo.pickupTime.toString()
     dto.customerName shouldBe order.takeawayInfo.customerName
   }
 
   @Test
-  fun `toDto should map DineInOrder to OrderDto-DineIn`() {
+  fun `toDto should map DineInOrder to OrderDto`() {
     val order = createDineInOrder()
 
     val dto = order.toDto()
 
-    dto.shouldBeInstanceOf<DineIn>()
-    dto as DineIn
+    dto.orderType shouldBe OrderType.DINE_IN
     dto.orderId shouldBe order.id.value
     dto.restaurantId shouldBe order.restaurantId.value
     dto.customerId shouldBe order.customerId.value
@@ -87,17 +82,16 @@ class OrderDtoFactoryUnitTest {
     val order = dto.toDomain()
 
     order.shouldBeInstanceOf<DeliveryOrder>()
-    order as DeliveryOrder
     order.id shouldBe OrderId(dto.orderId)
     order.restaurantId shouldBe RestaurantId(dto.restaurantId)
     order.customerId shouldBe CustomerId(dto.customerId)
     order.status shouldBe OrderStatus.valueOf(dto.status)
     order.items.size shouldBe dto.items.size
     order.deliveryInfo shouldBe DeliveryInfo(
-      estimatedDeliveryTime = dto.estimatedDeliveryTime,
-      deliveryAddress = dto.deliveryAddress,
-      bellName = dto.bellName,
-      customerPhone = dto.customerPhone,
+      estimatedDeliveryTime = dto.estimatedDeliveryTime.orEmpty().toLong(),
+      deliveryAddress = dto.deliveryAddress.orEmpty(),
+      bellName = dto.bellName.orEmpty(),
+      customerPhone = dto.customerPhone.orEmpty(),
     )
   }
 
@@ -108,15 +102,14 @@ class OrderDtoFactoryUnitTest {
     val order = dto.toDomain()
 
     order.shouldBeInstanceOf<TakeawayOrder>()
-    order as TakeawayOrder
     order.id shouldBe OrderId(dto.orderId)
     order.restaurantId shouldBe RestaurantId(dto.restaurantId)
     order.customerId shouldBe CustomerId(dto.customerId)
     order.status shouldBe OrderStatus.valueOf(dto.status)
     order.items.size shouldBe dto.items.size
     order.takeawayInfo shouldBe TakeawayInfo(
-      pickupTime = dto.pickupTime,
-      customerName = dto.customerName,
+      pickupTime = dto.pickupTime.orEmpty().toLong(),
+      customerName = dto.customerName.orEmpty(),
     )
   }
 
@@ -127,16 +120,13 @@ class OrderDtoFactoryUnitTest {
     val order = dto.toDomain()
 
     order.shouldBeInstanceOf<DineInOrder>()
-    order as DineInOrder
     order.id shouldBe OrderId(dto.orderId)
     order.restaurantId shouldBe RestaurantId(dto.restaurantId)
     order.customerId shouldBe CustomerId(dto.customerId)
     order.status shouldBe OrderStatus.valueOf(dto.status)
     order.items.size shouldBe dto.items.size
-    order.tableInfo shouldBe TableInfo(
-      tableNumber = dto.tableNumber,
-      numberOfGuests = dto.numberOfGuests,
-    )
+    order.tableInfo.tableNumber shouldBe dto.tableNumber
+    order.tableInfo.numberOfGuests shouldBe dto.numberOfGuests
   }
 
   @Test

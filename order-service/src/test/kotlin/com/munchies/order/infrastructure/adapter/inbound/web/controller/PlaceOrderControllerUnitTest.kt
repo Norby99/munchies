@@ -4,7 +4,10 @@ import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createPlaceOrderRequest
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
+import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponseType
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
@@ -22,7 +25,8 @@ class PlaceOrderControllerUnitTest : BaseOrderController() {
     val response = controller.placeOrder(request)
 
     response.status shouldBe HttpStatus.OK
-    response.body() shouldBeEqual "Order placed successfully with ID: ${order.id.value}"
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().type shouldBe PlaceOrderResponseType.SUCCESS
   }
 
   @Test
@@ -35,6 +39,9 @@ class PlaceOrderControllerUnitTest : BaseOrderController() {
     val response = controller.placeOrder(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<PlaceOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<PlaceOrderResponse>().type shouldBe PlaceOrderResponseType.INVALID_DATE
+    response.bd<PlaceOrderResponse>().order.shouldBeNull()
   }
 
   @Test
@@ -47,6 +54,9 @@ class PlaceOrderControllerUnitTest : BaseOrderController() {
     val response = controller.placeOrder(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<PlaceOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<PlaceOrderResponse>().type shouldBe PlaceOrderResponseType.EMPTY_ITEMS
+    response.bd<PlaceOrderResponse>().order.shouldBeNull()
   }
 
   @Test
@@ -59,5 +69,8 @@ class PlaceOrderControllerUnitTest : BaseOrderController() {
     val response = controller.placeOrder(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<PlaceOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<PlaceOrderResponse>().type shouldBe PlaceOrderResponseType.INVALID_ITEM_QUANTITY
+    response.bd<PlaceOrderResponse>().order.shouldBeNull()
   }
 }

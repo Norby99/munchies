@@ -2,6 +2,8 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.order.application.port.inbound.UpdateOrderItems
 import com.munchies.order.fixtures.createUpdateOrderItemsRequest
+import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponseType
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
@@ -20,6 +22,8 @@ class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
     val response = controller.updateOrderItems(request)
 
     response.status shouldBe HttpStatus.OK
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().type shouldBe UpdateOrderItemsResponseType.SUCCESS
   }
 
   @Test
@@ -33,6 +37,8 @@ class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
     val response = controller.updateOrderItems(request)
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -46,6 +52,8 @@ class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
     val response = controller.updateOrderItems(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
+    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.UNAUTHORIZED
   }
 
   @Test
@@ -59,5 +67,7 @@ class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
     val response = controller.updateOrderItems(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.EMPTY_ITEMS
   }
 }
