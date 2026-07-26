@@ -3,6 +3,8 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.fixtures.createAdvanceOrderStatusRequest
 import com.munchies.order.fixtures.defaultOrderId
+import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponseType
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
@@ -18,7 +20,8 @@ class AdvanceOrderStatusControllerUnitTest : BaseOrderController() {
     val response = controller.advanceOrderStatus(request)
 
     response.status shouldBe HttpStatus.OK
-    response.body() shouldBe "Order status advanced"
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().type shouldBe AdvanceOrderStatusResponseType.SUCCESS
   }
 
   @Test
@@ -33,6 +36,8 @@ class AdvanceOrderStatusControllerUnitTest : BaseOrderController() {
     val response = controller.advanceOrderStatus(request)
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<AdvanceOrderStatusResponse>().type shouldBe AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -45,6 +50,7 @@ class AdvanceOrderStatusControllerUnitTest : BaseOrderController() {
     val response = controller.advanceOrderStatus(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body() shouldBe "Invalid status transition"
+    response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<AdvanceOrderStatusResponse>().type shouldBe AdvanceOrderStatusResponseType.INVALID_TRANSACTION
   }
 }

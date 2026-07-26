@@ -4,6 +4,8 @@ import com.munchies.order.application.port.inbound.GetOrderDetails
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
+import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponseType
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
@@ -19,9 +21,9 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
     val response = controller.getOrderDetails(realDto.orderId)
 
     response.status shouldBe HttpStatus.OK
-    /*response.body().code shouldBe HttpStatus.OK.code
-    response.body().result.code shouldBe GetOrderCode.Success
-    response.body().result.order?.shouldBeEqual(realDto)*/
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().type shouldBe GetOrderDetailsResponseType.SUCCESS
+    response.body().order shouldBe realDto
   }
 
   @Test
@@ -31,9 +33,9 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
     val response = controller.getOrderDetails(defaultOrderId.value)
 
     response.status shouldBe HttpStatus.NOT_FOUND
-    /*response.body().code shouldBe HttpStatus.NOT_FOUND.code
-    response.body().result.code shouldBe GetOrderCode.OrderNotFound
-    response.body().result.order shouldBe null*/
+    response.bd<GetOrderDetailsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<GetOrderDetailsResponse>().type shouldBe GetOrderDetailsResponseType.ORDER_NOT_FOUND
+    response.bd<GetOrderDetailsResponse>().order shouldBe null
   }
 
   /*@Test
