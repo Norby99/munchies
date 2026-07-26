@@ -16,7 +16,8 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
   @Test
   fun `returns 200 OK and DTO when found`() {
     val realDto = createSampleOrder().toDto()
-    every { getOrderDetails.execute(any()) } returns GetOrderDetails.Result.Success(realDto)
+    every { getOrderDetails.execute(any()) } returns
+      GetOrderDetails.Result.Success(realDto)
 
     val response = controller.getOrderDetails(realDto.orderId)
 
@@ -28,7 +29,8 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
 
   @Test
   fun `returns 404 Not Found when use case returns OrderNotFound`() {
-    every { getOrderDetails.execute(any()) } returns GetOrderDetails.Result.Failure.OrderNotFound
+    every { getOrderDetails.execute(any()) } returns
+      GetOrderDetails.Result.Failure.OrderNotFound
 
     val response = controller.getOrderDetails(defaultOrderId.value)
 

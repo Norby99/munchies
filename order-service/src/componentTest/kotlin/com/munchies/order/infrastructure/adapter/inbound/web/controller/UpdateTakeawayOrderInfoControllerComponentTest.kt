@@ -1,6 +1,5 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.fixtures.Address2
@@ -12,15 +11,12 @@ import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponseType
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -81,7 +77,8 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<UpdateTakeawayOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateTakeawayOrderResponse>().type shouldBe UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND
+    response.bd<UpdateTakeawayOrderResponse>().type shouldBe
+      UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND
 
     orderRepository.findById(OrderId(requestBody.orderId)).shouldBeNull()
   }
@@ -104,7 +101,8 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateTakeawayOrderResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
-    response.bd<UpdateTakeawayOrderResponse>().type shouldBe UpdateTakeawayOrderResponseType.UNAUTHORIZED
+    response.bd<UpdateTakeawayOrderResponse>().type shouldBe
+      UpdateTakeawayOrderResponseType.UNAUTHORIZED
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as TakeawayOrder
     updatedOrder shouldNotBeEqual newOrder
@@ -132,7 +130,8 @@ class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateTakeawayOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<UpdateTakeawayOrderResponse>().type shouldBe UpdateTakeawayOrderResponseType.INVALID_DATE
+    response.bd<UpdateTakeawayOrderResponse>().type shouldBe
+      UpdateTakeawayOrderResponseType.INVALID_DATE
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as TakeawayOrder
     updatedOrder shouldNotBeEqual newOrder

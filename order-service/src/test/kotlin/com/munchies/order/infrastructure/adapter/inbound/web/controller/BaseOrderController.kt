@@ -34,5 +34,4 @@ abstract class BaseOrderController {
   )
 
   inline fun <reified T> HttpResponse<*>.bd() = this.getBody(T::class.java).get()
-
 }

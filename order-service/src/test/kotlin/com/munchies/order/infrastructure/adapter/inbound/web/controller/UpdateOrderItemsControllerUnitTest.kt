@@ -38,7 +38,8 @@ class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.ORDER_NOT_FOUND
+    response.bd<UpdateOrderItemsResponse>().type shouldBe
+      UpdateOrderItemsResponseType.ORDER_NOT_FOUND
   }
 
   @Test

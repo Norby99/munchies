@@ -88,7 +88,8 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder shouldNotBeEqual newOrder
@@ -112,7 +113,8 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.UNAUTHORIZED
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.UNAUTHORIZED
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder shouldNotBeEqual newOrder
@@ -138,7 +140,8 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.INVALID_DATE
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.INVALID_DATE
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder shouldNotBeEqual newOrder

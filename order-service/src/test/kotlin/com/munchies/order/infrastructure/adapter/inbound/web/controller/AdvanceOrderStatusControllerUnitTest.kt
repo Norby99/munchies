@@ -37,7 +37,8 @@ class AdvanceOrderStatusControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<AdvanceOrderStatusResponse>().type shouldBe AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
+    response.bd<AdvanceOrderStatusResponse>().type shouldBe
+      AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -50,7 +51,9 @@ class AdvanceOrderStatusControllerUnitTest : BaseOrderController() {
     val response = controller.advanceOrderStatus(request)
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<AdvanceOrderStatusResponse>().type shouldBe AdvanceOrderStatusResponseType.INVALID_TRANSACTION
+    response.bd<AdvanceOrderStatusResponse>().code shouldBe
+      HttpStatus.BAD_REQUEST.code
+    response.bd<AdvanceOrderStatusResponse>().type shouldBe
+      AdvanceOrderStatusResponseType.INVALID_TRANSACTION
   }
 }

@@ -8,7 +8,6 @@ import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.Mongo
 import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponseType
 import io.kotest.matchers.shouldBe
-import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -58,7 +57,8 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<GetOrderDetailsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<GetOrderDetailsResponse>().type shouldBe GetOrderDetailsResponseType.ORDER_NOT_FOUND
+    response.bd<GetOrderDetailsResponse>().type shouldBe
+      GetOrderDetailsResponseType.ORDER_NOT_FOUND
     response.bd<GetOrderDetailsResponse>().order shouldBe null
   }
 }

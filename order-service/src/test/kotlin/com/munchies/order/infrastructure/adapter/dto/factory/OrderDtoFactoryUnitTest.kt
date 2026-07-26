@@ -7,7 +7,6 @@ import com.munchies.order.domain.model.DineInOrder
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.RestaurantId
-import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.fixtures.createDeliveryOrder

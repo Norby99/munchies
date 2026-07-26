@@ -6,15 +6,11 @@ import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.secondaryOrderId
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponseType
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNot
-import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -83,6 +79,7 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<DiscardOrderResponse>().type shouldBe DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
+    response.bd<DiscardOrderResponse>().type shouldBe
+      DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
   }
 }

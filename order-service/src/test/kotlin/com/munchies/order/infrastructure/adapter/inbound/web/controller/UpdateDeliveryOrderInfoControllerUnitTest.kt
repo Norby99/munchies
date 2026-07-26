@@ -15,13 +15,15 @@ class UpdateDeliveryOrderInfoControllerUnitTest : BaseOrderController() {
   fun `returns 200 OK on success`() {
     val request = createUpdateDeliveryOrderRequest()
 
-    every { updateDeliveryOrderInfo.execute(any()) } returns UpdateDeliveryOrderInfo.Result.Success
+    every { updateDeliveryOrderInfo.execute(any()) } returns
+      UpdateDeliveryOrderInfo.Result.Success
 
     val response = controller.updateDeliveryOrderInfo(request)
 
     response.status shouldBe HttpStatus.OK
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.OK.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.SUCCESS
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.SUCCESS
   }
 
   @Test
@@ -36,7 +38,8 @@ class UpdateDeliveryOrderInfoControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -51,7 +54,8 @@ class UpdateDeliveryOrderInfoControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.UNAUTHORIZED
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.UNAUTHORIZED
   }
 
   @Test
@@ -66,6 +70,7 @@ class UpdateDeliveryOrderInfoControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe UpdateDeliveryOrderResponseType.INVALID_DATE
+    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
+      UpdateDeliveryOrderResponseType.INVALID_DATE
   }
 }

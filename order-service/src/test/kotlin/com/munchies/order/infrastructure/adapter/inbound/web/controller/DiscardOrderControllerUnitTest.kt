@@ -4,7 +4,6 @@ import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponseType
-import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
@@ -29,7 +28,8 @@ class DiscardOrderControllerUnitTest : BaseOrderController() {
   fun `returns 404 Not Found on OrderNotFound`() {
     val id = defaultOrderId.value
 
-    every { discardOrder.execute(any()) } returns DiscardOrder.Result.Failure.OrderNotFound
+    every { discardOrder.execute(any()) } returns
+      DiscardOrder.Result.Failure.OrderNotFound
 
     val response = controller.discardOrder(id)
 
@@ -48,6 +48,7 @@ class DiscardOrderControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<DiscardOrderResponse>().type shouldBe DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
+    response.bd<DiscardOrderResponse>().type shouldBe
+      DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
   }
 }

@@ -6,7 +6,6 @@ import com.munchies.order.fixtures.createPlaceOrderRequest
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponseType
-import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -64,7 +63,8 @@ class PlaceOrderControllerUnitTest : BaseOrderController() {
     val order = createDeliveryOrder()
     val request = createPlaceOrderRequest(order)
 
-    every { placeOrder.execute(any()) } returns PlaceOrder.Result.Failure.InvalidItemQuantity
+    every { placeOrder.execute(any()) } returns
+      PlaceOrder.Result.Failure.InvalidItemQuantity
 
     val response = controller.placeOrder(request)
 

@@ -83,8 +83,14 @@ class MicronautOrderController(
   AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, HttpResponse<AdvanceOrderStatusResponse>>,
   DiscardOrderAPI<String, HttpResponse<DiscardOrderResponse>>,
   UpdateOrderItemsAPI<UpdateOrderItemsRequest, HttpResponse<UpdateOrderItemsResponse>>,
-  UpdateDeliveryOrderInfoAPI<UpdateDeliveryOrderRequest, HttpResponse<UpdateDeliveryOrderResponse>>,
-  UpdateTakeawayOrderInfoAPI<UpdateTakeawayOrderRequest, HttpResponse<UpdateTakeawayOrderResponse>> {
+  UpdateDeliveryOrderInfoAPI<
+    UpdateDeliveryOrderRequest,
+    HttpResponse<UpdateDeliveryOrderResponse>,
+    >,
+  UpdateTakeawayOrderInfoAPI<
+    UpdateTakeawayOrderRequest,
+    HttpResponse<UpdateTakeawayOrderResponse>,
+    > {
 
   private val getOrderDetails: GetOrderDetails = services.getOrderDetails
   private val placeOrder: PlaceOrder = services.placeOrder
@@ -119,14 +125,14 @@ class MicronautOrderController(
         GetOrderDetailsResponse(
           code = HttpStatus.OK.code,
           type = GetOrderDetailsResponseType.SUCCESS,
-          order = res.order
-        )
+          order = res.order,
+        ),
       )
       is GetOrderDetails.Result.Failure.OrderNotFound -> HttpResponse.notFound(
         GetOrderDetailsResponse(
           code = HttpStatus.NOT_FOUND.code,
-          type = GetOrderDetailsResponseType.ORDER_NOT_FOUND
-        )
+          type = GetOrderDetailsResponseType.ORDER_NOT_FOUND,
+        ),
       )
     }
   }
@@ -159,26 +165,26 @@ class MicronautOrderController(
         PlaceOrderResponse(
           code = HttpStatus.OK.code,
           type = PlaceOrderResponseType.SUCCESS,
-          order = res.order
-        )
+          order = res.order,
+        ),
       )
       is PlaceOrder.Result.Failure.InvalidDate -> HttpResponse.badRequest(
         PlaceOrderResponse(
           code = HttpStatus.BAD_REQUEST.code,
           type = PlaceOrderResponseType.INVALID_DATE,
-        )
+        ),
       )
       is PlaceOrder.Result.Failure.EmptyItems -> HttpResponse.badRequest(
         PlaceOrderResponse(
           code = HttpStatus.BAD_REQUEST.code,
           type = PlaceOrderResponseType.EMPTY_ITEMS,
-        )
+        ),
       )
       is PlaceOrder.Result.Failure.InvalidItemQuantity -> HttpResponse.badRequest(
         PlaceOrderResponse(
           code = HttpStatus.BAD_REQUEST.code,
           type = PlaceOrderResponseType.INVALID_ITEM_QUANTITY,
-        )
+        ),
       )
     }
   }
@@ -205,7 +211,7 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Invalid status transition")
   override fun advanceOrderStatus(
-    @Body request: AdvanceOrderStatusRequest
+    @Body request: AdvanceOrderStatusRequest,
   ): HttpResponse<AdvanceOrderStatusResponse> {
     return when (
       advanceOrderStatus.execute(request.toCommand())
@@ -213,20 +219,20 @@ class MicronautOrderController(
       is AdvanceOrderStatus.Result.Success -> HttpResponse.ok(
         AdvanceOrderStatusResponse(
           code = HttpStatus.OK.code,
-          type = AdvanceOrderStatusResponseType.SUCCESS
-        )
+          type = AdvanceOrderStatusResponseType.SUCCESS,
+        ),
       )
       is AdvanceOrderStatus.Result.Failure.OrderNotFound -> HttpResponse.notFound(
         AdvanceOrderStatusResponse(
           code = HttpStatus.NOT_FOUND.code,
-          type = AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
-        )
+          type = AdvanceOrderStatusResponseType.ORDER_NOT_FOUND,
+        ),
       )
       is AdvanceOrderStatus.Result.Failure.InvalidTransition -> HttpResponse.badRequest(
         AdvanceOrderStatusResponse(
           code = HttpStatus.BAD_REQUEST.code,
-          type = AdvanceOrderStatusResponseType.INVALID_TRANSACTION
-        )
+          type = AdvanceOrderStatusResponseType.INVALID_TRANSACTION,
+        ),
       )
     }
   }
@@ -259,21 +265,21 @@ class MicronautOrderController(
       is DiscardOrder.Result.Success -> HttpResponse.ok(
         DiscardOrderResponse(
           code = HttpStatus.OK.code,
-          type = DiscardOrderResponseType.SUCCESS
-        )
+          type = DiscardOrderResponseType.SUCCESS,
+        ),
       )
       is DiscardOrder.Result.Failure.OrderNotFound ->
         HttpResponse.notFound(
           DiscardOrderResponse(
             code = HttpStatus.NOT_FOUND.code,
-            type = DiscardOrderResponseType.ORDER_NOT_FOUND
-          )
+            type = DiscardOrderResponseType.ORDER_NOT_FOUND,
+          ),
         )
       is DiscardOrder.Result.Failure.OrderNotCancellable -> HttpResponse.badRequest(
         DiscardOrderResponse(
           code = HttpStatus.BAD_REQUEST.code,
-          type = DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
-        )
+          type = DiscardOrderResponseType.ORDER_NOT_CANCELLABLE,
+        ),
       )
     }
   }
@@ -300,7 +306,7 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Invalid items or unauthorized")
   override fun updateOrderItems(
-    @Body request: UpdateOrderItemsRequest
+    @Body request: UpdateOrderItemsRequest,
   ): HttpResponse<UpdateOrderItemsResponse> {
     return when (
       updateOrderItems.execute(request.toCommand())
@@ -308,26 +314,26 @@ class MicronautOrderController(
       is UpdateOrderItems.Result.Success -> HttpResponse.ok(
         UpdateOrderItemsResponse(
           code = HttpStatus.OK.code,
-          type = UpdateOrderItemsResponseType.SUCCESS
-        )
+          type = UpdateOrderItemsResponseType.SUCCESS,
+        ),
       )
       is UpdateOrderItems.Result.Failure.OrderNotFound -> HttpResponse.notFound(
         UpdateOrderItemsResponse(
           code = HttpStatus.NOT_FOUND.code,
-          type = UpdateOrderItemsResponseType.ORDER_NOT_FOUND
-        )
+          type = UpdateOrderItemsResponseType.ORDER_NOT_FOUND,
+        ),
       )
       is UpdateOrderItems.Result.Failure.Unauthorized -> HttpResponse.badRequest(
         UpdateOrderItemsResponse(
           code = HttpStatus.UNAUTHORIZED.code,
-          type = UpdateOrderItemsResponseType.UNAUTHORIZED
-        )
+          type = UpdateOrderItemsResponseType.UNAUTHORIZED,
+        ),
       )
       is UpdateOrderItems.Result.Failure.EmptyItems -> HttpResponse.badRequest(
         UpdateOrderItemsResponse(
           code = HttpStatus.BAD_REQUEST.code,
-          type = UpdateOrderItemsResponseType.EMPTY_ITEMS
-        )
+          type = UpdateOrderItemsResponseType.EMPTY_ITEMS,
+        ),
       )
     }
   }
@@ -362,27 +368,27 @@ class MicronautOrderController(
       is UpdateDeliveryOrderInfo.Result.Success -> HttpResponse.ok(
         UpdateDeliveryOrderResponse(
           code = HttpStatus.OK.code,
-          type = UpdateDeliveryOrderResponseType.SUCCESS
-        )
+          type = UpdateDeliveryOrderResponseType.SUCCESS,
+        ),
       )
       is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound(
         UpdateDeliveryOrderResponse(
           code = HttpStatus.NOT_FOUND.code,
-          type = UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND
-        )
+          type = UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND,
+        ),
       )
       is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized -> HttpResponse.badRequest(
         UpdateDeliveryOrderResponse(
           code = HttpStatus.UNAUTHORIZED.code,
-          type = UpdateDeliveryOrderResponseType.UNAUTHORIZED
-        )
+          type = UpdateDeliveryOrderResponseType.UNAUTHORIZED,
+        ),
       )
       is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate ->
         HttpResponse.badRequest(
           UpdateDeliveryOrderResponse(
             code = HttpStatus.BAD_REQUEST.code,
-            type = UpdateDeliveryOrderResponseType.INVALID_DATE
-          )
+            type = UpdateDeliveryOrderResponseType.INVALID_DATE,
+          ),
         )
     }
   }
@@ -417,26 +423,26 @@ class MicronautOrderController(
       is UpdateTakeawayOrderInfo.Result.Success -> HttpResponse.ok(
         UpdateTakeawayOrderResponse(
           code = HttpStatus.OK.code,
-          type = UpdateTakeawayOrderResponseType.SUCCESS
-        )
+          type = UpdateTakeawayOrderResponseType.SUCCESS,
+        ),
       )
       is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound(
         UpdateTakeawayOrderResponse(
           code = HttpStatus.NOT_FOUND.code,
-          type = UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND
-        )
+          type = UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND,
+        ),
       )
       is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized -> HttpResponse.badRequest(
         UpdateTakeawayOrderResponse(
           code = HttpStatus.UNAUTHORIZED.code,
-          type = UpdateTakeawayOrderResponseType.UNAUTHORIZED
-        )
+          type = UpdateTakeawayOrderResponseType.UNAUTHORIZED,
+        ),
       )
       is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate -> HttpResponse.badRequest(
         UpdateTakeawayOrderResponse(
           code = HttpStatus.BAD_REQUEST.code,
-          type = UpdateTakeawayOrderResponseType.INVALID_DATE
-        )
+          type = UpdateTakeawayOrderResponseType.INVALID_DATE,
+        ),
       )
     }
   }
