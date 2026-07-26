@@ -3,7 +3,6 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
-import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createItemsDto
@@ -55,7 +54,10 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     orderRepository.save(initialOrder)
 
     val requestBody =
-      createUpdateOrderItemsRequest(initialOrder, createItemsDto(createNewItemsBigger()))
+      createUpdateOrderItemsRequest(
+        initialOrder,
+        createItemsDto(createNewItemsBigger()),
+      )
 
     val response = httpCalls.httpPatch<UpdateOrderItemsResponse>(
       mapper.writeValueAsString(requestBody),
@@ -83,7 +85,8 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.ORDER_NOT_FOUND
+    response.bd<UpdateOrderItemsResponse>().type shouldBe
+      UpdateOrderItemsResponseType.ORDER_NOT_FOUND
 
     orderRepository.findById(OrderId(requestBody.orderId)).shouldBeNull()
   }

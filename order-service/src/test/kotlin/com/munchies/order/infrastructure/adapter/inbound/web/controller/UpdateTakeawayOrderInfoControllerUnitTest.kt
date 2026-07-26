@@ -37,7 +37,8 @@ class UpdateTakeawayOrderInfoControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<UpdateTakeawayOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateTakeawayOrderResponse>().type shouldBe UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND
+    response.bd<UpdateTakeawayOrderResponse>().type shouldBe
+      UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -52,7 +53,8 @@ class UpdateTakeawayOrderInfoControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateTakeawayOrderResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
-    response.bd<UpdateTakeawayOrderResponse>().type shouldBe UpdateTakeawayOrderResponseType.UNAUTHORIZED
+    response.bd<UpdateTakeawayOrderResponse>().type shouldBe
+      UpdateTakeawayOrderResponseType.UNAUTHORIZED
   }
 
   @Test
@@ -67,6 +69,7 @@ class UpdateTakeawayOrderInfoControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<UpdateTakeawayOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<UpdateTakeawayOrderResponse>().type shouldBe UpdateTakeawayOrderResponseType.INVALID_DATE
+    response.bd<UpdateTakeawayOrderResponse>().type shouldBe
+      UpdateTakeawayOrderResponseType.INVALID_DATE
   }
 }

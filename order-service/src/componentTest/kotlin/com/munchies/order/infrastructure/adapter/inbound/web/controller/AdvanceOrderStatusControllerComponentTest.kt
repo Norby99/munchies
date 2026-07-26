@@ -10,10 +10,6 @@ import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.Mongo
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponseType
-import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponseType
-import io.kotest.matchers.equals.shouldBeEqual
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
@@ -71,7 +67,8 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.NOT_FOUND
     response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<AdvanceOrderStatusResponse>().type shouldBe AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
+    response.bd<AdvanceOrderStatusResponse>().type shouldBe
+      AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
   }
 
   @Test
@@ -87,6 +84,7 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<AdvanceOrderStatusResponse>().type shouldBe AdvanceOrderStatusResponseType.INVALID_TRANSACTION
+    response.bd<AdvanceOrderStatusResponse>().type shouldBe
+      AdvanceOrderStatusResponseType.INVALID_TRANSACTION
   }
 }
