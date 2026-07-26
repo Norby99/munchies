@@ -16,5 +16,6 @@ class GetOrderDetailsResponse(
 
 @Serializable
 enum class GetOrderDetailsResponseType {
-  SUCCESS, ORDER_NOT_FOUND
+  SUCCESS,
+  ORDER_NOT_FOUND,
 }

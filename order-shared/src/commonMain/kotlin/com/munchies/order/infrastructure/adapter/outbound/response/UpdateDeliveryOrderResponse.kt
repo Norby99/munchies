@@ -1,6 +1,5 @@
 package com.munchies.order.infrastructure.adapter.outbound.response
 
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,5 +14,8 @@ class UpdateDeliveryOrderResponse(
 
 @Serializable
 enum class UpdateDeliveryOrderResponseType {
-  SUCCESS, ORDER_NOT_FOUND, UNAUTHORIZED, INVALID_DATE
+  SUCCESS,
+  ORDER_NOT_FOUND,
+  UNAUTHORIZED,
+  INVALID_DATE,
 }
