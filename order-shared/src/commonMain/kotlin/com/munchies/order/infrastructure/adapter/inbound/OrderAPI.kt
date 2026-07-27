@@ -13,7 +13,7 @@ import kotlin.js.JsExport
  * a different aspect of order management.
  */
 @JsExport
-sealed interface OrderAPI {
+object OrderAPI {
 
   /**
    * The AdvanceOrderStatusAPI interface defines the contract for advancing the status of an order.
@@ -21,7 +21,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after advancing the order status.
    */
-  interface AdvanceOrderStatusAPI<Response> : OrderAPI {
+  interface AdvanceOrderStatusAPI<Response> {
     fun advanceOrderStatus(request: AdvanceOrderStatusRequest): Response
   }
 
@@ -31,7 +31,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after discarding the order.
    */
-  interface DiscardOrderAPI<Response> : OrderAPI {
+  interface DiscardOrderAPI<Response> {
     fun discardOrder(id: String): Response
   }
 
@@ -41,7 +41,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after retrieving the order details.
    */
-  interface GetOrderDetailsAPI<Response> : OrderAPI {
+  interface GetOrderDetailsAPI<Response> {
     fun getOrderDetails(id: String): Response
   }
 
@@ -51,7 +51,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after placing the order.
    */
-  interface PlaceOrderAPI<Response> : OrderAPI {
+  interface PlaceOrderAPI<Response> {
     fun placeOrder(request: PlaceOrderRequest): Response
   }
 
@@ -61,7 +61,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after updating the delivery order info.
    */
-  interface UpdateDeliveryOrderInfoAPI<Response> : OrderAPI {
+  interface UpdateDeliveryOrderInfoAPI<Response> {
     fun updateDeliveryOrderInfo(request: UpdateDeliveryOrderRequest): Response
   }
 
@@ -71,7 +71,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after updating the order items.
    */
-  interface UpdateOrderItemsAPI<Response> : OrderAPI {
+  interface UpdateOrderItemsAPI<Response> {
     fun updateOrderItems(request: UpdateOrderItemsRequest): Response
   }
 
@@ -81,7 +81,7 @@ sealed interface OrderAPI {
    *
    * @param Response The type of the response object returned after updating the takeaway order info.
    */
-  interface UpdateTakeawayOrderInfoAPI<Response> : OrderAPI {
+  interface UpdateTakeawayOrderInfoAPI<Response> {
     fun updateTakeawayOrderInfo(request: UpdateTakeawayOrderRequest): Response
   }
 }
