@@ -8,7 +8,7 @@ import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
+import com.munchies.order.infrastructure.adapter.inbound.OrderAPI
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
@@ -78,13 +78,13 @@ class MicronautOrderController(
   @Inject
   private val services: OrderServices,
 ) :
-  GetOrderDetailsAPI<HttpResponse<GetOrderDetailsResponse>>,
-  PlaceOrderAPI<HttpResponse<PlaceOrderResponse>>,
-  AdvanceOrderStatusAPI<HttpResponse<AdvanceOrderStatusResponse>>,
-  DiscardOrderAPI<HttpResponse<DiscardOrderResponse>>,
-  UpdateOrderItemsAPI<HttpResponse<UpdateOrderItemsResponse>>,
-  UpdateDeliveryOrderInfoAPI<HttpResponse<UpdateDeliveryOrderResponse>>,
-  UpdateTakeawayOrderInfoAPI<HttpResponse<UpdateTakeawayOrderResponse>> {
+  OrderAPI.GetOrderDetailsAPI<HttpResponse<GetOrderDetailsResponse>>,
+  OrderAPI.PlaceOrderAPI<HttpResponse<PlaceOrderResponse>>,
+  OrderAPI.AdvanceOrderStatusAPI<HttpResponse<AdvanceOrderStatusResponse>>,
+  OrderAPI.DiscardOrderAPI<HttpResponse<DiscardOrderResponse>>,
+  OrderAPI.UpdateOrderItemsAPI<HttpResponse<UpdateOrderItemsResponse>>,
+  OrderAPI.UpdateDeliveryOrderInfoAPI<HttpResponse<UpdateDeliveryOrderResponse>>,
+  OrderAPI.UpdateTakeawayOrderInfoAPI<HttpResponse<UpdateTakeawayOrderResponse>> {
 
   private val getOrderDetails: GetOrderDetails = services.getOrderDetails
   private val placeOrder: PlaceOrder = services.placeOrder

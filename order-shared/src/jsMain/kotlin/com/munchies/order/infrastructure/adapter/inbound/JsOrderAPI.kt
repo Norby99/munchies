@@ -1,33 +1,35 @@
 package com.munchies.order.infrastructure.adapter.inbound
 
-import com.munchies.commons.infrastructure.adapter.API
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
+import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
+import kotlin.js.Promise
 
 class JsOrderAPI
 
 @JsExport
 abstract class JsAdvanceOrderStatusAPI :
-  AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, OrderDto>,
-  API<AdvanceOrderStatusRequest, OrderDto>()
+  OrderAPI.AdvanceOrderStatusAPI<Promise<AdvanceOrderStatusResponse>>
+/*,  API<GetUserRequest, GetUserResponse, GetUserResult, GetUserSuccess, GetUserFailure>()()*/
 
 @JsExport
-abstract class JsDiscardOrderAPI : DiscardOrderAPI<String, OrderDto>
+abstract class JsDiscardOrderAPI : OrderAPI.DiscardOrderAPI<Promise<DiscardOrderResponse>>
 
 @JsExport
-abstract class JsGetOrderDetailsAPI : GetOrderDetailsAPI<String, OrderDto>
+abstract class JsGetOrderDetailsAPI : OrderAPI.GetOrderDetailsAPI<Promise<GetOrderDetailsResponse>>
 
 @JsExport
-abstract class JsPlaceOrderAPI : PlaceOrderAPI<PlaceOrderRequest, OrderDto>
+abstract class JsPlaceOrderAPI : OrderAPI.PlaceOrderAPI<Promise<PlaceOrderRequest>>
 
 @JsExport
 abstract class JsUpdateDeliveryOrderInfoAPI :
-  UpdateDeliveryOrderInfoAPI<UpdateDeliveryOrderRequest, OrderDto>
+  OrderAPI.UpdateDeliveryOrderInfoAPI<Promise<UpdateDeliveryOrderRequest>>
 
 @JsExport
-abstract class JsUpdateOrderItemsAPI : UpdateOrderItemsAPI<UpdateOrderItemsRequest, OrderDto>
+abstract class JsUpdateOrderItemsAPI :
+  OrderAPI.UpdateOrderItemsAPI<Promise<UpdateOrderItemsRequest>>
 
 @JsExport
 abstract class JsUpdateTakeawayOrderInfoAPI :
-  UpdateTakeawayOrderInfoAPI<UpdateTakeawayOrderRequest, OrderDto>
+  OrderAPI.UpdateTakeawayOrderInfoAPI<Promise<UpdateTakeawayOrderRequest>>
