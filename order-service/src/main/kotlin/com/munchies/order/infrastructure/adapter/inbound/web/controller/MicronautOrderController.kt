@@ -78,19 +78,13 @@ class MicronautOrderController(
   @Inject
   private val services: OrderServices,
 ) :
-  GetOrderDetailsAPI<String, HttpResponse<GetOrderDetailsResponse>>,
-  PlaceOrderAPI<PlaceOrderRequest, HttpResponse<PlaceOrderResponse>>,
-  AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, HttpResponse<AdvanceOrderStatusResponse>>,
-  DiscardOrderAPI<String, HttpResponse<DiscardOrderResponse>>,
-  UpdateOrderItemsAPI<UpdateOrderItemsRequest, HttpResponse<UpdateOrderItemsResponse>>,
-  UpdateDeliveryOrderInfoAPI<
-    UpdateDeliveryOrderRequest,
-    HttpResponse<UpdateDeliveryOrderResponse>,
-    >,
-  UpdateTakeawayOrderInfoAPI<
-    UpdateTakeawayOrderRequest,
-    HttpResponse<UpdateTakeawayOrderResponse>,
-    > {
+  GetOrderDetailsAPI<HttpResponse<GetOrderDetailsResponse>>,
+  PlaceOrderAPI<HttpResponse<PlaceOrderResponse>>,
+  AdvanceOrderStatusAPI<HttpResponse<AdvanceOrderStatusResponse>>,
+  DiscardOrderAPI<HttpResponse<DiscardOrderResponse>>,
+  UpdateOrderItemsAPI<HttpResponse<UpdateOrderItemsResponse>>,
+  UpdateDeliveryOrderInfoAPI<HttpResponse<UpdateDeliveryOrderResponse>>,
+  UpdateTakeawayOrderInfoAPI<HttpResponse<UpdateTakeawayOrderResponse>> {
 
   private val getOrderDetails: GetOrderDetails = services.getOrderDetails
   private val placeOrder: PlaceOrder = services.placeOrder
