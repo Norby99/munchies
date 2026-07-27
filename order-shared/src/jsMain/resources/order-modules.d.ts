@@ -6,18 +6,6 @@ export type OrderDTO =
     com.munchies.order.infrastructure.adapter.dto.OrderDto;
 export declare const OrderDTO: typeof com.munchies.order.infrastructure.adapter.dto.OrderDto;
 
-export type DeliveryDTO =
-    com.munchies.order.infrastructure.adapter.dto.Delivery;
-export declare const DeliveryDTO: typeof com.munchies.order.infrastructure.adapter.dto.Delivery;
-
-export type TakeawayDTO =
-    com.munchies.order.infrastructure.adapter.dto.Takeaway;
-export declare const TakeawayDTO: typeof com.munchies.order.infrastructure.adapter.dto.Takeaway;
-
-export type DineInDTO =
-    com.munchies.order.infrastructure.adapter.dto.DineIn;
-export declare const DineInDTO: typeof com.munchies.order.infrastructure.adapter.dto.DineIn;
-
 export type OrderType = com.munchies.order.infrastructure.adapter.dto.OrderType;
 export declare const OrderType: typeof com.munchies.order.infrastructure.adapter.dto.OrderType;
 
@@ -40,6 +28,29 @@ export declare const UpdateOrderItemsRequest: typeof com.munchies.order.infrastr
 
 export type UpdateTakeawayOrderRequest = com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest;
 export declare const UpdateTakeawayOrderRequest: typeof com.munchies.order.infrastructure.adapter.inbound.request.UpdateTakeawayOrderRequest;
+
+// Response
+
+export type AdvanceOrderStatusResponse = com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse;
+export declare const AdvanceOrderStatusResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.AdvanceOrderStatusResponse;
+
+export type DiscardOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse;
+export declare const DiscardOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.DiscardOrderResponse;
+
+export type GetOrderDetailsResponse = com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse;
+export declare const GetOrderDetailsResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.GetOrderDetailsResponse;
+
+export type PlaceOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse;
+export declare const PlaceOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.PlaceOrderResponse;
+
+export type UpdateDeliveryOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponse;
+export declare const UpdateDeliveryOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.UpdateDeliveryOrderResponse;
+
+export type UpdateOrderItemsResponse = com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponse;
+export declare const UpdateOrderItemsResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.UpdateOrderItemsResponse;
+
+export type UpdateTakeawayOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponse;
+export declare const UpdateTakeawayOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.request.UpdateTakeawayOrderResponse;
 
 // API
 

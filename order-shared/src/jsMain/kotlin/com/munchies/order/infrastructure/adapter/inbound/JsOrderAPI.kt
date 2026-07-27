@@ -5,6 +5,8 @@ import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
+class JsOrderAPI
+
 @JsExport
 abstract class JsAdvanceOrderStatusAPI :
   AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, OrderDto>,
