@@ -1,9 +1,11 @@
 import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
 import { RouteDefinition } from "./route-definition";
+import { SimpleRoute } from "./simple-route";
 import { userRoutes } from "./user/user.routes";
+import { restaurantRoutes } from "./restaurant/restaurant.routes";
 import { Express, NextFunction, Request, Response } from "express";
 
-const routes: RouteDefinition<any, any>[] = [...userRoutes];
+const routes: (RouteDefinition<any, any> | SimpleRoute<any>)[] = [...userRoutes, ...restaurantRoutes];
 
 export function fillPath(path: string, ...values: (string | number)[]): string {
   let i = 0;
