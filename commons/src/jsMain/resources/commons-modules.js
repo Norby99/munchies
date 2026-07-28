@@ -31,5 +31,8 @@ module.exports = {
   WebFailure: _commons.infrastructure.adapter.WebFailure,
   Notification: _commons.domain.port.Notification,
   NotificationObserver: _commons.domain.port.NotificationObserver,
-  NotificationSubject: _commons.domain.port.NotificationSubject
+  NotificationSubject: _commons.domain.port.NotificationSubject,
+  ErrorResponse: _commons.infrastructure.adapter.ErrorResponse,
+  errorResponseFromJson: _commons.infrastructure.adapter.errorResponseFromJson,
+  SimpleAPI: _commons.infrastructure.adapter.SimpleAPI
 };
