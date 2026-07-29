@@ -74,6 +74,8 @@ class LoginUserSteps @Inject constructor(
     when (expectedResponse) {
       "login" ->
         context.result.shouldBeInstanceOf<LoginUser.Companion.LoginResult.Success>()
+      "not found" ->
+        context.result.shouldBeInstanceOf<LoginUser.Companion.LoginResult.NotFound>()
       "failure" ->
         context.result.shouldBeInstanceOf<LoginUser.Companion.LoginResult.Failure>()
       "blocked" ->

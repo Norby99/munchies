@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 
 class LoginUserUseCaseTest {
@@ -30,6 +31,7 @@ class LoginUserUseCaseTest {
     },
     hasher: PasswordHasher = mock {
       on { hash(password = any(), salt = any()) } doReturn hashedValidPassword
+      on { hash(password = eq("invalidPassword"), salt = any()) } doReturn "invalidPasswordHash"
     },
   ): LoginUserUseCase = LoginUserUseCase(
     userRepository = userRepository,
@@ -74,10 +76,10 @@ class LoginUserUseCaseTest {
   @Test
   fun `login should fail with invalid credentials`() {
     val useCase = fakeLoginUserUserUseCase()
-    val result = useCase.execute("", invalidUsername, "invalidPassword")
+    val result = useCase.execute("", validUsername, "invalidPassword")
     result shouldBe LoginResult.Failure
 
-    val result2 = useCase.execute(invalidEmail, "", "invalidPassword")
+    val result2 = useCase.execute(validEmail, "", "invalidPassword")
     result2 shouldBe LoginResult.Failure
   }
 
@@ -85,7 +87,7 @@ class LoginUserUseCaseTest {
   fun `login should fail when username and email are empty`() {
     val useCase = fakeLoginUserUserUseCase()
     val result = useCase.execute("", "", validPassword)
-    result shouldBe LoginResult.Failure
+    result shouldBe LoginResult.NotFound
   }
 
   @Test
@@ -103,7 +105,7 @@ class LoginUserUseCaseTest {
   fun `login should fail when username and email are not found`() {
     val useCase = fakeLoginUserUserUseCase()
     val result = useCase.execute("", "", validPassword)
-    result shouldBe LoginResult.Failure
+    result shouldBe LoginResult.NotFound
   }
 
   @Test

@@ -9,5 +9,5 @@ Feature: Login User
       | system_status | credentials | expected_response |
       | registered    | correct     | login             |
       | registered    | wrong       | failure           |
-      | not found     | correct     | failure           |
+      | not found     | correct     | not found         |
       | blocked       | correct     | blocked           |

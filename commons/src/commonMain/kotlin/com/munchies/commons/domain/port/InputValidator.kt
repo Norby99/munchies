@@ -14,3 +14,6 @@ data object ValidInput : InputValidatorResult
 
 @JsExport
 data class InvalidInput(val reason: String = "") : InputValidatorResult
+
+@JsExport
+class ValidationException(msg: String) : Throwable(msg)

@@ -6,7 +6,7 @@ import io.micronaut.http.client.HttpClient
 
 class HttpCallHelper(val baseUrl: String, val client: HttpClient) {
 
-  fun post(request: Any, endPoint: String): HttpResponse<String> = client.toBlocking()
+  fun post(request: Any, endPoint: String): HttpResponse<*> = client.toBlocking()
     .exchange(
       HttpRequest.POST(
         "${baseUrl}$endPoint",
@@ -15,7 +15,7 @@ class HttpCallHelper(val baseUrl: String, val client: HttpClient) {
       String::class.java,
     )
 
-  fun get(endPoint: String): HttpResponse<String> = client.toBlocking()
+  fun get(endPoint: String): HttpResponse<*> = client.toBlocking()
     .exchange(
       HttpRequest.GET<Any>(
         "${baseUrl}$endPoint",
@@ -23,7 +23,7 @@ class HttpCallHelper(val baseUrl: String, val client: HttpClient) {
       String::class.java,
     )
 
-  fun patch(request: Any, endPoint: String): HttpResponse<String> = client.toBlocking()
+  fun patch(request: Any, endPoint: String): HttpResponse<*> = client.toBlocking()
     .exchange(
       HttpRequest.PATCH<Any>(
         "${baseUrl}$endPoint",
@@ -32,7 +32,7 @@ class HttpCallHelper(val baseUrl: String, val client: HttpClient) {
       String::class.java,
     )
 
-  fun delete(endPoint: String): HttpResponse<String> = client.toBlocking()
+  fun delete(endPoint: String): HttpResponse<*> = client.toBlocking()
     .exchange(
       HttpRequest.DELETE<Any>(
         "${baseUrl}$endPoint",

@@ -23,10 +23,14 @@ class LoginUserUseCase(
   private val timeProvider: TimeProvider,
 ) : LoginUser {
 
-  private fun findUser(email: String, username: String): User? = when {
-    email.isNotBlank() -> userRepository.findByEmail(email)
-    username.isNotBlank() -> userRepository.findByUsername(username)
-    else -> null
+  private fun findUser(email: String, username: String): User? {
+    println("email: $email, \t username: $username")
+    return when {
+      email.isNotBlank() -> userRepository.findByEmail(email)
+      username.isNotBlank() -> userRepository.findByUsername(username)
+      email.isEmpty().and(username.isEmpty()) -> null
+      else -> null
+    }
   }
 
   private fun authenticate(user: User, providedPassword: String): LoginResult =
@@ -47,5 +51,5 @@ class LoginUserUseCase(
   override fun execute(email: String, username: String, password: String): LoginResult =
     findUser(email = email.trim(), username = username.trim())
       ?.let { user -> authenticate(user, password) }
-      ?: Failure
+      ?: NotFound
 }
