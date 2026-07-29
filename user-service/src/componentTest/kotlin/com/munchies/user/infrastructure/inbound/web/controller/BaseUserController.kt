@@ -1,9 +1,15 @@
 package com.munchies.user.infrastructure.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.user.fixtures.HttpCallHelper
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.FactoryException
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import com.munchies.user.infrastructure.adapter.outbound.response.*
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
@@ -14,46 +20,27 @@ import io.micronaut.test.support.TestPropertyProvider
 import jakarta.inject.Inject
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.mongodb.MongoDBContainer
-
 @SerdeImport(UserDTO::class)
-@SerdeImport(GetUserResult::class)
 @SerdeImport(GetUserRequest::class)
 @SerdeImport(GetUserResponse::class)
-@SerdeImport(GetUserFailure::class)
-@SerdeImport(GetUserSuccess::class)
 @SerdeImport(RegisterUserRequest::class)
 @SerdeImport(RegisterUserResponse::class)
-@SerdeImport(RegisterUserResult::class)
-@SerdeImport(RegisterUserFailure::class)
-@SerdeImport(RegisterUserSuccess::class)
 @SerdeImport(LoginUserRequest::class)
 @SerdeImport(LoginUserResponse::class)
-@SerdeImport(LoginUserResult::class)
-@SerdeImport(LoginUserFailure::class)
-@SerdeImport(LoginUserSuccess::class)
-@SerdeImport(GetUserResponse::class)
-@SerdeImport(GetUserSuccess::class)
-@SerdeImport(GetUserFailure::class)
-@SerdeImport(UpdateUserInfoResponse::class)
-@SerdeImport(UpdateUserInfoResult::class)
 @SerdeImport(UpdateUserInfoRequest::class)
-@SerdeImport(UpdateUserInfoSuccess::class)
-@SerdeImport(UpdateUserInfoFailure::class)
-@SerdeImport(UpdateUserPasswordResponse::class)
-@SerdeImport(UpdateUserPasswordResult::class)
+@SerdeImport(UpdateUserInfoResponse::class)
 @SerdeImport(UpdateUserPasswordRequest::class)
-@SerdeImport(UpdateUserPasswordSuccess::class)
-@SerdeImport(UpdateUserPasswordFailure::class)
-@SerdeImport(VerifyEmailResponse::class)
-@SerdeImport(VerifyEmailResult::class)
+@SerdeImport(UpdateUserPasswordResponse::class)
 @SerdeImport(VerifyEmailRequest::class)
-@SerdeImport(VerifyEmailSuccess::class)
-@SerdeImport(VerifyEmailFailure::class)
+@SerdeImport(VerifyEmailResponse::class)
 @SerdeImport(DeleteUserRequest::class)
 @SerdeImport(DeleteUserResponse::class)
-@SerdeImport(DeleteUserResult::class)
-@SerdeImport(DeleteUserSuccess::class)
-@SerdeImport(DeleteUserFailure::class)
+@SerdeImport(ErrorResponse::class)
+@SerdeImport(FactoryException::class)
+@SerdeImport(NotFoundException::class)
+@SerdeImport(UnauthorizedException::class)
+@SerdeImport(UnexpectedException::class)
+@SerdeImport(ValidationException::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseUserController : TestPropertyProvider {
 
