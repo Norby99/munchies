@@ -65,5 +65,5 @@ abstract class SimpleAPI<Request, Response> {
   abstract fun getRequiredAuthRole(): AuthRole
   abstract fun parseRequest(json: String): Request
   abstract fun parseResponse(json: String): Response
-  open fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  abstract fun parseError(json: String): ErrorResponse
 }

@@ -1,0 +1,18 @@
+$kind: http-request
+description: Placeholder request for fetching a user by ID. This uses {{userId}} saved from the create-user step when available.
+url: "{{baseUrl}}/users/{{userId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('User lookup returned success', function () {
+          pm.expect(pm.response.code).to.eql(200);
+      });
+
+      pm.test('Response includes a user object', function () {
+          let json = pm.response.json();
+          pm.expect(json).to.be.an('object');
+      });
+    language: text/javascript
+settings: {}
+order: 2000

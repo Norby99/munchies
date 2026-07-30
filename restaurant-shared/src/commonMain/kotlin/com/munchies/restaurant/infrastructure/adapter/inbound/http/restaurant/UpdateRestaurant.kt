@@ -24,3 +24,11 @@ class UpdateRestaurantResponse(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun updateRestaurantRequestFromJson(json: String): UpdateRestaurantRequest =
+  Json.decodeFromString(json)
+
+@JsExport
+fun updateRestaurantResponseFromJson(json: String): UpdateRestaurantResponse =
+  Json.decodeFromString(json)

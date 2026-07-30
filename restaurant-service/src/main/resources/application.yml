@@ -1,0 +1,8 @@
+micronaut:
+  server:
+    port: 8080
+  application:
+    name: restaurant-service
+  serde:
+    serialization:
+      write-empty-values: true

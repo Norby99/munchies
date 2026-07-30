@@ -1,0 +1,8 @@
+workspace:
+  id: f4a0a28d-80f5-486b-87a8-e878f0efff54
+localResources:
+  documents:
+    - ../README.md
+cloudResources:
+  collections:
+    ../postman/collections/E2E Testing: 56956570-76078209-847a-4bac-8ded-d6beb8403f28

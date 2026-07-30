@@ -1,0 +1,40 @@
+$kind: http-request
+name: Register manager
+description: Placeholder request for creating a user. Update fields and endpoint to match your user service.
+url: "{{baseUrl}}/users"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "user": {
+            "id": "",
+            "username": "manager",
+            "email": "m@test.it",
+            "role":"MANAGER"
+        },
+        "hashedPassword": "hash",
+        "saltValue": "salt"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('User creation returned a success status', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+      });
+
+      pm.test('Save created user id when available', function () {
+          let json = {};
+          try { json = pm.response.json(); } catch (e) {}
+          if (json.id) {
+              pm.collectionVariables.set('userId', json.id);
+          }
+          let cookie = pm.collectionVariables.get('session');
+          pm.collectionVariables.set('sessionCookie', cookie)
+          pm.expect(true).to.eql(true);
+      });
+    language: text/javascript
+settings: {}
+order: 1000

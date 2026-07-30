@@ -1,5 +1,6 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.ConflictException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.UnauthorizedException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.ValidationException

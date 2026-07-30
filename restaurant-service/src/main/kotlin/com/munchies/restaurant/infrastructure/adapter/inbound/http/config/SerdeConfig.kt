@@ -1,6 +1,6 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.config
 
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.ErrorResponse
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse

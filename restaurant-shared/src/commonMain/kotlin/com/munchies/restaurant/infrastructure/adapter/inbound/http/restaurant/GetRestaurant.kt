@@ -32,3 +32,7 @@ class GetManagerRestaurantsResponse(
 ) {
   fun toJson(): String = Json.encodeToString(this)
 }
+
+@JsExport
+fun getManagerRestaurantsResponseFromJson(json: String): GetManagerRestaurantsResponse =
+  Json.decodeFromString(json)
