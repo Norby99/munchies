@@ -1,0 +1,7 @@
+$kind: collection
+description: Starter end-to-end testing collection for beginner-friendly API workflow setup, user service, restaurant service, and cleanup.
+variables:
+  baseUrl: https://api.example.com
+  userId: ""
+  restaurantId: ""
+  sessionCookie: ""

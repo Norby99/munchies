@@ -105,16 +105,6 @@ export declare const deleteRestaurantResponseFromJson: typeof
 
 
 
-export type ErrorResponse =
-  com.munchies.restaurant.infrastructure.adapter.inbound.http.ErrorResponse;
-export declare const ErrorResponse: typeof
-  com.munchies.restaurant.infrastructure.adapter.inbound.http.ErrorResponse;
-
-export declare const errorResponseFromJson: typeof
-  com.munchies.restaurant.infrastructure.adapter.inbound.http.errorResponseFromJson;
-
-
-
 // ---- Menu API ----
 
 export type CreateMenuAPI =

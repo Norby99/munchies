@@ -37,10 +37,6 @@ module.exports = {
   DeleteRestaurantResponse: _httpRestaurant.DeleteRestaurantResponse,
   deleteRestaurantResponseFromJson: _httpRestaurant.deleteRestaurantResponseFromJson,
 
-  // ---- Error ----
-  ErrorResponse: _inbound.http.ErrorResponse,
-  errorResponseFromJson: _inbound.http.errorResponseFromJson,
-
   // ---- Menu API ----
   CreateMenuAPI: _inbound.JsCreateMenuAPI,
   GetMenuAPI: _inbound.JsGetMenuAPI,

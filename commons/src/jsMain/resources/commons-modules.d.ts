@@ -86,3 +86,11 @@ export declare const errorResponseFromJson: typeof com.munchies.commons.infrastr
 
 export type SimpleAPI = com.munchies.commons.infrastructure.adapter.SimpleAPI;
 export declare const SimpleAPI: typeof com.munchies.commons.infrastructure.adapter.SimpleAPI;
+
+export type ErrorResponse = com.munchies.commons.infrastructure.adapter.ErrorResponse;
+export declare const ErrorResponse: typeof com.munchies.commons.infrastructure.adapter.ErrorResponse;
+
+export declare const errorResponseFromJson: typeof com.munchies.commons.infrastructure.adapter.errorResponseFromJson;
+
+export type SimpleAPI = com.munchies.commons.infrastructure.adapter.SimpleAPI;
+export declare const SimpleAPI: typeof com.munchies.commons.infrastructure.adapter.SimpleAPI;
