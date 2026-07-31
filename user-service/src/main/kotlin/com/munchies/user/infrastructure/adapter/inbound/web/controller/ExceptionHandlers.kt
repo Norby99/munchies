@@ -20,7 +20,12 @@ class UnauthorizedExceptionHandler :
     exception: UnauthorizedException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.UNAUTHORIZED)
-      .body(ErrorResponse(exception.message ?: "Unauthorized"))
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Unauthorized",
+          code = HttpStatus.UNAUTHORIZED.code,
+        ),
+      )
   }
 }
 
@@ -32,7 +37,12 @@ class NotFoundExceptionHandler :
     exception: NotFoundException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.NOT_FOUND)
-      .body(ErrorResponse(exception.message ?: "Resource not found"))
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Resource not found",
+          code = HttpStatus.NOT_FOUND.code,
+        ),
+      )
   }
 }
 
@@ -44,7 +54,12 @@ class ValidationExceptionHandler :
     exception: ValidationException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.BAD_REQUEST)
-      .body(ErrorResponse(exception.message ?: "Request validation failed"))
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Request validation failed",
+          code = HttpStatus.BAD_REQUEST.code,
+        ),
+      )
   }
 }
 
@@ -56,7 +71,12 @@ class FactoryExceptionHandler :
     exception: FactoryException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.BAD_REQUEST)
-      .body(ErrorResponse(exception.message ?: "Factory validation failed"))
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Factory validation failed",
+          code = HttpStatus.BAD_REQUEST.code,
+        ),
+      )
   }
 }
 
@@ -68,6 +88,11 @@ class UnexpectedExceptionHandler :
     exception: UnexpectedException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.INTERNAL_SERVER_ERROR)
-      .body(ErrorResponse(exception.message ?: "Unexpected error"))
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Unexpected result",
+          code = HttpStatus.INTERNAL_SERVER_ERROR.code,
+        ),
+      )
   }
 }

@@ -1,132 +1,78 @@
 import {
-  RegisterUserAPI,
-  RegisterUserFailure,
-  RegisterUserRequest,
-  RegisterUserResponse,
-  registerUserResponseFromJson,
-  RegisterUserResult,
-  RegisterUserSuccess,
-  UserDTO,
-} from "munchies-user-service-shared/kotlin/user-modules";
+  Response as ExpressResponse,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
 import {
   HttpMethod,
   AuthRole,
-  newId,
+  ErrorResponse,
 } from "munchies-commons/kotlin/commons-modules";
-import { InternalRoute, RouteDefinition } from "../route-definition";
-import { internalAxiosRequest } from "../internal-client";
-import { AuthedRequest, injectCookie, parseAuthRoleString } from "../../auth";
-import { Response } from "express";
+import {
+  RegisterUserRequest,
+  RegisterUserAPI,
+  RegisterUserResponse,
+  UserServiceConfig,
+} from "munchies-user-service-shared/kotlin/user-modules";
+import { AuthedRequest } from "../../auth";
+import { axiosClient, request } from "../internal-client";
+import { fillPath } from "../routes";
+import { createSimpleRoute, SimpleRoute } from "../simple-route";
 
-class InternalRegisterUserRoute
-  extends RegisterUserAPI
-  implements
-    InternalRoute<
-      RegisterUserAPI,
-      RegisterUserRequest,
-      RegisterUserResponse,
-      RegisterUserResult,
-      RegisterUserSuccess,
-      RegisterUserFailure
-    >
+export class RegisterUserRoute
+  extends RegisterUserAPI<RegisterUserResponse | ErrorResponse>
+  implements SimpleRoute<RegisterUserResponse>
 {
   constructor() {
     super();
-    this.service = this;
-    this.path = this.service.getPath();
+    let api: RegisterUserAPI = this;
+
+    this.path = api.getPath();
+    this.method = api.getMethod();
     this.authRole = null;
-    this.method = this.service.getMethod();
   }
-  service: RegisterUserAPI;
+
   path: string;
-  authRole: AuthRole | null;
   method: HttpMethod;
+  authRole: AuthRole | null;
 
-  generateErrorResponse(reason: string, code: number): RegisterUserResponse {
-    return this.generateResponse(this.generateFailure(reason), code);
-  }
-
-  parseResult(
-    result: RegisterUserResult
-  ): RegisterUserSuccess | RegisterUserFailure {
-    if (result.type === RegisterUserSuccess.name) {
-      return result as RegisterUserSuccess;
-    } else if (result.type === RegisterUserFailure.name) {
-      return result as RegisterUserFailure;
-    } else {
-      return this.generateFailure("Invalid result type");
-    }
-  }
   async registerUser(
-    request: RegisterUserRequest
-  ): Promise<RegisterUserResponse> {
+    req: RegisterUserRequest
+  ): Promise<RegisterUserResponse | ErrorResponse> {
     const uri = process.env.USER_SERVICE_URL;
-    if (!uri)
-      return this.generateErrorResponse("Missing User Service URL", 500);
-    return await internalAxiosRequest(
+    if (!uri) return Promise.resolve(new ErrorResponse("Missing User Service URL", 500));
+
+    const response = request<RegisterUserResponse>(
       uri + this.path,
-      this.getMethod(),
-      request.toJson(),
+      this.method,
+      req.toJson(),
       this.parseResponse,
-      this.parseResult,
-      this.generateResponse,
-      this.generateFailure
+      this.parseError,
     );
-  }
-  request(request: RegisterUserRequest): Promise<RegisterUserResponse> {
-    return this.registerUser(request);
-  }
-}
 
-export class RegisterUserRoute
-  implements RouteDefinition<RegisterUserResponse, RegisterUserFailure>
-{
-  constructor() {
-    this.internalRoute = new InternalRegisterUserRoute();
-    this.path = this.internalRoute.path;
-    this.method = this.internalRoute.method;
-    this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.service.generateFailure;
+    return response;
   }
 
-  internalRoute: InternalRoute<
-    any,
-    RegisterUserRequest,
-    RegisterUserResponse,
-    any,
-    any,
-    any
-  >;
-  path: string;
-
-  method: HttpMethod;
-  authRole: AuthRole | null;
-  onAuthFail: (msg: string) => RegisterUserFailure;
-  forward: (req: AuthedRequest) => Promise<RegisterUserResponse> = (req) => {
-    let request = this.internalRoute.service.parseRequest(req.body.toString());
-    return this.internalRoute.request(request);
+  private handler: {
+    forward: (req: AuthedRequest) => Promise<RegisterUserResponse | ErrorResponse>;
+    respond: RequestHandler;
+  } = {
+    forward: async (req: AuthedRequest) => {
+      try {
+        console.log("Register forwards handler | string: " + String(req.body))
+        const registerReq = this.parseRequest(req.body);
+        return this.registerUser(registerReq);
+      } catch (err: any) {
+        return new ErrorResponse("RegisterUser forward: \n" + String(err), 500);
+      }
+    },
+    respond: async (req: Request, res: Response) => {
+      const result = await this.forward(req as AuthedRequest);
+      res.status(result.code).type("json").send(result.toJson());
+    },
   };
-  respond: (req: AuthedRequest, res: Response) => void = async (req, res) => {
-    const response = await this.forward(req);
-    switch (response.result.type) {
-      case RegisterUserSuccess.name:
-        const result = response.result as RegisterUserSuccess;
-        const id = result.user.id;
-        try {
-          const role = parseAuthRoleString(result.user.role);
-          injectCookie(res, { id: id, role: role });
-        } catch (_: any) {
-          res
-            .status(500)
-            .type("json")
-            .send(
-              this.internalRoute
-                .generateErrorResponse("Invalid Role", 500)
-                .toJson()
-            );
-        }
-        break;
-    }
-    res.status(response.code).type("json").send(response.toJson());
-  };
+
+  forward = this.handler.forward;
+  respond = this.handler.respond;
 }

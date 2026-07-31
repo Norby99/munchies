@@ -3,26 +3,28 @@ package com.munchies.user.infrastructure.adapter.inbound
 import com.munchies.commons.domain.port.AuthRole
 import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.commons.infrastructure.adapter.SimpleAPI
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.outbound.response.*
 import kotlin.js.Promise
 
 @JsExport
-abstract class JsGetUserAPI : UserAPI.GetUserAPI<Promise<GetUserResponse>>,
+abstract class JsGetUserAPI<E : WebResponse<Any>> : UserAPI.GetUserAPI<Promise<E>>,
   SimpleAPI<GetUserRequest, GetUserResponse>() {
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getPath(): String = UserServiceConfig.SERVICE_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun getUser(id: String): Promise<GetUserResponse>
+  abstract override fun getUser(id: String): Promise<E>
 
   override fun parseRequest(json: String): GetUserRequest = getUserRequestFromJson(json)
   override fun parseResponse(json: String): GetUserResponse = getUserResponseFromJson(json)
 }
 
 @JsExport
-abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserResponse>>,
+abstract class JsRegisterUserAPI<E : WebResponse<Any>> :
+  UserAPI.RegisterUserAPI<Promise<E>>,
   SimpleAPI<
     RegisterUserRequest,
     RegisterUserResponse,
@@ -33,7 +35,7 @@ abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserR
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun registerUser(request: RegisterUserRequest): Promise<RegisterUserResponse>
+  abstract override fun registerUser(request: RegisterUserRequest): Promise<E>
 
   override fun parseRequest(json: String): RegisterUserRequest = registerUserRequestFromJson(json)
   override fun parseResponse(json: String): RegisterUserResponse =

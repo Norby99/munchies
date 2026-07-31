@@ -6,6 +6,7 @@ import {
   GenerateTokenSuccess,
   GenerateTokenFailure,
   UUIDEntityId,
+  ErrorResponse,
 } from "munchies-commons/kotlin/commons-modules";
 const provider = new AuthTokenProvider();
 const decoder = new AuthTokenDecoder();
@@ -36,8 +37,7 @@ export function parseAuthRoleString(role: string): AuthRole {
 export interface AuthedRequest extends ExpressRequest {
   user?: AuthInfo;
 }
-export function requireAuth<Response extends { toJson(): string }>(
-  invalidRoleResponse: (msg: string, code: number) => Response
+export function requireAuth( 
 ): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
@@ -50,7 +50,7 @@ export function requireAuth<Response extends { toJson(): string }>(
       res
         .status(missingToken)
         .type("json")
-        .send(invalidRoleResponse("missing token", missingToken).toJson());
+        .send(new ErrorResponse("missing token", missingToken).toJson());
       return;
     } else {
       const tokenRes = decoder.validateAndDecodeToken(req.cookies.authToken);
@@ -64,7 +64,7 @@ export function requireAuth<Response extends { toJson(): string }>(
           .status(missingToken)
           .type("json")
           .send(
-            invalidRoleResponse(
+            new ErrorResponse(
               "invalid token: " + (tokenRes as DecodedTokenFailure).toString(),
               missingToken
             ).toJson()
@@ -74,13 +74,8 @@ export function requireAuth<Response extends { toJson(): string }>(
     }
   };
 }
-export function requireRole<
-  Response extends {
-    toJson(): string;
-  }
->(
+export function requireRole(
   requiredRole: AuthRole,
-  invalidRoleResponse: (msg: string, code: number) => Response
 ): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
@@ -92,7 +87,7 @@ export function requireRole<
       res
         .status(unauthorizedCode)
         .type("json")
-        .send(invalidRoleResponse("Missing role", unauthorizedCode).toJson());
+        .send(new ErrorResponse("Missing role", unauthorizedCode).toJson());
       return;
     }
     if (req.user?.role.visibility >= requiredRole.visibility) next();
@@ -100,7 +95,7 @@ export function requireRole<
       res
         .status(unauthorizedCode)
         .type("json")
-        .send(invalidRoleResponse("Invalid role", unauthorizedCode).toJson());
+        .send(new ErrorResponse("Invalid role", unauthorizedCode).toJson());
     return;
   };
 }

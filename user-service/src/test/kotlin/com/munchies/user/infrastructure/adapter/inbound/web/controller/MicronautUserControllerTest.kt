@@ -102,7 +102,7 @@ class MicronautUserControllerTest {
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
-    res.body().user.id shouldBe userId.value
+    res.body().result.id shouldBe userId.value
     verify(userUseCase).execute(userId)
   }
 
@@ -125,7 +125,7 @@ class MicronautUserControllerTest {
       ),
     )
 
-    response.status shouldBe HttpStatus.OK
+    response.status shouldBe HttpStatus.CREATED
   }
 
   @Test

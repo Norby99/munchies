@@ -6,7 +6,6 @@ export interface SimpleRoute<Response> {
   path: string;
   method: HttpMethod;
   authRole: AuthRole | null;
-  onAuthFail: (msg: string) => ErrorResponse;
   forward: (req: AuthedRequest) => Promise<Response | ErrorResponse>;
   respond: RequestHandler;
 }

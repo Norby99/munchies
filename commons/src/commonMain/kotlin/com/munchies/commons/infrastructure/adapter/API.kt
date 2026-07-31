@@ -48,8 +48,10 @@ abstract class API<
 @Serializable
 @SerialName("ErrorResponse")
 class ErrorResponse(
-  val error: String,
-) : JsonEncodable() {
+  override val result: String,
+  override val code: Int = 420,
+
+) : WebResponse<String>() {
   override fun toJson(): String = Json.encodeToString(this)
 }
 
@@ -65,5 +67,5 @@ abstract class SimpleAPI<Request, Response> {
   abstract fun getRequiredAuthRole(): AuthRole
   abstract fun parseRequest(json: String): Request
   abstract fun parseResponse(json: String): Response
-  abstract fun parseError(json: String): ErrorResponse
+  open fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }
