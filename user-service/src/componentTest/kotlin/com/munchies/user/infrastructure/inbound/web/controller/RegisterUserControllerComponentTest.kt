@@ -100,6 +100,6 @@ class RegisterUserControllerComponentTest : BaseUserController() {
       mapper.writeValueAsString(request),
       UserServiceConfig.REGISTER_USER_PATH,
     )
-    response.status shouldBe HttpStatus.OK
+    response.status shouldBe HttpStatus.CREATED
   }
 }

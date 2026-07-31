@@ -5,40 +5,26 @@ import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.commons.infrastructure.adapter.SimpleAPI
 import com.munchies.commons.infrastructure.adapter.errorResponseFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.CreateRestaurantRequest
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.CreateRestaurantResponse
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantRequest
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantResponse
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.createRestaurantRequestFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.createRestaurantResponseFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.deleteRestaurantRequestFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.deleteRestaurantResponseFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getManagerRestaurantsResponseFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getRestaurantResponseFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantRequestFromJson
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantResponseFromJson
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.*
 import com.munchies.restaurant.infrastructure.adapter.inbound.web.config.RestaurantServiceConfig
-import kotlin.js.JsExport
 import kotlin.js.Promise
 
 @JsExport
 abstract class JsCreateRestaurantAPI :
   SimpleAPI<CreateRestaurantRequest, CreateRestaurantResponse>() {
-  abstract fun createRestaurant(request: CreateRestaurantRequest): Promise<CreateRestaurantResponse>
-  override fun parseRequest(json: String): CreateRestaurantRequest =
-    createRestaurantRequestFromJson(json)
-  override fun parseResponse(json: String): CreateRestaurantResponse =
-    createRestaurantResponseFromJson(json)
-  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
   override fun getPath(): String =
     RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.CREATE_RESTAURANT_PATH
   override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun parseRequest(json: String): CreateRestaurantRequest =
+    createRestaurantRequestFromJson(json)
+  override fun parseResponse(json: String): CreateRestaurantResponse =
+    createRestaurantResponseFromJson(json)
+
+  abstract fun createRestaurant(
+    request: CreateRestaurantRequest,
+  ): Promise<CreateRestaurantResponse>
 }
 
 @JsExport

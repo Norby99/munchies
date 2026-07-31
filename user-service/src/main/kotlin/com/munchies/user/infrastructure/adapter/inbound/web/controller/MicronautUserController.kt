@@ -29,6 +29,7 @@ import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailC
 import com.munchies.user.infrastructure.adapter.outbound.response.*
 import com.munchies.user.infrastructure.adapter.validator.*
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
@@ -181,7 +182,7 @@ class MicronautUserController(
   override fun getUser(@PathVariable id: String): HttpResponse<GetUserResponse> {
     return when (val res = getUser.execute(UserId(id))) {
       is GetUser.Companion.GetUserResult.Success -> HttpResponse.ok(
-        GetUserResponse(res.user.toDTO()),
+        GetUserResponse(result = res.user.toDTO(), code = HttpStatus.OK.code),
       )
       GetUser.Companion.GetUserResult.NotFound -> throw NotFoundException("User not found")
     }
@@ -207,7 +208,7 @@ class MicronautUserController(
     summary = "Register a new user",
     description = "Registers a new user with the provided information and credentials.",
   )
-  @ApiResponse(responseCode = "200", description = "User registered successfully")
+  @ApiResponse(responseCode = "201", description = "User registered successfully")
   @ApiResponse(responseCode = "400", description = "Invalid user data or missing fields")
   @ApiResponse(responseCode = "401", description = "User is already registered")
   @ApiResponse(responseCode = "500", description = "Failed to register user")
@@ -237,9 +238,10 @@ class MicronautUserController(
             ) {
               is RegisterUser.Companion.RegisterUserResult.Success -> {
                 HttpResponse
-                  .ok(
+                  .created(
                     RegisterUserResponse(
-                      res.user.toDTO(),
+                      result = res.user.toDTO(),
+                      code = HttpStatus.CREATED.code,
                     ),
                   )
               }

@@ -65,8 +65,8 @@ export function applyRoutes(app: Express) {
     const path = r.path;
     const handlers: RequestHandler[] = [logRequests()];
     if (r.authRole) {
-      handlers.push(requireAuth(r.onAuthFail));
-      handlers.push(requireRole(r.authRole, r.onAuthFail));
+      handlers.push(requireAuth());
+      handlers.push(requireRole(r.authRole));
     }
     handlers.push(catchError(r.respond));
     createRoute(app, path, method, ...handlers);
