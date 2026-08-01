@@ -63,9 +63,7 @@ export class LoginUserRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const bodyStr =
-          typeof req.body === "string" ? req.body : JSON.stringify(req.body);
-        const loginReq = this.parseRequest(bodyStr);
+        const loginReq = this.parseRequest(String(req.body));
         return this.loginUser(loginReq);
       } catch (err: any) {
         return new ErrorResponse("LoginUser forward: \n" + String(err), 500);

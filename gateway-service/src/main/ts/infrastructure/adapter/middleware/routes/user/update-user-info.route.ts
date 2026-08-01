@@ -63,21 +63,9 @@ export class UpdateUserInfoRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        let bodyObj =
-          typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
-        if (bodyObj.user) {
-          bodyObj.user.id = req.user!!.id;
-          if (!bodyObj.user.role && req.user?.role) {
-            bodyObj.user.role = req.user.role.name;
-          }
-        } else {
-          bodyObj.id = req.user!!.id;
-          if (!bodyObj.role && req.user?.role) {
-            bodyObj.role = req.user.role.name;
-          }
-          bodyObj = { user: bodyObj };
-        }
-        const updateReq = this.parseRequest(JSON.stringify(bodyObj));
+        const updateReq = this.parseRequest(String(req.body)).addId(
+          req.user!!.id,
+        );
         return this.updateUserInfo(updateReq);
       } catch (err: any) {
         return new ErrorResponse(

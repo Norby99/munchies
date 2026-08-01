@@ -63,10 +63,8 @@ export class VerifyEmailRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const otk = req.query.otk || req.body?.otk || "";
         const verifyReq = this.parseRequest(
-          JSON.stringify({ id: req.user!!.id, otk: String(otk) }),
-        );
+          String(req.body)).addId(req.user!!.id);
         return this.verifyEmail(verifyReq);
       } catch (err: any) {
         return new ErrorResponse("VerifyEmail forward: \n" + String(err), 500);

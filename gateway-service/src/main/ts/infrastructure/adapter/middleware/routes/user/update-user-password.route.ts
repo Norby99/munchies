@@ -63,10 +63,9 @@ export class UpdateUserPasswordRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const bodyObj =
-          typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
-        bodyObj.id = req.user!!.id;
-        const updatePassReq = this.parseRequest(JSON.stringify(bodyObj));
+        const updatePassReq = this.parseRequest(String(req.body)).addId(
+          req.user!!.id,
+        );
         return this.updateUserPassword(updatePassReq);
       } catch (err: any) {
         return new ErrorResponse(
