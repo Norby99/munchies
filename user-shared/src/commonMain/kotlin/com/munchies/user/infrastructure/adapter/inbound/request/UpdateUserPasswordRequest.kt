@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound.request
 
+import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -16,8 +17,9 @@ data class UpdateUserPasswordRequest(
   val email: String = "",
   val oldHashedPassword: String,
   val newPassword: String,
-) : JsonEncodable() {
+) : AuthenticatedRequest<UpdateUserPasswordRequest>, JsonEncodable() {
   override fun toJson(): String = Json.encodeToString(this)
+  override fun addId(userId: String): UpdateUserPasswordRequest = this.copy(id = userId)
 }
 
 @JsExport

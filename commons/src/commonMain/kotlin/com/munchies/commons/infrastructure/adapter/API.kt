@@ -15,6 +15,12 @@ abstract class JsonEncodable {
 }
 
 @JsExport
+@SerialName("")
+interface AuthenticatedRequest<E> {
+  fun addId(userId: String): E
+}
+
+@JsExport
 @Serializable
 @SerialName("WebResponse")
 abstract class WebResponse<Result> : JsonEncodable() {
