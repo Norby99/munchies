@@ -47,6 +47,9 @@ export declare const LoginUserRequest: typeof com.munchies.user.infrastructure.a
 export type LoginUserResponse = com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResponse;
 export declare const LoginUserResponse: typeof com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResponse;
 
+export type LoginUserResult = com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResult;
+export declare const LoginUserResult: typeof com.munchies.user.infrastructure.adapter.outbound.response.LoginUserResult;
+
 export declare const loginUserResponseFromJson = com.munchies.user.infrastructure.adapter.outbound.response.loginUserResponseFromJson;
 export declare const loginUserRequestFromJson = com.munchies.user.infrastructure.adapter.inbound.request.loginUserRequestFromJson;
 

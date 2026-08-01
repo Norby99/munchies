@@ -23,6 +23,7 @@ module.exports = {
   LoginUserAPI: _inbound.JsLoginUserAPI,
   LoginUserRequest: _inbound.request.LoginUserRequest,
   LoginUserResponse: _outbound.response.LoginUserResponse,
+  LoginUserResult: _outbound.response.LoginUserResult,
   loginUserResponseFromJson: _outbound.response.loginUserResponseFromJson,
   loginUserRequestFromJson: _inbound.request.loginUserRequestFromJson,
 

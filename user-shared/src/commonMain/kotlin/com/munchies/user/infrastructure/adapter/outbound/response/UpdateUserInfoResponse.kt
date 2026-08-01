@@ -1,6 +1,6 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
-import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,10 +10,13 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("UpdateUserInfoResponse")
-class UpdateUserInfoResponse(
-  val msg: String,
-) : JsonEncodable() {
+open class UpdateUserInfoResponse(
+  override val result: String,
+  override val code: Int = 200,
+) : WebResponse<String>() {
   override fun toJson(): String = Json.encodeToString(this)
+
+  val msg: String get() = result
 }
 
 @JsExport

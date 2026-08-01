@@ -58,6 +58,7 @@ import jakarta.inject.Inject
 @SerdeImport(RegisterUserResponse::class)
 @SerdeImport(LoginUserRequest::class)
 @SerdeImport(LoginUserResponse::class)
+@SerdeImport(LoginUserResult::class)
 @SerdeImport(UpdateUserInfoRequest::class)
 @SerdeImport(UpdateUserInfoResponse::class)
 @SerdeImport(UpdateUserPasswordRequest::class)

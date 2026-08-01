@@ -43,7 +43,7 @@ abstract class JsRegisterUserAPI<E : WebResponse<Any>> :
 }
 
 @JsExport
-abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<Promise<LoginUserResponse>>,
+abstract class JsLoginUserAPI<E : WebResponse<Any>> : UserAPI.LoginUserAPI<Promise<E>>,
   SimpleAPI<LoginUserRequest, LoginUserResponse>() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.LOGIN_USER_PATH
@@ -51,15 +51,15 @@ abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<Promise<LoginUserResponse>>
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun loginUser(request: LoginUserRequest): Promise<LoginUserResponse>
+  abstract override fun loginUser(request: LoginUserRequest): Promise<E>
 
   override fun parseRequest(json: String): LoginUserRequest = loginUserRequestFromJson(json)
   override fun parseResponse(json: String): LoginUserResponse = loginUserResponseFromJson(json)
 }
 
 @JsExport
-abstract class JsUpdateUserPasswordAPI :
-  UserAPI.UpdateUserPasswordAPI<Promise<UpdateUserPasswordResponse>>,
+abstract class JsUpdateUserPasswordAPI<E : WebResponse<Any>> :
+  UserAPI.UpdateUserPasswordAPI<Promise<E>>,
   SimpleAPI<
     UpdateUserPasswordRequest,
     UpdateUserPasswordResponse,
@@ -70,9 +70,7 @@ abstract class JsUpdateUserPasswordAPI :
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun updateUserPassword(
-    request: UpdateUserPasswordRequest,
-  ): Promise<UpdateUserPasswordResponse>
+  abstract override fun updateUserPassword(request: UpdateUserPasswordRequest): Promise<E>
 
   override fun parseRequest(json: String): UpdateUserPasswordRequest =
     updateUserPasswordRequestFromJson(json)
@@ -82,8 +80,8 @@ abstract class JsUpdateUserPasswordAPI :
 }
 
 @JsExport
-abstract class JsUpdateUserInfoAPI :
-  UserAPI.UpdateUserInfoAPI<Promise<UpdateUserInfoResponse>>,
+abstract class JsUpdateUserInfoAPI<E : WebResponse<Any>> :
+  UserAPI.UpdateUserInfoAPI<Promise<E>>,
   SimpleAPI<
     UpdateUserInfoRequest,
     UpdateUserInfoResponse,
@@ -94,9 +92,7 @@ abstract class JsUpdateUserInfoAPI :
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun updateUserInfo(
-    request: UpdateUserInfoRequest,
-  ): Promise<UpdateUserInfoResponse>
+  abstract override fun updateUserInfo(request: UpdateUserInfoRequest): Promise<E>
 
   override fun parseRequest(json: String): UpdateUserInfoRequest =
     updateUserInfoRequestFromJson(json)
@@ -106,7 +102,8 @@ abstract class JsUpdateUserInfoAPI :
 }
 
 @JsExport
-abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<Promise<DeleteUserResponse>>,
+abstract class JsDeleteUserAPI<E : WebResponse<Any>> :
+  UserAPI.DeleteUserAPI<Promise<E>>,
   SimpleAPI<DeleteUserRequest, DeleteUserResponse>
   () {
   override fun getPath(): String =
@@ -115,15 +112,15 @@ abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<Promise<DeleteUserRespons
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun deleteUser(id: String): Promise<DeleteUserResponse>
+  abstract override fun deleteUser(id: String): Promise<E>
 
   override fun parseRequest(json: String): DeleteUserRequest = deleteUserRequestFromJson(json)
   override fun parseResponse(json: String): DeleteUserResponse = deleteUserResponseFromJson(json)
 }
 
 @JsExport
-abstract class JsEmailVerificationAPI :
-  UserAPI.EmailVerificationAPI<Promise<VerifyEmailResponse>>,
+abstract class JsEmailVerificationAPI<E : WebResponse<Any>> :
+  UserAPI.EmailVerificationAPI<Promise<E>>,
   SimpleAPI<
     VerifyEmailRequest,
     VerifyEmailResponse,
@@ -134,7 +131,7 @@ abstract class JsEmailVerificationAPI :
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse>
+  abstract override fun verifyEmail(request: VerifyEmailRequest): Promise<E>
 
   override fun parseRequest(json: String): VerifyEmailRequest = verifyEmailRequestFromJson(json)
   override fun parseResponse(json: String): VerifyEmailResponse = verifyEmailResponseFromJson(json)
