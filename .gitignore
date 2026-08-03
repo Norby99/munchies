@@ -424,3 +424,7 @@ build
 
 # Micronaut
 */.micronaut/
+
+# Postman
+postman/* 
+.postman/*
