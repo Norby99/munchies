@@ -6,7 +6,8 @@ export type RestaurantDto =
 export declare const RestaurantDto: typeof
   com.munchies.restaurant.infrastructure.adapter.dto.RestaurantDto;
 
-
+export declare const RestaurantServiceConfig: typeof com.munchies.restaurant.infrastructure.adapter.inbound.web.config.RestaurantServiceConfig;
+export declare const MenuServiceConfig: typeof com.munchies.restaurant.infrastructure.adapter.inbound.web.config.MenuServiceConfig;
 
 export type CreateRestaurantAPI =
   com.munchies.restaurant.infrastructure.adapter.inbound.JsCreateRestaurantAPI;
@@ -29,8 +30,6 @@ export declare const CreateRestaurantResponse: typeof
 export declare const createRestaurantResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.createRestaurantResponseFromJson;
 
-
-
 export type GetRestaurantAPI =
   com.munchies.restaurant.infrastructure.adapter.inbound.JsGetRestaurantAPI;
 export declare const GetRestaurantAPI: typeof
@@ -46,7 +45,8 @@ export type GetRestaurantResponse =
 export declare const GetRestaurantResponse: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse;
 
-
+export declare const getRestaurantResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getRestaurantResponseFromJson;
 
 export type GetManagerRestaurantsAPI =
   com.munchies.restaurant.infrastructure.adapter.inbound.JsGetManagerRestaurantsAPI;
@@ -63,7 +63,8 @@ export type GetManagerRestaurantsResponse =
 export declare const GetManagerRestaurantsResponse: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse;
 
-
+export declare const getManagerRestaurantsResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getManagerRestaurantsResponseFromJson;
 
 export type UpdateRestaurantAPI =
   com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateRestaurantAPI;
@@ -75,12 +76,16 @@ export type UpdateRestaurantRequest =
 export declare const UpdateRestaurantRequest: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest;
 
+export declare const updateRestaurantRequestFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantRequestFromJson;
+
 export type UpdateRestaurantResponse =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse;
 export declare const UpdateRestaurantResponse: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse;
 
-
+export declare const updateRestaurantResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantResponseFromJson;
 
 export type DeleteRestaurantAPI =
   com.munchies.restaurant.infrastructure.adapter.inbound.JsDeleteRestaurantAPI;
@@ -102,8 +107,6 @@ export declare const DeleteRestaurantResponse: typeof
 
 export declare const deleteRestaurantResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.deleteRestaurantResponseFromJson;
-
-
 
 // ---- Menu API ----
 
@@ -150,8 +153,6 @@ export declare const CreateMenuResponse: typeof
 export declare const createMenuResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.createMenuResponseFromJson;
 
-
-
 export type GetMenuRequest =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetMenuRequest;
 export declare const GetMenuRequest: typeof
@@ -168,8 +169,6 @@ export declare const GetMenuResponse: typeof
 export declare const getMenuResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.getMenuResponseFromJson;
 
-
-
 export type GetRestaurantMenusRequest =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetRestaurantMenusRequest;
 export declare const GetRestaurantMenusRequest: typeof
@@ -182,8 +181,6 @@ export declare const GetRestaurantMenusResponse: typeof
 
 export declare const getRestaurantMenusResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.getRestaurantMenusResponseFromJson;
-
-
 
 export type UpdateMenuRequest =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.UpdateMenuRequest;
@@ -201,8 +198,6 @@ export declare const UpdateMenuResponse: typeof
 export declare const updateMenuResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.updateMenuResponseFromJson;
 
-
-
 export type DeleteMenuResponse =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse;
 export declare const DeleteMenuResponse: typeof
@@ -210,8 +205,6 @@ export declare const DeleteMenuResponse: typeof
 
 export declare const deleteMenuResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.deleteMenuResponseFromJson;
-
-
 
 // ---- Category API ----
 
@@ -248,8 +241,6 @@ export declare const CreateCategoryResponse: typeof
 export declare const createCategoryResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category.createCategoryResponseFromJson;
 
-
-
 export type UpdateCategoryRequest =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category.UpdateCategoryRequest;
 export declare const UpdateCategoryRequest: typeof
@@ -266,8 +257,6 @@ export declare const UpdateCategoryResponse: typeof
 export declare const updateCategoryResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category.updateCategoryResponseFromJson;
 
-
-
 export type DeleteCategoryResponse =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category.DeleteCategoryResponse;
 export declare const DeleteCategoryResponse: typeof
@@ -275,8 +264,6 @@ export declare const DeleteCategoryResponse: typeof
 
 export declare const deleteCategoryResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category.deleteCategoryResponseFromJson;
-
-
 
 // ---- Menu Item API ----
 
@@ -313,8 +300,6 @@ export declare const CreateMenuItemResponse: typeof
 export declare const createMenuItemResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.menuitem.createMenuItemResponseFromJson;
 
-
-
 export type UpdateMenuItemRequest =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.menuitem.UpdateMenuItemRequest;
 export declare const UpdateMenuItemRequest: typeof
@@ -330,8 +315,6 @@ export declare const UpdateMenuItemResponse: typeof
 
 export declare const updateMenuItemResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.menuitem.updateMenuItemResponseFromJson;
-
-
 
 export type DeleteMenuItemResponse =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.menuitem.DeleteMenuItemResponse;

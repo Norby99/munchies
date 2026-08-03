@@ -1,19 +1,23 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category
 
+import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.restaurant.infrastructure.adapter.dto.CategoryDto
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
 import kotlin.js.JsExport
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class CreateCategoryRequest(
+@SerialName("CreateCategoryRequest")
+data class CreateCategoryRequest(
   val name: String,
   val variations: Array<VariationDto> = emptyArray(),
-) {
-  fun toJson(): String = Json.encodeToString(this)
+) : JsonEncodable() {
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport
@@ -21,10 +25,13 @@ fun createCategoryRequestFromJson(json: String): CreateCategoryRequest = Json.de
 
 @JsExport
 @Serializable
-class CreateCategoryResponse(
-  val category: CategoryDto,
-) {
-  fun toJson(): String = Json.encodeToString(this)
+@SerialName("CreateCategoryResponse")
+open class CreateCategoryResponse(
+  override val result: CategoryDto,
+  override val code: Int = 201,
+) : WebResponse<CategoryDto>() {
+  val category: CategoryDto get() = result
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport
