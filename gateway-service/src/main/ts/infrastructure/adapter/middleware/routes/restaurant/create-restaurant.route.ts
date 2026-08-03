@@ -1,48 +1,83 @@
-import axios from "axios";
 import {
-  CreateRestaurantAPI,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
+import {
+  HttpMethod,
+  AuthRole,
+  ErrorResponse,
+} from "munchies-commons/kotlin/commons-modules";
+import {
   CreateRestaurantRequest,
+  CreateRestaurantAPI,
   CreateRestaurantResponse,
 } from "munchies-restaurant-service-shared/kotlin/restaurant-modules";
-import { ErrorResponse } from "munchies-commons/kotlin/commons-modules";
-import { SimpleRoute, createSimpleRoute } from "../simple-route";
+import { AuthedRequest } from "../../auth";
+import { request } from "../internal-client";
+import { SimpleRoute } from "../simple-route";
 
 export class CreateRestaurantRoute
-  extends CreateRestaurantAPI
+  extends CreateRestaurantAPI<CreateRestaurantResponse | ErrorResponse>
   implements SimpleRoute<CreateRestaurantResponse>
 {
-  path = this.getPath();
-  method = this.getMethod();
-  authRole = this.getRequiredAuthRole();
-  onAuthFail = (msg: string) => new ErrorResponse(msg);
+  constructor() {
+    super();
+    let api = this;
 
-  async createRestaurant(
-    request: CreateRestaurantRequest
-  ): Promise<CreateRestaurantResponse> {
-    const uri = process.env.RESTAURANT_SERVICE_URL;
-    if (!uri) throw new ErrorResponse("Missing Restaurant Service URL");
-    const response = await axios.post(
-      uri + this.path,
-      request.toJson(),
-      {
-        headers: { "Content-Type": "application/json" },
-        transformResponse: [(data) => data],
-        validateStatus: () => true,
-      }
-    );
-    if (response.status >= 400) {
-      throw this.parseError(response.data);
-    }
-    return this.parseResponse(response.data);
+    this.path = api.getPath();
+    this.method = api.getMethod();
+    this.authRole = api.getRequiredAuthRole();
   }
 
-  private handler = createSimpleRoute(
-    (json) => this.parseRequest(json),
-    async (request) => {
-      return this.createRestaurant(request);
+  path: string;
+  method: HttpMethod;
+  authRole: AuthRole | null;
+
+  async createRestaurant(
+    req: CreateRestaurantRequest,
+  ): Promise<CreateRestaurantResponse | ErrorResponse> {
+    const uri = process.env.RESTAURANT_SERVICE_URL;
+    if (!uri)
+      return Promise.resolve(
+        new ErrorResponse("Missing Restaurant Service URL", 500),
+      );
+
+    const response = request<CreateRestaurantResponse>(
+      uri + this.path,
+      this.method,
+      req.toJson(),
+      this.parseResponse,
+      this.parseError,
+    );
+
+    return response;
+  }
+
+  private handler: {
+    forward: (
+      req: AuthedRequest,
+    ) => Promise<CreateRestaurantResponse | ErrorResponse>;
+    respond: RequestHandler;
+  } = {
+    forward: async (req: AuthedRequest) => {
+      try {
+        const createReq = this.parseRequest(String(req.body)).addId(
+          req.user!!.id,
+        );
+        return this.createRestaurant(createReq);
+      } catch (err: any) {
+        return new ErrorResponse(
+          "CreateRestaurant forward: \n" + String(err),
+          500,
+        );
+      }
     },
-    201,
-  );
+    respond: async (req: Request, res: Response) => {
+      const result = await this.forward(req as AuthedRequest);
+      res.status(result.code).type("json").send(result.toJson());
+    },
+  };
 
   forward = this.handler.forward;
   respond = this.handler.respond;

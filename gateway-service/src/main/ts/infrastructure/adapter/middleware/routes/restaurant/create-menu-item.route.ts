@@ -1,47 +1,91 @@
-import { ErrorResponse } from "munchies-commons/kotlin/commons-modules";
 import {
-  CreateMenuItemAPI,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
+import {
+  HttpMethod,
+  AuthRole,
+  ErrorResponse,
+} from "munchies-commons/kotlin/commons-modules";
+import {
   CreateMenuItemRequest,
+  CreateMenuItemAPI,
   CreateMenuItemResponse,
 } from "munchies-restaurant-service-shared/kotlin/restaurant-modules";
-import { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import { SimpleRoute } from "../simple-route";
 import { AuthedRequest } from "../../auth";
-import { restaurantRequest } from "./restaurant-route-helper";
+import { request } from "../internal-client";
+import { fillPath } from "../routes";
+import { SimpleRoute } from "../simple-route";
 
 export class CreateMenuItemRoute
-  extends CreateMenuItemAPI
+  extends CreateMenuItemAPI<CreateMenuItemResponse | ErrorResponse>
   implements SimpleRoute<CreateMenuItemResponse>
 {
-  path = this.getPath();
-  method = this.getMethod();
-  authRole = this.getRequiredAuthRole();
-  onAuthFail = (msg: string) => new ErrorResponse(msg);
+  constructor() {
+    super();
+    let api = this;
 
-  async createMenuItem(_restaurantId: string, _menuId: string, _categoryId: string, request: CreateMenuItemRequest): Promise<CreateMenuItemResponse> {
-    const result = await restaurantRequest(
-      this.path, this.method, request.toJson(),
-      (json) => this.parseResponse(json),
-      (json) => this.parseError(json),
-      _restaurantId, _menuId, _categoryId,
-    );
-    if (result instanceof ErrorResponse) throw result;
-    return result;
+    this.path = api.getPath();
+    this.method = api.getMethod();
+    this.authRole = api.getRequiredAuthRole();
   }
 
-  forward = async (req: AuthedRequest): Promise<CreateMenuItemResponse | ErrorResponse> => {
-    try {
-      const request = this.parseRequest(req.body.toString());
-      return await this.createMenuItem(req.params.restaurantId, req.params.menuId, req.params.categoryId, request);
-    } catch (error: any) {
-      if (error instanceof ErrorResponse) return error;
-      return new ErrorResponse(String(error?.message ?? error));
-    }
+  path: string;
+  method: HttpMethod;
+  authRole: AuthRole | null;
+
+  async createMenuItem(
+    restaurantId: string,
+    menuId: string,
+    categoryId: string,
+    req: CreateMenuItemRequest,
+  ): Promise<CreateMenuItemResponse | ErrorResponse> {
+    const uri = process.env.RESTAURANT_SERVICE_URL;
+    if (!uri)
+      return Promise.resolve(
+        new ErrorResponse("Missing Restaurant Service URL", 500),
+      );
+
+    const response = request<CreateMenuItemResponse>(
+      fillPath(uri + this.path, restaurantId, menuId, categoryId),
+      this.method,
+      req.toJson(),
+      this.parseResponse,
+      this.parseError,
+    );
+
+    return response;
+  }
+
+  private handler: {
+    forward: (
+      req: AuthedRequest,
+    ) => Promise<CreateMenuItemResponse | ErrorResponse>;
+    respond: RequestHandler;
+  } = {
+    forward: async (req: AuthedRequest) => {
+      try {
+        const createReq = this.parseRequest(String(req.body));
+        return this.createMenuItem(
+          req.params.restaurantId,
+          req.params.menuId,
+          req.params.categoryId,
+          createReq,
+        );
+      } catch (err: any) {
+        return new ErrorResponse(
+          "CreateMenuItem forward: \n" + String(err),
+          500,
+        );
+      }
+    },
+    respond: async (req: Request, res: Response) => {
+      const result = await this.forward(req as AuthedRequest);
+      res.status(result.code).type("json").send(result.toJson());
+    },
   };
 
-  respond = async (_req: ExpressRequest, res: ExpressResponse) => {
-    const result = await this.forward(_req as AuthedRequest);
-    if (result instanceof ErrorResponse) { res.status(400).type("json").send(result.toJson()); }
-    else { res.status(201).type("json").send(result.toJson()); }
-  };
+  forward = this.handler.forward;
+  respond = this.handler.respond;
 }

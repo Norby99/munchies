@@ -12,6 +12,9 @@ const _dto = _adapter.dto;
 module.exports = {
   RestaurantDto: _dto.RestaurantDto,
 
+  RestaurantServiceConfig: _inbound.web.config.RestaurantServiceConfig,
+  MenuServiceConfig: _inbound.web.config.MenuServiceConfig,
+
   // ---- Restaurant API ----
   CreateRestaurantAPI: _inbound.JsCreateRestaurantAPI,
   CreateRestaurantRequest: _httpRestaurant.CreateRestaurantRequest,
@@ -22,14 +25,18 @@ module.exports = {
   GetRestaurantAPI: _inbound.JsGetRestaurantAPI,
   GetRestaurantRequest: _httpRestaurant.GetRestaurantRequest,
   GetRestaurantResponse: _httpRestaurant.GetRestaurantResponse,
+  getRestaurantResponseFromJson: _httpRestaurant.getRestaurantResponseFromJson,
 
   GetManagerRestaurantsAPI: _inbound.JsGetManagerRestaurantsAPI,
   GetManagerRestaurantsRequest: _httpRestaurant.GetManagerRestaurantsRequest,
   GetManagerRestaurantsResponse: _httpRestaurant.GetManagerRestaurantsResponse,
+  getManagerRestaurantsResponseFromJson: _httpRestaurant.getManagerRestaurantsResponseFromJson,
 
   UpdateRestaurantAPI: _inbound.JsUpdateRestaurantAPI,
   UpdateRestaurantRequest: _httpRestaurant.UpdateRestaurantRequest,
+  updateRestaurantRequestFromJson: _httpRestaurant.updateRestaurantRequestFromJson,
   UpdateRestaurantResponse: _httpRestaurant.UpdateRestaurantResponse,
+  updateRestaurantResponseFromJson: _httpRestaurant.updateRestaurantResponseFromJson,
 
   DeleteRestaurantAPI: _inbound.JsDeleteRestaurantAPI,
   DeleteRestaurantRequest: _httpRestaurant.DeleteRestaurantRequest,
@@ -104,4 +111,4 @@ module.exports = {
 
   DeleteMenuItemResponse: _httpMenuMenuItem.DeleteMenuItemResponse,
   deleteMenuItemResponseFromJson: _httpMenuMenuItem.deleteMenuItemResponseFromJson,
-}
+};

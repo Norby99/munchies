@@ -1,18 +1,23 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu
 
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuSummaryDto
 import kotlin.js.JsExport
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class GetMenuResponse(
-  val menu: MenuDto,
-) {
-  fun toJson(): String = Json.encodeToString(this)
+@SerialName("GetMenuResponse")
+open class GetMenuResponse(
+  override val result: MenuDto,
+  override val code: Int = 200,
+) : WebResponse<MenuDto>() {
+  val menu: MenuDto get() = result
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport
@@ -20,10 +25,13 @@ fun getMenuResponseFromJson(json: String): GetMenuResponse = Json.decodeFromStri
 
 @JsExport
 @Serializable
-class GetRestaurantMenusResponse(
-  val menus: Array<MenuSummaryDto> = emptyArray(),
-) {
-  fun toJson(): String = Json.encodeToString(this)
+@SerialName("GetRestaurantMenusResponse")
+open class GetRestaurantMenusResponse(
+  override val result: Array<MenuSummaryDto> = emptyArray(),
+  override val code: Int = 200,
+) : WebResponse<Array<MenuSummaryDto>>() {
+  val menus: Array<MenuSummaryDto> get() = result
+  override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport

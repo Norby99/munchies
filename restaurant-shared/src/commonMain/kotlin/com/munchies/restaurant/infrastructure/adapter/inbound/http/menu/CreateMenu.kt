@@ -1,15 +1,18 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu
 
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import kotlin.js.JsExport
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class CreateMenuRequest(
+@SerialName("CreateMenuRequest")
+data class CreateMenuRequest(
   val name: String,
 ) : JsonEncodable() {
   override fun toJson(): String = Json.encodeToString(this)
@@ -20,9 +23,12 @@ fun createMenuRequestFromJson(json: String): CreateMenuRequest = Json.decodeFrom
 
 @JsExport
 @Serializable
-class CreateMenuResponse(
-  val menu: MenuDto,
-) : JsonEncodable() {
+@SerialName("CreateMenuResponse")
+open class CreateMenuResponse(
+  override val result: MenuDto,
+  override val code: Int = 201,
+) : WebResponse<MenuDto>() {
+  val menu: MenuDto get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

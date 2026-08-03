@@ -5,7 +5,7 @@ import { userRoutes } from "./user/user.routes";
 import { restaurantRoutes } from "./restaurant/restaurant.routes";
 import { Express, NextFunction, Request, Response } from "express";
 
-const routes: (RouteDefinition<any, any> | SimpleRoute<any>)[] = [...userRoutes, ...restaurantRoutes];
+const routes: SimpleRoute<any>[] = [...userRoutes, ...restaurantRoutes];
 
 export function fillPath(path: string, ...values: (string | number)[]): string {
   let i = 0;

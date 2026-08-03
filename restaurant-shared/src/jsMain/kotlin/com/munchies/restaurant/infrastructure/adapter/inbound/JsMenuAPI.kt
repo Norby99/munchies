@@ -4,6 +4,7 @@ import com.munchies.commons.domain.port.AuthRole
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.commons.infrastructure.adapter.SimpleAPI
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.commons.infrastructure.adapter.errorResponseFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
@@ -46,11 +47,9 @@ import kotlin.js.Promise
 // ---- Menu ----
 
 @JsExport
-abstract class JsCreateMenuAPI : SimpleAPI<CreateMenuRequest, CreateMenuResponse>() {
-  abstract fun createMenu(
-    restaurantId: String,
-    request: CreateMenuRequest,
-  ): Promise<CreateMenuResponse>
+abstract class JsCreateMenuAPI<E : WebResponse<Any>> :
+  SimpleAPI<CreateMenuRequest, CreateMenuResponse>() {
+  abstract fun createMenu(restaurantId: String, request: CreateMenuRequest): Promise<E>
   override fun parseRequest(json: String): CreateMenuRequest = createMenuRequestFromJson(json)
   override fun parseResponse(json: String): CreateMenuResponse = createMenuResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
@@ -62,8 +61,8 @@ abstract class JsCreateMenuAPI : SimpleAPI<CreateMenuRequest, CreateMenuResponse
 }
 
 @JsExport
-abstract class JsGetMenuAPI : SimpleAPI<Nothing, GetMenuResponse>() {
-  abstract fun getMenu(restaurantId: String, menuId: String): Promise<GetMenuResponse>
+abstract class JsGetMenuAPI<E : WebResponse<Any>> : SimpleAPI<Nothing, GetMenuResponse>() {
+  abstract fun getMenu(restaurantId: String, menuId: String): Promise<E>
   override fun parseResponse(json: String): GetMenuResponse = getMenuResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
   override fun getPath(): String = MenuServiceConfig.SERVICE_PATH + MenuServiceConfig.GET_MENU_PATH
@@ -74,8 +73,9 @@ abstract class JsGetMenuAPI : SimpleAPI<Nothing, GetMenuResponse>() {
 }
 
 @JsExport
-abstract class JsGetRestaurantMenusAPI : SimpleAPI<Nothing, GetRestaurantMenusResponse>() {
-  abstract fun getRestaurantMenus(restaurantId: String): Promise<GetRestaurantMenusResponse>
+abstract class JsGetRestaurantMenusAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, GetRestaurantMenusResponse>() {
+  abstract fun getRestaurantMenus(restaurantId: String): Promise<E>
   override fun parseResponse(json: String): GetRestaurantMenusResponse =
     getRestaurantMenusResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
@@ -88,12 +88,13 @@ abstract class JsGetRestaurantMenusAPI : SimpleAPI<Nothing, GetRestaurantMenusRe
 }
 
 @JsExport
-abstract class JsUpdateMenuAPI : SimpleAPI<UpdateMenuRequest, UpdateMenuResponse>() {
+abstract class JsUpdateMenuAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateMenuRequest, UpdateMenuResponse>() {
   abstract fun updateMenu(
     restaurantId: String,
     menuId: String,
     request: UpdateMenuRequest,
-  ): Promise<UpdateMenuResponse>
+  ): Promise<E>
   override fun parseRequest(json: String): UpdateMenuRequest = updateMenuRequestFromJson(json)
   override fun parseResponse(json: String): UpdateMenuResponse = updateMenuResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
@@ -105,8 +106,9 @@ abstract class JsUpdateMenuAPI : SimpleAPI<UpdateMenuRequest, UpdateMenuResponse
 }
 
 @JsExport
-abstract class JsDeleteMenuAPI : SimpleAPI<Nothing, DeleteMenuResponse>() {
-  abstract fun deleteMenu(restaurantId: String, menuId: String): Promise<DeleteMenuResponse>
+abstract class JsDeleteMenuAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, DeleteMenuResponse>() {
+  abstract fun deleteMenu(restaurantId: String, menuId: String): Promise<E>
   override fun parseResponse(json: String): DeleteMenuResponse = deleteMenuResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
   override fun getPath(): String =
@@ -120,12 +122,13 @@ abstract class JsDeleteMenuAPI : SimpleAPI<Nothing, DeleteMenuResponse>() {
 // ---- Category ----
 
 @JsExport
-abstract class JsCreateCategoryAPI : SimpleAPI<CreateCategoryRequest, CreateCategoryResponse>() {
+abstract class JsCreateCategoryAPI<E : WebResponse<Any>> :
+  SimpleAPI<CreateCategoryRequest, CreateCategoryResponse>() {
   abstract fun createCategory(
     restaurantId: String,
     menuId: String,
     request: CreateCategoryRequest,
-  ): Promise<CreateCategoryResponse>
+  ): Promise<E>
   override fun parseRequest(json: String): CreateCategoryRequest =
     createCategoryRequestFromJson(json)
   override fun parseResponse(json: String): CreateCategoryResponse =
@@ -139,13 +142,14 @@ abstract class JsCreateCategoryAPI : SimpleAPI<CreateCategoryRequest, CreateCate
 }
 
 @JsExport
-abstract class JsUpdateCategoryAPI : SimpleAPI<UpdateCategoryRequest, UpdateCategoryResponse>() {
+abstract class JsUpdateCategoryAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateCategoryRequest, UpdateCategoryResponse>() {
   abstract fun updateCategory(
     restaurantId: String,
     menuId: String,
     categoryId: String,
     request: UpdateCategoryRequest,
-  ): Promise<UpdateCategoryResponse>
+  ): Promise<E>
   override fun parseRequest(json: String): UpdateCategoryRequest =
     updateCategoryRequestFromJson(json)
   override fun parseResponse(json: String): UpdateCategoryResponse =
@@ -159,12 +163,9 @@ abstract class JsUpdateCategoryAPI : SimpleAPI<UpdateCategoryRequest, UpdateCate
 }
 
 @JsExport
-abstract class JsDeleteCategoryAPI : SimpleAPI<Nothing, DeleteCategoryResponse>() {
-  abstract fun deleteCategory(
-    restaurantId: String,
-    menuId: String,
-    categoryId: String,
-  ): Promise<DeleteCategoryResponse>
+abstract class JsDeleteCategoryAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, DeleteCategoryResponse>() {
+  abstract fun deleteCategory(restaurantId: String, menuId: String, categoryId: String): Promise<E>
   override fun parseResponse(json: String): DeleteCategoryResponse =
     deleteCategoryResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
@@ -179,13 +180,14 @@ abstract class JsDeleteCategoryAPI : SimpleAPI<Nothing, DeleteCategoryResponse>(
 // ---- Menu Item ----
 
 @JsExport
-abstract class JsCreateMenuItemAPI : SimpleAPI<CreateMenuItemRequest, CreateMenuItemResponse>() {
+abstract class JsCreateMenuItemAPI<E : WebResponse<Any>> :
+  SimpleAPI<CreateMenuItemRequest, CreateMenuItemResponse>() {
   abstract fun createMenuItem(
     restaurantId: String,
     menuId: String,
     categoryId: String,
     request: CreateMenuItemRequest,
-  ): Promise<CreateMenuItemResponse>
+  ): Promise<E>
   override fun parseRequest(json: String): CreateMenuItemRequest =
     createMenuItemRequestFromJson(json)
   override fun parseResponse(json: String): CreateMenuItemResponse =
@@ -199,14 +201,15 @@ abstract class JsCreateMenuItemAPI : SimpleAPI<CreateMenuItemRequest, CreateMenu
 }
 
 @JsExport
-abstract class JsUpdateMenuItemAPI : SimpleAPI<UpdateMenuItemRequest, UpdateMenuItemResponse>() {
+abstract class JsUpdateMenuItemAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateMenuItemRequest, UpdateMenuItemResponse>() {
   abstract fun updateMenuItem(
     restaurantId: String,
     menuId: String,
     categoryId: String,
     itemId: String,
     request: UpdateMenuItemRequest,
-  ): Promise<UpdateMenuItemResponse>
+  ): Promise<E>
   override fun parseRequest(json: String): UpdateMenuItemRequest =
     updateMenuItemRequestFromJson(json)
   override fun parseResponse(json: String): UpdateMenuItemResponse =
@@ -220,13 +223,14 @@ abstract class JsUpdateMenuItemAPI : SimpleAPI<UpdateMenuItemRequest, UpdateMenu
 }
 
 @JsExport
-abstract class JsRemoveMenuItemAPI : SimpleAPI<Nothing, DeleteMenuItemResponse>() {
+abstract class JsRemoveMenuItemAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, DeleteMenuItemResponse>() {
   abstract fun removeMenuItem(
     restaurantId: String,
     menuId: String,
     categoryId: String,
     itemId: String,
-  ): Promise<DeleteMenuItemResponse>
+  ): Promise<E>
   override fun parseResponse(json: String): DeleteMenuItemResponse =
     deleteMenuItemResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)

@@ -4,13 +4,15 @@ import com.munchies.commons.domain.port.AuthRole
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.commons.infrastructure.adapter.HttpMethod
 import com.munchies.commons.infrastructure.adapter.SimpleAPI
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.commons.infrastructure.adapter.errorResponseFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.*
 import com.munchies.restaurant.infrastructure.adapter.inbound.web.config.RestaurantServiceConfig
+import kotlin.js.JsExport
 import kotlin.js.Promise
 
 @JsExport
-abstract class JsCreateRestaurantAPI :
+abstract class JsCreateRestaurantAPI<E : WebResponse<Any>> :
   SimpleAPI<CreateRestaurantRequest, CreateRestaurantResponse>() {
   override fun getPath(): String =
     RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.CREATE_RESTAURANT_PATH
@@ -22,15 +24,13 @@ abstract class JsCreateRestaurantAPI :
   override fun parseResponse(json: String): CreateRestaurantResponse =
     createRestaurantResponseFromJson(json)
 
-  abstract fun createRestaurant(
-    request: CreateRestaurantRequest,
-  ): Promise<CreateRestaurantResponse>
+  abstract fun createRestaurant(request: CreateRestaurantRequest): Promise<E>
 }
 
 @JsExport
-abstract class JsGetRestaurantAPI :
+abstract class JsGetRestaurantAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetRestaurantResponse>() {
-  abstract fun getRestaurant(restaurantId: String): Promise<GetRestaurantResponse>
+  abstract fun getRestaurant(restaurantId: String): Promise<E>
   override fun parseResponse(json: String): GetRestaurantResponse =
     getRestaurantResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
@@ -43,9 +43,9 @@ abstract class JsGetRestaurantAPI :
 }
 
 @JsExport
-abstract class JsGetManagerRestaurantsAPI :
+abstract class JsGetManagerRestaurantsAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetManagerRestaurantsResponse>() {
-  abstract fun getManagerRestaurants(managerId: String): Promise<GetManagerRestaurantsResponse>
+  abstract fun getManagerRestaurants(managerId: String): Promise<E>
   override fun parseResponse(json: String): GetManagerRestaurantsResponse =
     getManagerRestaurantsResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
@@ -58,9 +58,9 @@ abstract class JsGetManagerRestaurantsAPI :
 }
 
 @JsExport
-abstract class JsUpdateRestaurantAPI :
+abstract class JsUpdateRestaurantAPI<E : WebResponse<Any>> :
   SimpleAPI<UpdateRestaurantRequest, UpdateRestaurantResponse>() {
-  abstract fun updateRestaurant(request: UpdateRestaurantRequest): Promise<UpdateRestaurantResponse>
+  abstract fun updateRestaurant(restaurantId: String, request: UpdateRestaurantRequest): Promise<E>
   override fun parseRequest(json: String): UpdateRestaurantRequest =
     updateRestaurantRequestFromJson(json)
   override fun parseResponse(json: String): UpdateRestaurantResponse =
@@ -74,12 +74,9 @@ abstract class JsUpdateRestaurantAPI :
 }
 
 @JsExport
-abstract class JsDeleteRestaurantAPI :
+abstract class JsDeleteRestaurantAPI<E : WebResponse<Any>> :
   SimpleAPI<DeleteRestaurantRequest, DeleteRestaurantResponse>() {
-  abstract fun deleteRestaurant(
-    managerId: String,
-    restaurantId: String,
-  ): Promise<DeleteRestaurantResponse>
+  abstract fun deleteRestaurant(managerId: String, restaurantId: String): Promise<E>
   override fun parseRequest(json: String): DeleteRestaurantRequest =
     deleteRestaurantRequestFromJson(json)
   override fun parseResponse(json: String): DeleteRestaurantResponse =
