@@ -13,6 +13,7 @@ import {
   LoginUserRequest,
   LoginUserAPI,
   LoginUserResponse,
+  LoginUserResult,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthedRequest, injectCookie, parseAuthRoleString } from "../../auth";
 import { request } from "../internal-client";
@@ -71,16 +72,12 @@ export class LoginUserRoute
     },
     respond: async (req: Request, res: Response) => {
       const response = await this.forward(req as AuthedRequest);
-      if (!(response instanceof ErrorResponse)) {
+      const result = response.result
+      if (result instanceof LoginUserResult)
         try {
-          const loginResult = (response as any).result ?? response;
-          const roleVal =
-            typeof loginResult.role === "string"
-              ? parseAuthRoleString(loginResult.role)
-              : loginResult.role;
           injectCookie(res, {
-            id: loginResult.id,
-            role: roleVal,
+            id: result.id,
+            role: result.role,
           });
         } catch (e: any) {
           res
@@ -94,11 +91,8 @@ export class LoginUserRoute
             );
           return;
         }
-      }
-
-      const code = (response as any).code ?? 200;
-      res.status(code).type("json").send(response.toJson());
-    },
+       res.status(response.code).type("json").send(response.toJson());
+      } 
   };
 
   forward = this.handler.forward;

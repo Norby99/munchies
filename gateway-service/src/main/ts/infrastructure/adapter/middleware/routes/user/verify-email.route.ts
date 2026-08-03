@@ -72,8 +72,7 @@ export class VerifyEmailRoute
     },
     respond: async (req: Request, res: Response) => {
       const result = await this.forward(req as AuthedRequest);
-      const code = (result as any).code ?? 200;
-      res.status(code).type("json").send(result.toJson());
+      res.status(result.code).type("json").send(result.toJson());
     },
   };
 

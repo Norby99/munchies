@@ -12,6 +12,7 @@ import {
 import {
   DeleteUserAPI,
   DeleteUserResponse,
+  UserServiceConfig,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthedRequest } from "../../auth";
 import { request } from "../internal-client";
@@ -43,7 +44,7 @@ export class DeleteUserRoute
       );
 
     const response = request<DeleteUserResponse>(
-      fillPath(uri + this.path, id),
+      fillPath(uri + this.path + UserServiceConfig.DELETE_USER_PATH, id),
       this.method,
       "",
       this.parseResponse,
@@ -68,8 +69,7 @@ export class DeleteUserRoute
     },
     respond: async (req: Request, res: Response) => {
       const result = await this.forward(req as AuthedRequest);
-      const code = (result as any).code ?? 200;
-      res.status(code).type("json").send(result.toJson());
+      res.status(result.code).type("json").send(result.toJson());
     },
   };
 

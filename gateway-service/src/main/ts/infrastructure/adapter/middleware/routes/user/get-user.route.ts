@@ -18,7 +18,7 @@ import {
 import { AuthedRequest } from "../../auth";
 import { axiosClient, request } from "../internal-client";
 import { fillPath } from "../routes";
-import { createSimpleRoute, SimpleRoute } from "../simple-route";
+import { SimpleRoute } from "../simple-route";
 export class GetUserRoute
   extends GetUserAPI<GetUserResponse | ErrorResponse>
   implements SimpleRoute<GetUserResponse>
