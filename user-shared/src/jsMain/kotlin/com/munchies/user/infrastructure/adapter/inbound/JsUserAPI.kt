@@ -107,7 +107,7 @@ abstract class JsDeleteUserAPI<E : WebResponse<Any>> :
   SimpleAPI<DeleteUserRequest, DeleteUserResponse>
   () {
   override fun getPath(): String =
-    UserServiceConfig.SERVICE_PATH + UserServiceConfig.DELETE_USER_PATH
+    UserServiceConfig.SERVICE_PATH
 
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE

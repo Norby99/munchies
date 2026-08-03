@@ -19,7 +19,7 @@ import {
 import { AuthedRequest, injectCookie, parseAuthRoleString } from "../../auth";
 import { axiosClient, request } from "../internal-client";
 import { fillPath } from "../routes";
-import { createSimpleRoute, SimpleRoute } from "../simple-route";
+import { SimpleRoute } from "../simple-route";
 
 export class RegisterUserRoute
   extends RegisterUserAPI<RegisterUserResponse | ErrorResponse>
