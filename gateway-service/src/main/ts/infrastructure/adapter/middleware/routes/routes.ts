@@ -41,9 +41,9 @@ function createRoute(
   }
 }
 
-function logRequests(): RequestHandler {
+function logRequests(path: string, method: string): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    console.log("req.body", req.body);
+    console.log("[ " + method.toUpperCase() + " | " + path + " ] => ", req.body);
     next();
   };
 }
@@ -61,9 +61,12 @@ export function catchError(handler: AsyncHandler): RequestHandler {
 }
 export function applyRoutes(app: Express) {
   for (const r of routes) {
-    const method = r.method;
+    const method = r.method as HttpMethod;
     const path = r.path;
-    const handlers: RequestHandler[] = [logRequests()];
+    const handlers: RequestHandler[] = [
+      logRequests(path, method.name.toString())
+    ];
+    
     if (r.authRole) {
       handlers.push(requireAuth());
       handlers.push(requireRole(r.authRole));
