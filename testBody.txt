@@ -1,1 +1,0 @@
-{"user":{"id":"11324483067912312317793","username":"uawdawdsername9087094516703056195","email":"awdawemail6179801415470142756","role":"CUSTOMER"},"hashedPassword":"pass","saltValue":"salt"}
