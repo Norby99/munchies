@@ -4,12 +4,12 @@ import com.munchies.order.application.port.inbound.GetOrderDetails
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
-import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponseType
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class GetOrderDetailsControllerUnitTest : BaseOrderController() {
 
@@ -23,31 +23,17 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.OK
     response.body().code shouldBe HttpStatus.OK.code
-    response.body().type shouldBe GetOrderDetailsResponseType.SUCCESS
-    response.body().order shouldBe realDto
+    response.body().result shouldBe realDto
   }
 
   @Test
-  fun `returns 404 Not Found when use case returns OrderNotFound`() {
+  fun `throws NotFoundException when use case returns OrderNotFound`() {
     every { getOrderDetails.execute(any()) } returns
       GetOrderDetails.Result.Failure.OrderNotFound
 
-    val response = controller.getOrderDetails(defaultOrderId.value)
-
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<GetOrderDetailsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<GetOrderDetailsResponse>().type shouldBe GetOrderDetailsResponseType.ORDER_NOT_FOUND
-    response.bd<GetOrderDetailsResponse>().order shouldBe null
+    val exception = assertThrows<NotFoundException> {
+      controller.getOrderDetails(defaultOrderId.value)
+    }
+    exception.message shouldBe "Order not found"
   }
-
-  /*@Test
-  fun `serializes and deserializes correctly`() {
-    val realDto = createSampleOrder().toDto()
-    val response =
-      GetOrderResponse(GetOrderResultSuccess(realDto), HttpStatus.OK.code)
-    val json = response.toJson()
-    val decoded = getOrderResponseFromJson(json)
-    decoded.code shouldBe response.code
-    decoded.result.shouldBeInstanceOf<GetOrderResultSuccess>()
-  }*/
 }

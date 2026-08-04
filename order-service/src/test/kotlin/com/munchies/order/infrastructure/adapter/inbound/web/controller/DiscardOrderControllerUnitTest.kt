@@ -1,13 +1,14 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
 import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.fixtures.defaultOrderId
-import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponseType
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class DiscardOrderControllerUnitTest : BaseOrderController() {
 
@@ -21,34 +22,31 @@ class DiscardOrderControllerUnitTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.OK
     response.body().code shouldBe HttpStatus.OK.code
-    response.body().type shouldBe DiscardOrderResponseType.SUCCESS
+    response.body().result shouldBe "Order discarded successfully"
   }
 
   @Test
-  fun `returns 404 Not Found on OrderNotFound`() {
+  fun `throws NotFoundException on OrderNotFound`() {
     val id = defaultOrderId.value
 
     every { discardOrder.execute(any()) } returns
       DiscardOrder.Result.Failure.OrderNotFound
 
-    val response = controller.discardOrder(id)
-
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<DiscardOrderResponse>().type shouldBe DiscardOrderResponseType.ORDER_NOT_FOUND
+    val exception = assertThrows<NotFoundException> {
+      controller.discardOrder(id)
+    }
+    exception.message shouldBe "Order not found"
   }
 
   @Test
-  fun `returns 400 Bad Request on OrderNotCancellable`() {
+  fun `throws ValidationException on OrderNotCancellable`() {
     val id = defaultOrderId.value
 
     every { discardOrder.execute(any()) } returns DiscardOrder.Result.Failure.OrderNotCancellable
 
-    val response = controller.discardOrder(id)
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<DiscardOrderResponse>().type shouldBe
-      DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
+    val exception = assertThrows<ValidationException> {
+      controller.discardOrder(id)
+    }
+    exception.message shouldBe "Order cannot be cancelled"
   }
 }

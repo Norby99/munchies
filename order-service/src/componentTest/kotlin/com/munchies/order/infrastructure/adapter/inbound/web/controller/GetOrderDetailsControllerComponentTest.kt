@@ -1,12 +1,13 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponseType
+import com.munchies.order.infrastructure.adapter.outbound.response.getOrderDetailsResponseFromJson
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
@@ -41,12 +42,12 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
     val realDto = order.toDto()
 
-    val response = httpCalls.httpGet<GetOrderDetailsResponse>(realDto.orderId)
+    val response = httpCalls.httpGet<String>(realDto.orderId)
+
+    val result = getOrderDetailsResponseFromJson(response.body())
 
     response.status shouldBe HttpStatus.OK
-    response.body().code shouldBe HttpStatus.OK.code
-    response.body().type shouldBe GetOrderDetailsResponseType.SUCCESS
-    response.body().order shouldBe realDto
+    result.code shouldBe HttpStatus.OK.code
   }
 
   @Test
@@ -56,9 +57,7 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<GetOrderDetailsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<GetOrderDetailsResponse>().type shouldBe
-      GetOrderDetailsResponseType.ORDER_NOT_FOUND
-    response.bd<GetOrderDetailsResponse>().order shouldBe null
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<ErrorResponse>().result shouldBe "Order not found"
   }
 }

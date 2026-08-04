@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
@@ -24,6 +25,7 @@ import org.testcontainers.mongodb.MongoDBContainer
 @SerdeImport(UpdateOrderItemsRequest::class)
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
+@SerdeImport(ErrorResponse::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseOrderController : TestPropertyProvider {
 
