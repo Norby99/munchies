@@ -1,5 +1,7 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
@@ -12,20 +14,16 @@ import com.munchies.order.infrastructure.adapter.inbound.OrderAPI
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponseType
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponseType
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
@@ -41,7 +39,7 @@ import jakarta.inject.Inject
  * operations to application inbound ports. It is responsible for:
  * - validating incoming request payloads at the HTTP boundary
  * - mapping DTOs to domain objects and commands
- * - translating use-case results into HTTP response codes and messages
+ * - throwing domain/http exceptions handled by [ExceptionHandlers]
  *
  * The controller intentionally avoids domain logic so the application and domain
  * layers remain independent from transport concerns.
@@ -55,19 +53,17 @@ import jakarta.inject.Inject
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
 @SerdeImport(GetOrderDetailsResponse::class)
-@SerdeImport(GetOrderDetailsResponseType::class)
 @SerdeImport(PlaceOrderResponse::class)
-@SerdeImport(PlaceOrderResponseType::class)
 @SerdeImport(AdvanceOrderStatusResponse::class)
-@SerdeImport(AdvanceOrderStatusResponseType::class)
 @SerdeImport(DiscardOrderResponse::class)
-@SerdeImport(DiscardOrderResponseType::class)
 @SerdeImport(UpdateOrderItemsResponse::class)
-@SerdeImport(UpdateOrderItemsResponseType::class)
 @SerdeImport(UpdateDeliveryOrderResponse::class)
-@SerdeImport(UpdateDeliveryOrderResponseType::class)
 @SerdeImport(UpdateTakeawayOrderResponse::class)
-@SerdeImport(UpdateTakeawayOrderResponseType::class)
+@SerdeImport(ErrorResponse::class)
+@SerdeImport(NotFoundException::class)
+@SerdeImport(UnauthorizedException::class)
+@SerdeImport(UnexpectedException::class)
+@SerdeImport(ValidationException::class)
 @Controller(
   value = OrderServiceConfig.SERVICE_PATH,
 )
@@ -110,24 +106,18 @@ class MicronautOrderController(
     description = "Retrieves an order by its unique identifier.",
   )
   @ApiResponse(responseCode = "200", description = "Found")
-  @ApiResponse(responseCode = "404", description = "Not Found")
+  @ApiResponse(responseCode = "404", description = "Order not found")
   override fun getOrderDetails(@PathVariable id: String): HttpResponse<GetOrderDetailsResponse> {
     return when (
       val res = getOrderDetails.execute(GetOrderDetailsCommand(OrderId(id)))
     ) {
       is GetOrderDetails.Result.Success -> HttpResponse.ok(
         GetOrderDetailsResponse(
+          result = res.order,
           code = HttpStatus.OK.code,
-          type = GetOrderDetailsResponseType.SUCCESS,
-          order = res.order,
         ),
       )
-      is GetOrderDetails.Result.Failure.OrderNotFound -> HttpResponse.notFound(
-        GetOrderDetailsResponse(
-          code = HttpStatus.NOT_FOUND.code,
-          type = GetOrderDetailsResponseType.ORDER_NOT_FOUND,
-        ),
-      )
+      is GetOrderDetails.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
     }
   }
 
@@ -140,7 +130,6 @@ class MicronautOrderController(
    * Response mapping:
    * - `200 OK` when order is placed successfully
    * - `400 Bad Request` when payload validation fails or date/items are invalid
-   * - `500 Internal Server Error` when the use case reports a failure
    *
    * @param request Place order payload containing order type and details.
    * @return An HTTP response containing the created order DTO or an error status.
@@ -152,39 +141,24 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Order placed successfully")
   @ApiResponse(responseCode = "400", description = "Invalid order data")
-  @ApiResponse(responseCode = "500", description = "Failed to place order")
   override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<PlaceOrderResponse> {
     return when (val res = placeOrder.execute(request.toCommand())) {
       is PlaceOrder.Result.Success -> HttpResponse.ok(
         PlaceOrderResponse(
+          result = res.order,
           code = HttpStatus.OK.code,
-          type = PlaceOrderResponseType.SUCCESS,
-          order = res.order,
         ),
       )
-      is PlaceOrder.Result.Failure.InvalidDate -> HttpResponse.badRequest(
-        PlaceOrderResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = PlaceOrderResponseType.INVALID_DATE,
-        ),
-      )
-      is PlaceOrder.Result.Failure.EmptyItems -> HttpResponse.badRequest(
-        PlaceOrderResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = PlaceOrderResponseType.EMPTY_ITEMS,
-        ),
-      )
-      is PlaceOrder.Result.Failure.InvalidItemQuantity -> HttpResponse.badRequest(
-        PlaceOrderResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = PlaceOrderResponseType.INVALID_ITEM_QUANTITY,
-        ),
+      is PlaceOrder.Result.Failure.InvalidDate -> throw ValidationException("Invalid date")
+      is PlaceOrder.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
+      is PlaceOrder.Result.Failure.InvalidItemQuantity -> throw ValidationException(
+        "Invalid item quantity",
       )
     }
   }
 
   /**
-   * Handles `POST orders/{id}/advance`.
+   * Handles `POST orders/advance`.
    *
    * Advances the order status to the next valid state.
    *
@@ -213,26 +187,19 @@ class MicronautOrderController(
       is AdvanceOrderStatus.Result.Success -> HttpResponse.ok(
         AdvanceOrderStatusResponse(
           code = HttpStatus.OK.code,
-          type = AdvanceOrderStatusResponseType.SUCCESS,
         ),
       )
-      is AdvanceOrderStatus.Result.Failure.OrderNotFound -> HttpResponse.notFound(
-        AdvanceOrderStatusResponse(
-          code = HttpStatus.NOT_FOUND.code,
-          type = AdvanceOrderStatusResponseType.ORDER_NOT_FOUND,
-        ),
+      is AdvanceOrderStatus.Result.Failure.OrderNotFound -> throw NotFoundException(
+        "Order not found",
       )
-      is AdvanceOrderStatus.Result.Failure.InvalidTransition -> HttpResponse.badRequest(
-        AdvanceOrderStatusResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = AdvanceOrderStatusResponseType.INVALID_TRANSACTION,
-        ),
+      is AdvanceOrderStatus.Result.Failure.InvalidTransition -> throw ValidationException(
+        "Invalid status transition",
       )
     }
   }
 
   /**
-   * Handles `Delete orders/{id}/discard`.
+   * Handles `DELETE orders/{id}`.
    *
    * Cancels/discards an order if it is still in a cancellable state.
    *
@@ -259,34 +226,25 @@ class MicronautOrderController(
       is DiscardOrder.Result.Success -> HttpResponse.ok(
         DiscardOrderResponse(
           code = HttpStatus.OK.code,
-          type = DiscardOrderResponseType.SUCCESS,
         ),
       )
-      is DiscardOrder.Result.Failure.OrderNotFound ->
-        HttpResponse.notFound(
-          DiscardOrderResponse(
-            code = HttpStatus.NOT_FOUND.code,
-            type = DiscardOrderResponseType.ORDER_NOT_FOUND,
-          ),
-        )
-      is DiscardOrder.Result.Failure.OrderNotCancellable -> HttpResponse.badRequest(
-        DiscardOrderResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = DiscardOrderResponseType.ORDER_NOT_CANCELLABLE,
-        ),
+      is DiscardOrder.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
+      is DiscardOrder.Result.Failure.OrderNotCancellable -> throw ValidationException(
+        "Order cannot be cancelled",
       )
     }
   }
 
   /**
-   * Handles `PATCH orders/{id}/items`.
+   * Handles `PATCH orders/items`.
    *
    * Updates the items in an order.
    *
    * Response mapping:
    * - `200 OK` when items are updated successfully
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` for unauthorized access or empty items
+   * - `401 Unauthorized` for unauthorized access
+   * - `400 Bad Request` for empty items
    *
    * @param request Request containing order identifier and new items.
    * @return An HTTP response representing the update result.
@@ -298,7 +256,8 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Order items updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  @ApiResponse(responseCode = "400", description = "Invalid items or unauthorized")
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
+  @ApiResponse(responseCode = "400", description = "Empty items")
   override fun updateOrderItems(
     @Body request: UpdateOrderItemsRequest,
   ): HttpResponse<UpdateOrderItemsResponse> {
@@ -308,39 +267,24 @@ class MicronautOrderController(
       is UpdateOrderItems.Result.Success -> HttpResponse.ok(
         UpdateOrderItemsResponse(
           code = HttpStatus.OK.code,
-          type = UpdateOrderItemsResponseType.SUCCESS,
         ),
       )
-      is UpdateOrderItems.Result.Failure.OrderNotFound -> HttpResponse.notFound(
-        UpdateOrderItemsResponse(
-          code = HttpStatus.NOT_FOUND.code,
-          type = UpdateOrderItemsResponseType.ORDER_NOT_FOUND,
-        ),
-      )
-      is UpdateOrderItems.Result.Failure.Unauthorized -> HttpResponse.badRequest(
-        UpdateOrderItemsResponse(
-          code = HttpStatus.UNAUTHORIZED.code,
-          type = UpdateOrderItemsResponseType.UNAUTHORIZED,
-        ),
-      )
-      is UpdateOrderItems.Result.Failure.EmptyItems -> HttpResponse.badRequest(
-        UpdateOrderItemsResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = UpdateOrderItemsResponseType.EMPTY_ITEMS,
-        ),
-      )
+      is UpdateOrderItems.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
+      is UpdateOrderItems.Result.Failure.Unauthorized -> throw UnauthorizedException("Unauthorized")
+      is UpdateOrderItems.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
     }
   }
 
   /**
-   * Handles `PATCH orders/{id}/delivery`.
+   * Handles `PATCH orders/delivery`.
    *
    * Updates delivery information for a delivery order.
    *
    * Response mapping:
    * - `200 OK` when delivery info is updated
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` for unauthorized access or invalid date
+   * - `401 Unauthorized` for unauthorized access
+   * - `400 Bad Request` for invalid date
    *
    * @param request Request containing delivery order update details.
    * @return An HTTP response representing the update result.
@@ -352,7 +296,8 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Delivery info updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  @ApiResponse(responseCode = "400", description = "Invalid data or unauthorized")
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
+  @ApiResponse(responseCode = "400", description = "Invalid date")
   override fun updateDeliveryOrderInfo(
     @Body request: UpdateDeliveryOrderRequest,
   ): HttpResponse<UpdateDeliveryOrderResponse> {
@@ -362,40 +307,30 @@ class MicronautOrderController(
       is UpdateDeliveryOrderInfo.Result.Success -> HttpResponse.ok(
         UpdateDeliveryOrderResponse(
           code = HttpStatus.OK.code,
-          type = UpdateDeliveryOrderResponseType.SUCCESS,
         ),
       )
-      is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound(
-        UpdateDeliveryOrderResponse(
-          code = HttpStatus.NOT_FOUND.code,
-          type = UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND,
-        ),
+      is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> throw NotFoundException(
+        "Order not found",
       )
-      is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized -> HttpResponse.badRequest(
-        UpdateDeliveryOrderResponse(
-          code = HttpStatus.UNAUTHORIZED.code,
-          type = UpdateDeliveryOrderResponseType.UNAUTHORIZED,
-        ),
+      is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized -> throw UnauthorizedException(
+        "Unauthorized",
       )
-      is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate ->
-        HttpResponse.badRequest(
-          UpdateDeliveryOrderResponse(
-            code = HttpStatus.BAD_REQUEST.code,
-            type = UpdateDeliveryOrderResponseType.INVALID_DATE,
-          ),
-        )
+      is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate -> throw ValidationException(
+        "Invalid date",
+      )
     }
   }
 
   /**
-   * Handles `PATCH orders/{id}/takeaway`.
+   * Handles `PATCH orders/takeaway`.
    *
    * Updates takeaway information for a takeaway order.
    *
    * Response mapping:
    * - `200 OK` when takeaway info is updated
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` for unauthorized access or invalid date
+   * - `401 Unauthorized` for unauthorized access
+   * - `400 Bad Request` for invalid date
    *
    * @param request Request containing takeaway order update details.
    * @return An HTTP response representing the update result.
@@ -407,7 +342,8 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Takeaway info updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  @ApiResponse(responseCode = "400", description = "Invalid data or unauthorized")
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
+  @ApiResponse(responseCode = "400", description = "Invalid date")
   override fun updateTakeawayOrderInfo(
     @Body request: UpdateTakeawayOrderRequest,
   ): HttpResponse<UpdateTakeawayOrderResponse> {
@@ -417,26 +353,16 @@ class MicronautOrderController(
       is UpdateTakeawayOrderInfo.Result.Success -> HttpResponse.ok(
         UpdateTakeawayOrderResponse(
           code = HttpStatus.OK.code,
-          type = UpdateTakeawayOrderResponseType.SUCCESS,
         ),
       )
-      is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound(
-        UpdateTakeawayOrderResponse(
-          code = HttpStatus.NOT_FOUND.code,
-          type = UpdateTakeawayOrderResponseType.ORDER_NOT_FOUND,
-        ),
+      is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> throw NotFoundException(
+        "Order not found",
       )
-      is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized -> HttpResponse.badRequest(
-        UpdateTakeawayOrderResponse(
-          code = HttpStatus.UNAUTHORIZED.code,
-          type = UpdateTakeawayOrderResponseType.UNAUTHORIZED,
-        ),
+      is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized -> throw UnauthorizedException(
+        "Unauthorized",
       )
-      is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate -> HttpResponse.badRequest(
-        UpdateTakeawayOrderResponse(
-          code = HttpStatus.BAD_REQUEST.code,
-          type = UpdateTakeawayOrderResponseType.INVALID_DATE,
-        ),
+      is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate -> throw ValidationException(
+        "Invalid date",
       )
     }
   }

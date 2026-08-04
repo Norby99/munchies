@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.defaultOrderId
@@ -7,7 +8,7 @@ import com.munchies.order.fixtures.secondaryOrderId
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponseType
+import com.munchies.order.infrastructure.adapter.outbound.response.discardOrderResponseFromJson
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -16,7 +17,6 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -45,11 +45,12 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
 
     orderRepository.findById(defaultOrderId).shouldNotBeNull()
 
-    val response = httpCalls.httpDelete<DiscardOrderResponse>(id)
+    val response = httpCalls.httpDelete<String>(id)
+
+    val result = discardOrderResponseFromJson(response.body())
 
     response.status shouldBe HttpStatus.OK
-    response.body().code shouldBe HttpStatus.OK.code
-    response.body().type shouldBe DiscardOrderResponseType.SUCCESS
+    result.code shouldBe HttpStatus.OK.code
 
     orderRepository.findById(defaultOrderId).shouldBeNull()
   }
@@ -64,8 +65,8 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<DiscardOrderResponse>().type shouldBe DiscardOrderResponseType.ORDER_NOT_FOUND
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<ErrorResponse>().result shouldBe "Order not found"
   }
 
   @Test
@@ -78,8 +79,7 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<DiscardOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<DiscardOrderResponse>().type shouldBe
-      DiscardOrderResponseType.ORDER_NOT_CANCELLABLE
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<ErrorResponse>().result shouldBe "Order cannot be cancelled"
   }
 }

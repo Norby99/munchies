@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
@@ -15,7 +16,7 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponseType
+import com.munchies.order.infrastructure.adapter.outbound.response.updateOrderItemsResponseFromJson
 import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -25,7 +26,6 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -59,14 +59,15 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
         createItemsDto(createNewItemsBigger()),
       )
 
-    val response = httpCalls.httpPatch<UpdateOrderItemsResponse>(
+    val response = httpCalls.httpPatch<String>(
       mapper.writeValueAsString(requestBody),
       OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
     )
 
+    val result = updateOrderItemsResponseFromJson(response.body())
+
     response.status shouldBe HttpStatus.OK
-    response.body().code shouldBe HttpStatus.OK.code
-    response.body().type shouldBe UpdateOrderItemsResponseType.SUCCESS
+    result.code shouldBe HttpStatus.OK.code
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder.items shouldBe createNewItemsBigger()
@@ -84,15 +85,14 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateOrderItemsResponse>().type shouldBe
-      UpdateOrderItemsResponseType.ORDER_NOT_FOUND
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<ErrorResponse>().result shouldBe "Order not found"
 
     orderRepository.findById(OrderId(requestBody.orderId)).shouldBeNull()
   }
 
   @Test
-  fun `PATCH update order items should return 400 Bad Request on Unauthorized`() {
+  fun `PATCH update order items should return 401 Unauthorized on Unauthorized`() {
     val initialOrder = createDeliveryOrder()
     val newOrder = initialOrder.copy(customerId = secondaryCustomerId)
 
@@ -107,9 +107,9 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
       )
     }.response
 
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
-    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.UNAUTHORIZED
+    response.status shouldBe HttpStatus.UNAUTHORIZED
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
+    response.bd<ErrorResponse>().result shouldBe "Unauthorized"
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder shouldNotBeEqual newOrder
@@ -132,8 +132,8 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<UpdateOrderItemsResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<UpdateOrderItemsResponse>().type shouldBe UpdateOrderItemsResponseType.EMPTY_ITEMS
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<ErrorResponse>().result shouldBe "Empty items"
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder.items shouldNotBe emptyList<OrderItem>()

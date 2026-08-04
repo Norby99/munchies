@@ -1,13 +1,15 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.fixtures.createUpdateDeliveryOrderRequest
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponseType
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class UpdateDeliveryOrderInfoControllerUnitTest : BaseOrderController() {
 
@@ -21,56 +23,49 @@ class UpdateDeliveryOrderInfoControllerUnitTest : BaseOrderController() {
     val response = controller.updateDeliveryOrderInfo(request)
 
     response.status shouldBe HttpStatus.OK
-    response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.OK.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
-      UpdateDeliveryOrderResponseType.SUCCESS
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().result shouldBe "Delivery info updated successfully"
   }
 
   @Test
-  fun `returns 404 Not Found on OrderNotFound`() {
+  fun `throws NotFoundException on OrderNotFound`() {
     val request = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfo.execute(any())
     } returns UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound
 
-    val response = controller.updateDeliveryOrderInfo(request)
-
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
-      UpdateDeliveryOrderResponseType.ORDER_NOT_FOUND
+    val exception = assertThrows<NotFoundException> {
+      controller.updateDeliveryOrderInfo(request)
+    }
+    exception.message shouldBe "Order not found"
   }
 
   @Test
-  fun `returns 400 Bad Request on Unauthorized`() {
+  fun `throws UnauthorizedException on Unauthorized`() {
     val request = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfo.execute(any())
     } returns UpdateDeliveryOrderInfo.Result.Failure.Unauthorized
 
-    val response = controller.updateDeliveryOrderInfo(request)
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
-      UpdateDeliveryOrderResponseType.UNAUTHORIZED
+    val exception = assertThrows<UnauthorizedException> {
+      controller.updateDeliveryOrderInfo(request)
+    }
+    exception.message shouldBe "Unauthorized"
   }
 
   @Test
-  fun `returns 400 Bad Request on InvalidDate`() {
+  fun `throws ValidationException on InvalidDate`() {
     val request = createUpdateDeliveryOrderRequest()
 
     every {
       updateDeliveryOrderInfo.execute(any())
     } returns UpdateDeliveryOrderInfo.Result.Failure.InvalidDate
 
-    val response = controller.updateDeliveryOrderInfo(request)
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<UpdateDeliveryOrderResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<UpdateDeliveryOrderResponse>().type shouldBe
-      UpdateDeliveryOrderResponseType.INVALID_DATE
+    val exception = assertThrows<ValidationException> {
+      controller.updateDeliveryOrderInfo(request)
+    }
+    exception.message shouldBe "Invalid date"
   }
 }

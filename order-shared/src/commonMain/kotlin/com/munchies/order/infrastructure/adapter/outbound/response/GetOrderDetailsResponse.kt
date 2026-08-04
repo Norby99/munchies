@@ -12,21 +12,12 @@ import kotlinx.serialization.json.Json
 @Serializable
 @SerialName("GetOrderDetailsResponse")
 open class GetOrderDetailsResponse(
-  val type: GetOrderDetailsResponseType,
-  val order: OrderDto? = null,
+  override val result: OrderDto,
   override val code: Int = 200,
-) : WebResponse<OrderDto?>() {
-  override val result: OrderDto? get() = order
-
+) : WebResponse<OrderDto>() {
   override fun toJson(): String = Json.encodeToString(this)
 }
 
 @JsExport
 fun getOrderDetailsResponseFromJson(json: String): GetOrderDetailsResponse =
   Json.decodeFromString(json)
-
-@Serializable
-enum class GetOrderDetailsResponseType {
-  SUCCESS,
-  ORDER_NOT_FOUND,
-}

@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createAdvanceOrderStatusRequest
@@ -9,14 +10,13 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponseType
+import com.munchies.order.infrastructure.adapter.outbound.response.advanceOrderStatusResponseFromJson
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -43,14 +43,15 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     val order = createDeliveryOrder(status = OrderStatus.PENDING)
     orderRepository.save(order)
 
-    val response = httpCalls.httpPost<AdvanceOrderStatusResponse>(
+    val response = httpCalls.httpPost<String>(
       createAdvanceOrderStatusRequest(defaultOrderId),
       OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH,
     )
 
+    val result = advanceOrderStatusResponseFromJson(response.body())
+
     response.status shouldBe HttpStatus.OK
-    response.body().code shouldBe HttpStatus.OK.code
-    response.body().type shouldBe AdvanceOrderStatusResponseType.SUCCESS
+    result.code shouldBe HttpStatus.OK.code
 
     val updatedOrder = orderRepository.findById(order.id) as DeliveryOrder
     updatedOrder.status shouldBe OrderStatus.PREPARING
@@ -66,9 +67,8 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
-    response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.NOT_FOUND.code
-    response.bd<AdvanceOrderStatusResponse>().type shouldBe
-      AdvanceOrderStatusResponseType.ORDER_NOT_FOUND
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<ErrorResponse>().result shouldBe "Order not found"
   }
 
   @Test
@@ -83,8 +83,7 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     }.response
 
     response.status shouldBe HttpStatus.BAD_REQUEST
-    response.bd<AdvanceOrderStatusResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
-    response.bd<AdvanceOrderStatusResponse>().type shouldBe
-      AdvanceOrderStatusResponseType.INVALID_TRANSACTION
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<ErrorResponse>().result shouldBe "Invalid status transition"
   }
 }
