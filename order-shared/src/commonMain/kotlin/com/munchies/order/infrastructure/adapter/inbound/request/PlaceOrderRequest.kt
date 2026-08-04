@@ -1,9 +1,14 @@
 package com.munchies.order.infrastructure.adapter.inbound.request
 
+import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
+import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import kotlin.js.JsExport
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 // TODO: ricordarsi di validare i campi null
 
@@ -26,9 +31,10 @@ import kotlinx.serialization.Serializable
  */
 @JsExport
 @Serializable
+@SerialName("PlaceOrderRequest")
 data class PlaceOrderRequest(
   val restaurantId: String,
-  val customerId: String,
+  val customerId: String = "",
   val items: List<OrderItemDto>,
   val orderType: OrderType,
 
@@ -45,4 +51,10 @@ data class PlaceOrderRequest(
   // DineIn
   val tableNumber: Int? = null,
   val numberOfGuests: Int? = null,
-)
+) : AuthenticatedRequest<PlaceOrderRequest>, JsonEncodable() {
+  override fun toJson(): String = Json.encodeToString(this)
+  override fun addId(userId: String): PlaceOrderRequest = copy(customerId = userId)
+}
+
+@JsExport
+fun placeOrderRequestFromJson(json: String): PlaceOrderRequest = Json.decodeFromString(json)
