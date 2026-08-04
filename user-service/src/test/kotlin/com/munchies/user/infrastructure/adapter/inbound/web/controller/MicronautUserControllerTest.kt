@@ -18,7 +18,7 @@ import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
-import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryImpl
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -454,7 +454,7 @@ class MicronautUserControllerTest {
   @Test
   fun `controller should return ok in verify-email found when user and otk match`() {
     val userId = validUserDto.id
-    val repo = MemoryUserRepositoryTest().createMemoryUserRepository()
+    val repo = MemoryUserRepositoryImpl()
 
     repo.save(validUser)
 
