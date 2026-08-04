@@ -17,9 +17,7 @@ import jakarta.inject.Singleton
  * - @Singleton: Marks this class as a singleton bean in the Micronaut application context.
  * - @Requires(env = ["dev"]): Ensures this implementation is only active in the "dev" environment.
  */
-@Singleton
-@Requires(env = ["dev"])
-interface MemoryUserCredentialsRepository : UserCredentialsRepository {
+sealed interface MemoryUserCredentialsRepository : UserCredentialsRepository {
 
   /**
    * The in-memory repository instance used for storing and managing UserCredentials entities.
@@ -76,3 +74,9 @@ interface MemoryUserCredentialsRepository : UserCredentialsRepository {
     repository.findById(entity.id)?.let { repository.delete(it) } ?: {}
   }
 }
+
+@Singleton
+@Requires(env = ["dev"])
+class MemoryUserCredentialsRepositoryImpl(
+  override val repository: InMemoryRepository<UserId, UserCredentials> = InMemoryRepository(),
+) : MemoryUserCredentialsRepository

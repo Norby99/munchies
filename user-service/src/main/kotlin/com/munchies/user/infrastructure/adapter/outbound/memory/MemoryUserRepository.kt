@@ -17,8 +17,7 @@ import jakarta.inject.Singleton
  * - @Singleton: Marks this class as a singleton bean in the Micronaut application context.
  * - @Requires(env = ["dev"]): Ensures this implementation is only active in the "dev" environment.
  */
-@Singleton
-@Requires(env = ["dev"])
+
 interface MemoryUserRepository : UserRepository {
 
   /**
@@ -63,3 +62,9 @@ interface MemoryUserRepository : UserRepository {
   override fun findByUsername(username: String): User? =
     repository.findByPredicate { it.profile.username == username }
 }
+
+@Singleton
+@Requires(env = ["dev"])
+class MemoryUserRepositoryImpl(
+  override val repository: InMemoryRepository<UserId, User> = InMemoryRepository(),
+) : MemoryUserRepository

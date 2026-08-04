@@ -1,7 +1,9 @@
 package com.munchies.user.infrastructure.adapter.outbound.memory
 
-import com.munchies.commons.repository.InMemoryRepository
-import com.munchies.user.domain.model.*
+import com.munchies.user.domain.model.UserId
+import com.munchies.user.domain.model.exampleUser
+import com.munchies.user.domain.model.exampleUserId
+import com.munchies.user.domain.model.update
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
@@ -9,27 +11,11 @@ import org.junit.jupiter.api.Test
 
 class MemoryUserRepositoryTest {
 
-  fun createMemoryUserRepository(): MemoryUserRepository {
-    return object : MemoryUserRepository {
-      val map = mutableMapOf<UserId, User>()
-      override val repository: InMemoryRepository<UserId, User>
-        get() = object : InMemoryRepository<UserId, User>(map) {
-        }
-
-      override fun findByEmail(email: String): User? = map.values.find {
-        it.profile.email.address == email
-      }
-
-      override fun findByUsername(username: String): User? =
-        map.values.find { it.profile.username == username }
-    }
-  }
-
   lateinit var repository: MemoryUserRepository
 
   @BeforeEach
   fun setUp() {
-    repository = createMemoryUserRepository()
+    repository = MemoryUserRepositoryImpl()
   }
 
   @Test

@@ -1,10 +1,9 @@
 package com.munchies.user.application.usecase
 
-import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.application.port.inbound.UpdateUserPassword.Companion.UpdateUserPasswordResult
 import com.munchies.user.domain.model.*
 import com.munchies.user.domain.port.*
-import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserCredentialsRepository
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserCredentialsRepositoryImpl
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -41,10 +40,6 @@ class UpdateUserPasswordUseCaseTest {
     passwordHasher = hasher,
     timeProvider = timeProvider,
   )
-
-  private class MemoryUserCredentialRepositoryImpl(
-    override val repository: InMemoryRepository<UserId, UserCredentials> = InMemoryRepository(),
-  ) : MemoryUserCredentialsRepository
 
   val validId = "userId"
   val validUserId = UserId(validId)
@@ -164,7 +159,7 @@ class UpdateUserPasswordUseCaseTest {
 
   @Test
   fun `execute should update password with new hash and salt on success`() {
-    val repo = MemoryUserCredentialRepositoryImpl()
+    val repo = MemoryUserCredentialsRepositoryImpl()
 
     repo.save(
       UserCredentials(
@@ -198,7 +193,7 @@ class UpdateUserPasswordUseCaseTest {
 
   @Test
   fun `execute should reset login attempts on successful password update`() {
-    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    val credentialsRepository = MemoryUserCredentialsRepositoryImpl()
     credentialsRepository.save(
       UserCredentials(
         validUserId,
@@ -227,7 +222,7 @@ class UpdateUserPasswordUseCaseTest {
   @Test
   fun `execute should reset lock on successful password update`() {
     val lockedUntil = currentTime - 1000L
-    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    val credentialsRepository = MemoryUserCredentialsRepositoryImpl()
     credentialsRepository.save(
       UserCredentials(
         validUserId,
@@ -257,7 +252,7 @@ class UpdateUserPasswordUseCaseTest {
   @Test
   fun `execute should increment login attempts on wrong password`() {
     val attemps = 2
-    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    val credentialsRepository = MemoryUserCredentialsRepositoryImpl()
     val cred = UserCredentials(
       id = validUserId,
       passwordHash = hashedValidPassword,
@@ -300,7 +295,7 @@ class UpdateUserPasswordUseCaseTest {
       loginAttempts = 0,
       lockedUntil = 0,
     )
-    val credentialsRepository = MemoryUserCredentialRepositoryImpl()
+    val credentialsRepository = MemoryUserCredentialsRepositoryImpl()
     credentialsRepository.save(cred)
     val hasher = mock<PasswordHasher> {
       on { hash(password = any(), salt = any()) } doReturn "wrongHash"

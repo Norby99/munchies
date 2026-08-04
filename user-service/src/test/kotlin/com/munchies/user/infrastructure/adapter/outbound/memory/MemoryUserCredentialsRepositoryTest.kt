@@ -1,6 +1,5 @@
 package com.munchies.user.infrastructure.adapter.outbound.memory
 
-import com.munchies.commons.repository.InMemoryRepository
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.model.UserId
 import io.kotest.matchers.shouldBe
@@ -9,14 +8,14 @@ import org.junit.jupiter.api.Test
 class MemoryUserCredentialsRepositoryTest {
   @Test
   fun `findById should return null when credentials do not exist`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
 
     memoryRepository.findById(UserId("missing-id")) shouldBe null
   }
 
   @Test
   fun `update should modify existing credentials and keep previous hash and salt`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
     val id = UserId("update-credentials-id")
     val stored = UserCredentials(
       id = id,
@@ -48,7 +47,7 @@ class MemoryUserCredentialsRepositoryTest {
 
   @Test
   fun `update should modify existing credentials using provided hash and salt`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
     val id = UserId("update-with-new-values-id")
     memoryRepository.save(
       UserCredentials(
@@ -81,7 +80,7 @@ class MemoryUserCredentialsRepositoryTest {
 
   @Test
   fun `update should do nothing when credentials do not exist`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
 
     memoryRepository.update(
       UserCredentials(
@@ -99,7 +98,7 @@ class MemoryUserCredentialsRepositoryTest {
 
   @Test
   fun `delete should remove existing credentials`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
     val credentials = UserCredentials(
       id = UserId("delete-id"),
       passwordHash = "hash",
@@ -114,7 +113,7 @@ class MemoryUserCredentialsRepositoryTest {
 
   @Test
   fun `delete should not fail when credentials do not exist`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
     val missingCredentials = UserCredentials(
       id = UserId("missing-delete-id"),
       passwordHash = "hash",
@@ -128,7 +127,7 @@ class MemoryUserCredentialsRepositoryTest {
 
   @Test
   fun `findByPredicate should return null when no credentials match the predicate`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
     val credentials = UserCredentials(
       id = UserId("non-matching-id"),
       passwordHash = "hash",
@@ -144,7 +143,7 @@ class MemoryUserCredentialsRepositoryTest {
 
   @Test
   fun `delete should not remove credentials when id does not match`() {
-    val memoryRepository = createMemoryUserCredentialsRepository()
+    val memoryRepository = MemoryUserCredentialsRepositoryImpl()
     val credentials = UserCredentials(
       id = UserId("existing-id"),
       passwordHash = "hash",
@@ -162,10 +161,4 @@ class MemoryUserCredentialsRepositoryTest {
 
     memoryRepository.findById(credentials.id) shouldBe credentials
   }
-
-  private fun createMemoryUserCredentialsRepository(): MemoryUserCredentialsRepository =
-    object : MemoryUserCredentialsRepository {
-      override val repository: InMemoryRepository<UserId, UserCredentials> =
-        object : InMemoryRepository<UserId, UserCredentials>() {}
-    }
 }
