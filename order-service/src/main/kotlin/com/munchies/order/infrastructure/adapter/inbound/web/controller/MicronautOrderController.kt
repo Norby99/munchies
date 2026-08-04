@@ -17,13 +17,7 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
-import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponse
-import com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
@@ -39,7 +33,7 @@ import jakarta.inject.Inject
  * operations to application inbound ports. It is responsible for:
  * - validating incoming request payloads at the HTTP boundary
  * - mapping DTOs to domain objects and commands
- * - throwing domain/http exceptions handled by [ExceptionHandlers]
+ * - throwing domain/http exceptions handled by ExceptionHandlers
  *
  * The controller intentionally avoids domain logic so the application and domain
  * layers remain independent from transport concerns.
