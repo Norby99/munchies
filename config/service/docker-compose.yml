@@ -94,6 +94,21 @@ services:
   #      <<: [ *kafka-env, *service-env ]
   #      MONGODB_URI: mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
 
+  restaurant-service:
+    <<: *service-common
+    container_name: munchies-restaurant-service
+    build:
+      context: restaurant-service/build/docker/main
+    image: munchies-restaurant-service:latest
+    ports: [ "8087:8080" ]
+    depends_on:
+      <<: *kafka-dependency
+      munchies-mongo-restaurant-service:
+        condition: service_healthy
+    environment:
+      <<: [ *kafka-env, *service-env ]
+      MONGODB_URI: mongodb://munchies-mongo-restaurant-service:27017/restaurant-service
+
   gateway-service:
     <<: *service-common
     container_name: munchies-gateway-service
@@ -109,4 +124,6 @@ services:
       <<: [ *kafka-env, *service-env ]
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8080
+      ORDER_SERVICE_URL: http://order-service:8080
       MONGODB_URI: mongodb://munchies-mongo-gateway-service:27017/gateway-service

@@ -48,6 +48,13 @@ services:
     volumes: [ "mongo_gateway_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
+  munchies-mongo-restaurant-service:
+    image: mongo:7.0
+    container_name: munchies-mongo-restaurant-service
+    ports: [ "27024:27017" ]
+    volumes: [ "mongo_restaurant_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
+
 volumes:
   mongo_order_data:
   mongo_user_data:
@@ -55,3 +62,4 @@ volumes:
   mongo_notification_data:
   mongo_table_reservation_data:
   mongo_gateway_data:
+  mongo_restaurant_data:
