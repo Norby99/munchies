@@ -4,11 +4,11 @@ import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.ConflictException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.UnauthorizedException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.ValidationException
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.NotFoundException
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.server.exceptions.ExceptionHandler
-import io.micronaut.http.server.exceptions.NotFoundException
 import jakarta.inject.Singleton
 
 @Singleton
