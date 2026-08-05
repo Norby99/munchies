@@ -4,9 +4,8 @@ import cookieParser from "cookie-parser";
 import { applyRoutes } from "./infrastructure/adapter/middleware/routes/routes";
 async function main(): Promise<void> {
   const app = express();
-  app.use(express.raw({ type: "application/json" }));
+  app.use(express.raw({ type: "application/json", limit: '1mb'}));
   app.use(cookieParser());
-
   applyRoutes(app);
 
   const PORT = process.env.PORT ?? 8080;

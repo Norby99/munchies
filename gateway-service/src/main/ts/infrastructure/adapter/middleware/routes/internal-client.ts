@@ -7,6 +7,8 @@ export const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
   validateStatus: (status: number) => status <= 500,
+  timeout: 10,
+  
 });
 
 axiosClient.interceptors.request.use((config) => {
