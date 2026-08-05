@@ -44,7 +44,7 @@ export function requireAuth(
     res: ExpressResponse,
     next: NextFunction
   ) => {
-    const missingToken = 500;
+    const missingToken = 401;
     console.log("cookies", req.cookies["authToken"]);
     if (req.cookies["authToken"] === undefined) {
       res
@@ -82,12 +82,13 @@ export function requireRole(
     res: ExpressResponse,
     next: NextFunction
   ) => {
-    const unauthorizedCode = 401;
+    const unauthorizedCode = 403;
+    const missingRole = 401;
     if (!req.user) {
       res
-        .status(unauthorizedCode)
+        .status(missingRole)
         .type("json")
-        .send(new ErrorResponse("Missing role", unauthorizedCode).toJson());
+        .send(new ErrorResponse("Missing role", missingRole).toJson());
       return;
     }
     if (req.user?.role.visibility >= requiredRole.visibility) next();
