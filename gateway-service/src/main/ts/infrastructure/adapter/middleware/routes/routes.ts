@@ -1,5 +1,4 @@
 import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
-import { RouteDefinition } from "./route-definition";
 import { SimpleRoute } from "./simple-route";
 import { userRoutes } from "./user/user.routes";
 import { restaurantRoutes } from "./restaurant/restaurant.routes";
