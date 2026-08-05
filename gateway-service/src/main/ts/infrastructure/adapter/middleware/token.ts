@@ -25,6 +25,7 @@ import {
   getTokenRepository,
   TokenRepository,
 } from "../outbound/token-repository";
+import { parseAuthRoleString } from "./auth";
 export class AuthTokenProvider extends TokenProvider {
   private readonly secret: string | undefined = process.env.JWT_SECRET;
   private readonly repository: TokenRepository<string> = getTokenRepository();
@@ -69,9 +70,7 @@ export class AuthTokenDecoder extends TokenDecoder {
       console.log("decoded token: ", decoded);
       return new DecodedTokenSuccess(
         decoded[ID_CLAIM]!!?.toString(),
-        decoded[ROLE_CLAIM]!!.toString() == AuthRole.CUSTOMER.name
-          ? AuthRole.CUSTOMER
-          : AuthRole.MANAGER
+        parseAuthRoleString(decoded[ROLE_CLAIM]!!.toString())
       );
     } catch (e: any) {
       return new DecodedTokenFailure("error: " + e);
