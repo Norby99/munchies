@@ -49,7 +49,6 @@ class MicronautUserControllerTest {
   ) = MicronautUserController(
     services = services,
     emailConfirmationKafkaClient = emailConfirmationKafkaClient,
-    paymentClient = mock(),
   )
 
   private val validUser = exampleUser
