@@ -3,8 +3,6 @@ package com.munchies.user.infrastructure.adapter.inbound.web.controller
 import com.munchies.commons.domain.port.InvalidInput
 import com.munchies.commons.domain.port.ValidationException
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
-import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
-import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.domain.model.UserCredentials
@@ -22,7 +20,6 @@ import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
-import com.munchies.user.infrastructure.adapter.outbound.http.PaymentService
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotificationInfo.USER_CONFIRMATION_KEY
@@ -83,9 +80,6 @@ class MicronautUserController(
   @Inject
   private val services: UserServices,
 
-  @Inject
-  private val paymentClient: PaymentService,
-
   /**
    * Kafka producer/client used to emit email confirmation events after a user
    * successfully verifies their email address.
@@ -134,34 +128,6 @@ class MicronautUserController(
    * Application use case for verifying a user's email address.
    */
   private val verifyUserEmail: VerifyUserEmail = services.verifyUserEmail
-
-  /**
-   * Lightweight diagnostic endpoint that exercises the payment client.
-   *
-   * This method is not part of the user API contract. It appears to be a
-   * temporary or debugging-oriented endpoint that invokes the payment service
-   * with placeholder data and returns the raw payment response.
-   *
-   * @return an HTTP 200 response containing the payment service result.
-   */
-  @Get("/")
-  fun get(): HttpResponse<ProcessPaymentResponse> {
-    println("GET / called")
-    val response = paymentClient.processPayment(
-      com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest(
-        orderId = "",
-        PaymentDetails(
-          amount = 0,
-          currency = com.munchies.payment.infrastructure.adapter.dto.Currency.USD,
-          method = com.munchies.payment.infrastructure.adapter.dto.PaymentMethod.CARD,
-        ),
-      ),
-    )
-
-    return HttpResponse.ok(
-      response,
-    )
-  }
 
   /**
    * Handles `GET users/{id}/`.
