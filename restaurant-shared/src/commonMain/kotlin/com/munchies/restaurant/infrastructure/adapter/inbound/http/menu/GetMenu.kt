@@ -16,7 +16,6 @@ open class GetMenuResponse(
   override val result: MenuDto,
   override val code: Int = 200,
 ) : WebResponse<MenuDto>() {
-  val menu: MenuDto get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 
@@ -30,7 +29,6 @@ open class GetRestaurantMenusResponse(
   override val result: Array<MenuSummaryDto> = emptyArray(),
   override val code: Int = 200,
 ) : WebResponse<Array<MenuSummaryDto>>() {
-  val menus: Array<MenuSummaryDto> get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

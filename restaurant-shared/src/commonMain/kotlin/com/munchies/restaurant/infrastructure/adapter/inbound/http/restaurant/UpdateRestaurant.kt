@@ -34,7 +34,6 @@ open class UpdateRestaurantResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {
-  val restaurantId: String get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

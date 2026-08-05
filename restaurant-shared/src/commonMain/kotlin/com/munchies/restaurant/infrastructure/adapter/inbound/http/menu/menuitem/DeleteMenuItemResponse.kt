@@ -14,7 +14,6 @@ open class DeleteMenuItemResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {
-  val menuItemId: String get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

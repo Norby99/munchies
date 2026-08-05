@@ -17,7 +17,6 @@ open class GetRestaurantResponse(
   override val result: RestaurantDto,
   override val code: Int = 200,
 ) : WebResponse<RestaurantDto>() {
-  val restaurant: RestaurantDto get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 
@@ -45,7 +44,6 @@ open class GetManagerRestaurantsResponse(
   override val result: Array<RestaurantDto>,
   override val code: Int = 200,
 ) : WebResponse<Array<RestaurantDto>>() {
-  val restaurants: Array<RestaurantDto> get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 
