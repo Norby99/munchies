@@ -31,7 +31,6 @@ open class CreateMenuItemResponse(
   override val result: String,
   override val code: Int = 201,
 ) : WebResponse<String>() {
-  val itemId: String get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

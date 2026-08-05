@@ -15,8 +15,6 @@ open class VerifyEmailResponse(
   override val code: Int = 200,
 ) : WebResponse<String>() {
   override fun toJson(): String = Json.encodeToString(this)
-
-  val msg: String get() = result
 }
 
 @JsExport

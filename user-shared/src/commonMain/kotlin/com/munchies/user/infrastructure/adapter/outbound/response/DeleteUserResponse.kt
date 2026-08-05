@@ -16,8 +16,6 @@ open class DeleteUserResponse(
   override val code: Int = 200,
 ) : WebResponse<UserDTO>() {
   override fun toJson(): String = Json.encodeToString(this)
-
-  val user: UserDTO get() = result
 }
 
 @JsExport
