@@ -5,7 +5,6 @@ import com.munchies.restaurant.domain.valueobject.RestaurantId
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,7 +25,7 @@ class CreateMenuTest {
     val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "Winter Menu",
-      validity = ValidityConfig.Period(LocalDate.of(2026, 12, 1), LocalDate.of(2027, 2, 28)),
+      validity = ValidityInput.Period("2026-12-01", "2027-02-28"),
     )
 
     coEvery { menuRepository.save(any()) } returns Unit
@@ -44,7 +43,7 @@ class CreateMenuTest {
     val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "Main Menu",
-      validity = ValidityConfig.Always,
+      validity = ValidityInput.Always,
     )
 
     coEvery { menuRepository.save(any()) } returns Unit
@@ -62,7 +61,7 @@ class CreateMenuTest {
     val command = CreateMenuCommand(
       restaurantId = RestaurantId().value,
       name = "   ",
-      validity = ValidityConfig.Always,
+      validity = ValidityInput.Always,
     )
 
     when (val result = createMenuUseCase(command)) {

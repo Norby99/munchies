@@ -1,5 +1,28 @@
 # Restaurant Service
 
+## Module dependency graph
+
+<!--region graph-->
+```mermaid
+---
+config:
+  layout: elk
+  elk:
+    nodePlacementStrategy: SIMPLE
+---
+graph TB
+  :restaurant-shared[restaurant-shared]:::unknown
+  :restaurant-service[restaurant-service]:::unknown
+  :commons[commons]:::unknown
+
+  :restaurant-service -.-> :commons
+  :restaurant-service -.-> :restaurant-shared
+  :restaurant-shared -.->|commonMainImplementation| :commons
+
+classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
+```
+<!--endregion-->
+
 Restaurant Service è un microservizio per la gestione della configurazione dei ristoranti, incluso le tavole, i menu, i driver e la configurazione dell'output della cucina.
 
 ## Struttura del Progetto
@@ -114,4 +137,3 @@ Per eseguire i test BDD:
 ```bash
 ./gradlew bddTest
 ```
-

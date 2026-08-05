@@ -1,103 +1,78 @@
-import { Response as ExpressResponse } from "express";
-import { HttpMethod, AuthRole } from "munchies-commons/kotlin/commons-modules";
 import {
-  DeleteUserRequest,
+  Response as ExpressResponse,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
+import {
+  HttpMethod,
+  AuthRole,
+  ErrorResponse,
+} from "munchies-commons/kotlin/commons-modules";
+import {
   DeleteUserAPI,
   DeleteUserResponse,
-  DeleteUserFailure,
-  DeleteUserResult,
-  DeleteUserSuccess,
   UserServiceConfig,
 } from "munchies-user-service-shared/kotlin/user-modules";
 import { AuthedRequest } from "../../auth";
-import { RouteDefinition, InternalRoute } from "../route-definition";
-import { internalAxiosRequest } from "../internal-client";
+import { request } from "../internal-client";
 import { fillPath } from "../routes";
-class InternalDeleteUserRoute
-  extends DeleteUserAPI
-  implements
-    InternalRoute<
-      DeleteUserAPI,
-      DeleteUserRequest,
-      DeleteUserResponse,
-      DeleteUserResult,
-      DeleteUserSuccess,
-      DeleteUserFailure
-    >
+import { SimpleRoute } from "../simple-route";
+
+export class DeleteUserRoute
+  extends DeleteUserAPI<DeleteUserResponse | ErrorResponse>
+  implements SimpleRoute<DeleteUserResponse>
 {
   constructor() {
     super();
-    this.service = this;
-    this.path = this.service.getPath();
-    this.authRole = this.service.getRequiredAuthRole();
-    this.method = this.service.getMethod();
+    let api = this;
+
+    this.path = api.getPath();
+    this.method = api.getMethod();
+    this.authRole = api.getRequiredAuthRole();
   }
-  service: DeleteUserAPI;
+
   path: string;
-  authRole: AuthRole | null;
   method: HttpMethod;
+  authRole: AuthRole | null;
 
-  generateErrorResponse(reason: string, code: number): DeleteUserResponse {
-    return new DeleteUserResponse(this.generateFailure(reason), code);
-  }
-  parseResult(result: DeleteUserResult): DeleteUserFailure | DeleteUserSuccess {
-    if (result.type === DeleteUserSuccess.name) {
-      return result as DeleteUserSuccess;
-    } else if (result.type === DeleteUserFailure.name) {
-      return result as DeleteUserFailure;
-    } else {
-      return this.generateFailure("Invalid Type in Result");
-    }
-  }
-
-  request(request: DeleteUserRequest): Promise<DeleteUserResponse> {
-    return this.deleteUser(request.userId);
-  }
-
-  async deleteUser(id: string): Promise<DeleteUserResponse> {
+  async deleteUser(id: string): Promise<DeleteUserResponse | ErrorResponse> {
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
-      return this.generateErrorResponse("Missing User Service URL", 500);
+      return Promise.resolve(
+        new ErrorResponse("Missing User Service URL", 500),
+      );
 
-    return await internalAxiosRequest(
-      fillPath(uri + this.path, id),
-      this.getMethod(),
+    const response = request<DeleteUserResponse>(
+      fillPath(uri + this.path + UserServiceConfig.DELETE_USER_PATH, id),
+      this.method,
       "",
       this.parseResponse,
-      this.parseResult,
-      this.generateResponse,
-      this.generateFailure
+      this.parseError,
     );
-  }
-}
 
-export class DeleteUserRoute
-  implements RouteDefinition<DeleteUserResponse, DeleteUserFailure>
-{
-  constructor() {
-    this.internalRoute = new InternalDeleteUserRoute();
-    this.path = this.internalRoute.path;
-    this.method = this.internalRoute.method;
-    this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.service.generateFailure;
+    return response;
   }
-  internalRoute: InternalRoute<any, any, any, any, any, any>;
 
-  path: string = UserServiceConfig.SERVICE_PATH;
-  method: HttpMethod;
-  authRole: AuthRole | null;
-  onAuthFail: (msg: string) => DeleteUserFailure;
-  forward: (req: AuthedRequest) => Promise<DeleteUserResponse> = (
-    req: AuthedRequest
-  ) => {
-    const id = req.user!!.id;
-    return this.internalRoute.request(new DeleteUserRequest(id));
+  private handler: {
+    forward: (
+      req: AuthedRequest,
+    ) => Promise<DeleteUserResponse | ErrorResponse>;
+    respond: RequestHandler;
+  } = {
+    forward: async (req: AuthedRequest) => {
+      try {
+        return this.deleteUser(req.user!!.id);
+      } catch (err: any) {
+        return new ErrorResponse("DeleteUser forward: \n" + String(err), 500);
+      }
+    },
+    respond: async (req: Request, res: Response) => {
+      const result = await this.forward(req as AuthedRequest);
+      res.status(result.code).type("json").send(result.toJson());
+    },
   };
-  respond: (req: AuthedRequest, res: ExpressResponse) => void = async (
-    req,
-    res
-  ) => {
-    const response = await this.forward(req);
-    res.status(response.code).type("json").send(response.toJson());
-  };
+
+  forward = this.handler.forward;
+  respond = this.handler.respond;
 }

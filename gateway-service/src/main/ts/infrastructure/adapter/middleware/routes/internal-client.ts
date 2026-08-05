@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosStatic } from "axios";
 
-const axiosClient = axios.create({
+export const axiosClient = axios.create({
   transformRequest: [(data) => data],
   transformResponse: [(data) => data],
   headers: {
@@ -20,6 +20,7 @@ axiosClient.interceptors.response.use((response) => {
 });
 
 import {
+  ErrorResponse,
   HttpMethod,
   JsonEncodable,
   WebResponse,
@@ -42,25 +43,24 @@ function axiosMethodChooser(
   }
 }
 
-async function request<
-  Response extends { result: Result; code: number },
-  Result extends { type: string },
-  Success extends Result,
-  Failure extends Result
+export async function request<
+  Response
 >(
   uri: string,
   httpMethod: HttpMethod,
   body: string,
-  fromJson: (json: string) => Response,
-  toResult: (result: Result) => Success | Failure,
-  toResponse: (result: Success | Failure, code: number) => Response,
-  toFailure: (err: string) => Failure
-): Promise<Response> {
+  responseFromJson: (json: string) => Response,
+  errorFromJson: (json: string) => ErrorResponse,
+): Promise<Response | ErrorResponse> {
   return axiosMethodChooser(axiosClient, uri, httpMethod, body)
     .then((value) => {
       console.log("received data: ", value.data);
-      const response = fromJson(value.data);
-      return toResponse(toResult(response.result), response.code);
+      
+      if (value.status >= 400) {
+        return errorFromJson(value.data);
+      }
+      
+      return responseFromJson(value.data);
     })
     .catch((err) => {
       console.error("-----Error-----");
@@ -68,35 +68,8 @@ async function request<
       console.error("with: " + body);
       console.error("result err: ", err);
       console.error("-----End Error-----");
-      return toResponse(toFailure(JSON.stringify(err)), 500);
+      return new ErrorResponse("Internal Axios Request: \n" + String(err), 500);
+      
     });
 }
 
-import { API } from "munchies-commons/kotlin/commons-modules";
-import { InternalRoute } from "./route-definition";
-export function internalAxiosRequest<
-  Service extends API,
-  Request extends JsonEncodable,
-  Response extends WebResponse,
-  Result extends { type: string },
-  Success extends Result,
-  Failure extends Result & { reason: string }
->(
-  uri: string,
-  httpMethod: HttpMethod,
-  body: string,
-  fromJson: (json: string) => Response,
-  toResult: (result: Result) => Success | Failure,
-  toResponse: (result: Success | Failure, code: number) => Response,
-  toFailure: (err: string) => Failure
-): Promise<Response> {
-  return request(
-    uri,
-    httpMethod,
-    body,
-    fromJson,
-    toResult,
-    toResponse,
-    toFailure
-  );
-}

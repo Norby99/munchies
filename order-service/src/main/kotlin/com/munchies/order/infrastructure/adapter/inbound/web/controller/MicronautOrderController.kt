@@ -1,17 +1,25 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.application.port.inbound.*
+import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
-import com.munchies.order.infrastructure.adapter.inbound.OrderAPI.*
+import com.munchies.order.infrastructure.adapter.inbound.OrderAPI
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
+import com.munchies.order.infrastructure.adapter.outbound.response.*
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
 import io.micronaut.serde.annotation.SerdeImport
 import io.swagger.v3.oas.annotations.Operation
@@ -25,24 +33,31 @@ import jakarta.inject.Inject
  * operations to application inbound ports. It is responsible for:
  * - validating incoming request payloads at the HTTP boundary
  * - mapping DTOs to domain objects and commands
- * - translating use-case results into HTTP response codes and messages
+ * - throwing domain/http exceptions handled by ExceptionHandlers
  *
  * The controller intentionally avoids domain logic so the application and domain
  * layers remain independent from transport concerns.
  */
 @SerdeImport(OrderDto::class)
-@SerdeImport(OrderDto.Delivery::class)
-@SerdeImport(OrderDto.Takeaway::class)
-@SerdeImport(OrderDto.DineIn::class)
 @SerdeImport(OrderItemDto::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
-@SerdeImport(GetOrderDetailsRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
-@SerdeImport(DiscardOrderRequest::class)
 @SerdeImport(UpdateOrderItemsRequest::class)
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
+@SerdeImport(GetOrderDetailsResponse::class)
+@SerdeImport(PlaceOrderResponse::class)
+@SerdeImport(AdvanceOrderStatusResponse::class)
+@SerdeImport(DiscardOrderResponse::class)
+@SerdeImport(UpdateOrderItemsResponse::class)
+@SerdeImport(UpdateDeliveryOrderResponse::class)
+@SerdeImport(UpdateTakeawayOrderResponse::class)
+@SerdeImport(ErrorResponse::class)
+@SerdeImport(NotFoundException::class)
+@SerdeImport(UnauthorizedException::class)
+@SerdeImport(UnexpectedException::class)
+@SerdeImport(ValidationException::class)
 @Controller(
   value = OrderServiceConfig.SERVICE_PATH,
 )
@@ -53,13 +68,13 @@ class MicronautOrderController(
   @Inject
   private val services: OrderServices,
 ) :
-  GetOrderDetailsAPI<String, HttpResponse<OrderDto>>,
-  PlaceOrderAPI<PlaceOrderRequest, HttpResponse<String>>,
-  AdvanceOrderStatusAPI<AdvanceOrderStatusRequest, HttpResponse<String>>,
-  DiscardOrderAPI<DiscardOrderRequest, HttpResponse<String>>,
-  UpdateOrderItemsAPI<UpdateOrderItemsRequest, HttpResponse<String>>,
-  UpdateDeliveryOrderInfoAPI<UpdateDeliveryOrderRequest, HttpResponse<String>>,
-  UpdateTakeawayOrderInfoAPI<UpdateTakeawayOrderRequest, HttpResponse<String>> {
+  OrderAPI.GetOrderDetailsAPI<HttpResponse<GetOrderDetailsResponse>>,
+  OrderAPI.PlaceOrderAPI<HttpResponse<PlaceOrderResponse>>,
+  OrderAPI.AdvanceOrderStatusAPI<HttpResponse<AdvanceOrderStatusResponse>>,
+  OrderAPI.DiscardOrderAPI<HttpResponse<DiscardOrderResponse>>,
+  OrderAPI.UpdateOrderItemsAPI<HttpResponse<UpdateOrderItemsResponse>>,
+  OrderAPI.UpdateDeliveryOrderInfoAPI<HttpResponse<UpdateDeliveryOrderResponse>>,
+  OrderAPI.UpdateTakeawayOrderInfoAPI<HttpResponse<UpdateTakeawayOrderResponse>> {
 
   private val getOrderDetails: GetOrderDetails = services.getOrderDetails
   private val placeOrder: PlaceOrder = services.placeOrder
@@ -85,13 +100,18 @@ class MicronautOrderController(
     description = "Retrieves an order by its unique identifier.",
   )
   @ApiResponse(responseCode = "200", description = "Found")
-  @ApiResponse(responseCode = "404", description = "Not Found")
-  override fun getOrderDetails(@PathVariable id: String): HttpResponse<OrderDto> {
+  @ApiResponse(responseCode = "404", description = "Order not found")
+  override fun getOrderDetails(@PathVariable id: String): HttpResponse<GetOrderDetailsResponse> {
     return when (
       val res = getOrderDetails.execute(GetOrderDetailsCommand(OrderId(id)))
     ) {
-      is GetOrderDetails.Result.Success -> HttpResponse.ok(res.order)
-      is GetOrderDetails.Result.Failure.OrderNotFound -> HttpResponse.notFound()
+      is GetOrderDetails.Result.Success -> HttpResponse.ok(
+        GetOrderDetailsResponse(
+          result = res.order,
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is GetOrderDetails.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
     }
   }
 
@@ -104,7 +124,6 @@ class MicronautOrderController(
    * Response mapping:
    * - `200 OK` when order is placed successfully
    * - `400 Bad Request` when payload validation fails or date/items are invalid
-   * - `500 Internal Server Error` when the use case reports a failure
    *
    * @param request Place order payload containing order type and details.
    * @return An HTTP response containing the created order DTO or an error status.
@@ -116,22 +135,24 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Order placed successfully")
   @ApiResponse(responseCode = "400", description = "Invalid order data")
-  @ApiResponse(responseCode = "500", description = "Failed to place order")
-  override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<String> {
+  override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<PlaceOrderResponse> {
     return when (val res = placeOrder.execute(request.toCommand())) {
-      is PlaceOrder.Result.Success ->
-        HttpResponse.ok("Order placed successfully with ID: ${res.order.orderId}")
-      is PlaceOrder.Result.Failure.InvalidDate ->
-        HttpResponse.badRequest("Invalid date for order type")
-      is PlaceOrder.Result.Failure.EmptyItems ->
-        HttpResponse.badRequest("Order must contain at least one item")
-      is PlaceOrder.Result.Failure.InvalidItemQuantity ->
-        HttpResponse.badRequest("Item quantity must be greater than zero")
+      is PlaceOrder.Result.Success -> HttpResponse.ok(
+        PlaceOrderResponse(
+          result = res.order,
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is PlaceOrder.Result.Failure.InvalidDate -> throw ValidationException("Invalid date")
+      is PlaceOrder.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
+      is PlaceOrder.Result.Failure.InvalidItemQuantity -> throw ValidationException(
+        "Invalid item quantity",
+      )
     }
   }
 
   /**
-   * Handles `POST orders/{id}/advance`.
+   * Handles `POST orders/advance`.
    *
    * Advances the order status to the next valid state.
    *
@@ -151,19 +172,28 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "200", description = "Order status advanced successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Invalid status transition")
-  override fun advanceOrderStatus(@Body request: AdvanceOrderStatusRequest): HttpResponse<String> {
+  override fun advanceOrderStatus(
+    @Body request: AdvanceOrderStatusRequest,
+  ): HttpResponse<AdvanceOrderStatusResponse> {
     return when (
       advanceOrderStatus.execute(request.toCommand())
     ) {
-      is AdvanceOrderStatus.Result.Success -> HttpResponse.ok("Order status advanced")
-      is AdvanceOrderStatus.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is AdvanceOrderStatus.Result.Failure.InvalidTransition ->
-        HttpResponse.badRequest("Invalid status transition")
+      is AdvanceOrderStatus.Result.Success -> HttpResponse.ok(
+        AdvanceOrderStatusResponse(
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is AdvanceOrderStatus.Result.Failure.OrderNotFound -> throw NotFoundException(
+        "Order not found",
+      )
+      is AdvanceOrderStatus.Result.Failure.InvalidTransition -> throw ValidationException(
+        "Invalid status transition",
+      )
     }
   }
 
   /**
-   * Handles `Delete orders/{id}/discard`.
+   * Handles `DELETE orders/{id}`.
    *
    * Cancels/discards an order if it is still in a cancellable state.
    *
@@ -172,7 +202,7 @@ class MicronautOrderController(
    * - `404 Not Found` when order does not exist
    * - `400 Bad Request` when order cannot be canceled
    *
-   * @param request Request containing order and customer identifiers.
+   * @param id Request containing order identifiers.
    * @return An HTTP response representing the discard result.
    */
   @Delete(OrderServiceConfig.DISCARD_ORDER_PATH)
@@ -183,26 +213,32 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "200", description = "Order discarded successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Order cannot be cancelled")
-  override fun discardOrder(@Body request: DiscardOrderRequest): HttpResponse<String> {
+  override fun discardOrder(@PathVariable id: String): HttpResponse<DiscardOrderResponse> {
     return when (
-      discardOrder.execute(request.toCommand())
+      discardOrder.execute(DiscardOrderCommand(OrderId(id)))
     ) {
-      is DiscardOrder.Result.Success -> HttpResponse.ok("Order discarded")
-      is DiscardOrder.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is DiscardOrder.Result.Failure.OrderNotCancellable ->
-        HttpResponse.badRequest("Cannot discard this order")
+      is DiscardOrder.Result.Success -> HttpResponse.ok(
+        DiscardOrderResponse(
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is DiscardOrder.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
+      is DiscardOrder.Result.Failure.OrderNotCancellable -> throw ValidationException(
+        "Order cannot be cancelled",
+      )
     }
   }
 
   /**
-   * Handles `PATCH orders/{id}/items`.
+   * Handles `PATCH orders/items`.
    *
    * Updates the items in an order.
    *
    * Response mapping:
    * - `200 OK` when items are updated successfully
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` for unauthorized access or empty items
+   * - `401 Unauthorized` for unauthorized access
+   * - `400 Bad Request` for empty items
    *
    * @param request Request containing order identifier and new items.
    * @return An HTTP response representing the update result.
@@ -214,29 +250,35 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Order items updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  @ApiResponse(responseCode = "400", description = "Invalid items or unauthorized")
-  override fun updateOrderItems(@Body request: UpdateOrderItemsRequest): HttpResponse<String> {
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
+  @ApiResponse(responseCode = "400", description = "Empty items")
+  override fun updateOrderItems(
+    @Body request: UpdateOrderItemsRequest,
+  ): HttpResponse<UpdateOrderItemsResponse> {
     return when (
       updateOrderItems.execute(request.toCommand())
     ) {
-      is UpdateOrderItems.Result.Success -> HttpResponse.ok("Order items updated")
-      is UpdateOrderItems.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is UpdateOrderItems.Result.Failure.Unauthorized ->
-        HttpResponse.badRequest("Unauthorized to update this order")
-      is UpdateOrderItems.Result.Failure.EmptyItems ->
-        HttpResponse.badRequest("Cannot update items")
+      is UpdateOrderItems.Result.Success -> HttpResponse.ok(
+        UpdateOrderItemsResponse(
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is UpdateOrderItems.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
+      is UpdateOrderItems.Result.Failure.Unauthorized -> throw UnauthorizedException("Unauthorized")
+      is UpdateOrderItems.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
     }
   }
 
   /**
-   * Handles `PATCH orders/{id}/delivery`.
+   * Handles `PATCH orders/delivery`.
    *
    * Updates delivery information for a delivery order.
    *
    * Response mapping:
    * - `200 OK` when delivery info is updated
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` for unauthorized access or invalid date
+   * - `401 Unauthorized` for unauthorized access
+   * - `400 Bad Request` for invalid date
    *
    * @param request Request containing delivery order update details.
    * @return An HTTP response representing the update result.
@@ -248,31 +290,41 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Delivery info updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  @ApiResponse(responseCode = "400", description = "Invalid data or unauthorized")
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
+  @ApiResponse(responseCode = "400", description = "Invalid date")
   override fun updateDeliveryOrderInfo(
     @Body request: UpdateDeliveryOrderRequest,
-  ): HttpResponse<String> {
+  ): HttpResponse<UpdateDeliveryOrderResponse> {
     return when (
       updateDeliveryOrderInfo.execute(request.toCommand())
     ) {
-      is UpdateDeliveryOrderInfo.Result.Success -> HttpResponse.ok("Delivery info updated")
-      is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized ->
-        HttpResponse.badRequest("Unauthorized to update this order")
-      is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate ->
-        HttpResponse.badRequest("Cannot update delivery info")
+      is UpdateDeliveryOrderInfo.Result.Success -> HttpResponse.ok(
+        UpdateDeliveryOrderResponse(
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound -> throw NotFoundException(
+        "Order not found",
+      )
+      is UpdateDeliveryOrderInfo.Result.Failure.Unauthorized -> throw UnauthorizedException(
+        "Unauthorized",
+      )
+      is UpdateDeliveryOrderInfo.Result.Failure.InvalidDate -> throw ValidationException(
+        "Invalid date",
+      )
     }
   }
 
   /**
-   * Handles `PATCH orders/{id}/takeaway`.
+   * Handles `PATCH orders/takeaway`.
    *
    * Updates takeaway information for a takeaway order.
    *
    * Response mapping:
    * - `200 OK` when takeaway info is updated
    * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` for unauthorized access or invalid date
+   * - `401 Unauthorized` for unauthorized access
+   * - `400 Bad Request` for invalid date
    *
    * @param request Request containing takeaway order update details.
    * @return An HTTP response representing the update result.
@@ -284,19 +336,28 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Takeaway info updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  @ApiResponse(responseCode = "400", description = "Invalid data or unauthorized")
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
+  @ApiResponse(responseCode = "400", description = "Invalid date")
   override fun updateTakeawayOrderInfo(
     @Body request: UpdateTakeawayOrderRequest,
-  ): HttpResponse<String> {
+  ): HttpResponse<UpdateTakeawayOrderResponse> {
     return when (
       updateTakeawayOrderInfo.execute(request.toCommand())
     ) {
-      is UpdateTakeawayOrderInfo.Result.Success -> HttpResponse.ok("Takeaway info updated")
-      is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> HttpResponse.notFound()
-      is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized ->
-        HttpResponse.badRequest("Unauthorized to update this order")
-      is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate ->
-        HttpResponse.badRequest("Cannot update takeaway info")
+      is UpdateTakeawayOrderInfo.Result.Success -> HttpResponse.ok(
+        UpdateTakeawayOrderResponse(
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is UpdateTakeawayOrderInfo.Result.Failure.OrderNotFound -> throw NotFoundException(
+        "Order not found",
+      )
+      is UpdateTakeawayOrderInfo.Result.Failure.Unauthorized -> throw UnauthorizedException(
+        "Unauthorized",
+      )
+      is UpdateTakeawayOrderInfo.Result.Failure.InvalidDate -> throw ValidationException(
+        "Invalid date",
+      )
     }
   }
 }

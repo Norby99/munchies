@@ -8,6 +8,7 @@ import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.application.port.inbound.UpdateOrderItems
 import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
+import io.micronaut.http.HttpResponse
 import io.mockk.mockk
 
 abstract class BaseOrderController {
@@ -31,4 +32,6 @@ abstract class BaseOrderController {
       updateTakeawayOrderInfo,
     ),
   )
+
+  inline fun <reified T> HttpResponse<*>.bd() = this.getBody(T::class.java).get()
 }

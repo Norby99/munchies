@@ -1,11 +1,15 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
 import com.munchies.order.application.port.inbound.UpdateOrderItems
 import com.munchies.order.fixtures.createUpdateOrderItemsRequest
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.mockk.every
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
 
@@ -20,44 +24,49 @@ class UpdateOrderItemsControllerUnitTest : BaseOrderController() {
     val response = controller.updateOrderItems(request)
 
     response.status shouldBe HttpStatus.OK
+    response.body().code shouldBe HttpStatus.OK.code
+    response.body().result shouldBe "Order items updated successfully"
   }
 
   @Test
-  fun `returns 404 Not Found on OrderNotFound`() {
+  fun `throws NotFoundException on OrderNotFound`() {
     val request = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItems.execute(any())
     } returns UpdateOrderItems.Result.Failure.OrderNotFound
 
-    val response = controller.updateOrderItems(request)
-
-    response.status shouldBe HttpStatus.NOT_FOUND
+    val exception = assertThrows<NotFoundException> {
+      controller.updateOrderItems(request)
+    }
+    exception.message shouldBe "Order not found"
   }
 
   @Test
-  fun `returns 400 Bad Request on Unauthorized`() {
+  fun `throws UnauthorizedException on Unauthorized`() {
     val request = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItems.execute(any())
     } returns UpdateOrderItems.Result.Failure.Unauthorized
 
-    val response = controller.updateOrderItems(request)
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
+    val exception = assertThrows<UnauthorizedException> {
+      controller.updateOrderItems(request)
+    }
+    exception.message shouldBe "Unauthorized"
   }
 
   @Test
-  fun `returns 400 Bad Request on EmptyItems`() {
+  fun `throws ValidationException on EmptyItems`() {
     val request = createUpdateOrderItemsRequest()
 
     every {
       updateOrderItems.execute(any())
     } returns UpdateOrderItems.Result.Failure.EmptyItems
 
-    val response = controller.updateOrderItems(request)
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
+    val exception = assertThrows<ValidationException> {
+      controller.updateOrderItems(request)
+    }
+    exception.message shouldBe "Empty items"
   }
 }

@@ -1,111 +1,81 @@
 import {
+  Response as ExpressResponse,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
+import {
   HttpMethod,
   AuthRole,
-  newId,
+  ErrorResponse,
 } from "munchies-commons/kotlin/commons-modules";
-import { InternalRoute, RouteDefinition } from "../route-definition";
-import { internalAxiosRequest } from "../internal-client";
-import { AuthedRequest, injectCookie, parseAuthRoleString } from "../../auth";
-import { Response } from "express";
 import {
-  EmailVerificationAPI,
   VerifyEmailRequest,
+  EmailVerificationAPI,
   VerifyEmailResponse,
-  VerifyEmailResult,
-  VerifyEmailFailure,
-  VerifyEmailSuccess,
-  verifyEmailRequestFromJson,
-  verifyEmailResponseFromJson,
 } from "munchies-user-service-shared/kotlin/user-modules";
+import { AuthedRequest } from "../../auth";
+import { request } from "../internal-client";
+import { SimpleRoute } from "../simple-route";
 
-class InternalVerifyEmailRoute
-  extends EmailVerificationAPI
-  implements
-    InternalRoute<
-      EmailVerificationAPI,
-      VerifyEmailRequest,
-      VerifyEmailResponse,
-      VerifyEmailResult,
-      VerifyEmailSuccess,
-      VerifyEmailFailure
-    >
+export class VerifyEmailRoute
+  extends EmailVerificationAPI<VerifyEmailResponse | ErrorResponse>
+  implements SimpleRoute<VerifyEmailResponse>
 {
   constructor() {
     super();
-    this.service = this;
-    this.path = this.service.getPath();
-    this.authRole = null;
-    this.method = this.service.getMethod();
+    let api = this;
+
+    this.path = api.getPath();
+    this.method = api.getMethod();
+    this.authRole = api.getRequiredAuthRole();
   }
-  service: EmailVerificationAPI;
+
   path: string;
-  authRole: AuthRole | null;
   method: HttpMethod;
+  authRole: AuthRole | null;
 
-  generateErrorResponse(reason: string, code: number): VerifyEmailResponse {
-    return this.generateResponse(this.generateFailure(reason), code);
-  }
-
-  parseResult(
-    result: VerifyEmailResult
-  ): VerifyEmailSuccess | VerifyEmailFailure {
-    if (result.type === VerifyEmailSuccess.name) {
-      return result as VerifyEmailSuccess;
-    } else if (result.type === VerifyEmailFailure.name) {
-      return result as VerifyEmailFailure;
-    } else {
-      return this.generateFailure("Invalid result type");
-    }
-  }
-  async verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+  async verifyEmail(
+    req: VerifyEmailRequest,
+  ): Promise<VerifyEmailResponse | ErrorResponse> {
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
-      return this.generateErrorResponse("Missing User Service URL", 500);
-    return await internalAxiosRequest(
+      return Promise.resolve(
+        new ErrorResponse("Missing User Service URL", 500),
+      );
+
+    const response = request<VerifyEmailResponse>(
       uri + this.path,
-      this.getMethod(),
-      request.toJson(),
+      this.method,
+      req.toJson(),
       this.parseResponse,
-      this.parseResult,
-      this.generateResponse,
-      this.generateFailure
+      this.parseError,
     );
-  }
-  request(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
-    return this.verifyEmail(request);
-  }
-}
 
-export class VerifyEmailRoute
-  implements RouteDefinition<VerifyEmailResponse, VerifyEmailFailure>
-{
-  constructor() {
-    this.internalRoute = new InternalVerifyEmailRoute();
-    this.path = this.internalRoute.path;
-    this.method = this.internalRoute.method;
-    this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.service.generateFailure;
+    return response;
   }
 
-  internalRoute: InternalRoute<
-    any,
-    VerifyEmailRequest,
-    VerifyEmailResponse,
-    any,
-    any,
-    any
-  >;
-  path: string;
-
-  method: HttpMethod;
-  authRole: AuthRole | null;
-  onAuthFail: (msg: string) => VerifyEmailFailure;
-  forward: (req: AuthedRequest) => Promise<VerifyEmailResponse> = (req) => {
-    let request = this.internalRoute.service.parseRequest(req.body.toString());
-    return this.internalRoute.request(request);
+  private handler: {
+    forward: (
+      req: AuthedRequest,
+    ) => Promise<VerifyEmailResponse | ErrorResponse>;
+    respond: RequestHandler;
+  } = {
+    forward: async (req: AuthedRequest) => {
+      try {
+        const verifyReq = this.parseRequest(
+          String(req.body)).addId(req.user!!.id);
+        return this.verifyEmail(verifyReq);
+      } catch (err: any) {
+        return new ErrorResponse("VerifyEmail forward: \n" + String(err), 500);
+      }
+    },
+    respond: async (req: Request, res: Response) => {
+      const result = await this.forward(req as AuthedRequest);
+      res.status(result.code).type("json").send(result.toJson());
+    },
   };
-  respond: (req: AuthedRequest, res: Response) => void = async (req, res) => {
-    const response = await this.forward(req);
-    res.status(response.code).type("json").send(response.toJson());
-  };
+
+  forward = this.handler.forward;
+  respond = this.handler.respond;
 }

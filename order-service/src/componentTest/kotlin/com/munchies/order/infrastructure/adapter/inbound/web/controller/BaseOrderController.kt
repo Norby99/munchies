@@ -1,9 +1,11 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.runtime.server.EmbeddedServer
@@ -16,18 +18,14 @@ import org.testcontainers.mongodb.MongoDBContainer
 
 @SerdeImport(OrderId::class)
 @SerdeImport(OrderDto::class)
-@SerdeImport(OrderDto.Delivery::class)
-@SerdeImport(OrderDto.Takeaway::class)
-@SerdeImport(OrderDto.DineIn::class)
 @SerdeImport(OrderItemDto::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
-@SerdeImport(GetOrderDetailsRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
-@SerdeImport(DiscardOrderRequest::class)
 @SerdeImport(UpdateOrderItemsRequest::class)
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
+@SerdeImport(ErrorResponse::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseOrderController : TestPropertyProvider {
 
@@ -54,6 +52,8 @@ abstract class BaseOrderController : TestPropertyProvider {
   lateinit var embeddedServer: EmbeddedServer
 
   val httpCalls: HttpCalls by lazy { HttpCalls(baseUrl(), client) }
+
+  inline fun <reified T> HttpResponse<*>.bd() = this.getBody(T::class.java).get()
 
   /**
    * @return the base URL for the order service, including the embedded server

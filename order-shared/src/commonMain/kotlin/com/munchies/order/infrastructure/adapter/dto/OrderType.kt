@@ -1,5 +1,6 @@
 package com.munchies.order.infrastructure.adapter.dto
 
+import kotlin.js.JsExport
 import kotlinx.serialization.Serializable
 
 /**
@@ -7,6 +8,7 @@ import kotlinx.serialization.Serializable
  *
  * This enum is used to specify whether an order is for delivery, takeaway, or dine-in.
  */
+@JsExport
 @Serializable
 enum class OrderType {
   DELIVERY,

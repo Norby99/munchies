@@ -104,8 +104,8 @@ class RestaurantSteps @Inject constructor(
 
     context.lastResult = helper.updateRestaurant(
       UpdateRestaurantCommand(
-        context.restaurantId!!,
         context.managerId!!,
+        context.restaurantId!!,
         detailsRow["name"]!!,
         detailsRow["address"]!!,
         detailsRow["phone"]!!,

@@ -16,7 +16,7 @@ export interface RouteDefinition<Response, Failure> {
   method: HttpMethod;
   authRole: AuthRole | null;
   onAuthFail: (msg: string) => Failure;
-  internalRoute: InternalRoute<any, any, any, any, any, any>;
+  internalRoute?: InternalRoute<any, any, any, any, any, any>;
   forward: (req: AuthedRequest) => Promise<Response>;
   respond: RequestHandler;
 }

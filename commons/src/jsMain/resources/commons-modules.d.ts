@@ -61,6 +61,8 @@ export declare const API: typeof com.munchies.commons.infrastructure.adapter.API
 export type JsonEncodable = com.munchies.commons.infrastructure.adapter.JsonEncodable;
 export declare const JsonEncodable: typeof com.munchies.commons.infrastructure.adapter.JsonEncodable;
 
+export type AuthenticatedRequest = com.munchies.commons.infrastructure.adapter.AuthenticatedRequest;
+
 export type WebResponse = com.munchies.commons.infrastructure.adapter.WebResponse;
 export declare const WebResponse: typeof com.munchies.commons.infrastructure.adapter.WebResponse;
 
@@ -78,3 +80,19 @@ export declare const NotificationObserver: typeof com.munchies.commons.domain.po
 
 export type NotificationSubject = com.munchies.commons.domain.port.NotificationSubject;
 export declare const NotificationSubject: typeof com.munchies.commons.domain.port.NotificationSubject;
+
+export type ErrorResponse = com.munchies.commons.infrastructure.adapter.ErrorResponse;
+export declare const ErrorResponse: typeof com.munchies.commons.infrastructure.adapter.ErrorResponse;
+
+export declare const errorResponseFromJson: typeof com.munchies.commons.infrastructure.adapter.errorResponseFromJson;
+
+export type SimpleAPI = com.munchies.commons.infrastructure.adapter.SimpleAPI;
+export declare const SimpleAPI: typeof com.munchies.commons.infrastructure.adapter.SimpleAPI;
+
+export type ErrorResponse = com.munchies.commons.infrastructure.adapter.ErrorResponse;
+export declare const ErrorResponse: typeof com.munchies.commons.infrastructure.adapter.ErrorResponse;
+
+export declare const errorResponseFromJson: typeof com.munchies.commons.infrastructure.adapter.errorResponseFromJson;
+
+export type SimpleAPI = com.munchies.commons.infrastructure.adapter.SimpleAPI;
+export declare const SimpleAPI: typeof com.munchies.commons.infrastructure.adapter.SimpleAPI;

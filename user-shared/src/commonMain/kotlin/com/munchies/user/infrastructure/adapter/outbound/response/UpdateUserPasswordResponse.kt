@@ -10,35 +10,15 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("UpdateUserPasswordResponse")
-class UpdateUserPasswordResponse(
-  override val result: UpdateUserPasswordResult,
-  override val code: Int,
-) : WebResponse<UpdateUserPasswordResult>() {
+open class UpdateUserPasswordResponse(
+  override val result: String,
+  override val code: Int = 200,
+) : WebResponse<String>() {
   override fun toJson(): String = Json.encodeToString(this)
+
+  val msg: String get() = result
 }
 
 @JsExport
 fun updateUserPasswordResponseFromJson(json: String): UpdateUserPasswordResponse =
   Json.decodeFromString(json)
-
-@JsExport
-@Serializable
-sealed class UpdateUserPasswordResult {
-  abstract val type: String
-}
-
-@JsExport
-@Serializable
-@SerialName("UpdateUserPasswordSuccess")
-class UpdateUserPasswordSuccess(val msg: String) : UpdateUserPasswordResult() {
-  override val type: String
-    get() = "UpdateUserPasswordSuccess"
-}
-
-@JsExport
-@Serializable
-@SerialName("UpdateUserPasswordFailure")
-class UpdateUserPasswordFailure(val reason: String) : UpdateUserPasswordResult() {
-  override val type: String
-    get() = "UpdateUserPasswordFailure"
-}

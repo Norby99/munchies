@@ -12,6 +12,7 @@ import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
+import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDto
 
@@ -25,27 +26,30 @@ object OrderDtoFactory {
   fun Order.toDto(): OrderDto {
     val itemsDto = items.map { it.toDto() }
     return when (this) {
-      is DeliveryOrder -> OrderDto.Delivery(
+      is DeliveryOrder -> OrderDto(
+        orderType = OrderType.DELIVERY,
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
-        estimatedDeliveryTime = deliveryInfo.estimatedDeliveryTime,
+        estimatedDeliveryTime = deliveryInfo.estimatedDeliveryTime.toString(),
         deliveryAddress = deliveryInfo.deliveryAddress,
         bellName = deliveryInfo.bellName,
         customerPhone = deliveryInfo.customerPhone,
       )
-      is TakeawayOrder -> OrderDto.Takeaway(
+      is TakeawayOrder -> OrderDto(
+        orderType = OrderType.TAKEAWAY,
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
-        pickupTime = takeawayInfo.pickupTime,
+        pickupTime = takeawayInfo.pickupTime.toString(),
         customerName = takeawayInfo.customerName,
       )
-      is DineInOrder -> OrderDto.DineIn(
+      is DineInOrder -> OrderDto(
+        orderType = OrderType.DINE_IN,
         orderId = id.value,
         restaurantId = restaurantId.value,
         customerId = customerId.value,
@@ -72,42 +76,50 @@ object OrderDtoFactory {
     val domainCustomerId = CustomerId(customerId)
     val domainStatus = OrderStatus.valueOf(status)
 
-    return when (this) {
-      is OrderDto.Delivery -> DeliveryOrder(
+    return when (this.orderType) {
+      OrderType.DELIVERY -> DeliveryOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
         deliveryInfo = DeliveryInfo(
-          estimatedDeliveryTime = estimatedDeliveryTime,
-          deliveryAddress = deliveryAddress,
-          bellName = bellName,
-          customerPhone = customerPhone,
+          estimatedDeliveryTime = requireLongField(estimatedDeliveryTime, "estimatedDeliveryTime"),
+          deliveryAddress = requireField(deliveryAddress, "deliveryAddress"),
+          bellName = requireField(bellName, "bellName"),
+          customerPhone = requireField(customerPhone, "customerPhone"),
         ),
       )
-      is OrderDto.Takeaway -> TakeawayOrder(
+      OrderType.TAKEAWAY -> TakeawayOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
         takeawayInfo = TakeawayInfo(
-          pickupTime = pickupTime,
-          customerName = customerName,
+          pickupTime = requireLongField(pickupTime, "pickupTime"),
+          customerName = requireField(customerName, "customerName"),
         ),
       )
-      is OrderDto.DineIn -> DineInOrder(
+      OrderType.DINE_IN -> DineInOrder(
         id = domainId,
         restaurantId = domainRestaurantId,
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
         tableInfo = TableInfo(
-          tableNumber = tableNumber,
-          numberOfGuests = numberOfGuests,
+          tableNumber = requireField(tableNumber, "tableNumber"),
+          numberOfGuests = requireField(numberOfGuests, "numberOfGuests"),
         ),
       )
     }
   }
+
+  private fun <T> requireField(value: T?, name: String): T =
+    value ?: throw InvalidOrderDataException("Invalid: $name")
+
+  private fun requireLongField(value: String?, name: String): Long =
+    value?.toLongOrNull() ?: throw InvalidOrderDataException("Invalid: $name")
+
+  class InvalidOrderDataException(message: String) : IllegalArgumentException(message)
 }

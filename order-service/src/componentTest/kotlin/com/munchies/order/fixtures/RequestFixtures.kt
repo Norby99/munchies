@@ -6,7 +6,6 @@ import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.inbound.request.AdvanceOrderStatusRequest
-import com.munchies.order.infrastructure.adapter.inbound.request.DiscardOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.PlaceOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateDeliveryOrderRequest
 import com.munchies.order.infrastructure.adapter.inbound.request.UpdateOrderItemsRequest
@@ -66,22 +65,14 @@ fun createTestPlaceOrderRequest(
   restaurantId = restaurantId,
   customerId = customerId,
   items = items,
-  estimatedDeliveryTime = estimatedDeliveryTime,
+  estimatedDeliveryTime = estimatedDeliveryTime.toString(),
   deliveryAddress = deliveryAddress,
   bellName = bellName,
   customerPhone = customerPhone,
-  pickupTime = pickupTime,
+  pickupTime = pickupTime.toString(),
   customerName = customerName,
   tableNumber = tableNumber,
   numberOfGuests = numberOfGuests,
-)
-
-/** Creates a DiscardOrderRequest from an OrderId.
- * @param orderId The OrderId of the order to discard. Defaults to defaultOrderId.
- * @return A DiscardOrderRequest with the given OrderId and defaultCustomerId.
- */
-fun createDiscardOrderRequest(orderId: OrderId = defaultOrderId) = DiscardOrderRequest(
-  orderId = orderId.value,
 )
 
 /** Creates an UpdateTakeawayOrderRequest from a TakeawayOrder.
@@ -92,7 +83,7 @@ fun createUpdateTakeawayOrderRequest(order: TakeawayOrder = createTakeawayOrder(
   UpdateTakeawayOrderRequest(
     orderId = order.id.value,
     customerId = order.customerId.value,
-    pickupTime = order.takeawayInfo.pickupTime,
+    pickupTime = order.takeawayInfo.pickupTime.toString(),
     customerName = order.takeawayInfo.customerName,
   )
 
@@ -104,7 +95,7 @@ fun createUpdateDeliveryOrderRequest(order: DeliveryOrder = createDeliveryOrder(
   UpdateDeliveryOrderRequest(
     orderId = order.id.value,
     customerId = order.customerId.value,
-    estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime,
+    estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime.toString(),
     deliveryAddress = order.deliveryInfo.deliveryAddress,
     bellName = order.deliveryInfo.bellName,
     customerPhone = order.deliveryInfo.customerPhone,

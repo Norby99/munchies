@@ -1,7 +1,7 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.DeliveryOrder
-import com.munchies.order.fixtures.Address1
 import com.munchies.order.fixtures.Address2
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createUpdateDeliveryOrderRequest
@@ -12,14 +12,18 @@ import com.munchies.order.fixtures.secondaryOrderId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
+import com.munchies.order.infrastructure.adapter.outbound.response.UpdateDeliveryOrderResponse
+import com.munchies.order.infrastructure.adapter.outbound.response.updateDeliveryOrderResponseFromJson
+import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
@@ -54,22 +58,18 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
-    val response = httpCalls.httpPatch(
+    val response = httpCalls.httpPatch<String>(
       mapper.writeValueAsString(requestBody),
       OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
     )
 
-    response.status shouldBe HttpStatus.OK
+    val result = updateDeliveryOrderResponseFromJson(response.body())
 
-    initialOrder.deliveryInfo.deliveryAddress shouldBe Address1.deliveryAddress
-    initialOrder.deliveryInfo.bellName shouldBe Address1.bellName
-    initialOrder.deliveryInfo.customerPhone shouldBe Address1.customerPhone
+    response.status shouldBe HttpStatus.OK
+    result.code shouldBe HttpStatus.OK.code
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
-
-    updatedOrder.deliveryInfo.deliveryAddress shouldBe Address2.deliveryAddress
-    updatedOrder.deliveryInfo.bellName shouldBe Address2.bellName
-    updatedOrder.deliveryInfo.customerPhone shouldBe Address2.customerPhone
+    updatedOrder shouldBeEqual newOrder
   }
 
   @Test
@@ -81,18 +81,23 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpCalls.httpPatch(
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpPatch<UpdateDeliveryOrderResponse>(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
-    }
+    }.response
 
     response.status shouldBe HttpStatus.NOT_FOUND
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.NOT_FOUND.code
+    response.bd<ErrorResponse>().result shouldBe "Order not found"
+
+    val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
+    updatedOrder shouldNotBeEqual newOrder
   }
 
   @Test
-  fun `PATCH update delivery order info should return 400 Bad Request on Unauthorized`() {
+  fun `PATCH update delivery order info should return 401 Unauthorized on Unauthorized`() {
     val initialOrder = createDeliveryOrder()
     val newOrder = initialOrder.copy(customerId = secondaryCustomerId)
 
@@ -100,14 +105,19 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpCalls.httpPatch(
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpPatch<UpdateDeliveryOrderResponse>(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
-    }
+    }.response
 
-    response.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.UNAUTHORIZED
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.UNAUTHORIZED.code
+    response.bd<ErrorResponse>().result shouldBe "Unauthorized"
+
+    val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
+    updatedOrder shouldNotBeEqual newOrder
   }
 
   @Test
@@ -121,13 +131,18 @@ class UpdateDeliveryOrderInfoControllerComponentTest : BaseOrderController() {
 
     val requestBody = createUpdateDeliveryOrderRequest(newOrder)
 
-    val response = assertThrows(HttpClientResponseException::class.java) {
-      httpCalls.httpPatch(
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpPatch<UpdateDeliveryOrderResponse>(
         mapper.writeValueAsString(requestBody),
         OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH,
       )
-    }
+    }.response
 
     response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<ErrorResponse>().result shouldBe "Invalid date"
+
+    val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
+    updatedOrder shouldNotBeEqual newOrder
   }
 }

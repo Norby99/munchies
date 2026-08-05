@@ -68,7 +68,7 @@ class LoginUserControllerComponentTest : BaseUserController() {
     val response = assertThrows(HttpClientResponseException::class.java) {
       httpCalls.post(mapper.writeValueAsString(request), UserServiceConfig.LOGIN_USER_PATH)
     }
-    response.status shouldBe HttpStatus.BAD_REQUEST
+    response.status shouldBe HttpStatus.NOT_FOUND
   }
 
   @Test

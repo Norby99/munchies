@@ -16,6 +16,7 @@ interface LoginUser {
   companion object {
     sealed interface LoginResult {
       data class Success(val userId: String, val role: UserRole) : LoginResult
+      data object NotFound : LoginResult
       data object Failure : LoginResult
       data object BlockedLogin : LoginResult
     }

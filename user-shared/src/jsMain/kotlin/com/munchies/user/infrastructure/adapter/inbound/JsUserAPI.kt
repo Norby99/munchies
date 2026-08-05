@@ -1,37 +1,33 @@
 package com.munchies.user.infrastructure.adapter.inbound
 
 import com.munchies.commons.domain.port.AuthRole
-import com.munchies.commons.infrastructure.adapter.API
 import com.munchies.commons.infrastructure.adapter.HttpMethod
+import com.munchies.commons.infrastructure.adapter.SimpleAPI
+import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
 import com.munchies.user.infrastructure.adapter.outbound.response.*
 import kotlin.js.Promise
 
 @JsExport
-abstract class JsGetUserAPI : UserAPI.GetUserAPI<Promise<GetUserResponse>>,
-  API<GetUserRequest, GetUserResponse, GetUserResult, GetUserSuccess, GetUserFailure>() {
+abstract class JsGetUserAPI<E : WebResponse<Any>> : UserAPI.GetUserAPI<Promise<E>>,
+  SimpleAPI<GetUserRequest, GetUserResponse>() {
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getPath(): String = UserServiceConfig.SERVICE_PATH
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun getUser(id: String): Promise<GetUserResponse>
-  override fun generateFailure(reason: String): GetUserFailure = GetUserFailure(reason)
-  override fun generateResponse(result: GetUserResult, code: Int): GetUserResponse =
-    GetUserResponse(result, code)
+  abstract override fun getUser(id: String): Promise<E>
 
   override fun parseRequest(json: String): GetUserRequest = getUserRequestFromJson(json)
   override fun parseResponse(json: String): GetUserResponse = getUserResponseFromJson(json)
 }
 
 @JsExport
-abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserResponse>>,
-  API<
+abstract class JsRegisterUserAPI<E : WebResponse<Any>> :
+  UserAPI.RegisterUserAPI<Promise<E>>,
+  SimpleAPI<
     RegisterUserRequest,
     RegisterUserResponse,
-    RegisterUserResult,
-    RegisterUserSuccess,
-    RegisterUserFailure,
     >() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.REGISTER_USER_PATH
@@ -39,10 +35,7 @@ abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserR
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun registerUser(request: RegisterUserRequest): Promise<RegisterUserResponse>
-  override fun generateFailure(reason: String): RegisterUserFailure = RegisterUserFailure(reason)
-  override fun generateResponse(result: RegisterUserResult, code: Int): RegisterUserResponse =
-    RegisterUserResponse(result, code)
+  abstract override fun registerUser(request: RegisterUserRequest): Promise<E>
 
   override fun parseRequest(json: String): RegisterUserRequest = registerUserRequestFromJson(json)
   override fun parseResponse(json: String): RegisterUserResponse =
@@ -50,32 +43,26 @@ abstract class JsRegisterUserAPI : UserAPI.RegisterUserAPI<Promise<RegisterUserR
 }
 
 @JsExport
-abstract class JsLoginUserAPI : UserAPI.LoginUserAPI<Promise<LoginUserResponse>>,
-  API<LoginUserRequest, LoginUserResponse, LoginUserResult, LoginUserSuccess, LoginUserFailure>() {
+abstract class JsLoginUserAPI<E : WebResponse<Any>> : UserAPI.LoginUserAPI<Promise<E>>,
+  SimpleAPI<LoginUserRequest, LoginUserResponse>() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.LOGIN_USER_PATH
 
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun loginUser(request: LoginUserRequest): Promise<LoginUserResponse>
-  override fun generateFailure(reason: String): LoginUserFailure = LoginUserFailure(reason)
-  override fun generateResponse(result: LoginUserResult, code: Int): LoginUserResponse =
-    LoginUserResponse(result, code)
+  abstract override fun loginUser(request: LoginUserRequest): Promise<E>
 
   override fun parseRequest(json: String): LoginUserRequest = loginUserRequestFromJson(json)
   override fun parseResponse(json: String): LoginUserResponse = loginUserResponseFromJson(json)
 }
 
 @JsExport
-abstract class JsUpdateUserPasswordAPI :
-  UserAPI.UpdateUserPasswordAPI<Promise<UpdateUserPasswordResponse>>,
-  API<
+abstract class JsUpdateUserPasswordAPI<E : WebResponse<Any>> :
+  UserAPI.UpdateUserPasswordAPI<Promise<E>>,
+  SimpleAPI<
     UpdateUserPasswordRequest,
     UpdateUserPasswordResponse,
-    UpdateUserPasswordResult,
-    UpdateUserPasswordSuccess,
-    UpdateUserPasswordFailure,
     >() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_PASSWORD_PATH
@@ -83,19 +70,7 @@ abstract class JsUpdateUserPasswordAPI :
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun updateUserPassword(
-    request: UpdateUserPasswordRequest,
-  ): Promise<UpdateUserPasswordResponse>
-
-  override fun generateFailure(reason: String): UpdateUserPasswordFailure =
-    UpdateUserPasswordFailure(
-      reason,
-    )
-
-  override fun generateResponse(
-    result: UpdateUserPasswordResult,
-    code: Int,
-  ): UpdateUserPasswordResponse = UpdateUserPasswordResponse(result, code)
+  abstract override fun updateUserPassword(request: UpdateUserPasswordRequest): Promise<E>
 
   override fun parseRequest(json: String): UpdateUserPasswordRequest =
     updateUserPasswordRequestFromJson(json)
@@ -105,14 +80,11 @@ abstract class JsUpdateUserPasswordAPI :
 }
 
 @JsExport
-abstract class JsUpdateUserInfoAPI :
-  UserAPI.UpdateUserInfoAPI<Promise<UpdateUserInfoResponse>>,
-  API<
+abstract class JsUpdateUserInfoAPI<E : WebResponse<Any>> :
+  UserAPI.UpdateUserInfoAPI<Promise<E>>,
+  SimpleAPI<
     UpdateUserInfoRequest,
     UpdateUserInfoResponse,
-    UpdateUserInfoResult,
-    UpdateUserInfoSuccess,
-    UpdateUserInfoFailure,
     >() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.UPDATE_USER_INFO_PATH
@@ -120,15 +92,7 @@ abstract class JsUpdateUserInfoAPI :
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun updateUserInfo(
-    request: UpdateUserInfoRequest,
-  ): Promise<UpdateUserInfoResponse>
-
-  override fun generateFailure(reason: String): UpdateUserInfoFailure =
-    UpdateUserInfoFailure(reason)
-
-  override fun generateResponse(result: UpdateUserInfoResult, code: Int): UpdateUserInfoResponse =
-    UpdateUserInfoResponse(result, code)
+  abstract override fun updateUserInfo(request: UpdateUserInfoRequest): Promise<E>
 
   override fun parseRequest(json: String): UpdateUserInfoRequest =
     updateUserInfoRequestFromJson(json)
@@ -138,35 +102,27 @@ abstract class JsUpdateUserInfoAPI :
 }
 
 @JsExport
-abstract class JsDeleteUserAPI : UserAPI.DeleteUserAPI<Promise<DeleteUserResponse>>,
-  API<DeleteUserRequest, DeleteUserResponse, DeleteUserResult, DeleteUserSuccess, DeleteUserFailure>
+abstract class JsDeleteUserAPI<E : WebResponse<Any>> :
+  UserAPI.DeleteUserAPI<Promise<E>>,
+  SimpleAPI<DeleteUserRequest, DeleteUserResponse>
   () {
-  override fun getPath(): String =
-    UserServiceConfig.SERVICE_PATH + UserServiceConfig.DELETE_USER_PATH
+  override fun getPath(): String = UserServiceConfig.SERVICE_PATH
 
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun deleteUser(id: String): Promise<DeleteUserResponse>
-
-  override fun generateFailure(reason: String): DeleteUserFailure = DeleteUserFailure(reason)
-
-  override fun generateResponse(result: DeleteUserResult, code: Int): DeleteUserResponse =
-    DeleteUserResponse(result, code)
+  abstract override fun deleteUser(id: String): Promise<E>
 
   override fun parseRequest(json: String): DeleteUserRequest = deleteUserRequestFromJson(json)
   override fun parseResponse(json: String): DeleteUserResponse = deleteUserResponseFromJson(json)
 }
 
 @JsExport
-abstract class JsEmailVerificationAPI :
-  UserAPI.EmailVerificationAPI<Promise<VerifyEmailResponse>>,
-  API<
+abstract class JsEmailVerificationAPI<E : WebResponse<Any>> :
+  UserAPI.EmailVerificationAPI<Promise<E>>,
+  SimpleAPI<
     VerifyEmailRequest,
     VerifyEmailResponse,
-    VerifyEmailResult,
-    VerifyEmailSuccess,
-    VerifyEmailFailure,
     >() {
   override fun getPath(): String =
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.VERIFY_EMAIL_PATH
@@ -174,10 +130,7 @@ abstract class JsEmailVerificationAPI :
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse>
-  override fun generateFailure(reason: String): VerifyEmailFailure = VerifyEmailFailure(reason)
-  override fun generateResponse(result: VerifyEmailResult, code: Int): VerifyEmailResponse =
-    VerifyEmailResponse(result, code)
+  abstract override fun verifyEmail(request: VerifyEmailRequest): Promise<E>
 
   override fun parseRequest(json: String): VerifyEmailRequest = verifyEmailRequestFromJson(json)
   override fun parseResponse(json: String): VerifyEmailResponse = verifyEmailResponseFromJson(json)

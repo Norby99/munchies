@@ -17,6 +17,7 @@ graph TB
 
   :order-service -.-> :commons
   :order-service -.-> :order-shared
+  :order-shared -.->|commonMainImplementation| :commons
 
 classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```

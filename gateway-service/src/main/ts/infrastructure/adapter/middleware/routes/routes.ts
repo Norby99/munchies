@@ -1,9 +1,17 @@
 import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
 import { RouteDefinition } from "./route-definition";
+import { SimpleRoute } from "./simple-route";
 import { userRoutes } from "./user/user.routes";
+import { restaurantRoutes } from "./restaurant/restaurant.routes";
+import { orderRoutes } from "./order/order.routes";
 import { Express, NextFunction, Request, Response } from "express";
 
-const routes: RouteDefinition<any, any>[] = [...userRoutes];
+const routes: SimpleRoute<any>[] = [
+  ...userRoutes,
+  ...restaurantRoutes,
+  ...orderRoutes,
+];
+
 
 export function fillPath(path: string, ...values: (string | number)[]): string {
   let i = 0;
@@ -39,9 +47,9 @@ function createRoute(
   }
 }
 
-function logRequests(): RequestHandler {
+function logRequests(path: string, method: string): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    console.log("req.body", req.body);
+    console.log("[ " + method.toUpperCase() + " | " + path + " ] => ", req.body);
     next();
   };
 }
@@ -59,12 +67,15 @@ export function catchError(handler: AsyncHandler): RequestHandler {
 }
 export function applyRoutes(app: Express) {
   for (const r of routes) {
-    const method = r.method;
+    const method = r.method as HttpMethod;
     const path = r.path;
-    const handlers: RequestHandler[] = [logRequests()];
+    const handlers: RequestHandler[] = [
+      logRequests(path, method.name.toString())
+    ];
+    
     if (r.authRole) {
-      handlers.push(requireAuth(r.onAuthFail));
-      handlers.push(requireRole(r.authRole, r.onAuthFail));
+      handlers.push(requireAuth());
+      handlers.push(requireRole(r.authRole));
     }
     handlers.push(catchError(r.respond));
     createRoute(app, path, method, ...handlers);

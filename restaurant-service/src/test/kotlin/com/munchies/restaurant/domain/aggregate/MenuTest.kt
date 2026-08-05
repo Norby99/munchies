@@ -25,7 +25,7 @@ class MenuTest {
     val menu2 = Menu.create(restaurantId, customName)
     assertEquals(customName, menu2.name)
 
-    val validity = Validity.from(LocalDate.of(2025, 1, 1))
+    val validity = Validity.from("2025-01-01")
     val menu3 = Menu.create(restaurantId, customName, validity)
     assertEquals(validity, menu3.validity)
   }
@@ -76,7 +76,7 @@ class MenuTest {
     val menu = Menu.create(RestaurantId())
     val category = menu.createCategory(CategoryName.of("Desserts"))
 
-    menu.removeCategory(category.id)
+    menu.deleteCategory(category.id)
 
     assertFalse(menu.categories.contains(category))
     assertEquals(0, menu.categories.size)
@@ -99,7 +99,7 @@ class MenuTest {
     val menu = Menu.create(
       RestaurantId(),
       MenuName.of("Test"),
-      Validity.until(LocalDate.of(2025, 12, 31)),
+      Validity.until("2025-12-31"),
     )
 
     assertTrue(menu.isValid(LocalDate.of(2025, 12, 30).atStartOfDay()))
@@ -110,7 +110,7 @@ class MenuTest {
   fun `should update menu validity`() {
     val menu = Menu.create(RestaurantId())
 
-    val newValidity = Validity.until(LocalDate.of(2025, 12, 31))
+    val newValidity = Validity.until("2025-12-31")
     menu.updateValidity(newValidity)
 
     assertEquals(newValidity, menu.validity)

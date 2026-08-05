@@ -26,10 +26,14 @@ module.exports = {
   DecodedTokenFailure: _commons.domain.port.DecodedTokenFailure,
   API: _commons.infrastructure.adapter.API,
   JsonEncodable: _commons.infrastructure.adapter.JsonEncodable,
+  AuthenticatedRequest: _commons.infrastructure.adapter.AuthenticatedRequest,
   WebResponse: _commons.infrastructure.adapter.WebResponse,
   ResponseResult: _commons.infrastructure.adapter.ResponseResult,
   WebFailure: _commons.infrastructure.adapter.WebFailure,
   Notification: _commons.domain.port.Notification,
   NotificationObserver: _commons.domain.port.NotificationObserver,
-  NotificationSubject: _commons.domain.port.NotificationSubject
+  NotificationSubject: _commons.domain.port.NotificationSubject,
+  ErrorResponse: _commons.infrastructure.adapter.ErrorResponse,
+  errorResponseFromJson: _commons.infrastructure.adapter.errorResponseFromJson,
+  SimpleAPI: _commons.infrastructure.adapter.SimpleAPI
 };

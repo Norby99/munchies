@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound.web.controller
 
+import com.munchies.commons.domain.port.ValidationException
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.GetUser.Companion.GetUserResult.Success
 import com.munchies.user.application.usecase.VerifyUserEmailUseCase
@@ -13,14 +14,15 @@ import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.*
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServices
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
+import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
-import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryTest
-import com.munchies.user.infrastructure.adapter.outbound.response.*
+import com.munchies.user.infrastructure.adapter.outbound.memory.MemoryUserRepositoryImpl
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldNotBeEmpty
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.serde.annotation.SerdeImport
@@ -75,11 +77,12 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(getUser = userUseCase))
 
-    val res = controller.getUser(userId.value)
-    res.status shouldBe HttpStatus.NOT_FOUND
-    res.body() shouldNotBe null
-    res.body().result.shouldBeInstanceOf<GetUserFailure>().reason.shouldNotBeEmpty()
-    verify(userUseCase).execute(userId)
+    shouldThrow<NotFoundException> {
+      val res = controller.getUser(userId.value)
+      res.status shouldBe HttpStatus.NOT_FOUND
+      res.body() shouldNotBe null
+      verify(userUseCase).execute(userId)
+    }
   }
 
   @Test
@@ -99,7 +102,7 @@ class MicronautUserControllerTest {
     val res = controller.getUser(userId.value)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
-    res.body().result.shouldBeInstanceOf<GetUserSuccess>().user.id shouldBe userId.value
+    res.body().result.id shouldBe userId.value
     verify(userUseCase).execute(userId)
   }
 
@@ -122,8 +125,7 @@ class MicronautUserControllerTest {
       ),
     )
 
-    response.status shouldBe HttpStatus.OK
-    response.body().result.shouldBeInstanceOf<RegisterUserSuccess>()
+    response.status shouldBe HttpStatus.CREATED
   }
 
   @Test
@@ -136,17 +138,18 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(registerUser = registerUseCase))
 
-    val response = controller.registerUser(
+    shouldThrow<UnauthorizedException> {
+      val response = controller.registerUser(
 
-      RegisterUserRequest(
-        user = userDTO,
-        hashedPassword = "hashed-password",
-        saltValue = "salt-value",
-      ),
-    )
+        RegisterUserRequest(
+          user = userDTO,
+          hashedPassword = "hashed-password",
+          saltValue = "salt-value",
+        ),
+      )
 
-    response.status shouldBe HttpStatus.UNAUTHORIZED
-    response.body().result.shouldBeInstanceOf<RegisterUserFailure>()
+      response.status shouldBe HttpStatus.UNAUTHORIZED
+    }
   }
 
   @Test
@@ -159,16 +162,17 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(registerUser = registerUseCase))
 
-    val response = controller.registerUser(
-      RegisterUserRequest(
-        user = userDTO,
-        hashedPassword = "hashed-password",
-        saltValue = "salt-value",
-      ),
-    )
+    shouldThrow<UnexpectedException> {
+      val response = controller.registerUser(
+        RegisterUserRequest(
+          user = userDTO,
+          hashedPassword = "hashed-password",
+          saltValue = "salt-value",
+        ),
+      )
 
-    response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
-    response.body().result.shouldBeInstanceOf<RegisterUserFailure>()
+      response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
+    }
   }
 
   @Test
@@ -186,7 +190,6 @@ class MicronautUserControllerTest {
       .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "valid-password"))
 
     response.status shouldBe HttpStatus.OK
-    response.body().result.shouldBeInstanceOf<LoginUserSuccess>()
     verify(loginUseCase).execute(userDTO.email, userDTO.username, "valid-password")
   }
 
@@ -199,15 +202,16 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(loginUser = loginUseCase))
 
-    val response = controller
-      .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "invalid-password"))
+    shouldThrow<UnexpectedException> {
+      val response = controller
+        .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "invalid-password"))
 
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().result.shouldBeInstanceOf<LoginUserFailure>()
+      response.status shouldBe HttpStatus.BAD_REQUEST
+    }
   }
 
   @Test
-  fun `controller should return bad request when loginUser is blocked`() {
+  fun `controller should return unauthorized when loginUser is blocked`() {
     val userDTO = validUserDto
     val loginUseCase = mock<LoginUser> {
       on { execute(userDTO.email, userDTO.username, "blocked-password") } doReturn
@@ -215,12 +219,12 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(loginUser = loginUseCase))
 
-    val response = controller
-      .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "blocked-password"))
-
-    response.status shouldBe HttpStatus.UNAUTHORIZED
-    response.body().result.shouldBeInstanceOf<LoginUserFailure>()
-    verify(loginUseCase).execute(userDTO.email, userDTO.username, "blocked-password")
+    shouldThrow<UnauthorizedException> {
+      val response = controller
+        .loginUser(LoginUserRequest(userDTO.email, userDTO.username, "blocked-password"))
+      response.status shouldBe HttpStatus.UNAUTHORIZED
+      verify(loginUseCase).execute(userDTO.email, userDTO.username, "blocked-password")
+    }
   }
 
   @Test
@@ -232,27 +236,28 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(updateUserPassword = updatePasswordUseCase))
 
-    val response = controller
-      .updateUserPassword(
-        UpdateUserPasswordRequest(
-          userDTO.id,
-          userDTO.username,
-          userDTO.email,
+    shouldThrow<UnauthorizedException> {
+      val response = controller
+        .updateUserPassword(
+          UpdateUserPasswordRequest(
+            userDTO.id,
+            userDTO.username,
+            userDTO.email,
+            "old-password",
+            "new-password",
+          ),
+        )
+
+      response.status shouldBe HttpStatus.UNAUTHORIZED
+      verify(updatePasswordUseCase)
+        .execute(
+          validUser.id.value,
+          validUser.profile.username,
+          validUser.profile.email.address,
           "old-password",
           "new-password",
-        ),
-      )
-
-    response.status shouldBe HttpStatus.UNAUTHORIZED
-    response.body().result.shouldBeInstanceOf<UpdateUserPasswordFailure>()
-    verify(updatePasswordUseCase)
-      .execute(
-        validUser.id.value,
-        validUser.profile.username,
-        validUser.profile.email.address,
-        "old-password",
-        "new-password",
-      )
+        )
+    }
   }
 
   @Test
@@ -264,27 +269,27 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(updateUserPassword = updatePasswordUseCase))
 
-    val response = controller
-      .updateUserPassword(
-        UpdateUserPasswordRequest(
-          userDTO.id,
-          userDTO.username,
-          userDTO.email,
+    shouldThrow<NotFoundException> {
+      val response = controller
+        .updateUserPassword(
+          UpdateUserPasswordRequest(
+            userDTO.id,
+            userDTO.username,
+            userDTO.email,
+            "old-password",
+            "new-password",
+          ),
+        )
+      response.status shouldBe HttpStatus.NOT_FOUND
+      verify(updatePasswordUseCase)
+        .execute(
+          validUser.id.value,
+          validUser.profile.username,
+          validUser.profile.email.address,
           "old-password",
           "new-password",
-        ),
-      )
-
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.body().result.shouldBeInstanceOf<UpdateUserPasswordFailure>()
-    verify(updatePasswordUseCase)
-      .execute(
-        validUser.id.value,
-        validUser.profile.username,
-        validUser.profile.email.address,
-        "old-password",
-        "new-password",
-      )
+        )
+    }
   }
 
   @Test
@@ -298,7 +303,6 @@ class MicronautUserControllerTest {
     val response = controller.updateUserInfo(UpdateUserInfoRequest(userDTO))
 
     response.status shouldBe HttpStatus.OK
-    response.body().result.shouldBeInstanceOf<UpdateUserInfoSuccess>()
     verify(updateInfoUseCase).execute(validUser)
   }
 
@@ -310,11 +314,11 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
 
-    val response = controller.updateUserInfo(UpdateUserInfoRequest(userDTO))
-
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
-    verify(updateInfoUseCase).execute(validUser)
+    shouldThrow<NotFoundException> {
+      val response = controller.updateUserInfo(UpdateUserInfoRequest(userDTO))
+      response.status shouldBe HttpStatus.NOT_FOUND
+      verify(updateInfoUseCase).execute(validUser)
+    }
   }
 
   @Test
@@ -328,10 +332,10 @@ class MicronautUserControllerTest {
     val updateInfoUseCase = mock<UpdateUserInfo>()
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
 
-    val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
+    shouldThrow<ValidationException> {
+      val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
+      response.status shouldBe HttpStatus.BAD_REQUEST
+    }
   }
 
   @Test
@@ -344,11 +348,10 @@ class MicronautUserControllerTest {
     )
     val updateInfoUseCase = mock<UpdateUserInfo>()
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
-
-    val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
+    shouldThrow<ValidationException> {
+      val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
+      response.status shouldBe HttpStatus.BAD_REQUEST
+    }
   }
 
   @Test
@@ -361,11 +364,10 @@ class MicronautUserControllerTest {
     )
     val updateInfoUseCase = mock<UpdateUserInfo>()
     val controller = getController(fakeServices.copy(updateUserInfo = updateInfoUseCase))
-
-    val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
-
-    response.status shouldBe HttpStatus.BAD_REQUEST
-    response.body().result.shouldBeInstanceOf<UpdateUserInfoFailure>()
+    shouldThrow<ValidationException> {
+      val response = controller.updateUserInfo(UpdateUserInfoRequest(invalidUserDTO))
+      response.status shouldBe HttpStatus.BAD_REQUEST
+    }
   }
 
   @Test
@@ -382,7 +384,6 @@ class MicronautUserControllerTest {
 
     val response = controller.deleteUser((userId.value))
     response.status shouldBe HttpStatus.OK
-    response.body().result.shouldBeInstanceOf<DeleteUserSuccess>()
     verify(deleteUseCase).execute(userId)
   }
 
@@ -394,11 +395,12 @@ class MicronautUserControllerTest {
     }
     val controller = getController(fakeServices.copy(deleteUser = deleteUseCase))
 
-    val response = controller.deleteUser((userId.value))
+    shouldThrow<NotFoundException> {
+      val response = controller.deleteUser((userId.value))
+      response.status shouldBe HttpStatus.NOT_FOUND
 
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.body().result.shouldBeInstanceOf<DeleteUserFailure>()
-    verify(deleteUseCase).execute(userId)
+      verify(deleteUseCase).execute(userId)
+    }
   }
 
   @Test
@@ -417,10 +419,10 @@ class MicronautUserControllerTest {
       ),
     )
 
-    val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
-
-    response.status shouldBe HttpStatus.NOT_FOUND
-    response.body().result.shouldBeInstanceOf<VerifyEmailFailure>()
+    shouldThrow<NotFoundException> {
+      val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
+      response.status shouldBe HttpStatus.NOT_FOUND
+    }
   }
 
   @Test
@@ -443,16 +445,16 @@ class MicronautUserControllerTest {
       ),
     )
 
-    val response = controller.verifyEmail(VerifyEmailRequest(userId, "fakeOtk"))
-
-    response.body().result.shouldBeInstanceOf<VerifyEmailFailure>()
-    response.status shouldBe HttpStatus.NOT_FOUND
+    shouldThrow<NotFoundException> {
+      val response = controller.verifyEmail(VerifyEmailRequest(userId, "fakeOtk"))
+      response.status shouldBe HttpStatus.NOT_FOUND
+    }
   }
 
   @Test
   fun `controller should return ok in verify-email found when user and otk match`() {
     val userId = validUserDto.id
-    val repo = MemoryUserRepositoryTest().createMemoryUserRepository()
+    val repo = MemoryUserRepositoryImpl()
 
     repo.save(validUser)
 
@@ -475,7 +477,6 @@ class MicronautUserControllerTest {
     val response = controller.verifyEmail(VerifyEmailRequest(userId, "otk"))
     verify(notificationClient).confirmEmail(any())
     response.status shouldBe HttpStatus.OK
-    response.body().result.shouldBeInstanceOf<VerifyEmailSuccess>()
     repo.findById(UserId(userId)) shouldNotBe null
     repo.findById(UserId(userId))!!.profile.email.isVerified shouldBe true
   }

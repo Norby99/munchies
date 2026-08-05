@@ -29,21 +29,28 @@ class UpdateCategoryTest {
 
   @Test
   fun `should update category successfully when menu exists`() = runBlocking {
-    val categoryId = CategoryId()
-    val category = spyk(Category(id = categoryId, name = CategoryName.of("Old Name")))
-    val menuId = MenuId()
-    val menu =
-      spyk(
-        Menu(id = menuId, restaurantId = RestaurantId(), categories = listOf(category)),
-      )
+    val category = spyk(
+      Category(
+        id = CategoryId(),
+        name = CategoryName.of("Old Name"),
+      ),
+    )
+    val menu = spyk(
+      Menu(
+        id = MenuId(),
+        restaurantId = RestaurantId(),
+        categories = listOf(category),
+      ),
+    )
 
     val command = UpdateCategoryCommand(
-      menuId = menuId.value,
-      categoryId = categoryId.value,
+      restaurantId = menu.restaurantId.value,
+      menuId = menu.id.value,
+      categoryId = category.id.value,
       name = "New Name",
     )
 
-    coEvery { menuRepository.findById(any()) } returns menu
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
     coEvery { menuRepository.save(any()) } returns Unit
 
     when (val result = updateCategoryUseCase(command)) {
@@ -60,12 +67,13 @@ class UpdateCategoryTest {
   @Test
   fun `should fail when menu does not exist`() = runBlocking {
     val command = UpdateCategoryCommand(
+      restaurantId = RestaurantId().value,
       menuId = MenuId().value,
       categoryId = CategoryId().value,
       name = "New Name",
     )
 
-    coEvery { menuRepository.findById(any()) } returns null
+    coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns null
 
     when (val result = updateCategoryUseCase(command)) {
       is UpdateCategoryResult.MenuNotFound -> {

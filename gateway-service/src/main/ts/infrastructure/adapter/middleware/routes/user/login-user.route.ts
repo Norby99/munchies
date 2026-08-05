@@ -1,114 +1,100 @@
-import { InternalRoute, RouteDefinition } from "../route-definition";
-import { internalAxiosRequest } from "../internal-client";
 import {
-  LoginUserResponse,
-  LoginUserFailure,
-  LoginUserAPI,
+  Response as ExpressResponse,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
+import {
+  HttpMethod,
+  AuthRole,
+  ErrorResponse,
+} from "munchies-commons/kotlin/commons-modules";
+import {
   LoginUserRequest,
+  LoginUserAPI,
+  LoginUserResponse,
   LoginUserResult,
-  LoginUserSuccess,
-  loginUserRequestFromJson,
-  loginUserResponseFromJson,
-  GetUserResponse,
 } from "munchies-user-service-shared/kotlin/user-modules";
-import { AuthRole, HttpMethod } from "munchies-commons/kotlin/commons-modules";
-import { AuthedRequest, injectCookie } from "../../auth";
-import { Response } from "express";
-class InternalLoginUserRoute
-  extends LoginUserAPI
-  implements
-    InternalRoute<
-      LoginUserAPI,
-      LoginUserRequest,
-      LoginUserResponse,
-      LoginUserResult,
-      LoginUserSuccess,
-      LoginUserFailure
-    >
+import { AuthedRequest, injectCookie, parseAuthRoleString } from "../../auth";
+import { request } from "../internal-client";
+import { SimpleRoute } from "../simple-route";
+
+export class LoginUserRoute
+  extends LoginUserAPI<LoginUserResponse | ErrorResponse>
+  implements SimpleRoute<LoginUserResponse>
 {
   constructor() {
     super();
-    this.service = this;
-    this.path = this.service.getPath();
+    let api = this;
+
+    this.path = api.getPath();
+    this.method = api.getMethod();
     this.authRole = null;
-    this.method = this.service.getMethod();
   }
-  authRole: AuthRole | null;
-  method: HttpMethod;
+
   path: string;
-  service: LoginUserAPI;
+  method: HttpMethod;
+  authRole: AuthRole | null;
 
-  generateErrorResponse(reason: string, code: number): LoginUserResponse {
-    return new GetUserResponse(this.generateFailure(reason), code);
-  }
-
-  parseResult(result: LoginUserResult): LoginUserSuccess | LoginUserFailure {
-    if (result.type === LoginUserSuccess.name) {
-      return result as LoginUserSuccess;
-    } else if (result.type === LoginUserFailure.name) {
-      return result as LoginUserFailure;
-    } else {
-      return this.generateFailure("Invalid Type in Result");
-    }
-  }
-  async loginUser(request: LoginUserRequest): Promise<LoginUserResponse> {
+  async loginUser(
+    req: LoginUserRequest,
+  ): Promise<LoginUserResponse | ErrorResponse> {
     const uri = process.env.USER_SERVICE_URL;
     if (!uri)
-      return this.generateErrorResponse("Missing User Service URL", 500);
+      return Promise.resolve(
+        new ErrorResponse("Missing User Service URL", 500),
+      );
 
-    return await internalAxiosRequest(
+    const response = request<LoginUserResponse>(
       uri + this.path,
-      this.getMethod(),
-      request.toJson(),
+      this.method,
+      req.toJson(),
       this.parseResponse,
-      this.parseResult,
-      this.generateResponse,
-      this.generateFailure
+      this.parseError,
     );
-  }
-  request(request: LoginUserRequest): Promise<LoginUserResponse> {
-    return this.loginUser(request);
-  }
-}
 
-export class LoginUserRoute
-  implements RouteDefinition<LoginUserResponse, LoginUserFailure>
-{
-  constructor() {
-    this.internalRoute = new InternalLoginUserRoute();
-    this.path = this.internalRoute.path;
-    this.method = this.internalRoute.method;
-    this.authRole = this.internalRoute.authRole;
-    this.onAuthFail = this.internalRoute.service.generateFailure;
+    return response;
   }
-  internalRoute: InternalRoute<
-    any,
-    LoginUserRequest,
-    LoginUserResponse,
-    LoginUserResult,
-    LoginUserSuccess,
-    LoginUserFailure
-  >;
-  path: string;
-  method: HttpMethod;
-  authRole: AuthRole | null;
-  onAuthFail: (msg: string) => LoginUserFailure;
 
-  forward: (req: AuthedRequest) => Promise<LoginUserResponse> = (req) => {
-    const request = this.internalRoute.service.parseRequest(
-      req.body.toString()
-    );
-    return this.internalRoute.request(request);
+  private handler: {
+    forward: (
+      req: AuthedRequest,
+    ) => Promise<LoginUserResponse | ErrorResponse>;
+    respond: RequestHandler;
+  } = {
+    forward: async (req: AuthedRequest) => {
+      try {
+        const loginReq = this.parseRequest(String(req.body));
+        return this.loginUser(loginReq);
+      } catch (err: any) {
+        return new ErrorResponse("LoginUser forward: \n" + String(err), 500);
+      }
+    },
+    respond: async (req: Request, res: Response) => {
+      const response = await this.forward(req as AuthedRequest);
+      const result = response.result
+      if (result instanceof LoginUserResult)
+        try {
+          injectCookie(res, {
+            id: result.id,
+            role: result.role,
+          });
+        } catch (e: any) {
+          res
+            .status(500)
+            .type("json")
+            .send(
+              new ErrorResponse(
+                "Something went wrong during cookie injection: " + String(e),
+                500,
+              ).toJson(),
+            );
+          return;
+        }
+       res.status(response.code).type("json").send(response.toJson());
+      } 
   };
 
-  respond: (req: AuthedRequest, res: Response) => void = async (req, res) => {
-    const response = await this.forward(req);
-    switch (response.result.type) {
-      case LoginUserSuccess.name:
-        const result = response.result as LoginUserSuccess;
-        injectCookie(res, { id: result.id, role: result.role });
-        break;
-    }
-    res.status(response.code).type("json").send(response.toJson());
-  };
+  forward = this.handler.forward;
+  respond = this.handler.respond;
 }

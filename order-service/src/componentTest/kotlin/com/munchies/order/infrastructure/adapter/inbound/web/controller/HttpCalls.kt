@@ -1,7 +1,5 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
-import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
@@ -18,54 +16,60 @@ class HttpCalls(val baseUrl: String, val client: HttpClient) {
   /**
    * Makes an HTTP POST request to the specified endpoint with the given request body.
    *
+   * @param T The type of the response body expected from the POST request.
    * @param request The request body to be sent in the POST request.
    * @param endPoint The endpoint to which the POST request is made.
    * @return The HttpResponse containing the response from the server.
    */
-  fun httpPost(request: Any, endPoint: String): HttpResponse<String> = client.toBlocking().exchange(
-    HttpRequest.POST(
-      "${baseUrl}$endPoint",
-      request,
-    ),
-    String::class.java,
-  )
+  inline fun <reified T> httpPost(request: Any, endPoint: String): HttpResponse<T> =
+    client.toBlocking()
+      .exchange(
+        HttpRequest.POST(
+          "${baseUrl}$endPoint",
+          request,
+        ),
+        T::class.java,
+      )
 
   /**
    * Makes an HTTP PATCH request to the specified endpoint with the given request body.
    *
+   * @param T The type of the response body expected from the PATCH request.
    * @param request The request body to be sent in the PATCH request.
    * @param endPoint The endpoint to which the PATCH request is made.
    * @return The HttpResponse containing the response from the server.
    */
-  fun httpPatch(request: Any, endPoint: String): HttpResponse<String> =
+  inline fun <reified T> httpPatch(request: Any, endPoint: String): HttpResponse<T> =
     client.toBlocking().exchange(
       HttpRequest.PATCH(
         "${baseUrl}$endPoint",
         request,
       ),
-      String::class.java,
+      T::class.java,
     )
 
   /**
    * Makes an HTTP GET request to the specified endpoint.
    *
+   * @param T The type of the response body expected from the GET request.
    * @param endPoint The endpoint to which the GET request is made.
-   * @return The HttpResponse containing the response from the server, which is expected to be
-   * of type OrderDto.Takeaway.
+   * @return The HttpResponse containing the response from the server.
    */
-  fun httpGet(endPoint: String): HttpResponse<OrderDto.Takeaway> = client.toBlocking().exchange(
-    HttpRequest.GET<Any>("${baseUrl}$endPoint"),
-    OrderDto.Takeaway::class.java,
+  inline fun <reified T> httpGet(endPoint: String): HttpResponse<T> = client.toBlocking().exchange(
+    HttpRequest.GET<T>("${baseUrl}$endPoint"),
+    T::class.java,
   )
 
   /**
    * Makes an HTTP DELETE request to the discard order endpoint with the given request body.
    *
-   * @param request The request body to be sent in the DELETE request.
+   * @param T The type of the response body expected from the DELETE request.
+   * @param endPoint The endpoint to which the DELETE request is made.
    * @return The HttpResponse containing the response from the server.
    */
-  fun httpDelete(request: String): HttpResponse<String> = client.toBlocking().exchange(
-    HttpRequest.DELETE("${baseUrl}${OrderServiceConfig.DISCARD_ORDER_PATH}", request),
-    String::class.java,
-  )
+  inline fun <reified T> httpDelete(endPoint: String): HttpResponse<T> =
+    client.toBlocking().exchange(
+      HttpRequest.DELETE<T>("${baseUrl}$endPoint"),
+      T::class.java,
+    )
 }

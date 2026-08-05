@@ -10,35 +10,15 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("VerifyEmailResponse")
-class VerifyEmailResponse(
-  override val result: VerifyEmailResult,
-  override val code: Int,
-) : WebResponse<VerifyEmailResult>() {
+open class VerifyEmailResponse(
+  override val result: String,
+  override val code: Int = 200,
+) : WebResponse<String>() {
   override fun toJson(): String = Json.encodeToString(this)
+
+  val msg: String get() = result
 }
 
 @JsExport
 fun verifyEmailResponseFromJson(jsonString: String): VerifyEmailResponse =
   Json.decodeFromString(jsonString)
-
-@JsExport
-@Serializable
-sealed class VerifyEmailResult {
-  abstract val type: String
-}
-
-@JsExport
-@Serializable
-@SerialName("VerifyEmailSuccess")
-class VerifyEmailSuccess(val msg: String) : VerifyEmailResult() {
-  override val type: String
-    get() = "VerifyEmailSuccess"
-}
-
-@JsExport
-@Serializable
-@SerialName("VerifyEmailFailure")
-class VerifyEmailFailure(val reason: String) : VerifyEmailResult() {
-  override val type: String
-    get() = "VerifyEmailFailure"
-}

@@ -1,5 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound.request
 
+import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -12,8 +13,9 @@ import kotlinx.serialization.json.Json
 @SerialName("DeleteUserRequest")
 data class DeleteUserRequest(
   val userId: String,
-) : JsonEncodable() {
+) : AuthenticatedRequest<DeleteUserRequest>, JsonEncodable() {
   override fun toJson(): String = Json.encodeToString(this)
+  override fun addId(userId: String): DeleteUserRequest = this.copy(userId = userId)
 }
 
 @JsExport

@@ -10,32 +10,15 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-class DeleteUserResponse(override val result: DeleteUserResult, override val code: Int) :
-  WebResponse<DeleteUserResult>() {
+@SerialName("DeleteUserResponse")
+open class DeleteUserResponse(
+  override val result: UserDTO,
+  override val code: Int = 200,
+) : WebResponse<UserDTO>() {
   override fun toJson(): String = Json.encodeToString(this)
+
+  val user: UserDTO get() = result
 }
 
 @JsExport
 fun deleteUserResponseFromJson(json: String): DeleteUserResponse = Json.decodeFromString(json)
-
-@JsExport
-@Serializable
-sealed class DeleteUserResult {
-  abstract val type: String
-}
-
-@JsExport
-@Serializable
-@SerialName("DeleteUserSuccess")
-class DeleteUserSuccess(val user: UserDTO) : DeleteUserResult() {
-  override val type: String
-    get() = "DeleteUserSuccess"
-}
-
-@JsExport
-@Serializable
-@SerialName("DeleteUserFailure")
-class DeleteUserFailure(val reason: String) : DeleteUserResult() {
-  override val type: String
-    get() = "DeleteUserFailure"
-}

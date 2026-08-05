@@ -94,7 +94,7 @@ class MenuItemTest {
         MenuItemDescription.of("With spicy salami"),
       ),
       price = Money(BigDecimal("10.0")),
-      validity = Validity.from(LocalDate.of(2025, 1, 1)),
+      validity = Validity.from("2025-01-01"),
     )
 
     assertTrue(item.isValid(LocalDate.of(2025, 1, 2).atStartOfDay()))
@@ -110,7 +110,7 @@ class MenuItemTest {
       ),
       price = Money(BigDecimal("10.0")),
     )
-    val newValidity = Validity.from(LocalDate.of(2025, 1, 1))
+    val newValidity = Validity.from("2025-01-01")
 
     item.update(
       item.details,

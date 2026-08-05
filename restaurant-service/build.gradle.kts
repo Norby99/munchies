@@ -8,5 +8,6 @@ application {
 
 dependencies {
   implementation(project(":commons"))
+  implementation(project(":restaurant-shared"))
   testImplementation(testFixtures(project(":architecture-rules")))
 }
