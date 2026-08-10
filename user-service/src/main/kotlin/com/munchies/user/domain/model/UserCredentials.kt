@@ -21,4 +21,8 @@ data class UserCredentials(
   val loginAttempts: Int = 0,
   val lockedUntil: Long = -1L,
   val lastLogin: Long = 0L,
-) : Entity<UserId>(id = id)
+) : Entity<UserId>(id = id) {
+  companion object {
+    const val MAXIMUM_LOGIN_ATTEMPTS = 3
+  }
+}

@@ -19,6 +19,7 @@ interface LoginUser {
       data object NotFound : LoginResult
       data object Failure : LoginResult
       data object BlockedLogin : LoginResult
+      data object LockedUser : LoginResult
     }
   }
 }

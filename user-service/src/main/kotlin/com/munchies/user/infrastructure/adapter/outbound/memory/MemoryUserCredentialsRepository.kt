@@ -73,6 +73,18 @@ sealed interface MemoryUserCredentialsRepository : UserCredentialsRepository {
   override fun delete(entity: UserCredentials) {
     repository.findById(entity.id)?.let { repository.delete(it) } ?: {}
   }
+
+  override fun resetLoginAttemps(id: UserId) {
+    repository.findById(id)?.let {
+      update(it.copy(loginAttempts = 0))
+    }
+  }
+
+  override fun incrementLoginAttemps(id: UserId) {
+    repository.findById(id)?.let {
+      update(it.copy(loginAttempts = it.loginAttempts + 1))
+    }
+  }
 }
 
 @Singleton

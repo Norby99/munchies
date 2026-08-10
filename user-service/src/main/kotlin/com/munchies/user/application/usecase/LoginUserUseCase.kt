@@ -5,10 +5,7 @@ import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResul
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult.*
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
-import com.munchies.user.domain.port.PasswordHasher
-import com.munchies.user.domain.port.TimeProvider
-import com.munchies.user.domain.port.UserCredentialsRepository
-import com.munchies.user.domain.port.UserRepository
+import com.munchies.user.domain.port.*
 
 /**
  * Authenticates a user using either email or username and validates the provided password.
@@ -40,10 +37,17 @@ class LoginUserUseCase(
 
   private fun UserCredentials.toLoginResult(user: User, providedPassword: String): LoginResult =
     when {
+      this.loginAttempts >= UserCredentials.MAXIMUM_LOGIN_ATTEMPTS -> LockedUser
       isBlocked(timeProvider()) -> BlockedLogin
-      passwordHasher.hash(password = providedPassword, salt = salt) == passwordHash ->
+      passwordHasher.hash(password = providedPassword, salt = salt) == passwordHash -> {
+        credentialsRepository.resetLoginAttemps(user.id)
         Success(user.id.value, user.profile.role)
-      else -> Failure
+      }
+      else -> {
+        credentialsRepository.incrementLoginAttemps(user.id)
+        credentialsRepository.update(this.copy(lockedUntil = timeProvider.addOneHour()()))
+        Failure
+      }
     }
 
   private fun UserCredentials.isBlocked(now: Long): Boolean = lockedUntil > now
