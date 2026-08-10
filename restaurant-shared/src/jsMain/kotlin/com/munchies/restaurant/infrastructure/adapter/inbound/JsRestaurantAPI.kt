@@ -50,7 +50,7 @@ abstract class JsGetManagerRestaurantsAPI<E : WebResponse<Any>> :
     getManagerRestaurantsResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
   override fun getPath(): String =
-    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.GET_MANAGER_RESTAURANTS_PATH
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.MANAGER_RESTAURANTS_PREFIX
   override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
