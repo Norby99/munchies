@@ -37,6 +37,7 @@ object UserDTOFactory {
     username = this.profile.username,
     email = this.profile.email.address,
     role = this.profile.role.toString(),
+    isEmailVerified = this.profile.email.isVerified,
   )
 
   /**
