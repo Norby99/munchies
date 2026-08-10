@@ -275,6 +275,8 @@ class MicronautUserController(
           }
           is LoginResult.BlockedLogin ->
             throw UnauthorizedException("User is locked")
+          is LoginResult.LockedUser ->
+            throw UnexpectedException("Too many login attempts")
           is LoginResult.NotFound ->
             throw NotFoundException("User was not found")
           else ->

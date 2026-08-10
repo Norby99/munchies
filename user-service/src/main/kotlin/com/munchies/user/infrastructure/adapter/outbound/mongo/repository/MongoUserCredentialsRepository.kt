@@ -120,4 +120,13 @@ class MongoUserCredentialsRepository(
         repository.delete(documentFactory.run { entity.toDocument() })
       } ?: {}
   }
+
+  override fun resetLoginAttemps(id: UserId) {
+    this.findById(id)
+      ?.let { this.update(it.copy(loginAttempts = 0)) }
+  }
+
+  override fun incrementLoginAttemps(id: UserId) {
+    this.findById(id)?.let { this.update(it.copy(loginAttempts = it.loginAttempts + 1)) }
+  }
 }
