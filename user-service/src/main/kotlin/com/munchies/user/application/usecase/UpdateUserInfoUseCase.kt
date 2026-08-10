@@ -18,7 +18,8 @@ class UpdateUserInfoUseCase(
 
   override fun execute(user: User): UpdateUserInfoResult {
     return userRepository.findById(user.id)?.let {
-      return when (val newUser = User.factory.create(id = user.id.value, profile = user.profile)) {
+      val profile = user.profile.copy(role = it.profile.role)
+      return when (val newUser = User.factory.create(id = user.id.value, profile = profile)) {
         is User.Companion.UserFactory.UserFactoryResult.Success -> {
           userRepository.update(newUser.user)
           Success
