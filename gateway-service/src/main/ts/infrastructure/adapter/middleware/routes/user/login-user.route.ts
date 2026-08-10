@@ -79,6 +79,12 @@ export class LoginUserRoute
             id: result.id,
             role: result.role,
           });
+          res.status(response.code).type("json").send(
+              (response as LoginUserResponse).copy(
+                  result.copy("")
+              ).toJson()
+              );
+          return;
         } catch (e: any) {
           res
             .status(500)

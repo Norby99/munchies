@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("RegisterUserResponse")
-open class RegisterUserResponse(
+data class RegisterUserResponse(
   override val result: UserDTO,
   override val code: Int,
 ) : WebResponse<UserDTO>() {
