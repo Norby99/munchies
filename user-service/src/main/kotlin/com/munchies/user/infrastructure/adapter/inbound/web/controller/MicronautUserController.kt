@@ -464,7 +464,7 @@ class MicronautUserController(
    * @param request Verification payload containing the user identifier and OTP/key.
    * @return An HTTP response indicating confirmation success or failure.
    */
-  @Get(UserServiceConfig.VERIFY_EMAIL_PATH)
+  @Post(UserServiceConfig.VERIFY_EMAIL_PATH)
   @Operation(
     summary = "Confirm a user's email address",
     description = "The user inputs a specific otk received in the email",
@@ -472,7 +472,6 @@ class MicronautUserController(
   @ApiResponse(responseCode = "200", description = "Email confirmed successfully")
   @ApiResponse(responseCode = "404", description = "User not found or otk not valid")
   override fun verifyEmail(@Body request: VerifyEmailRequest): HttpResponse<VerifyEmailResponse> {
-    val request = VerifyEmailRequest(request.id, request.otk)
     return when (val msg = VerifyEmailRequestValidator().validate(request)) {
       is InvalidInput -> throw ValidationException(msg.reason)
       else -> {
