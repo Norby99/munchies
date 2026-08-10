@@ -3,6 +3,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http
 import com.munchies.restaurant.application.RestaurantService
 import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantResult
 import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
@@ -17,11 +18,11 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Cr
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.CreateRestaurantResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantResponse
-import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.web.config.RestaurantServiceConfig
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -58,11 +59,11 @@ class RestaurantController(private val restaurantService: RestaurantService) {
     }
   }
 
-  @Get
+  @Get(RestaurantServiceConfig.GET_MANAGER_RESTAURANTS_PATH)
   suspend fun getManagerRestaurants(
-    @Body request: GetManagerRestaurantsRequest,
+    @PathVariable managerId: String,
   ): HttpResponse<GetManagerRestaurantsResponse> {
-    val command = request.toCommand()
+    val command = GetManagerRestaurantsCommand(managerId)
     return when (val result = restaurantService.getManagerRestaurants(command)) {
       is GetManagerRestaurantsResult.Success -> HttpResponse.ok(result.toResponse())
       is GetManagerRestaurantsResult.ValidationError -> throw ValidationException(result.error)
