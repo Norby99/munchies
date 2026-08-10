@@ -81,6 +81,12 @@ export class RegisterUserRoute
             id: result.id,
             role: parseAuthRoleString(result.role),
           });
+          res.status(response.code).type("json").send(
+                        (response as RegisterUserResponse).copy(
+                            result.copy("")
+                        ).toJson()
+                        );
+                    return;
         } catch (e: any) {
           res
             .status(500)

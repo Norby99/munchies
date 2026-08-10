@@ -20,7 +20,7 @@ data class LoginUserResult(
 @JsExport
 @Serializable
 @SerialName("LoginUserResponse")
-open class LoginUserResponse(
+data class LoginUserResponse(
   override val result: LoginUserResult,
   override val code: Int = 200,
 ) : WebResponse<LoginUserResult>() {
