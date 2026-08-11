@@ -7,20 +7,20 @@ import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
-object ValidityType {
-  const val PERIOD = "PERIOD"
-  const val YEARLY = "YEARLY"
-  const val WEEKLY = "WEEKLY"
-  const val HOURS = "HOURS"
-  const val FROM = "FROM"
-  const val UNTIL = "UNTIL"
-  const val ALWAYS = "ALWAYS"
+enum class ValidityType {
+  PERIOD,
+  YEARLY,
+  WEEKLY,
+  HOURS,
+  FROM,
+  UNTIL,
+  ALWAYS,
 }
 
 @JsExport
 @Serializable
 class ValidityDto(
-  val type: String,
+  val type: ValidityType,
   val value: Map<String, String> = emptyMap(),
 ) {
   fun toJson(): String = Json.encodeToString(this)
