@@ -5,11 +5,13 @@ import com.munchies.restaurant.domain.valueobject.menu.Validity
 import com.munchies.restaurant.domain.valueobject.menu.Variation
 import com.munchies.restaurant.domain.valueobject.menu.VariationName
 import com.munchies.restaurant.domain.valueobject.menu.VariationOption
-import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.ValidityDocument
+import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.ValidityData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.VariationDocument
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.VariationOptionDocument
 import java.math.BigDecimal
 import java.time.LocalTime
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 object MenuValueObjectDocumentFactory {
 
@@ -33,53 +35,25 @@ object MenuValueObjectDocumentFactory {
     additionalPrice = Money(BigDecimal(additionalPrice)),
   )
 
-  fun Validity.toDocument(): ValidityDocument = when (this) {
-    is Validity.Always -> ValidityDocument.always
-    is Validity.Period -> ValidityDocument(
-      type = "period",
-      start = start.toString(), end = end.toString(),
-      startMonth = null, startDay = null, endMonth = null, endDay = null,
-      days = null, startHour = null, endHour = null,
-      first = null, second = null,
-    )
-    is Validity.Yearly -> ValidityDocument(
-      type = "yearly",
-      start = null, end = null,
-      startMonth = start.monthValue, startDay = start.dayOfMonth,
-      endMonth = end.monthValue, endDay = end.dayOfMonth,
-      days = null, startHour = null, endHour = null,
-      first = null, second = null,
-    )
-    is Validity.Weekly -> ValidityDocument(
-      type = "weekly",
-      start = null, end = null,
-      startMonth = null, startDay = null, endMonth = null, endDay = null,
-      days = days.map { it.value }, startHour = null, endHour = null,
-      first = null, second = null,
-    )
-    is Validity.Hours -> ValidityDocument(
-      type = "hours",
-      start = null, end = null,
-      startMonth = null, startDay = null, endMonth = null, endDay = null,
-      days = null, startHour = start.toString(), endHour = end.toString(),
-      first = null, second = null,
-    )
-    is Validity.And -> ValidityDocument(
-      type = "and",
-      start = null, end = null,
-      startMonth = null, startDay = null, endMonth = null, endDay = null,
-      days = null, startHour = null, endHour = null,
-      first = first.toDocument(), second = second.toDocument(),
-    )
+  private fun Validity.toData(): ValidityData = when (this) {
+    is Validity.Always -> ValidityData.Always
+    is Validity.Period -> ValidityData.Period(start.toString(), end.toString())
+    is Validity.Yearly -> ValidityData.Yearly(start.monthValue, start.dayOfMonth, end.monthValue, end.dayOfMonth)
+    is Validity.Weekly -> ValidityData.Weekly(days.map { it.value })
+    is Validity.Hours -> ValidityData.Hours(start.toString(), end.toString())
+    is Validity.And -> ValidityData.And(first.toData(), second.toData())
   }
 
-  fun ValidityDocument.toDomain(): Validity = when (type) {
-    "always" -> Validity.always
-    "period" -> Validity.period(start!!, end!!)
-    "yearly" -> Validity.yearly(startMonth!!, startDay!!, endMonth!!, endDay!!)
-    "weekly" -> Validity.weekly(days!!.map { it })
-    "hours" -> Validity.hours(LocalTime.parse(startHour!!), LocalTime.parse(endHour!!))
-    "and" -> first!!.toDomain().combine(second!!.toDomain())
-    else -> Validity.always
+  private fun ValidityData.toDomain(): Validity = when (this) {
+    is ValidityData.Always -> Validity.always
+    is ValidityData.Period -> Validity.period(start, end)
+    is ValidityData.Yearly -> Validity.yearly(startMonth, startDay, endMonth, endDay)
+    is ValidityData.Weekly -> Validity.weekly(days)
+    is ValidityData.Hours -> Validity.hours(LocalTime.parse(start), LocalTime.parse(end))
+    is ValidityData.And -> first.toDomain().combine(second.toDomain())
   }
+
+  fun Validity.toDocument(): String = Json.encodeToString(toData())
+
+  fun String.toDomain(): Validity = Json.decodeFromString<ValidityData>(this).toDomain()
 }
