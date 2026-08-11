@@ -50,6 +50,7 @@ include(":table-reservation-service")
 include(":table-reservation-shared")
 
 include(":gateway-service")
+include(":gateway-shared")
 
 include(":order-service")
 include(":order-shared")

@@ -17,16 +17,19 @@ graph TB
   :payment-shared[payment-shared]:::unknown
   :order-shared[order-shared]:::unknown
   :notification-shared[notification-shared]:::unknown
+  :gateway-shared[gateway-shared]:::unknown
   :gateway-service[gateway-service]:::unknown
   :commons[commons]:::unknown
 
   :gateway-service -.->|jsImplementation| :commons
+  :gateway-service -.->|jsImplementation| :gateway-shared
   :gateway-service -.->|jsImplementation| :notification-shared
   :gateway-service -.->|jsImplementation| :order-shared
   :gateway-service -.->|jsImplementation| :payment-shared
   :gateway-service -.->|jsImplementation| :restaurant-shared
   :gateway-service -.->|jsImplementation| :table-reservation-shared
   :gateway-service -.->|jsImplementation| :user-shared
+  :gateway-shared -.->|commonMainImplementation| :commons
   :order-shared -.->|commonMainImplementation| :commons
   :payment-shared -.->|commonMainImplementation| :commons
   :restaurant-shared -.->|commonMainImplementation| :commons
