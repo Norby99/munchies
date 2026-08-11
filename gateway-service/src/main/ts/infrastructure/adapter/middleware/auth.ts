@@ -111,7 +111,7 @@ export function injectCookie(
       httpOnly: true,
       secure: true,
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60, // 1 Hour
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 Days — aligned with JWT exp
       path: "/",
     });
     return res;
