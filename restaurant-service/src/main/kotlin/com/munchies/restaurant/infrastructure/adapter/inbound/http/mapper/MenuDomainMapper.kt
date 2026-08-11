@@ -53,7 +53,6 @@ private fun ValidityDto.toSingleInput(): ValidityInput = when (type) {
   ValidityType.FROM -> ValidityInput.From(value.getValue("start"))
   ValidityType.UNTIL -> ValidityInput.Until(value.getValue("end"))
   ValidityType.ALWAYS -> ValidityInput.Always
-  else -> error("Unknown validity type: $type")
 }
 
 fun ValidityInput.toDto(): Array<ValidityDto> = when (this) {
