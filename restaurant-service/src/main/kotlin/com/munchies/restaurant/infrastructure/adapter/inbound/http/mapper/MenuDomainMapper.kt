@@ -71,7 +71,10 @@ private fun ValidityInput.toSingleDto(): ValidityDto = when (this) {
       "endDay" to endDay.toString(),
     ),
   )
-  is ValidityInput.Weekly -> ValidityDto(ValidityType.WEEKLY, mapOf("days" to days.joinToString(",")))
+  is ValidityInput.Weekly -> ValidityDto(
+    ValidityType.WEEKLY,
+    mapOf("days" to days.joinToString(",")),
+  )
   is ValidityInput.Hours -> ValidityDto(ValidityType.HOURS, mapOf("start" to start, "end" to end))
   is ValidityInput.From -> ValidityDto(ValidityType.FROM, mapOf("start" to start))
   is ValidityInput.Until -> ValidityDto(ValidityType.UNTIL, mapOf("end" to end))

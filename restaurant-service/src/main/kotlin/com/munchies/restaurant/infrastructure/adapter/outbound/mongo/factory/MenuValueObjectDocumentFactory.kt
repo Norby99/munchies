@@ -38,7 +38,12 @@ object MenuValueObjectDocumentFactory {
   private fun Validity.toData(): ValidityData = when (this) {
     is Validity.Always -> ValidityData.Always
     is Validity.Period -> ValidityData.Period(start.toString(), end.toString())
-    is Validity.Yearly -> ValidityData.Yearly(start.monthValue, start.dayOfMonth, end.monthValue, end.dayOfMonth)
+    is Validity.Yearly -> ValidityData.Yearly(
+      start.monthValue,
+      start.dayOfMonth,
+      end.monthValue,
+      end.dayOfMonth,
+    )
     is Validity.Weekly -> ValidityData.Weekly(days.map { it.value })
     is Validity.Hours -> ValidityData.Hours(start.toString(), end.toString())
     is Validity.And -> ValidityData.And(first.toData(), second.toData())

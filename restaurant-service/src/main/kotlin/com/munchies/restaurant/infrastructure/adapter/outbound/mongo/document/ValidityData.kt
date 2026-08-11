@@ -11,7 +11,12 @@ sealed interface ValidityData {
   data class Period(val start: String, val end: String) : ValidityData
 
   @Serializable
-  data class Yearly(val startMonth: Int, val startDay: Int, val endMonth: Int, val endDay: Int) : ValidityData
+  data class Yearly(
+    val startMonth: Int,
+    val startDay: Int,
+    val endMonth: Int,
+    val endDay: Int,
+  ) : ValidityData
 
   @Serializable
   data class Weekly(val days: List<Int>) : ValidityData

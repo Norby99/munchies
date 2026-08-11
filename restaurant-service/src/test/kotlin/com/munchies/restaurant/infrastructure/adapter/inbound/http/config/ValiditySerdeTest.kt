@@ -7,7 +7,6 @@ import io.micronaut.serde.ObjectMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class ValiditySerdeTest {
   @Test
   fun `ValidityDto round-trips through Micronaut Serde using the enum's plain constant name`() {
