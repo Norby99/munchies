@@ -60,8 +60,7 @@ class CategoryDto(
 class MenuDto(
   val id: String,
   val name: String,
-  val categories: Array<CategoryDto>,
-  val validity: ValidityDto,
+  val categories: Array<CategoryDto> = emptyArray(),
   val validity: Array<ValidityDto> = emptyArray(),
 ) {
   fun toJson(): String = Json.encodeToString(this)
