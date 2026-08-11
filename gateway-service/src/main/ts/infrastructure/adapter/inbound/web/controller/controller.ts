@@ -15,3 +15,13 @@ export class GatewayController {
   @Post()
   public exampleEndpoint() {}
 }
+
+@Route("users")
+@Tags("Users")
+export class UserController {
+  /**
+   * Logout user endpoint.
+   */
+  @Post("logout")
+  public logout() {}
+}

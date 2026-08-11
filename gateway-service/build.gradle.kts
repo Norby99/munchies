@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
   jsImplementation(project(":commons"))
+  jsImplementation(project(":gateway-shared"))
   jsImplementation(project(":notification-shared"))
   jsImplementation(project(":order-shared"))
   jsImplementation(project(":payment-shared"))
