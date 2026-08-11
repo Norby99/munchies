@@ -9,21 +9,14 @@ import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.aggregate.MenuItem
 import com.munchies.restaurant.domain.valueobject.menu.Variation
 import com.munchies.restaurant.domain.valueobject.menu.VariationOption
-import com.munchies.restaurant.infrastructure.adapter.dto.AlwaysValidity
-import com.munchies.restaurant.infrastructure.adapter.dto.AndValidity
 import com.munchies.restaurant.infrastructure.adapter.dto.CategoryDto
-import com.munchies.restaurant.infrastructure.adapter.dto.FromValidity
-import com.munchies.restaurant.infrastructure.adapter.dto.HoursValidity
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuItemDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuSummaryDto
-import com.munchies.restaurant.infrastructure.adapter.dto.PeriodValidity
-import com.munchies.restaurant.infrastructure.adapter.dto.UntilValidity
 import com.munchies.restaurant.infrastructure.adapter.dto.ValidityDto
+import com.munchies.restaurant.infrastructure.adapter.dto.ValidityType
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationOptionDto
-import com.munchies.restaurant.infrastructure.adapter.dto.WeeklyValidity
-import com.munchies.restaurant.infrastructure.adapter.dto.YearlyValidity
 import java.math.BigDecimal
 
 // --- Menu ---
@@ -40,26 +33,50 @@ fun Menu.toSummaryDto(): MenuSummaryDto = MenuSummaryDto(
   name = name.value,
 )
 
-fun ValidityDto.toInput(): ValidityInput = when (this) {
-  is PeriodValidity -> ValidityInput.Period(start, end)
-  is YearlyValidity -> ValidityInput.Yearly(startMonth, startDay, endMonth, endDay)
-  is WeeklyValidity -> ValidityInput.Weekly(days.toList())
-  is FromValidity -> ValidityInput.From(start)
-  is UntilValidity -> ValidityInput.Until(end)
-  is AlwaysValidity -> ValidityInput.Always
-  is HoursValidity -> ValidityInput.Hours(start, end)
-  is AndValidity -> ValidityInput.And(first.toInput(), second.toInput())
+fun Array<ValidityDto>.toInput(): ValidityInput {
+  require(isNotEmpty()) { "validity must contain at least one rule" }
+  return map { it.toSingleInput() }.reduce { acc, next -> ValidityInput.And(acc, next) }
 }
 
-fun ValidityInput.toDto(): ValidityDto = when (this) {
-  is ValidityInput.Period -> PeriodValidity(start, end)
-  is ValidityInput.Yearly -> YearlyValidity(startMonth, startDay, endMonth, endDay)
-  is ValidityInput.Weekly -> WeeklyValidity(days.toTypedArray())
-  is ValidityInput.From -> FromValidity(start)
-  is ValidityInput.Until -> UntilValidity(end)
-  is ValidityInput.Always -> AlwaysValidity
-  is ValidityInput.Hours -> HoursValidity(start, end)
-  is ValidityInput.And -> AndValidity(first.toDto(), second.toDto())
+private fun ValidityDto.toSingleInput(): ValidityInput = when (type) {
+  ValidityType.PERIOD -> ValidityInput.Period(value.getValue("start"), value.getValue("end"))
+  ValidityType.YEARLY -> ValidityInput.Yearly(
+    value.getValue("startMonth").toInt(),
+    value.getValue("startDay").toInt(),
+    value.getValue("endMonth").toInt(),
+    value.getValue("endDay").toInt(),
+  )
+  ValidityType.WEEKLY -> ValidityInput.Weekly(
+    value.getValue("days").split(",").filter { it.isNotEmpty() }.map { it.toInt() },
+  )
+  ValidityType.HOURS -> ValidityInput.Hours(value.getValue("start"), value.getValue("end"))
+  ValidityType.FROM -> ValidityInput.From(value.getValue("start"))
+  ValidityType.UNTIL -> ValidityInput.Until(value.getValue("end"))
+  ValidityType.ALWAYS -> ValidityInput.Always
+}
+
+fun ValidityInput.toDto(): Array<ValidityDto> = when (this) {
+  is ValidityInput.And -> first.toDto() + second.toDto()
+  else -> arrayOf(toSingleDto())
+}
+
+private fun ValidityInput.toSingleDto(): ValidityDto = when (this) {
+  is ValidityInput.Period -> ValidityDto(ValidityType.PERIOD, mapOf("start" to start, "end" to end))
+  is ValidityInput.Yearly -> ValidityDto(
+    ValidityType.YEARLY,
+    mapOf(
+      "startMonth" to startMonth.toString(),
+      "startDay" to startDay.toString(),
+      "endMonth" to endMonth.toString(),
+      "endDay" to endDay.toString(),
+    ),
+  )
+  is ValidityInput.Weekly -> ValidityDto(ValidityType.WEEKLY, mapOf("days" to days.joinToString(",")))
+  is ValidityInput.Hours -> ValidityDto(ValidityType.HOURS, mapOf("start" to start, "end" to end))
+  is ValidityInput.From -> ValidityDto(ValidityType.FROM, mapOf("start" to start))
+  is ValidityInput.Until -> ValidityDto(ValidityType.UNTIL, mapOf("end" to end))
+  is ValidityInput.Always -> ValidityDto(ValidityType.ALWAYS)
+  is ValidityInput.And -> error("AND is flattened by toDto() before reaching toSingleDto()")
 }
 
 // --- Category ---
