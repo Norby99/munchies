@@ -22,6 +22,7 @@
     "express-list-endpoints": "^7.1.1",
     "jsonwebtoken": "^9.0.3",
     "munchies-commons": "file:./build/libs/munchies-commons.tgz",
+    "munchies-gateway-service-shared": "file:./build/libs/munchies-gateway-shared.tgz",
     "munchies-notification-service-shared": "file:./build/libs/munchies-notification-shared.tgz",
     "munchies-order-service-shared": "file:./build/libs/munchies-order-shared.tgz",
     "munchies-payment-service-shared": "file:./build/libs/munchies-payment-shared.tgz",
