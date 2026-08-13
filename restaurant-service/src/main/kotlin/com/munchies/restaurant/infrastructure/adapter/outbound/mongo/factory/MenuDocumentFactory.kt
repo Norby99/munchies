@@ -18,57 +18,59 @@ import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.Me
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.MenuItemDocument
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.factory.MenuValueObjectDocumentFactory.toDocument
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.factory.MenuValueObjectDocumentFactory.toDomain
+import jakarta.inject.Singleton
 import java.math.BigDecimal
 
-object MenuDocumentFactory {
+@Singleton
+class MenuDocumentFactory(private val validityDocumentFactory: ValidityDocumentFactory) {
 
-  fun Menu.toDocument(): MenuDocument = MenuDocument(
-    id = id.value,
-    restaurantId = restaurantId.value,
-    name = name.value,
-    validity = validity.toDocument(),
-    categories = categories.map { it.toDocument() },
+  fun toDocument(menu: Menu): MenuDocument = MenuDocument(
+    id = menu.id.value,
+    restaurantId = menu.restaurantId.value,
+    name = menu.name.value,
+    validity = validityDocumentFactory.toDocument(menu.validity),
+    categories = menu.categories.map { it.toDocument() },
   )
 
-  fun MenuDocument.toDomain(): Menu = Menu.fromDatabase(
-    id = MenuId(id),
-    restaurantId = RestaurantId(restaurantId),
-    name = MenuName.of(name),
-    categories = categories.map { it.toDomain() },
-    validity = validity.toDomain(),
+  fun toDomain(document: MenuDocument): Menu = Menu.fromDatabase(
+    id = MenuId(document.id),
+    restaurantId = RestaurantId(document.restaurantId),
+    name = MenuName.of(document.name),
+    categories = document.categories.map { it.toDomain() },
+    validity = validityDocumentFactory.toDomain(document.validity),
   )
 
-  fun Category.toDocument(): CategoryDocument = CategoryDocument(
+  private fun Category.toDocument(): CategoryDocument = CategoryDocument(
     id = id.value,
     name = name.value,
     items = items.map { it.toDocument() },
     variations = variations.map { it.toDocument() },
   )
 
-  fun CategoryDocument.toDomain(): Category = Category(
+  private fun CategoryDocument.toDomain(): Category = Category(
     id = CategoryId(id),
     name = CategoryName.of(name),
     items = items.map { it.toDomain() },
     variations = variations.map { it.toDomain() },
   )
 
-  fun MenuItem.toDocument(): MenuItemDocument = MenuItemDocument(
+  private fun MenuItem.toDocument(): MenuItemDocument = MenuItemDocument(
     id = id.value,
     name = details.name.value,
     description = details.description.value,
     price = price.amount.toPlainString(),
-    validity = validity.toDocument(),
+    validity = validityDocumentFactory.toDocument(validity),
     variations = variations.map { it.toDocument() },
   )
 
-  fun MenuItemDocument.toDomain(): MenuItem = MenuItem(
+  private fun MenuItemDocument.toDomain(): MenuItem = MenuItem(
     id = MenuItemId(id),
     details = MenuItemDetails(
       name = MenuItemName.of(name),
       description = MenuItemDescription.of(description),
     ),
     price = Money(BigDecimal(price)),
-    validity = validity.toDomain(),
+    validity = validityDocumentFactory.toDomain(validity),
     variations = variations.map { it.toDomain() },
   )
 }
