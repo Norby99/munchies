@@ -1,6 +1,8 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.config
 
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
+import com.munchies.restaurant.infrastructure.adapter.dto.ValidityDto
+import com.munchies.restaurant.infrastructure.adapter.dto.ValidityType
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse
@@ -33,6 +35,8 @@ import jakarta.inject.Singleton
 @SerdeImport(ErrorResponse::class)
 @SerdeImport(CreateMenuRequest::class)
 @SerdeImport(CreateMenuResponse::class)
+@SerdeImport(ValidityType::class)
+@SerdeImport(ValidityDto::class)
 @SerdeImport(UpdateMenuRequest::class)
 @SerdeImport(UpdateMenuResponse::class)
 @SerdeImport(GetMenuResponse::class)
