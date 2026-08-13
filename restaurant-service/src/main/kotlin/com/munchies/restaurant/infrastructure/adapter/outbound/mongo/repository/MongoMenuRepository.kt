@@ -5,8 +5,7 @@ import com.munchies.restaurant.domain.aggregate.MenuId
 import com.munchies.restaurant.domain.repository.MenuRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.MenuDocument
-import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.factory.MenuDocumentFactory.toDocument
-import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.factory.MenuDocumentFactory.toDomain
+import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.factory.MenuDocumentFactory
 import io.micronaut.context.annotation.Requires
 import io.micronaut.data.mongodb.annotation.MongoRepository
 import io.micronaut.data.repository.CrudRepository
@@ -19,29 +18,30 @@ sealed interface MongoCrudMenuRepository : CrudRepository<MenuDocument, String>
 @Requires(env = ["prod"])
 class MongoMenuRepository(
   private val repository: MongoCrudMenuRepository,
+  private val menuDocumentFactory: MenuDocumentFactory,
 ) : MenuRepository {
 
   override fun save(entity: Menu) {
-    repository.save(entity.toDocument())
+    repository.save(menuDocumentFactory.toDocument(entity))
   }
 
   override fun update(entity: Menu) {
-    TODO("Not yet implemented")
+    repository.update(menuDocumentFactory.toDocument(entity))
   }
 
   override fun delete(entity: Menu) {
-    TODO("Not yet implemented")
+    repository.delete(menuDocumentFactory.toDocument(entity))
   }
 
   override fun findById(id: MenuId): Menu? =
-    repository.findById(id.value).map { it.toDomain() }.orElse(null)
+    repository.findById(id.value).map { menuDocumentFactory.toDomain(it) }.orElse(null)
 
   override fun findByIdAndRestaurantId(id: MenuId, restaurantId: RestaurantId): Menu? =
     repository.findById(id.value)
-      .map { it.toDomain() }
+      .map { menuDocumentFactory.toDomain(it) }
       .orElse(null)
       ?.takeIf { it.restaurantId == restaurantId }
 
   override fun findAllByRestaurantId(restaurantId: RestaurantId): List<Menu> = repository.findAll()
-    .filter { it.restaurantId == restaurantId.value }.map { it.toDomain() }
+    .filter { it.restaurantId == restaurantId.value }.map { menuDocumentFactory.toDomain(it) }
 }

@@ -4,8 +4,8 @@ import com.munchies.restaurant.infrastructure.adapter.dto.ValidityDto
 import com.munchies.restaurant.infrastructure.adapter.dto.ValidityType
 import io.micronaut.context.ApplicationContext
 import io.micronaut.serde.ObjectMapper
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class ValiditySerdeTest {
   @Test
@@ -32,7 +32,7 @@ class ValiditySerdeTest {
       val json = mapper.writeValueAsString(dto)
       val decoded = mapper.readValue(json, ValidityDto::class.java)
       assertEquals(ValidityType.ALWAYS, decoded.type)
-      assertEquals(emptyMap(), decoded.value)
+      assertEquals(emptyMap<String, String>(), decoded.value)
     }
   }
 }
