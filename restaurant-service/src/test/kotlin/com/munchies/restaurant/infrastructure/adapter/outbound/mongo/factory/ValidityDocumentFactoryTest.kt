@@ -2,7 +2,7 @@ package com.munchies.restaurant.infrastructure.adapter.outbound.mongo.factory
 
 import com.munchies.restaurant.domain.valueobject.menu.Validity
 import io.micronaut.context.ApplicationContext
-import io.micronaut.serde.exceptions.SerdeException
+import java.io.IOException
 import java.time.LocalTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -61,7 +61,7 @@ class ValidityDocumentFactoryTest {
   @Test
   fun `an unrecognized type discriminator fails loudly instead of defaulting to always valid`() {
     withFactory { factory ->
-      assertThrows<SerdeException> {
+      assertThrows<IOException> {
         factory.toDomain("""[{"type":"whenever"}]""")
       }
     }
@@ -70,7 +70,7 @@ class ValidityDocumentFactoryTest {
   @Test
   fun `malformed json fails loudly instead of silently becoming always valid`() {
     withFactory { factory ->
-      assertThrows<SerdeException> {
+      assertThrows<IOException> {
         factory.toDomain("not json")
       }
     }

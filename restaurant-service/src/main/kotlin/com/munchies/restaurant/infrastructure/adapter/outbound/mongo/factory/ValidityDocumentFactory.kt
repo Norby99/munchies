@@ -76,6 +76,8 @@ class ValidityDocumentFactory(private val objectMapper: ObjectMapper) {
   fun toDomain(json: String): Validity = objectMapper.readValue(json, LIST_ARGUMENT).toDomain()
 
   companion object {
-    private val LIST_ARGUMENT: Argument<List<ValidityData>> = Argument.listOf(ValidityData::class.java)
+    private val LIST_ARGUMENT: Argument<List<ValidityData>> = Argument.listOf(
+      ValidityData::class.java,
+    )
   }
 }
