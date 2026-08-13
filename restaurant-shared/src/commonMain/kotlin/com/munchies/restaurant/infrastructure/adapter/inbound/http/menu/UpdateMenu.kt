@@ -13,9 +13,9 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("UpdateMenuRequest")
-data class UpdateMenuRequest(
+class UpdateMenuRequest(
   val name: String,
-  val validity: ValidityDto,
+  val validity: Array<ValidityDto>,
 ) : JsonEncodable() {
   override fun toJson(): String = Json.encodeToString(this)
 }
