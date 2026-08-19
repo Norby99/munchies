@@ -1,24 +1,51 @@
 {
   "extends": [
-    "github>DanySK/renovate-config:develop.json" /* This includes DanySK/renovate-config:default.json */
+    "github>DanySK/renovate-config:develop.json"
+    /* This includes DanySK/renovate-config:default.json */
   ],
-  "baseBranchPatterns": ["develop"], /* This configuration option was formerly known as baseBranches */
+  "baseBranchPatterns": [
+    "develop"
+  ],
+  /* This configuration option was formerly known as baseBranches */
   "automerge": true,
   "packageRules": [
-    { /* Automerge all but major dependency updates */
-      "matchUpdateTypes": ["major"],
-      "automerge": false  /* Whether to automerge branches/PRs automatically, without human intervention. */
+    {
+      /* Automerge all but major dependency updates */
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+      /* Whether to automerge branches/PRs automatically, without human intervention. */
     },
-    { /* Apply a special label to major updates */ 
-      "matchUpdateTypes": ["major"],
-      "labels": ["MAJOR"]
+    {
+      /* Apply a special label to major updates */
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "labels": [
+        "MAJOR"
+      ]
+    },
+    {
+      /* Block Avast compose library from updating. */
+      "matchManagers": [
+        "gradle"
+      ],
+      "matchPackageNames": [
+        "com.avast.gradle.docker-compose"
+      ],
+      "enabled": false
     }
   ],
-  "dependencyDashboard": true, /* Whether to create a "Dependency Dashboard" issue in the repository. */
+  "dependencyDashboard": true,
+  /* Whether to create a "Dependency Dashboard" issue in the repository. */
   "major": {
-    "dependencyDashboardApproval": true  /* Require approval for major updates. */
+    "dependencyDashboardApproval": true
+    /* Require approval for major updates. */
   },
-  "prConcurrentLimit": 5, /* Limit to a maximum of 5 concurrent branches/PRs. */
-  "prCreation": "immediate", /* Renovate creates PRs immediately after creating the corresponding branch */
+  "prConcurrentLimit": 5,
+  /* Limit to a maximum of 5 concurrent branches/PRs. */
+  "prCreation": "immediate",
+  /* Renovate creates PRs immediately after creating the corresponding branch */
   "prHourlyLimit": 2
 }
