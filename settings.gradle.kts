@@ -37,6 +37,8 @@ include(":restaurant-service")
 include(":restaurant-shared")
 include(":architecture-rules")
 
+include(":e2e-test")
+
 include(":user-service")
 include(":user-shared")
 
