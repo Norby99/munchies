@@ -41,7 +41,7 @@ fun getManagerRestaurantsRequestFromJson(json: String): GetManagerRestaurantsReq
 @Serializable
 @SerialName("GetManagerRestaurantsResponse")
 open class GetManagerRestaurantsResponse(
-  override val result: Array<RestaurantDto>,
+  override val result: Array<RestaurantDto> = emptyArray(),
   override val code: Int = 200,
 ) : WebResponse<Array<RestaurantDto>>() {
   override fun toJson(): String = Json.encodeToString(this)
