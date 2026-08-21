@@ -49,7 +49,7 @@ export class GetManagerRestaurantsRoute
     const response = request<GetManagerRestaurantsResponse>(
       fillPath(
         uri +
-        this.path + 
+        RestaurantServiceConfig.SERVICE_PATH +
         RestaurantServiceConfig.GET_MANAGER_RESTAURANTS_PATH,
         managerId,
       ),
