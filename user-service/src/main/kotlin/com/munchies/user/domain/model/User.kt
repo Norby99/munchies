@@ -17,6 +17,8 @@ class User private constructor(
 
   fun updateEmailAsVerified(): User = User(this.id, this.profile.updateEmailAsVerified())
 
+  override fun toString(): String = "User(id=${id.value}, profile=$profile)"
+
   companion object {
     /**
      * Factory interface for creating instances of the User domain model.
