@@ -33,7 +33,7 @@ export async function getRestaurant(restaurantId: string): Promise<Restaurant> {
 }
 
 export async function listMyRestaurants(): Promise<Restaurant[]> {
-  return unwrap(http.request({ method: 'get', url: BASE, data: {} }))
+  return unwrap(http.request({ method: 'get', url: `${BASE}manager/`, data: {} }))
 }
 
 export async function updateRestaurant(restaurantId: string, input: RestaurantInput): Promise<string> {
