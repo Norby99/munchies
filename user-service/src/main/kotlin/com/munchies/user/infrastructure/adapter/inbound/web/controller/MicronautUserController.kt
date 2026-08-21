@@ -186,7 +186,7 @@ class MicronautUserController(
       is InvalidInput ->
         throw ValidationException(msg.reason)
       else -> {
-        when (val user = request.user.toDomain()) {
+        when (val user = request.toDomain()) {
           is UserDTOFactory.UserDTOFactoryResult.Failure ->
             throw FactoryException(user.reason)
           is UserDTOFactory.UserDTOFactoryResult.Success -> {

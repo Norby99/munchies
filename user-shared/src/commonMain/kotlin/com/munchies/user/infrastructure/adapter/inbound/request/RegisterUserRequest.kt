@@ -1,7 +1,6 @@
 package com.munchies.user.infrastructure.adapter.inbound.request
 
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
-import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,7 +11,9 @@ import kotlinx.serialization.json.Json
 @Serializable
 @SerialName("RegisterUserRequest")
 data class RegisterUserRequest(
-  val user: UserDTO,
+  val username: String,
+  val email: String,
+  val role: String,
   val hashedPassword: String,
   val saltValue: String,
 ) : JsonEncodable() {
