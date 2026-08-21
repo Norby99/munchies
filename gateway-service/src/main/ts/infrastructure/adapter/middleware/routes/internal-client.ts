@@ -7,7 +7,7 @@ export const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
   validateStatus: (status: number) => status <= 500,
-  timeout: 10,
+  timeout: 10_000,
   
 });
 
@@ -36,6 +36,8 @@ function axiosMethodChooser(
   switch (method.name) {
     case HttpMethod.POST.name:
       return base.post(uri, body);
+    case HttpMethod.PUT.name:
+      return base.put(uri, body);
     case HttpMethod.DELETE.name:
       return base.delete(uri);
     case HttpMethod.PATCH.name:
