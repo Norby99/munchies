@@ -5,6 +5,7 @@ import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserProfile
 import com.munchies.user.domain.model.UserRole
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
+import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
 
 /**
  * Factory interface for converting between User domain models and UserDTOs.
@@ -46,19 +47,37 @@ object UserDTOFactory {
    * @receiver The UserDTO to be converted.
    * @return The corresponding User domain model with mapped fields.
    */
-  fun UserDTO.toDomain(): UserDTOFactoryResult {
-    return when (
-      val profile = UserProfile.factory.create(
-        this.username,
-        this.email,
-        this.role,
-      )
-    ) {
+  fun UserDTO.toDomain(): UserDTOFactoryResult = createUser(
+    this.id,
+    this.username,
+    this.email,
+    this.role,
+  )
+
+  /**
+   * Converts a RegisterUserRequest to a User domain model.
+   *
+   * Registration never carries a client-supplied id, so the domain factory
+   * always generates a fresh one.
+   *
+   * @receiver The RegisterUserRequest to be converted.
+   * @return The corresponding User domain model with mapped fields.
+   */
+  fun RegisterUserRequest.toDomain(): UserDTOFactoryResult =
+    createUser(username = this.username, email = this.email, role = this.role)
+
+  private fun createUser(
+    id: String = "",
+    username: String,
+    email: String,
+    role: String,
+  ): UserDTOFactoryResult {
+    return when (val profile = UserProfile.factory.create(username, email, role)) {
       is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Failure -> {
         UserDTOFactoryResult.Failure(profile.reason)
       }
       is UserProfile.Companion.UserProfileFactory.UserProfileFactoryResult.Success -> {
-        when (val user = User.factory.create(this.id, profile.profile)) {
+        when (val user = User.factory.create(id, profile.profile)) {
           is User.Companion.UserFactory.UserFactoryResult.Failure -> {
             UserDTOFactoryResult.Failure(user.reason)
           }
