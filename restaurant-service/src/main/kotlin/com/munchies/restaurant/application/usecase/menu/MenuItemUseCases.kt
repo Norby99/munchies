@@ -59,7 +59,7 @@ class CreateMenuItemUseCase(private val menuRepository: MenuRepository) :
         Money(command.price),
         command.variations.map { it.toDomain() },
       )
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       CreateMenuItemResult.Success(item.id.value)
     }.getOrElse { CreateMenuItemResult.InvalidItem(it.message.orEmpty()) }
   }
@@ -106,7 +106,7 @@ class UpdateMenuItemUseCase(
         Money(command.price),
         command.variations.map { it.toDomain() },
       )
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       UpdateMenuItemResult.Success(item)
     }.getOrElse { UpdateMenuItemResult.InvalidItem(it.message.orEmpty()) }
   }
@@ -141,7 +141,7 @@ class DeleteMenuItemUseCase(
 
     return runCatching {
       category.removeItem(MenuItemId(command.itemId))
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       RemoveMenuItemResult.Success
     }.getOrElse { RemoveMenuItemResult.InvalidItem(it.message.orEmpty()) }
   }

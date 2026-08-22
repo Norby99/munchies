@@ -70,11 +70,11 @@ class RemoveMenuItemTest {
     )
 
     coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
-    coEvery { menuRepository.save(any()) } returns Unit
+    coEvery { menuRepository.update(any()) } returns Unit
 
     when (val result = deleteMenuItemUseCase(command)) {
       is RemoveMenuItemResult.Success -> {
-        coVerify(exactly = 1) { menuRepository.save(menu) }
+        coVerify(exactly = 1) { menuRepository.update(menu) }
         assertEquals(0, category.items.size)
       }
       else -> {
@@ -96,7 +96,7 @@ class RemoveMenuItemTest {
 
     when (val result = deleteMenuItemUseCase(command)) {
       is RemoveMenuItemResult.MenuNotFound -> {
-        coVerify(exactly = 0) { menuRepository.save(any()) }
+        coVerify(exactly = 0) { menuRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected Error, but got $result" }
@@ -120,7 +120,7 @@ class RemoveMenuItemTest {
 
     when (val result = deleteMenuItemUseCase(command)) {
       is RemoveMenuItemResult.CategoryNotFound -> {
-        coVerify(exactly = 0) { menuRepository.save(any()) }
+        coVerify(exactly = 0) { menuRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected Error, but got $result" }
