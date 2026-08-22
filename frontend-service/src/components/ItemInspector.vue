@@ -3,14 +3,15 @@
 // the whole item, so Save always submits every field, including untouched
 // variations — there is no partial-update endpoint.
 
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 
-import VariationGroupsEditor from '@/components/VariationGroupsEditor.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import MenuItemFieldsForm from '@/components/MenuItemFieldsForm.vue'
 import type { MenuItemInput } from '@/api/menus'
 import type { MenuItem } from '@/types'
 
 const props = defineProps<{ item: MenuItem }>()
-const emit = defineEmits<{ save: [input: MenuItemInput] }>()
+const emit = defineEmits<{ save: [input: MenuItemInput]; delete: [] }>()
 
 function draftFrom(item: MenuItem): MenuItemInput {
   return {
@@ -31,35 +32,30 @@ watch(
 function onSave(): void {
   emit('save', { ...draft, variations: draft.variations.map((v) => ({ ...v, options: v.options.map((o) => ({ ...o })) })) })
 }
+
+const deleteOpen = ref(false)
+
+function confirmDelete(): void {
+  emit('delete')
+  deleteOpen.value = false
+}
 </script>
 
 <template>
   <div>
-    <h6 style="margin-bottom: 12px">Item</h6>
-
-    <div class="field" style="margin-bottom: 12px">
-      <label for="item-name">Name</label>
-      <input id="item-name" class="input" type="text" v-model="draft.name" maxlength="150" />
-      <p class="text-muted" style="font-size: 11px; margin: 4px 0 0">{{ draft.name.length }} / 150</p>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px">
+      <h6 style="margin: 0">Item</h6>
+      <button
+        class="btn btn-ghost"
+        type="button"
+        style="flex: none; white-space: nowrap; margin-left: auto"
+        @click="deleteOpen = true"
+      >
+        Delete item
+      </button>
     </div>
 
-    <div class="field" style="margin-bottom: 12px">
-      <label for="item-description">Description</label>
-      <textarea id="item-description" class="input" maxlength="500" v-model="draft.description"></textarea>
-      <p class="text-muted" style="font-size: 11px; margin: 4px 0 0">{{ draft.description.length }} / 500</p>
-    </div>
-
-    <div class="field" style="margin-bottom: 16px">
-      <label for="item-price">Price</label>
-      <input id="item-price" class="input" type="text" inputmode="decimal" v-model="draft.price" />
-      <p class="text-muted" style="font-size: 11px; margin: 4px 0 0">
-        Decimal string on the wire. Never parsed to a float before display.
-      </p>
-    </div>
-
-    <div class="hr" style="margin: 16px 0"></div>
-    <h6 style="margin-bottom: 10px">Variation groups</h6>
-    <VariationGroupsEditor v-model="draft.variations" />
+    <MenuItemFieldsForm id-prefix="item" v-model="draft" />
 
     <div class="hr" style="margin: 16px 0"></div>
     <button class="btn btn-primary btn-block" type="button" @click="onSave">Save item</button>
@@ -67,5 +63,15 @@ function onSave(): void {
       PUT replaces the whole item, so the form always submits every field — including untouched
       variations.
     </p>
+
+    <ConfirmDialog
+      :open="deleteOpen"
+      title="Delete this item?"
+      :body="`${props.item.name} will be removed permanently.`"
+      confirm-label="Delete permanently"
+      cancel-label="Keep item"
+      @cancel="deleteOpen = false"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
