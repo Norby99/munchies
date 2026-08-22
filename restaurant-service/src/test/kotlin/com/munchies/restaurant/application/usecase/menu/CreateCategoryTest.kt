@@ -36,11 +36,11 @@ class CreateCategoryTest {
     )
 
     coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
-    coEvery { menuRepository.save(any()) } returns Unit
+    coEvery { menuRepository.update(any()) } returns Unit
 
     when (val result = createCategoryUseCase(command)) {
       is CreateCategoryResult.Success -> {
-        coVerify(exactly = 1) { menuRepository.save(menu) }
+        coVerify(exactly = 1) { menuRepository.update(menu) }
       }
       else -> {
         assert(false) { "Expected Success, but got $result" }
@@ -60,7 +60,7 @@ class CreateCategoryTest {
 
     when (val result = createCategoryUseCase(command)) {
       is CreateCategoryResult.MenuNotFound -> {
-        coVerify(exactly = 0) { menuRepository.save(any()) }
+        coVerify(exactly = 0) { menuRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected Error, but got $result" }

@@ -41,7 +41,7 @@ class CreateCategoryUseCase(
     return runCatching {
       val variations = command.variations.map { it.toDomain() }
       val category = menu.createCategory(CategoryName.of(command.name), variations)
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       CreateCategoryResult.Success(category)
     }.getOrElse { CreateCategoryResult.InvalidCategory(it.message.orEmpty()) }
   }
@@ -78,7 +78,7 @@ class UpdateCategoryUseCase(
         CategoryName.of(command.name),
         command.variations.map { it.toDomain() },
       )
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       val category = menu.getCategory(categoryId)
         ?: throw IllegalArgumentException("Category not found after update")
       UpdateCategoryResult.Success(category)
@@ -110,7 +110,7 @@ class DeleteCategoryUseCase(
 
     return runCatching {
       menu.deleteCategory(CategoryId(command.categoryId))
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       DeleteCategoryResult.Success(command.categoryId)
     }.getOrElse { DeleteCategoryResult.InvalidCategory(it.message.orEmpty()) }
   }

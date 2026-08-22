@@ -108,7 +108,7 @@ class UpdateMenuUseCase(
     return runCatching {
       menu.updateName(MenuName.of(command.name))
       menu.updateValidity(command.validity.toDomain())
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       UpdateMenuResult.Success(menu)
     }.getOrElse { UpdateMenuResult.InvalidMenu(it.message.orEmpty()) }
   }

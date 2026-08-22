@@ -44,11 +44,11 @@ class UpdateMenuTest {
     )
 
     coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu
-    coEvery { menuRepository.save(any()) } returns Unit
+    coEvery { menuRepository.update(any()) } returns Unit
 
     when (val result = updateMenuUseCase(command)) {
       is UpdateMenuResult.Success -> {
-        coVerify(exactly = 1) { menuRepository.save(menu) }
+        coVerify(exactly = 1) { menuRepository.update(menu) }
         assert(menu.name.value == "Spring Menu")
       }
       else -> assert(false) { "Expected Success, but got $result" }
@@ -68,7 +68,7 @@ class UpdateMenuTest {
 
     when (val result = updateMenuUseCase(command)) {
       is UpdateMenuResult.MenuNotFound -> {
-        coVerify(exactly = 0) { menuRepository.save(any()) }
+        coVerify(exactly = 0) { menuRepository.update(any()) }
       }
       else -> assert(false) { "Expected MenuNotFound, but got $result" }
     }
@@ -96,7 +96,7 @@ class UpdateMenuTest {
 
     when (val result = updateMenuUseCase(command)) {
       is UpdateMenuResult.InvalidMenu -> {
-        coVerify(exactly = 0) { menuRepository.save(any()) }
+        coVerify(exactly = 0) { menuRepository.update(any()) }
       }
       else -> assert(false) { "Expected InvalidMenu, but got $result" }
     }
