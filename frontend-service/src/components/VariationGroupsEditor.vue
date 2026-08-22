@@ -19,13 +19,13 @@ function removeGroup(index: number): void {
 }
 
 function addGroup(): void {
-  model.value = [...model.value, { name: 'New group', options: [{ name: 'Option', additionalPrice: '0.00' }] }]
+  model.value = [...model.value, { name: '', options: [{ name: '', additionalPrice: '0.0' }] }]
 }
 
 function addOption(groupIndex: number): void {
   model.value = model.value.map((group, i) =>
     i === groupIndex
-      ? { ...group, options: [...group.options, { name: 'New option', additionalPrice: '0.00' }] }
+      ? { ...group, options: [...group.options, { name: '', additionalPrice: '0.0' }] }
       : group,
   )
 }
@@ -63,7 +63,7 @@ function removeOption(groupIndex: number, optionIndex: number): void {
         <input
           class="input"
           :value="group.name"
-          aria-label="Variation group name"
+          placeholder="Variation name"
           @change="renameGroup(groupIndex, ($event.target as HTMLInputElement).value)"
         />
         <button class="btn btn-ghost btn-icon" type="button" aria-label="Remove group" @click="removeGroup(groupIndex)">
@@ -79,7 +79,7 @@ function removeOption(groupIndex: number, optionIndex: number): void {
         <input
           class="input"
           :value="option.name"
-          aria-label="Option name"
+          placeholder="Option name"
           @change="renameOption(groupIndex, optionIndex, ($event.target as HTMLInputElement).value)"
         />
         <input
@@ -105,7 +105,7 @@ function removeOption(groupIndex: number, optionIndex: number): void {
       </button>
     </div>
 
-    <button class="btn btn-secondary" type="button" @click="addGroup">Add variation group</button>
+    <button class="btn btn-secondary" type="button" @click="addGroup">Add variation</button>
   </div>
 </template>
 

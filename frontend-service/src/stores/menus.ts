@@ -130,7 +130,7 @@ export const useMenusStore = defineStore('menus', () => {
     activeItemId.value = null
   }
 
-  function setActiveItem(itemId: string): void {
+  function setActiveItem(itemId: string | null): void {
     activeItemId.value = itemId
   }
 
