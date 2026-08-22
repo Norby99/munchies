@@ -99,7 +99,7 @@ export interface Menu {
   id: string
   name: string
   categories: Category[]
-  validity: Validity
+  validity: Validity[]
 }
 
 export interface MenuSummary {
