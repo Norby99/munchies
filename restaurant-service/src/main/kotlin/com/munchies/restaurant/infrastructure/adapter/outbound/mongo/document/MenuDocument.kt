@@ -2,6 +2,7 @@ package com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document
 
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
+import io.micronaut.serde.annotation.Serdeable
 
 @MappedEntity
 data class MenuDocument(
@@ -13,7 +14,7 @@ data class MenuDocument(
   val categories: List<CategoryDocument>,
 )
 
-@MappedEntity
+@Serdeable
 data class CategoryDocument(
   val id: String,
   val name: String,
@@ -21,7 +22,7 @@ data class CategoryDocument(
   val variations: List<VariationDocument>,
 )
 
-@MappedEntity
+@Serdeable
 data class MenuItemDocument(
   val id: String,
   val name: String,
@@ -31,13 +32,13 @@ data class MenuItemDocument(
   val variations: List<VariationDocument>,
 )
 
-@MappedEntity
+@Serdeable
 data class VariationDocument(
   val name: String,
   val options: List<VariationOptionDocument>,
 )
 
-@MappedEntity
+@Serdeable
 data class VariationOptionDocument(
   val name: String,
   val additionalPrice: String,
