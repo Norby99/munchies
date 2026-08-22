@@ -5,4 +5,4 @@ micronaut:
     name: restaurant-service
   serde:
     serialization:
-      write-empty-values: true
+      inclusion: ALWAYS
