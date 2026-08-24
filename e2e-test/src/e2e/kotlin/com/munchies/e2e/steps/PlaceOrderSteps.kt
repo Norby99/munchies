@@ -5,13 +5,14 @@ import com.munchies.e2e.support.WordResult
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 
 class PlaceOrderSteps(private val world: WordResult) {
 
-  private val client = HttpClient.create(java.net.URI(ServiceUrls.order).toURL())
+  private val client = HttpClient.create(java.net.URI(ServiceUrls.gateway).toURL())
 
   private var requestBody: String? = null
 
@@ -26,9 +27,10 @@ class PlaceOrderSteps(private val world: WordResult) {
         ],
         "orderType": "DELIVERY",
         "estimatedDeliveryTime": 1814380800000,
-        "deliveryAddress": "Via Stronzi 67",
-        "bellName": "Sviluppatore",
-        "customerPhone": "+39333998877"
+        "deliveryAddress": "Via Strombi 67",
+        "bellName": "Antonio",
+        "customerPhone": "+39333998877",
+        "authToken": ---
       }
     """.trimIndent()
   }
@@ -49,9 +51,11 @@ class PlaceOrderSteps(private val world: WordResult) {
     }
   }
 
-  @Then("print the result")
-  fun printResult() {
+  @Then("order is created successfully")
+  fun orderIsCreatedSuccessfully() {
     println("STATUS: ${world.responseStatus}")
     println("BODY: ${world.responseBody}")
+
+    world.responseStatus shouldBe 200
   }
 }
