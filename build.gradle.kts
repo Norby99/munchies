@@ -21,7 +21,9 @@ subprojects {
         "dokka"(project(this@subprojects.path))
       }
     }
-    apply(plugin = "maven-publish-convention")
+    if (this@subprojects.getProjectType() != ProjectType.SERVICE) {
+      apply(plugin = "maven-publish-convention")
+    }
   }
   apply(plugin = "munchies-subproject")
   apply(plugin = "linter-convention")
