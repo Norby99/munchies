@@ -37,7 +37,10 @@ class LoginUserUseCase(
 
   private fun UserCredentials.toLoginResult(user: User, providedPassword: String): LoginResult =
     when {
-      this.loginAttempts >= UserCredentials.MAXIMUM_LOGIN_ATTEMPTS -> LockedUser
+      this.loginAttempts >= UserCredentials.MAXIMUM_LOGIN_ATTEMPTS -> {
+        credentialsRepository.update(this.copy(lockedUntil = timeProvider.addOneHour()()))
+        LockedUser
+      }
       isBlocked(timeProvider()) -> BlockedLogin
       passwordHasher.hash(password = providedPassword, salt = salt) == passwordHash -> {
         credentialsRepository.resetLoginAttemps(user.id)
@@ -45,7 +48,6 @@ class LoginUserUseCase(
       }
       else -> {
         credentialsRepository.incrementLoginAttemps(user.id)
-        credentialsRepository.update(this.copy(lockedUntil = timeProvider.addOneHour()()))
         Failure
       }
     }
