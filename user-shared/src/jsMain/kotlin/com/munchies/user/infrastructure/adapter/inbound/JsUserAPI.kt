@@ -128,7 +128,7 @@ abstract class JsEmailVerificationAPI<E : WebResponse<Any>> :
     UserServiceConfig.SERVICE_PATH + UserServiceConfig.VERIFY_EMAIL_PATH
 
   override fun getPort(): Int = UserServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun verifyEmail(request: VerifyEmailRequest): Promise<E>
 

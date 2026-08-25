@@ -30,7 +30,6 @@ open class CreateCategoryResponse(
   override val result: CategoryDto,
   override val code: Int = 201,
 ) : WebResponse<CategoryDto>() {
-  val category: CategoryDto get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

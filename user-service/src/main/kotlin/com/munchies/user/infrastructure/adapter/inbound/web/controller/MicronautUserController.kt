@@ -3,8 +3,6 @@ package com.munchies.user.infrastructure.adapter.inbound.web.controller
 import com.munchies.commons.domain.port.InvalidInput
 import com.munchies.commons.domain.port.ValidationException
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
-import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
-import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import com.munchies.user.application.port.inbound.*
 import com.munchies.user.application.port.inbound.LoginUser.Companion.LoginResult
 import com.munchies.user.domain.model.UserCredentials
@@ -22,7 +20,6 @@ import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.user.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
-import com.munchies.user.infrastructure.adapter.outbound.http.PaymentService
 import com.munchies.user.infrastructure.adapter.outbound.kafka.EmailConfirmationClient
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotification
 import com.munchies.user.infrastructure.adapter.outbound.notification.UserEmailConfirmationNotificationInfo.USER_CONFIRMATION_KEY
@@ -83,9 +80,6 @@ class MicronautUserController(
   @Inject
   private val services: UserServices,
 
-  @Inject
-  private val paymentClient: PaymentService,
-
   /**
    * Kafka producer/client used to emit email confirmation events after a user
    * successfully verifies their email address.
@@ -134,34 +128,6 @@ class MicronautUserController(
    * Application use case for verifying a user's email address.
    */
   private val verifyUserEmail: VerifyUserEmail = services.verifyUserEmail
-
-  /**
-   * Lightweight diagnostic endpoint that exercises the payment client.
-   *
-   * This method is not part of the user API contract. It appears to be a
-   * temporary or debugging-oriented endpoint that invokes the payment service
-   * with placeholder data and returns the raw payment response.
-   *
-   * @return an HTTP 200 response containing the payment service result.
-   */
-  @Get("/")
-  fun get(): HttpResponse<ProcessPaymentResponse> {
-    println("GET / called")
-    val response = paymentClient.processPayment(
-      com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest(
-        orderId = "",
-        PaymentDetails(
-          amount = 0,
-          currency = com.munchies.payment.infrastructure.adapter.dto.Currency.USD,
-          method = com.munchies.payment.infrastructure.adapter.dto.PaymentMethod.CARD,
-        ),
-      ),
-    )
-
-    return HttpResponse.ok(
-      response,
-    )
-  }
 
   /**
    * Handles `GET users/{id}/`.
@@ -220,7 +186,7 @@ class MicronautUserController(
       is InvalidInput ->
         throw ValidationException(msg.reason)
       else -> {
-        when (val user = request.user.toDomain()) {
+        when (val user = request.toDomain()) {
           is UserDTOFactory.UserDTOFactoryResult.Failure ->
             throw FactoryException(user.reason)
           is UserDTOFactory.UserDTOFactoryResult.Success -> {
@@ -309,6 +275,8 @@ class MicronautUserController(
           }
           is LoginResult.BlockedLogin ->
             throw UnauthorizedException("User is locked")
+          is LoginResult.LockedUser ->
+            throw UnexpectedException("Too many login attempts")
           is LoginResult.NotFound ->
             throw NotFoundException("User was not found")
           else ->
@@ -496,7 +464,7 @@ class MicronautUserController(
    * @param request Verification payload containing the user identifier and OTP/key.
    * @return An HTTP response indicating confirmation success or failure.
    */
-  @Get(UserServiceConfig.VERIFY_EMAIL_PATH)
+  @Post(UserServiceConfig.VERIFY_EMAIL_PATH)
   @Operation(
     summary = "Confirm a user's email address",
     description = "The user inputs a specific otk received in the email",
@@ -504,7 +472,6 @@ class MicronautUserController(
   @ApiResponse(responseCode = "200", description = "Email confirmed successfully")
   @ApiResponse(responseCode = "404", description = "User not found or otk not valid")
   override fun verifyEmail(@Body request: VerifyEmailRequest): HttpResponse<VerifyEmailResponse> {
-    val request = VerifyEmailRequest(request.id, request.otk)
     return when (val msg = VerifyEmailRequestValidator().validate(request)) {
       is InvalidInput -> throw ValidationException(msg.reason)
       else -> {

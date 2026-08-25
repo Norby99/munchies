@@ -8,7 +8,8 @@ object RestaurantServiceConfig {
   const val SERVICE_PATH = "/restaurants/"
   const val CREATE_RESTAURANT_PATH = ""
   const val GET_RESTAURANT_PATH = "{restaurantId}/"
-  const val GET_MANAGER_RESTAURANTS_PATH = "manager/{managerId}/"
+  const val MANAGER_RESTAURANTS_PREFIX = "manager/"
+  const val GET_MANAGER_RESTAURANTS_PATH = MANAGER_RESTAURANTS_PREFIX + "{managerId}/"
   const val UPDATE_RESTAURANT_PATH = "{restaurantId}/"
   const val DELETE_RESTAURANT_PATH = "{restaurantId}/"
 

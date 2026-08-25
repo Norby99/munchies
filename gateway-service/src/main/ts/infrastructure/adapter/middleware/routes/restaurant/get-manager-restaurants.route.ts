@@ -11,6 +11,7 @@ import {
 import {
   GetManagerRestaurantsAPI,
   GetManagerRestaurantsResponse,
+  RestaurantServiceConfig,
 } from "munchies-restaurant-service-shared/kotlin/restaurant-modules";
 import { AuthedRequest } from "../../auth";
 import { request } from "../internal-client";
@@ -46,7 +47,12 @@ export class GetManagerRestaurantsRoute
       );
 
     const response = request<GetManagerRestaurantsResponse>(
-      fillPath(uri + this.path, managerId),
+      fillPath(
+        uri +
+        RestaurantServiceConfig.SERVICE_PATH +
+        RestaurantServiceConfig.GET_MANAGER_RESTAURANTS_PATH,
+        managerId,
+      ),
       this.method,
       "",
       this.parseResponse,
@@ -64,7 +70,7 @@ export class GetManagerRestaurantsRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        return this.getManagerRestaurants(req.params.managerId);
+        return this.getManagerRestaurants(req.user!!.id);
       } catch (err: any) {
         return new ErrorResponse(
           "GetManagerRestaurants forward: \n" + String(err),

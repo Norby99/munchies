@@ -12,4 +12,7 @@ import com.munchies.user.domain.model.UserId
  *
  * @see com.munchies.commons.Repository
  */
-interface UserCredentialsRepository : Repository<UserId, UserCredentials>
+interface UserCredentialsRepository : Repository<UserId, UserCredentials> {
+  fun incrementLoginAttemps(id: UserId)
+  fun resetLoginAttemps(id: UserId)
+}

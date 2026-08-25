@@ -1,7 +1,6 @@
 package com.munchies.user.infrastructure.inbound.web.controller
 
 import com.munchies.user.fixtures.UserFixtures
-import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import com.munchies.user.infrastructure.adapter.dto.factory.UserDTOFactory.toDTO
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
 import com.munchies.user.infrastructure.adapter.inbound.web.config.UserServiceConfig
@@ -37,14 +36,11 @@ class RegisterUserControllerComponentTest : BaseUserController() {
   @Test
   fun `invalid register user request should return bad request`() {
     val request = RegisterUserRequest(
-      UserDTO(
-        "",
-        "",
-        "",
-        role = "CUSTOMER",
-      ),
-      "",
-      "",
+      username = "",
+      email = "",
+      role = "CUSTOMER",
+      hashedPassword = "",
+      saltValue = "",
     )
 
     val response = assertThrows(HttpClientResponseException::class.java) {
@@ -56,14 +52,11 @@ class RegisterUserControllerComponentTest : BaseUserController() {
   @Test
   fun `register user should return bad request when userdto is invalid`() {
     val request = RegisterUserRequest(
-      UserDTO(
-        "",
-        "username",
-        "email",
-        role = "invalid-role",
-      ),
-      "password",
-      "salt",
+      username = "username",
+      email = "email",
+      role = "invalid-role",
+      hashedPassword = "password",
+      saltValue = "salt",
     )
     val response = assertThrows(HttpClientResponseException::class.java) {
       httpCalls.post(mapper.writeValueAsString(request), UserServiceConfig.REGISTER_USER_PATH)
@@ -75,9 +68,11 @@ class RegisterUserControllerComponentTest : BaseUserController() {
   fun `register user should return unauthorized when already present`() {
     val user = UserFixtures.exampleUser.toDTO()
     val request = RegisterUserRequest(
-      user,
-      "password",
-      "saltvalue",
+      username = user.username,
+      email = user.email,
+      role = user.role,
+      hashedPassword = "password",
+      saltValue = "saltvalue",
     )
 
     userRepository.save(UserFixtures.exampleUser)
@@ -92,9 +87,11 @@ class RegisterUserControllerComponentTest : BaseUserController() {
   fun `register user should return ok`() {
     val user = UserFixtures.exampleUser.toDTO()
     val request = RegisterUserRequest(
-      user,
-      "password",
-      "saltvalue",
+      username = user.username,
+      email = user.email,
+      role = user.role,
+      hashedPassword = "password",
+      saltValue = "saltvalue",
     )
     val response = httpCalls.post(
       mapper.writeValueAsString(request),

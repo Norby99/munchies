@@ -20,7 +20,7 @@ dependencyResolutionManagement {
 }
 
 plugins {
-  id("org.danilopianini.gradle-pre-commit-git-hooks") version "2.1.21"
+  id("org.danilopianini.gradle-pre-commit-git-hooks") version "2.1.23"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 
@@ -50,6 +50,7 @@ include(":table-reservation-service")
 include(":table-reservation-shared")
 
 include(":gateway-service")
+include(":gateway-shared")
 
 include(":order-service")
 include(":order-shared")

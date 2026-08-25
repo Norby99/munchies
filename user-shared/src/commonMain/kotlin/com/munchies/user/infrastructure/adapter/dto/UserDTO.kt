@@ -8,8 +8,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("UserDTO")
 data class UserDTO(
-  val id: String,
+  val id: String = "",
   val username: String,
   val email: String,
   val role: String,
+  val isEmailVerified: Boolean = false,
 )

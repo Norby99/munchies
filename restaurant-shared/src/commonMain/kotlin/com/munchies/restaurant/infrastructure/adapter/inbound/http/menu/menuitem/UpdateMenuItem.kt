@@ -32,7 +32,6 @@ open class UpdateMenuItemResponse(
   override val result: MenuItemDto,
   override val code: Int = 200,
 ) : WebResponse<MenuItemDto>() {
-  val menuItem: MenuItemDto get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

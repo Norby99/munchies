@@ -18,8 +18,8 @@ import { UpdateRestaurantRoute } from "./update-restaurant.route";
 
 export const restaurantRoutes: SimpleRoute<any>[] = [
   new CreateRestaurantRoute(),
-  new GetRestaurantRoute(),
   new GetManagerRestaurantsRoute(),
+  new GetRestaurantRoute(),
   new UpdateRestaurantRoute(),
   new DeleteRestaurantRoute(),
   new CreateMenuRoute(),

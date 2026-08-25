@@ -49,7 +49,6 @@ class MicronautUserControllerTest {
   ) = MicronautUserController(
     services = services,
     emailConfirmationKafkaClient = emailConfirmationKafkaClient,
-    paymentClient = mock(),
   )
 
   private val validUser = exampleUser
@@ -119,7 +118,9 @@ class MicronautUserControllerTest {
 
     val response = controller.registerUser(
       RegisterUserRequest(
-        user = userDTO,
+        username = userDTO.username,
+        email = userDTO.email,
+        role = userDTO.role,
         hashedPassword = "hashed-password",
         saltValue = "salt-value",
       ),
@@ -142,7 +143,9 @@ class MicronautUserControllerTest {
       val response = controller.registerUser(
 
         RegisterUserRequest(
-          user = userDTO,
+          username = userDTO.username,
+          email = userDTO.email,
+          role = userDTO.role,
           hashedPassword = "hashed-password",
           saltValue = "salt-value",
         ),
@@ -165,7 +168,9 @@ class MicronautUserControllerTest {
     shouldThrow<UnexpectedException> {
       val response = controller.registerUser(
         RegisterUserRequest(
-          user = userDTO,
+          username = userDTO.username,
+          email = userDTO.email,
+          role = userDTO.role,
           hashedPassword = "hashed-password",
           saltValue = "salt-value",
         ),

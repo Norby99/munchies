@@ -28,7 +28,6 @@ open class CreateMenuResponse(
   override val result: MenuDto,
   override val code: Int = 201,
 ) : WebResponse<MenuDto>() {
-  val menu: MenuDto get() = result
   override fun toJson(): String = Json.encodeToString(this)
 }
 

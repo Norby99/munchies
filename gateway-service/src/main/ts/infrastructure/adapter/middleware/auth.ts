@@ -37,14 +37,13 @@ export function parseAuthRoleString(role: string): AuthRole {
 export interface AuthedRequest extends ExpressRequest {
   user?: AuthInfo;
 }
-export function requireAuth( 
-): ExpressRequestHandler {
+export function requireAuth(): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
     res: ExpressResponse,
-    next: NextFunction
+    next: NextFunction,
   ) => {
-    const missingToken = 500;
+    const missingToken = 401;
     console.log("cookies", req.cookies["authToken"]);
     if (req.cookies["authToken"] === undefined) {
       res
@@ -66,28 +65,27 @@ export function requireAuth(
           .send(
             new ErrorResponse(
               "invalid token: " + (tokenRes as DecodedTokenFailure).toString(),
-              missingToken
-            ).toJson()
+              missingToken,
+            ).toJson(),
           );
         return;
       }
     }
   };
 }
-export function requireRole(
-  requiredRole: AuthRole,
-): ExpressRequestHandler {
+export function requireRole(requiredRole: AuthRole): ExpressRequestHandler {
   return async (
     req: AuthedRequest,
     res: ExpressResponse,
-    next: NextFunction
+    next: NextFunction,
   ) => {
-    const unauthorizedCode = 401;
+    const unauthorizedCode = 403;
+    const missingRole = 401;
     if (!req.user) {
       res
-        .status(unauthorizedCode)
+        .status(missingRole)
         .type("json")
-        .send(new ErrorResponse("Missing role", unauthorizedCode).toJson());
+        .send(new ErrorResponse("Missing role", missingRole).toJson());
       return;
     }
     if (req.user?.role.visibility >= requiredRole.visibility) next();
@@ -100,9 +98,9 @@ export function requireRole(
   };
 }
 
-export function injectCookie<Response extends { toJson(): string }>(
+export function injectCookie(
   res: ExpressResponse,
-  info: AuthInfo
+  info: AuthInfo,
 ): ExpressResponse | null {
   const token = provider.generateToken(new UUIDEntityId(info.id), info.role);
   if (token instanceof GenerateTokenFailure) {
@@ -113,9 +111,19 @@ export function injectCookie<Response extends { toJson(): string }>(
       httpOnly: true,
       secure: true,
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60, // 1 Hour
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 Days — aligned with JWT exp
       path: "/",
     });
     return res;
   }
+}
+
+export function clearCookie(res: ExpressResponse): ExpressResponse {
+  res.clearCookie("authToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+  });
+  return res;
 }
