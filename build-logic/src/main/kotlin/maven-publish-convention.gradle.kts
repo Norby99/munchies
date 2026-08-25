@@ -3,7 +3,7 @@ plugins {
 }
 
 mavenPublishing {
-  publishToMavenCentral(automaticRelease = true)
+  publishToMavenCentral(automaticRelease = false)
   signAllPublications()
 
   coordinates(
