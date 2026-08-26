@@ -14,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.exceptions.HttpClientResponseException
+import java.util.*
 
 class PlaceOrderSteps(private val world: WordResult) {
 
@@ -25,12 +26,14 @@ class PlaceOrderSteps(private val world: WordResult) {
   fun loginUser() {
     loginBody =
       RegisterUserRequest(
-        username = "pippo",
-        email = "nigger@nigger.com",
+        username = "pippo" + Random().nextFloat(),
+        email = "nigger@nigger.com" + Random().nextFloat(),
         role = AuthRole.CUSTOMER.toString(),
         hashedPassword = "123",
-        saltValue = "c"
-      ).toJson()
+        saltValue = "c",
+      ).toJson().trim()
+
+    println(loginBody)
   }
 
   @Given("a valid delivery order")
@@ -39,7 +42,7 @@ class PlaceOrderSteps(private val world: WordResult) {
       restaurantId = "rest-munchies-99",
       customerId = "cust-jack-01",
       items = listOf(
-        OrderItemDto(menuItemId = "burger-super-double", quantity = 1)
+        OrderItemDto(menuItemId = "burger-super-double", quantity = 1),
       ),
       orderType = OrderType.DELIVERY,
       estimatedDeliveryTime = "1814380800000",
@@ -51,6 +54,7 @@ class PlaceOrderSteps(private val world: WordResult) {
 
   @When("the client places the order")
   fun placeTheOrder() {
+    loginUser()
     try {
       val response = client.toBlocking().exchange(
         HttpRequest.POST("/users/register", loginBody)
@@ -59,7 +63,7 @@ class PlaceOrderSteps(private val world: WordResult) {
       )
       world.responseStatus = response.status.code
       world.responseBody = response.body()
-      println("COOKIE: ${response.cookies}")
+      world.cookies = response.cookies
     } catch (e: HttpClientResponseException) {
       world.responseStatus = e.status.code
       world.responseBody = e.response.getBody(String::class.java).orElse(null)
@@ -68,10 +72,9 @@ class PlaceOrderSteps(private val world: WordResult) {
     println("STATUS: ${world.responseStatus}")
     println("BODY: ${world.responseBody}")
 
-
     try {
       val response = client.toBlocking().exchange(
-        HttpRequest.POST("/orders/place", requestBody)
+        HttpRequest.POST("/orders/place", requestBody).cookie(world.cookies!!.get("authToken"))
           .contentType("application/json"),
         String::class.java,
       )
