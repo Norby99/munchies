@@ -6,16 +6,6 @@ plugins {
   id("kotlin-jvm")
 }
 
-dependencies {
-  testImplementation(project(":commons"))
-  testImplementation(project(":order-shared"))
-  testImplementation(project(":user-shared"))
-
-  implementation(project(":commons"))
-  implementation(project(":order-shared"))
-  implementation(project(":user-shared"))
-}
-
 testing {
   suites {
     register("e2eTest", JvmTestSuite::class) {
@@ -32,6 +22,10 @@ testing {
         implementation(libs().junit.platform.suite.engine)
         runtimeOnly(libs().junit.platform.suite.launcher)
         runtimeOnly(libs().micronaut.serde.jackson)
+
+        implementation(project(":commons"))
+        implementation(project(":order-shared"))
+        implementation(project(":user-shared"))
       }
     }
   }
