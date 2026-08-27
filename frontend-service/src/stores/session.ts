@@ -77,9 +77,15 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   async function patchProfile(input: { username: string; email: string }): Promise<void> {
-    if (!role.value) throw new Error('Not authenticated')
-    await usersApi.updateProfile({ ...input, role: role.value })
-    if (user.value) user.value = { ...user.value, ...input }
+    if (!role.value || !user.value) throw new Error('Not authenticated')
+    // isEmailVerified must be forwarded from the current known value — UpdateUserInfoRequest
+    // takes a whole UserDTO, and the field defaults to false server-side if omitted.
+    await usersApi.updateProfile({
+      ...input,
+      role: role.value,
+      isEmailVerified: user.value.isEmailVerified,
+    })
+    user.value = { ...user.value, ...input }
   }
 
   async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
