@@ -5,4 +5,3 @@ Feature: Create an order
     And a valid delivery order
     When the client places the order
     Then order is created successfully
-    
