@@ -13,17 +13,17 @@ class AuthSteps(private val world: WordResult) {
 
   @Given("an authenticated client")
   fun anAuthenticatedCustomer() {
-    register(UserCredentials.customerJson)
+    register(UserCredentials.newCustomer())
   }
 
   @Given("an authenticated manager")
   fun anAuthenticatedManager() {
-    register(UserCredentials.managerJson)
+    register(UserCredentials.newManager())
   }
 
   fun register(userJson: String) {
     val response = client.toBlocking().exchange(
-      HttpRequest.POST("/users/register", UserCredentials.managerJson).contentType
+      HttpRequest.POST("/users/register", userJson).contentType
         ("application/json"),
       String::class.java,
     )

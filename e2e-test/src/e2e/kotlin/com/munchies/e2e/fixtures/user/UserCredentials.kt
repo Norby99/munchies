@@ -5,22 +5,26 @@ import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequ
 import java.util.UUID
 
 object UserCredentials {
-  private val userId = UUID.randomUUID().toString().take(8)
-  private val managerId = UUID.randomUUID().toString().take(8)
 
-  val customerJson = RegisterUserRequest(
-    username = "customer-$userId",
-    email = "customer-$userId@e2e-test.local",
-    role = AuthRole.CUSTOMER.toString(),
-    hashedPassword = "test-password-$userId",
-    saltValue = "salt",
-  ).toJson()
+  fun newCustomer(): String {
+    val id = UUID.randomUUID().toString().take(8)
+    return RegisterUserRequest(
+      username = "customer-$id",
+      email = "customer-$id@e2e-test.local",
+      role = AuthRole.CUSTOMER.toString(),
+      hashedPassword = "test-password-$id",
+      saltValue = "salt",
+    ).toJson()
+  }
 
-  val managerJson = RegisterUserRequest(
-    username = "manager-$managerId",
-    email = "manager-$managerId@e2e-test.local",
-    role = AuthRole.MANAGER.toString(),
-    hashedPassword = "test-password-$managerId",
-    saltValue = "salt",
-  ).toJson()
+  fun newManager(): String {
+    val id = UUID.randomUUID().toString().take(8)
+    return RegisterUserRequest(
+      username = "manager-$id",
+      email = "manager-$id@e2e-test.local",
+      role = AuthRole.MANAGER.toString(),
+      hashedPassword = "test-password-$id",
+      saltValue = "salt",
+    ).toJson()
+  }
 }
