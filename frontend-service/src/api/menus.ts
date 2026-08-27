@@ -6,20 +6,28 @@
 // part of the full menu fetch (getMenu).
 
 import { http, unwrap } from '@/api/client'
+import { decodeValidity, encodeValidity } from '@/utils/validity'
 import type { Category, Menu, MenuSummary, MenuItem, Validity, Variation } from '@/types'
+import type { MenuDto } from 'munchies-wire-types/kotlin/restaurant-wire-types'
 
 const base = (restaurantId: string) => `/restaurant/${restaurantId}/menus`
+
+// MenuDto.validity is ValidityDto[] on the wire; every response carrying a full menu goes through
+// this before reaching a caller, so callers only ever see the UI-friendly Validity[] shape.
+function toMenu(dto: MenuDto): Menu {
+  return { ...dto, validity: decodeValidity(dto.validity) }
+}
 
 export async function listMenus(restaurantId: string): Promise<MenuSummary[]> {
   return unwrap(http.get(base(restaurantId)))
 }
 
 export async function getMenu(restaurantId: string, menuId: string): Promise<Menu> {
-  return unwrap(http.get(`${base(restaurantId)}/${menuId}`))
+  return toMenu(await unwrap<MenuDto>(http.get(`${base(restaurantId)}/${menuId}`)))
 }
 
 export async function createMenu(restaurantId: string, name: string): Promise<Menu> {
-  return unwrap(http.post(base(restaurantId), { name }))
+  return toMenu(await unwrap<MenuDto>(http.post(base(restaurantId), { name })))
 }
 
 export async function updateMenu(
@@ -28,7 +36,8 @@ export async function updateMenu(
   name: string,
   validity: Validity[],
 ): Promise<Menu> {
-  return unwrap(http.put(`${base(restaurantId)}/${menuId}`, { name, validity }))
+  const body = { name, validity: encodeValidity(validity) }
+  return toMenu(await unwrap<MenuDto>(http.put(`${base(restaurantId)}/${menuId}`, body)))
 }
 
 export async function deleteMenu(restaurantId: string, menuId: string): Promise<string> {

@@ -77,12 +77,10 @@ export interface UntilValidity {
   type: 'until'
   end: string
 }
-export interface AndValidity {
-  type: 'and'
-  first: Validity
-  second: Validity
-}
 
+// No AND variant here: the wire format has no per-rule AND combinator at all — "AND" is expressed
+// by list cardinality (a Menu's validity is Validity[], every entry must hold), matching
+// restaurant-shared's ValidityDomainMapper.kt exactly. See utils/validity.ts.
 export type Validity =
   | AlwaysValidity
   | PeriodValidity
@@ -91,7 +89,6 @@ export type Validity =
   | HoursValidity
   | FromValidity
   | UntilValidity
-  | AndValidity
 
 export type ValidityType = Validity['type']
 
