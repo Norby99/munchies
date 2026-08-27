@@ -3,6 +3,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant
 import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,7 +20,7 @@ data class UpdateRestaurantRequest(
   val phone: String,
   val email: String,
 ) : AuthenticatedRequest<UpdateRestaurantRequest>, JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): UpdateRestaurantRequest = copy(managerId = userId)
 }
 
@@ -34,7 +35,7 @@ open class UpdateRestaurantResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

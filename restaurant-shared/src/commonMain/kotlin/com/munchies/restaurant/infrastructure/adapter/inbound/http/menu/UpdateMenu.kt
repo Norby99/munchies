@@ -1,7 +1,9 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu
 
+import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import com.munchies.restaurant.infrastructure.adapter.dto.ValidityDto
 import kotlin.js.JsExport
@@ -13,11 +15,13 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("UpdateMenuRequest")
-class UpdateMenuRequest(
+data class UpdateMenuRequest(
+  val managerId: String = "",
   val name: String,
   val validity: Array<ValidityDto>,
-) : JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+) : AuthenticatedRequest<UpdateMenuRequest>, JsonEncodable() {
+  override fun toJson(): String = wireJson.encodeToString(this)
+  override fun addId(userId: String): UpdateMenuRequest = copy(managerId = userId)
 }
 
 @JsExport
@@ -30,7 +34,7 @@ open class UpdateMenuResponse(
   override val result: MenuDto,
   override val code: Int = 200,
 ) : WebResponse<MenuDto>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

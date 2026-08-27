@@ -2,6 +2,7 @@ package com.munchies.user.infrastructure.adapter.inbound.request
 
 import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,7 +13,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 @SerialName("GetUserRequest")
 data class GetUserRequest(val id: String) : AuthenticatedRequest<GetUserRequest>, JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): GetUserRequest = this.copy(id = userId)
 }
 

@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.inbound.request
 
 import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -24,7 +25,7 @@ data class UpdateOrderItemsRequest(
   val customerId: String = "",
   val items: List<OrderItemDto>,
 ) : AuthenticatedRequest<UpdateOrderItemsRequest>, JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): UpdateOrderItemsRequest = copy(customerId = userId)
 }
 

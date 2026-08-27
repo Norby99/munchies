@@ -1,6 +1,7 @@
 package com.munchies.user.infrastructure.adapter.outbound.notification
 
 import com.munchies.commons.domain.port.Notification
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -12,7 +13,7 @@ data class UserEmailConfirmationNotification(
   val user_id_key: String,
   val user_confirmation_key: String,
 ) : Notification {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

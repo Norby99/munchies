@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.inbound.request
 
 import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import kotlin.js.JsExport
@@ -52,7 +53,7 @@ data class PlaceOrderRequest(
   val tableNumber: Int? = null,
   val numberOfGuests: Int? = null,
 ) : AuthenticatedRequest<PlaceOrderRequest>, JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): PlaceOrderRequest = copy(customerId = userId)
 }
 

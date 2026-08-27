@@ -2,6 +2,7 @@ package com.munchies.user.infrastructure.adapter.outbound.response
 
 import com.munchies.commons.domain.port.AuthRole
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlin.js.JsName
 import kotlinx.serialization.SerialName
@@ -24,7 +25,7 @@ data class LoginUserResponse(
   override val result: LoginUserResult,
   override val code: Int = 200,
 ) : WebResponse<LoginUserResult>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 
   @JsName("createWithIdAndRole")
   constructor(id: String, role: AuthRole, code: Int = 200) : this(

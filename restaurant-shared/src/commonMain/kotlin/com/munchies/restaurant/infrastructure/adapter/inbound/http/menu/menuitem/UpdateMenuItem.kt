@@ -2,6 +2,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.menuite
 
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuItemDto
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
 import kotlin.js.JsExport
@@ -19,7 +20,7 @@ data class UpdateMenuItemRequest(
   val price: String,
   val variations: Array<VariationDto> = emptyArray(),
 ) : JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -32,7 +33,7 @@ open class UpdateMenuItemResponse(
   override val result: MenuItemDto,
   override val code: Int = 200,
 ) : WebResponse<MenuItemDto>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
