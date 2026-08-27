@@ -58,7 +58,7 @@ class ErrorResponse(
   override val code: Int = 420,
 
 ) : WebResponse<String>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

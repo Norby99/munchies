@@ -1,6 +1,7 @@
 package com.munchies.user.infrastructure.adapter.outbound.response
 
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.user.infrastructure.adapter.dto.UserDTO
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -15,7 +16,7 @@ open class GetUserResponse(
   override val result: UserDTO,
   override val code: Int = 200,
 ) : WebResponse<UserDTO>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

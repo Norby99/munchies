@@ -1,6 +1,7 @@
 package com.munchies.order.infrastructure.adapter.inbound.request
 
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,7 +17,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 @SerialName("AdvanceOrderStatusRequest")
 data class AdvanceOrderStatusRequest(val orderId: String) : JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

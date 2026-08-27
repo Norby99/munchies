@@ -1,9 +1,9 @@
 package com.munchies.restaurant.infrastructure.adapter.dto
 
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
@@ -14,5 +14,5 @@ class RestaurantDto(
   val phone: String,
   val email: String,
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
