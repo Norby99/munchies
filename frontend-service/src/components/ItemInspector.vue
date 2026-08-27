@@ -10,8 +10,8 @@ import MenuItemFieldsForm from '@/components/MenuItemFieldsForm.vue'
 import type { MenuItemInput } from '@/api/menus'
 import type { MenuItem } from '@/types'
 
-const props = defineProps<{ item: MenuItem }>()
-const emit = defineEmits<{ save: [input: MenuItemInput]; delete: [] }>()
+const props = defineProps<{ item: MenuItem; saveError: string | null }>()
+const emit = defineEmits<{ save: [input: MenuItemInput]; delete: []; clearSaveError: [] }>()
 
 function draftFrom(item: MenuItem): MenuItemInput {
   return {
@@ -26,7 +26,10 @@ const draft = reactive<MenuItemInput>(draftFrom(props.item))
 
 watch(
   () => props.item,
-  (item) => Object.assign(draft, draftFrom(item)),
+  (item) => {
+    Object.assign(draft, draftFrom(item))
+    emit('clearSaveError')
+  },
 )
 
 function onSave(): void {
@@ -56,6 +59,10 @@ function confirmDelete(): void {
     </div>
 
     <MenuItemFieldsForm id-prefix="item" v-model="draft" />
+
+    <p v-if="saveError" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 12px 0 0">
+      {{ saveError }}
+    </p>
 
     <div class="hr" style="margin: 16px 0"></div>
     <button class="btn btn-primary btn-block" type="button" @click="onSave">Save item</button>
