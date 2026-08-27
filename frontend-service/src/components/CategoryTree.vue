@@ -5,7 +5,7 @@
 // No position field exists on categories or items, so order is whatever the
 // server returns; there are no drag handles until the backend adds one.
 
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { ChevronDown, ChevronRight } from 'lucide-vue-next'
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -19,12 +19,14 @@ const props = defineProps<{
   categories: Category[]
   expanded: Set<string>
   activeItemId: string | null
+  addItemError: string | null
 }>()
 
 const emit = defineEmits<{
   toggle: [categoryId: string]
   selectItem: [itemId: string | null]
   addItem: [categoryId: string, input: MenuItemInput]
+  clearAddItemError: []
   deleteCategory: [categoryId: string]
   addCategory: [input: { name: string; variations: Variation[] }]
   updateCategory: [categoryId: string, input: { name: string; variations: Variation[] }]
@@ -80,10 +82,12 @@ function openAddItemForm(categoryId: string): void {
   itemDraft.description = ''
   itemDraft.price = '0.00'
   itemDraft.variations = []
+  emit('clearAddItemError')
 }
 
 function cancelItemForm(): void {
   itemFormOpenFor.value = null
+  emit('clearAddItemError')
 }
 
 function submitItemForm(categoryId: string): void {
@@ -91,8 +95,20 @@ function submitItemForm(categoryId: string): void {
     ...itemDraft,
     variations: itemDraft.variations.map((v) => ({ ...v, options: v.options.map((o) => ({ ...o })) })),
   })
-  itemFormOpenFor.value = null
 }
+
+// Closes the add-item form once the item actually lands in `categories` —
+// i.e. only on success. On failure the parent's createItem throws before
+// re-fetching, categories never changes, and the form stays open with
+// addItemError showing instead of closing before the user can read it.
+watch(
+  () => props.categories.find((c) => c.id === itemFormOpenFor.value)?.items.length,
+  (length, previousLength) => {
+    if (itemFormOpenFor.value && length !== undefined && previousLength !== undefined && length > previousLength) {
+      itemFormOpenFor.value = null
+    }
+  },
+)
 </script>
 
 <template>
@@ -199,6 +215,9 @@ function submitItemForm(categoryId: string): void {
         </button>
         <div v-if="itemFormOpenFor === category.id" style="margin-top: 8px">
           <MenuItemFieldsForm :id-prefix="`item-${category.id}`" v-model="itemDraft" />
+          <p v-if="addItemError" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 10px 0 0">
+            {{ addItemError }}
+          </p>
           <div style="display: flex; gap: 8px; margin-top: 10px">
             <button class="btn btn-primary" type="button" @click="submitItemForm(category.id)">Create item</button>
             <button class="btn btn-secondary" type="button" @click="cancelItemForm">Cancel</button>
