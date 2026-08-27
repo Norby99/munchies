@@ -8,6 +8,8 @@ import { computed, ref } from 'vue'
 import * as authApi from '@/api/auth'
 import { ApiError, onUnauthorized } from '@/api/client'
 import * as usersApi from '@/api/users'
+import { useMenusStore } from '@/stores/menus'
+import { useRestaurantsStore } from '@/stores/restaurants'
 import { hashPassword, randomSalt } from '@/utils/hash'
 import type { LoadStatus, Role, User } from '@/types'
 
@@ -24,10 +26,15 @@ export const useSessionStore = defineStore('session', () => {
 
   const isAuthenticated = computed(() => user.value !== null)
 
+  // Also wipes the manager/menu caches — otherwise the next signed-in
+  // account (a fresh registration included) would still see, and could
+  // still edit, whatever the previous account had cached.
   function clear(): void {
     user.value = null
     role.value = null
     status.value = 'ready'
+    useRestaurantsStore().reset()
+    useMenusStore().reset()
   }
 
   async function hydrate(): Promise<void> {
