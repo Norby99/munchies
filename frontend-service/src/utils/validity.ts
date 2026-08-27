@@ -6,7 +6,7 @@
 // combinator — all rules in the list must hold, matching the infrastructure
 // layer's wire format exactly.
 
-import type { Validity } from '@/types'
+import type { ValidityDto, Validity } from '@/types'
 
 const WEEKDAY_LABELS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -94,4 +94,76 @@ export function isValid(rules: Validity[] | null | undefined, now: Date = new Da
 export function describe(rules: Validity[] | null | undefined): string {
   if (!rules || rules.length === 0) return 'Always'
   return rules.map(describeRule).join(' and ')
+}
+
+// Wire <-> UI conversion. The real wire shape (ValidityDto, from restaurant-shared's
+// ValidityDto.kt) is flat: { type: 'PERIOD'|'YEARLY'|..., value: Record<string,string> } — every
+// field is a string, and per-rule field names/types are only known by convention (see
+// ValidityDomainMapper.kt on the restaurant-service side, which these two functions mirror
+// exactly). This is the only place that flat shape and the UI's richer typed union meet.
+
+function decodeRule(dto: ValidityDto): Validity {
+  switch (dto.type) {
+    case 'ALWAYS':
+      return { type: 'always' }
+    case 'PERIOD':
+      return { type: 'period', start: dto.value.start ?? '', end: dto.value.end ?? '' }
+    case 'YEARLY':
+      return {
+        type: 'yearly',
+        startMonth: Number(dto.value.startMonth ?? 0),
+        startDay: Number(dto.value.startDay ?? 0),
+        endMonth: Number(dto.value.endMonth ?? 0),
+        endDay: Number(dto.value.endDay ?? 0),
+      }
+    case 'WEEKLY':
+      return {
+        type: 'weekly',
+        days: (dto.value.days ?? '')
+          .split(',')
+          .filter((d) => d !== '')
+          .map(Number),
+      }
+    case 'HOURS':
+      return { type: 'hours', start: dto.value.start ?? '', end: dto.value.end ?? '' }
+    case 'FROM':
+      return { type: 'from', start: dto.value.start ?? '' }
+    case 'UNTIL':
+      return { type: 'until', end: dto.value.end ?? '' }
+  }
+}
+
+function encodeRule(rule: Validity): ValidityDto {
+  switch (rule.type) {
+    case 'always':
+      return { type: 'ALWAYS', value: {} }
+    case 'period':
+      return { type: 'PERIOD', value: { start: rule.start, end: rule.end } }
+    case 'yearly':
+      return {
+        type: 'YEARLY',
+        value: {
+          startMonth: String(rule.startMonth),
+          startDay: String(rule.startDay),
+          endMonth: String(rule.endMonth),
+          endDay: String(rule.endDay),
+        },
+      }
+    case 'weekly':
+      return { type: 'WEEKLY', value: { days: rule.days.join(',') } }
+    case 'hours':
+      return { type: 'HOURS', value: { start: rule.start, end: rule.end } }
+    case 'from':
+      return { type: 'FROM', value: { start: rule.start } }
+    case 'until':
+      return { type: 'UNTIL', value: { end: rule.end } }
+  }
+}
+
+export function decodeValidity(dtos: ValidityDto[]): Validity[] {
+  return dtos.map(decodeRule)
+}
+
+export function encodeValidity(rules: Validity[]): ValidityDto[] {
+  return rules.map(encodeRule)
 }
