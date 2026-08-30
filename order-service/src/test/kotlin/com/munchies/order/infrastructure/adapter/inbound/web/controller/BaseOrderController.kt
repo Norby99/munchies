@@ -3,6 +3,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.application.port.inbound.GetOrderDetails
+import com.munchies.order.application.port.inbound.GetOrders
 import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.application.port.inbound.UpdateOrderItems
@@ -11,11 +12,16 @@ import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderService
 import io.micronaut.http.HttpResponse
 import io.mockk.mockk
 
+/**
+ * Base class for testing the MicronautOrderController.
+ * It provides mocked dependencies and a controller instance for testing.
+ */
 abstract class BaseOrderController {
 
   val advanceOrderStatus = mockk<AdvanceOrderStatus>()
   val discardOrder = mockk<DiscardOrder>()
   val getOrderDetails = mockk<GetOrderDetails>()
+  val getOrders = mockk<GetOrders>()
   val placeOrder = mockk<PlaceOrder>()
   val updateDeliveryOrderInfo = mockk<UpdateDeliveryOrderInfo>()
   val updateOrderItems = mockk<UpdateOrderItems>()
@@ -26,6 +32,7 @@ abstract class BaseOrderController {
       advanceOrderStatus,
       discardOrder,
       getOrderDetails,
+      getOrders,
       placeOrder,
       updateDeliveryOrderInfo,
       updateOrderItems,
