@@ -36,6 +36,9 @@ class MongoOrderRepository(
     it.toNullableDomain()
   }.orElse(null)
 
+  override fun findAll(): List<Order> = repository.findAll()
+    .mapNotNull { it.toNullableDomain() }
+
   override fun save(entity: Order) {
     repository.save(entity.toDocument())
   }

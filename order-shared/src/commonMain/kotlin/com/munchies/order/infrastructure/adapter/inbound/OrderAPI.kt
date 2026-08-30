@@ -46,6 +46,16 @@ object OrderAPI {
   }
 
   /**
+   * The GetOrdersAPI interface defines the contract for retrieving a list of orders based on certain criteria.
+   * It extends the OrderAPI interface and provides a method to get orders.
+   *
+   * @param Response The type of the response object returned after retrieving the orders.
+   */
+  interface GetOrdersAPI<Response> {
+    fun getOrders(restaurantId: String?, customerId: String?, orderStatus: String?): Response
+  }
+
+  /**
    * The PlaceOrderAPI interface defines the contract for placing a new order.
    * It extends the OrderAPI interface and provides a method to place an order.
    *

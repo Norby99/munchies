@@ -16,6 +16,7 @@ object OrderServiceConfig {
   const val SERVICE_PORT = 8080
 
   const val GET_ORDER_PATH = "{id}"
+  const val GET_ORDERS_PATH = ""
   const val PLACE_ORDER_PATH = "place"
   const val ADVANCE_ORDER_STATUS_PATH = "advance"
   const val DISCARD_ORDER_PATH = "{id}"

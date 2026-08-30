@@ -20,6 +20,9 @@ class OrderBeans {
   fun getOrderDetails(repo: OrderRepository): GetOrderDetails = GetOrderDetailsUseCase(repo)
 
   @Singleton
+  fun getOrders(repo: OrderRepository): GetOrders = GetOrdersUseCase(repo)
+
+  @Singleton
   fun placeOrder(repo: OrderRepository): PlaceOrder = PlaceOrderUseCase(repo)
 
   @Singleton
@@ -38,6 +41,7 @@ class OrderBeans {
     advanceOrderStatus: AdvanceOrderStatus,
     discardOrder: DiscardOrder,
     getOrderDetails: GetOrderDetails,
+    getOrders: GetOrders,
     placeOrder: PlaceOrder,
     updateDeliveryOrderInfo: UpdateDeliveryOrderInfo,
     updateOrderItems: UpdateOrderItems,
@@ -46,6 +50,7 @@ class OrderBeans {
     advanceOrderStatus,
     discardOrder,
     getOrderDetails,
+    getOrders,
     placeOrder,
     updateDeliveryOrderInfo,
     updateOrderItems,
@@ -57,6 +62,7 @@ open class OrderServices(
   val advanceOrderStatus: AdvanceOrderStatus,
   val discardOrder: DiscardOrder,
   val getOrderDetails: GetOrderDetails,
+  val getOrders: GetOrders,
   val placeOrder: PlaceOrder,
   val updateDeliveryOrderInfo: UpdateDeliveryOrderInfo,
   val updateOrderItems: UpdateOrderItems,

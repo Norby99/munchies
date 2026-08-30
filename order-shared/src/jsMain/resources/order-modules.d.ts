@@ -72,6 +72,10 @@ export type GetOrderDetailsAPI =
     com.munchies.order.infrastructure.adapter.inbound.JsGetOrderDetailsAPI;
 export declare const GetOrderDetailsAPI: typeof com.munchies.order.infrastructure.adapter.inbound.JsGetOrderDetailsAPI;
 
+export type GetOrdersAPI =
+    com.munchies.order.infrastructure.adapter.inbound.JsGetOrdersAPI;
+export declare const GetOrdersAPI: typeof com.munchies.order.infrastructure.adapter.inbound.JsGetOrdersAPI;
+
 export type PlaceOrderAPI =
     com.munchies.order.infrastructure.adapter.inbound.JsPlaceOrderAPI;
 export declare const PlaceOrderAPI: typeof com.munchies.order.infrastructure.adapter.inbound.JsPlaceOrderAPI;
