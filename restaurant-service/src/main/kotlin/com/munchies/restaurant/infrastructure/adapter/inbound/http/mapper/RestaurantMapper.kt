@@ -51,7 +51,7 @@ fun UpdateRestaurantResult.Success.toResponse(): UpdateRestaurantResponse =
 // --- Delete ---
 
 fun DeleteRestaurantRequest.toCommand(restaurantId: String): DeleteRestaurantCommand =
-  DeleteRestaurantCommand(managerId, restaurantId)
+  DeleteRestaurantCommand(restaurantId, managerId)
 
 fun DeleteRestaurantResult.Success.toResponse(): DeleteRestaurantResponse =
   DeleteRestaurantResponse(restaurantId)

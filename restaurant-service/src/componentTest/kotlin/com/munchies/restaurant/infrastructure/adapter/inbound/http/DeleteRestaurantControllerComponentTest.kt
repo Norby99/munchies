@@ -54,7 +54,7 @@ class DeleteRestaurantControllerComponentTest : BaseMenuController() {
     val restaurant = seedRestaurant(managerId)
 
     val response = httpDelete<DeleteRestaurantResponse>(
-      "/restaurants/${restaurant.id.value}/",
+      "/restaurants/${restaurant.id.value}",
       DeleteRestaurantRequest(managerId = managerId.value),
     )
 
@@ -66,7 +66,7 @@ class DeleteRestaurantControllerComponentTest : BaseMenuController() {
   fun `deleteRestaurant should return 404 Not Found when the restaurant does not exist`() {
     val ex = assertThrows<HttpClientResponseException> {
       httpDelete<DeleteRestaurantResponse>(
-        "/restaurants/${RestaurantId().value}/",
+        "/restaurants/${RestaurantId().value}",
         DeleteRestaurantRequest(managerId = UserId().value),
       )
     }
@@ -80,7 +80,7 @@ class DeleteRestaurantControllerComponentTest : BaseMenuController() {
 
     val ex = assertThrows<HttpClientResponseException> {
       httpDelete<DeleteRestaurantResponse>(
-        "/restaurants/${restaurant.id.value}/",
+        "/restaurants/${restaurant.id.value}",
         DeleteRestaurantRequest(managerId = UserId().value),
       )
     }
