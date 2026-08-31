@@ -12,6 +12,7 @@ import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationOptionDto
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetRestaurantMenusResponse
@@ -55,6 +56,7 @@ import jakarta.inject.Singleton
 @SerdeImport(UpdateMenuResponse::class)
 @SerdeImport(GetMenuResponse::class)
 @SerdeImport(GetRestaurantMenusResponse::class)
+@SerdeImport(DeleteMenuRequest::class)
 @SerdeImport(DeleteMenuResponse::class)
 @SerdeImport(CreateCategoryRequest::class)
 @SerdeImport(CreateCategoryResponse::class)
