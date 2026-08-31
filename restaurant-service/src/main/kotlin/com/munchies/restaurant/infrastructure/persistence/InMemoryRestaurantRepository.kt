@@ -9,7 +9,7 @@ import io.micronaut.context.annotation.Requires
 import jakarta.inject.Singleton
 
 @Singleton
-@Requires(env = ["test"])
+@Requires(notEnv = ["prod"])
 class InMemoryRestaurantRepository : RestaurantRepository,
   InMemoryRepository<RestaurantId, Restaurant>() {
 
