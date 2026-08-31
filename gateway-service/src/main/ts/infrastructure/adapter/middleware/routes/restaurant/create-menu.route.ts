@@ -64,7 +64,9 @@ export class CreateMenuRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const createReq = this.parseRequest(String(req.body));
+        const createReq = this.parseRequest(String(req.body)).addId(
+          req.user!!.id,
+        );
         return this.createMenu(req.params.restaurantId, createReq);
       } catch (err: any) {
         return new ErrorResponse(

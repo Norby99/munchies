@@ -65,7 +65,9 @@ export class UpdateMenuRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const updateReq = this.parseRequest(String(req.body));
+        const updateReq = this.parseRequest(String(req.body)).addId(
+          req.user!!.id,
+        );
         return this.updateMenu(
           req.params.restaurantId,
           req.params.menuId,
