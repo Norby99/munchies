@@ -51,6 +51,7 @@ import jakarta.inject.Inject
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
 @SerdeImport(GetOrderDetailsResponse::class)
+@SerdeImport(GetOrdersResponse::class)
 @SerdeImport(PlaceOrderResponse::class)
 @SerdeImport(AdvanceOrderStatusResponse::class)
 @SerdeImport(DiscardOrderResponse::class)
@@ -122,7 +123,7 @@ class MicronautOrderController(
   }
 
   /**
-   * Handles `GET orders` with optional query parameters for filtering.
+   * Handles `GET orders/?restaurantId={restaurantId}&customerId={customerId}&status={status}`.
    *
    * Translates the application-layer result into an HTTP response:
    * - `200 OK` with a list of order DTOs if orders are found
@@ -157,6 +158,8 @@ class MicronautOrderController(
           code = HttpStatus.OK.code,
         ),
       )
+      is GetOrders.Result.Failure.OrderNotFound ->
+        throw NotFoundException("No orders found matching the provided filters")
     }
   }
 

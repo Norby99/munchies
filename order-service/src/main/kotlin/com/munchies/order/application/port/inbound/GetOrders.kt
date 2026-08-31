@@ -14,5 +14,8 @@ interface GetOrders {
    */
   sealed interface Result {
     data class Success(val orders: List<OrderDto>) : Result
+    sealed interface Failure : Result {
+      data object OrderNotFound : Failure
+    }
   }
 }

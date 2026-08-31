@@ -18,6 +18,9 @@ class GetOrdersUseCase(private val repository: OrderRepository) : GetOrders {
     command.customerId?.let { cusId -> orders = orders.filter { it.customerId == cusId } }
     command.orderStatus?.let { status -> orders = orders.filter { it.status == status } }
 
+    if (orders.isEmpty()) {
+      return GetOrders.Result.Failure.OrderNotFound
+    }
     return GetOrders.Result.Success(orders.map { o -> o.toDto() })
   }
 }

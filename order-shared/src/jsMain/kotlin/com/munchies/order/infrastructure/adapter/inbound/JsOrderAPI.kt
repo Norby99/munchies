@@ -44,12 +44,11 @@ abstract class JsGetOrdersAPI<E : WebResponse<Any>> :
   abstract override fun getOrders(
     restaurantId: String?,
     customerId: String?,
-    orderStatus: String?
+    orderStatus: String?,
   ): Promise<E>
 
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
-  override fun parseResponse(json: String): GetOrdersResponse =
-    getOrdersResponseFromJson(json)
+  override fun parseResponse(json: String): GetOrdersResponse = getOrdersResponseFromJson(json)
 
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }

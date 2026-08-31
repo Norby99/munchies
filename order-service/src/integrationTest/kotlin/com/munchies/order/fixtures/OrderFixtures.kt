@@ -13,6 +13,7 @@ val futureTime: Long get() = fixedNow + 60_000
 // ---------- IDs ----------
 
 val defaultOrderId: OrderId get() = OrderId("o-1")
+val defaultTakeawayOrderId: OrderId get() = OrderId("o-t-1")
 val defaultRestaurantId: RestaurantId get() = RestaurantId("r-1")
 val defaultCustomerId: CustomerId get() = CustomerId("c-1")
 
@@ -94,7 +95,7 @@ fun createTakeawayOrder(
   items: List<OrderItem> = createNewItems(),
   takeawayInfo: TakeawayInfo = createTakeawayInfo(),
 ): TakeawayOrder = TakeawayOrder(
-  id = defaultOrderId,
+  id = defaultTakeawayOrderId,
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
   status = status,
