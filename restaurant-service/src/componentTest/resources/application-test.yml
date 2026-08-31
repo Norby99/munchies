@@ -1,0 +1,6 @@
+micronaut:
+  server:
+    port: -1
+  mongodb:
+    package-names:
+      - "com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document"
