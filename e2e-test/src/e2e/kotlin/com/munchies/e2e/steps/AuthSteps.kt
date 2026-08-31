@@ -33,6 +33,7 @@ class AuthSteps(private val world: WordResult) {
         "User registered but no auth cookie was given: " +
           response.cookies.forEach { c ->
             println("${c.key} = ${c.value}")
-          })
+          },
+      )
   }
 }
