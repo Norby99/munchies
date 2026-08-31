@@ -7,7 +7,6 @@ import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
-import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import io.kotest.matchers.equals.shouldBeEqual
@@ -28,8 +27,6 @@ class GetOrdersUseCaseUnitTest {
 
   private val repository = mockk<OrderRepository>(relaxed = false)
   private val useCase = GetOrdersUseCase(repository)
-
-  private val mockOrderDto = mockk<OrderDto>()
 
   private val command = GetOrdersCommand(resToFind, customerToFind, statusToFind)
 
