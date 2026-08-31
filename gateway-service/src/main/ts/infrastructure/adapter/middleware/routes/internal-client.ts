@@ -39,7 +39,7 @@ function axiosMethodChooser(
     case HttpMethod.PUT.name:
       return base.put(uri, body);
     case HttpMethod.DELETE.name:
-      return base.delete(uri);
+      return base.delete(uri, { data: body });
     case HttpMethod.PATCH.name:
       return base.patch(uri, body);
     default:

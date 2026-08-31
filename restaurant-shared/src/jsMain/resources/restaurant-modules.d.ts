@@ -198,6 +198,14 @@ export declare const UpdateMenuResponse: typeof
 export declare const updateMenuResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.updateMenuResponseFromJson;
 
+export type DeleteMenuRequest =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuRequest;
+export declare const DeleteMenuRequest: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuRequest;
+
+export declare const deleteMenuRequestFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.deleteMenuRequestFromJson;
+
 export type DeleteMenuResponse =
   com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse;
 export declare const DeleteMenuResponse: typeof

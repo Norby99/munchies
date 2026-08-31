@@ -8,6 +8,7 @@ import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.commons.infrastructure.adapter.errorResponseFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetRestaurantMenusResponse
@@ -25,6 +26,7 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.category.updateCategoryResponseFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.createMenuRequestFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.createMenuResponseFromJson
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.deleteMenuRequestFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.deleteMenuResponseFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.getMenuResponseFromJson
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.getRestaurantMenusResponseFromJson
@@ -107,8 +109,13 @@ abstract class JsUpdateMenuAPI<E : WebResponse<Any>> :
 
 @JsExport
 abstract class JsDeleteMenuAPI<E : WebResponse<Any>> :
-  SimpleAPI<Nothing, DeleteMenuResponse>() {
-  abstract fun deleteMenu(restaurantId: String, menuId: String): Promise<E>
+  SimpleAPI<DeleteMenuRequest, DeleteMenuResponse>() {
+  abstract fun deleteMenu(
+    restaurantId: String,
+    menuId: String,
+    request: DeleteMenuRequest,
+  ): Promise<E>
+  override fun parseRequest(json: String): DeleteMenuRequest = deleteMenuRequestFromJson(json)
   override fun parseResponse(json: String): DeleteMenuResponse = deleteMenuResponseFromJson(json)
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
   override fun getPath(): String =
@@ -116,7 +123,6 @@ abstract class JsDeleteMenuAPI<E : WebResponse<Any>> :
   override fun getPort(): Int = MenuServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
-  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
 }
 
 // ---- Category ----

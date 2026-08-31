@@ -1,5 +1,6 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu
 
+import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
 import com.munchies.commons.infrastructure.adapter.wireJson
@@ -14,9 +15,11 @@ import kotlinx.serialization.json.Json
 @Serializable
 @SerialName("CreateMenuRequest")
 data class CreateMenuRequest(
+  val managerId: String = "",
   val name: String,
-) : JsonEncodable() {
+) : AuthenticatedRequest<CreateMenuRequest>, JsonEncodable() {
   override fun toJson(): String = wireJson.encodeToString(this)
+  override fun addId(userId: String): CreateMenuRequest = copy(managerId = userId)
 }
 
 @JsExport

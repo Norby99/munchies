@@ -2,7 +2,6 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http
 
 import com.munchies.restaurant.application.MenuService
 import com.munchies.restaurant.application.usecase.menu.CreateMenuResult
-import com.munchies.restaurant.application.usecase.menu.DeleteMenuCommand
 import com.munchies.restaurant.application.usecase.menu.DeleteMenuResult
 import com.munchies.restaurant.application.usecase.menu.GetMenuCommand
 import com.munchies.restaurant.application.usecase.menu.GetMenuResult
@@ -10,10 +9,12 @@ import com.munchies.restaurant.application.usecase.menu.GetRestaurantMenusComman
 import com.munchies.restaurant.application.usecase.menu.GetRestaurantMenusResult
 import com.munchies.restaurant.application.usecase.menu.UpdateMenuResult
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.NotFoundException
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.UnauthorizedException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.ValidationException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.mapper.*
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.CreateMenuResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.DeleteMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetMenuResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.GetRestaurantMenusResponse
@@ -39,6 +40,8 @@ class MenuController(private val menuService: MenuService) {
     val command = request.toCommand(restaurantId)
     return when (val result = menuService.createMenu(command)) {
       is CreateMenuResult.Success -> HttpResponse.created(result.toResponse())
+      is CreateMenuResult.RestaurantNotFound -> throw NotFoundException("Restaurant not found")
+      is CreateMenuResult.Unauthorized -> throw UnauthorizedException("Unauthorized to create menu")
       is CreateMenuResult.InvalidMenu -> throw ValidationException(result.error)
     }
   }
@@ -75,6 +78,7 @@ class MenuController(private val menuService: MenuService) {
     return when (val result = menuService.updateMenu(command)) {
       is UpdateMenuResult.Success -> HttpResponse.ok(result.toResponse())
       is UpdateMenuResult.MenuNotFound -> throw NotFoundException("Menu not found")
+      is UpdateMenuResult.Unauthorized -> throw UnauthorizedException("Unauthorized to update menu")
       is UpdateMenuResult.InvalidMenu -> throw ValidationException(result.error)
     }
   }
@@ -83,11 +87,13 @@ class MenuController(private val menuService: MenuService) {
   suspend fun deleteMenu(
     @PathVariable restaurantId: String,
     @PathVariable menuId: String,
+    @Body request: DeleteMenuRequest,
   ): HttpResponse<DeleteMenuResponse> {
-    val command = DeleteMenuCommand(restaurantId, menuId)
+    val command = request.toCommand(restaurantId, menuId)
     return when (val result = menuService.deleteMenu(command)) {
       is DeleteMenuResult.Success -> HttpResponse.ok(result.toResponse())
       is DeleteMenuResult.MenuNotFound -> throw NotFoundException("Menu not found")
+      is DeleteMenuResult.Unauthorized -> throw UnauthorizedException("Unauthorized to delete menu")
       is DeleteMenuResult.InvalidMenu -> throw ValidationException(result.error)
     }
   }

@@ -15,13 +15,14 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("UpdateMenuRequest")
-data class UpdateMenuRequest(
-  val managerId: String = "",
+class UpdateMenuRequest(
+  val managerId: String,
   val name: String,
   val validity: Array<ValidityDto>,
 ) : AuthenticatedRequest<UpdateMenuRequest>, JsonEncodable() {
   override fun toJson(): String = wireJson.encodeToString(this)
-  override fun addId(userId: String): UpdateMenuRequest = copy(managerId = userId)
+  override fun addId(userId: String): UpdateMenuRequest =
+    UpdateMenuRequest(userId, name, validity)
 }
 
 @JsExport

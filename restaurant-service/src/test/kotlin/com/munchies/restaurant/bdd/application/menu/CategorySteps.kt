@@ -34,6 +34,7 @@ class CategorySteps @Inject constructor(
   fun givenRestaurantHasAMenu() {
     val result = helper.createMenu(
       context.restaurantId,
+      context.managerId,
       "Default",
       "2023-01-01",
       "2023-12-31",
