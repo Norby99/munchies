@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("DeleteCategoryResponse")
-open class DeleteCategoryResponse(
+class DeleteCategoryResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {

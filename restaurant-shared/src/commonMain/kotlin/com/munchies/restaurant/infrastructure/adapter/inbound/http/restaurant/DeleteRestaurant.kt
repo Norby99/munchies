@@ -27,7 +27,7 @@ fun deleteRestaurantRequestFromJson(json: String): DeleteRestaurantRequest =
 @JsExport
 @Serializable
 @SerialName("DeleteRestaurantResponse")
-open class DeleteRestaurantResponse(
+class DeleteRestaurantResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {

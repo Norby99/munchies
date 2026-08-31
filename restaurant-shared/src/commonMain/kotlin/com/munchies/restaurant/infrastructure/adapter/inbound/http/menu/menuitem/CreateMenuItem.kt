@@ -28,7 +28,7 @@ fun createMenuItemRequestFromJson(json: String): CreateMenuItemRequest = Json.de
 @JsExport
 @Serializable
 @SerialName("CreateMenuItemResponse")
-open class CreateMenuItemResponse(
+class CreateMenuItemResponse(
   override val result: String,
   override val code: Int = 201,
 ) : WebResponse<String>() {

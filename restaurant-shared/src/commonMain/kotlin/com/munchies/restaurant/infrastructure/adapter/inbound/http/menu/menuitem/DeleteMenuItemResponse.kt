@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("DeleteMenuItemResponse")
-open class DeleteMenuItemResponse(
+class DeleteMenuItemResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {

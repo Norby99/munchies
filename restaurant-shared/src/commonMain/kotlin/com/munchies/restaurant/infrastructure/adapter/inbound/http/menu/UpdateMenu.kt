@@ -30,7 +30,7 @@ fun updateMenuRequestFromJson(json: String): UpdateMenuRequest = Json.decodeFrom
 @JsExport
 @Serializable
 @SerialName("UpdateMenuResponse")
-open class UpdateMenuResponse(
+class UpdateMenuResponse(
   override val result: MenuDto,
   override val code: Int = 200,
 ) : WebResponse<MenuDto>() {
