@@ -34,7 +34,7 @@ class UpdateMenuTest {
     updateMenuUseCase = UpdateMenuUseCase(menuRepository, restaurantRepository)
   }
 
-  private fun ownerOf(menu: Menu): Restaurant = Restaurant.create(
+  private fun aRestaurant(): Restaurant = Restaurant.create(
     managerId = UserId(),
     name = RestaurantName.of("Trattoria da Piero"),
     address = Address.of("Via Roma 1, Milano"),
@@ -52,7 +52,7 @@ class UpdateMenuTest {
           validity = Validity.always,
         ),
       )
-    val restaurant = ownerOf(menu)
+    val restaurant = aRestaurant()
 
     val command = UpdateMenuCommand(
       restaurantId = menu.restaurantId.value,
@@ -105,7 +105,7 @@ class UpdateMenuTest {
           validity = Validity.always,
         ),
       )
-    val restaurant = ownerOf(menu)
+    val restaurant = aRestaurant()
 
     val command = UpdateMenuCommand(
       restaurantId = menu.restaurantId.value,
@@ -137,7 +137,7 @@ class UpdateMenuTest {
         ),
       )
 
-    val restaurant = ownerOf(menu)
+    val restaurant = aRestaurant()
 
     val command = UpdateMenuCommand(
       restaurantId = menu.restaurantId.value,

@@ -5,7 +5,6 @@ import com.munchies.restaurant.application.usecase.menu.*
 import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.aggregate.Restaurant
 import com.munchies.restaurant.domain.repository.RestaurantRepository
-import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
 import com.munchies.restaurant.domain.valueobject.menu.Validity
 import com.munchies.restaurant.domain.valueobject.menu.Validity.Period
