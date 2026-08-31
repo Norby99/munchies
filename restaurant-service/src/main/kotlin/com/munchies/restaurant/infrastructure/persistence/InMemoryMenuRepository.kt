@@ -9,7 +9,7 @@ import io.micronaut.context.annotation.Requires
 import jakarta.inject.Singleton
 
 @Singleton
-@Requires(env = ["test"])
+@Requires(notEnv = ["prod"])
 class InMemoryMenuRepository : MenuRepository, InMemoryRepository<MenuId, Menu>() {
   override fun findByIdAndRestaurantId(id: MenuId, restaurantId: RestaurantId): Menu? =
     findById(id)?.takeIf { it.restaurantId == restaurantId }
