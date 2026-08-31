@@ -34,7 +34,7 @@ class RemoveMenuTest {
     deleteMenuUseCase = DeleteMenuUseCase(menuRepository, restaurantRepository)
   }
 
-  private fun ownerOf(menu: Menu): Restaurant = Restaurant.create(
+  private fun aRestaurant(): Restaurant = Restaurant.create(
     managerId = UserId(),
     name = RestaurantName.of("Trattoria da Piero"),
     address = Address.of("Via Roma 1, Milano"),
@@ -51,7 +51,7 @@ class RemoveMenuTest {
         validity = Validity.always,
       ),
     )
-    val restaurant = ownerOf(menu)
+    val restaurant = aRestaurant()
     val command = DeleteMenuCommand(
       menu.restaurantId.value,
       menu.id.value,
@@ -93,7 +93,7 @@ class RemoveMenuTest {
         validity = Validity.always,
       ),
     )
-    val restaurant = ownerOf(menu)
+    val restaurant = aRestaurant()
     val command = DeleteMenuCommand(menu.restaurantId.value, menu.id.value, UserId().value)
 
     coEvery { menuRepository.findByIdAndRestaurantId(any(), any()) } returns menu

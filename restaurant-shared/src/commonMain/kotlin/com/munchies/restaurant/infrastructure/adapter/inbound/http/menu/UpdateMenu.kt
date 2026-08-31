@@ -21,8 +21,7 @@ class UpdateMenuRequest(
   val validity: Array<ValidityDto>,
 ) : AuthenticatedRequest<UpdateMenuRequest>, JsonEncodable() {
   override fun toJson(): String = wireJson.encodeToString(this)
-  override fun addId(userId: String): UpdateMenuRequest =
-    UpdateMenuRequest(userId, name, validity)
+  override fun addId(userId: String): UpdateMenuRequest = UpdateMenuRequest(userId, name, validity)
 }
 
 @JsExport
