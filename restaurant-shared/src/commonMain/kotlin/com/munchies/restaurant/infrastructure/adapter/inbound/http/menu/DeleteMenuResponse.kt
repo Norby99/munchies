@@ -26,7 +26,7 @@ fun deleteMenuRequestFromJson(json: String): DeleteMenuRequest = Json.decodeFrom
 @JsExport
 @Serializable
 @SerialName("DeleteMenuResponse")
-open class DeleteMenuResponse(
+class DeleteMenuResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {

@@ -31,7 +31,7 @@ fun createRestaurantRequestFromJson(json: String): CreateRestaurantRequest =
 @JsExport
 @Serializable
 @SerialName("CreateRestaurantResponse")
-open class CreateRestaurantResponse(
+class CreateRestaurantResponse(
   override val result: String,
   override val code: Int = 201,
 ) : WebResponse<String>() {

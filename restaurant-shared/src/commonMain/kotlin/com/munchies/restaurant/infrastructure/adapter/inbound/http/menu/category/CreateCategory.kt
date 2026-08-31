@@ -27,7 +27,7 @@ fun createCategoryRequestFromJson(json: String): CreateCategoryRequest = Json.de
 @JsExport
 @Serializable
 @SerialName("CreateCategoryResponse")
-open class CreateCategoryResponse(
+class CreateCategoryResponse(
   override val result: CategoryDto,
   override val code: Int = 201,
 ) : WebResponse<CategoryDto>() {

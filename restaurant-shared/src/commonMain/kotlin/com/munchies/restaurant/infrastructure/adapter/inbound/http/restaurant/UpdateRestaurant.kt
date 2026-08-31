@@ -31,7 +31,7 @@ fun updateRestaurantRequestFromJson(json: String): UpdateRestaurantRequest =
 @JsExport
 @Serializable
 @SerialName("UpdateRestaurantResponse")
-open class UpdateRestaurantResponse(
+class UpdateRestaurantResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {

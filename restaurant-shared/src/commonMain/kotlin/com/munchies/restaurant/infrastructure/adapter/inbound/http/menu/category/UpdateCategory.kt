@@ -27,7 +27,7 @@ fun updateCategoryRequestFromJson(json: String): UpdateCategoryRequest = Json.de
 @JsExport
 @Serializable
 @SerialName("UpdateCategoryResponse")
-open class UpdateCategoryResponse(
+class UpdateCategoryResponse(
   override val result: CategoryDto,
   override val code: Int = 200,
 ) : WebResponse<CategoryDto>() {

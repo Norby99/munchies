@@ -29,7 +29,7 @@ fun updateMenuItemRequestFromJson(json: String): UpdateMenuItemRequest = Json.de
 @JsExport
 @Serializable
 @SerialName("UpdateMenuItemResponse")
-open class UpdateMenuItemResponse(
+class UpdateMenuItemResponse(
   override val result: MenuItemDto,
   override val code: Int = 200,
 ) : WebResponse<MenuItemDto>() {

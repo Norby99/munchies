@@ -13,7 +13,7 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("GetMenuResponse")
-open class GetMenuResponse(
+class GetMenuResponse(
   override val result: MenuDto,
   override val code: Int = 200,
 ) : WebResponse<MenuDto>() {
@@ -26,7 +26,7 @@ fun getMenuResponseFromJson(json: String): GetMenuResponse = Json.decodeFromStri
 @JsExport
 @Serializable
 @SerialName("GetRestaurantMenusResponse")
-open class GetRestaurantMenusResponse(
+class GetRestaurantMenusResponse(
   override val result: Array<MenuSummaryDto> = emptyArray(),
   override val code: Int = 200,
 ) : WebResponse<Array<MenuSummaryDto>>() {
