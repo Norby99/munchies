@@ -160,7 +160,7 @@ class UpdateRestaurantUseCase(
             email = Email.of(command.email),
           )
           restaurant.updateDetails(newDetails)
-          repository.save(restaurant)
+          repository.update(restaurant)
           UpdateRestaurantResult.Success(restaurantId = restaurant.id.value)
         }
       }
