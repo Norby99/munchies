@@ -3,6 +3,7 @@ package com.munchies.order.infrastructure.adapter.outbound.mongo.repository
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createDeliveryOrder
+import com.munchies.order.fixtures.createTakeawayOrder
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.context.ApplicationContext
@@ -62,6 +63,19 @@ class MongoOrderRepositoryIntegrationTest {
     val found = repository.findById(order.id)
 
     found shouldBe order
+  }
+
+  @Test
+  fun `findAll returns all saved orders`() {
+    val order1 = createDeliveryOrder()
+    val order2 = createTakeawayOrder()
+
+    repository.save(order1)
+    repository.save(order2)
+
+    val allOrders = repository.findAll()
+
+    allOrders shouldBe listOf(order1, order2)
   }
 
   @Test

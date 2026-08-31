@@ -42,6 +42,9 @@ module.exports = {
     GetOrderDetailsResponse: _outbound.response.GetOrderDetailsResponse,
     getOrderDetailsResponseFromJson: _outbound.response.getOrderDetailsResponseFromJson,
 
+    GetOrdersResponse: _outbound.response.GetOrdersResponse,
+    getOrdersResponseFromJson: _outbound.response.getOrdersResponseFromJson,
+
     PlaceOrderResponse: _outbound.response.PlaceOrderResponse,
     placeOrderResponseFromJson: _outbound.response.placeOrderResponseFromJson,
 

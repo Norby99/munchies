@@ -44,13 +44,12 @@ class GetOrdersUseCaseUnitTest {
   }
 
   @Test
-  fun `execute should return an empty list when repository cannot find orders`() {
+  fun `execute should return OrderNotFound when repository cannot find orders`() {
     every { repository.findAll() } returns emptyList()
 
     val result = useCase.execute(command)
 
-    result.shouldBeInstanceOf<GetOrders.Result.Success>()
-    result.orders shouldBeEqual emptyList<OrderDto>()
+    result.shouldBeInstanceOf<GetOrders.Result.Failure.OrderNotFound>()
   }
 
   @Test

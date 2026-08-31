@@ -29,4 +29,19 @@ class GetOrdersControllerUnitTest : BaseOrderController() {
     response.body().code shouldBe HttpStatus.OK.code
     response.body().result shouldBe realDto
   }
+
+  @Test
+  fun `returns 404 Not Found when not found`() {
+    every { getOrders.execute(any()) } returns
+      GetOrders.Result.Failure.OrderNotFound
+
+    val response = controller.getOrders(
+      restaurantId = defaultRestaurantId.value,
+      customerId = null,
+      orderStatus = null,
+    )
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+    response.body().code shouldBe HttpStatus.NOT_FOUND.code
+  }
 }

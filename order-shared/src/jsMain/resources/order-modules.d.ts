@@ -50,6 +50,10 @@ export type GetOrderDetailsResponse = com.munchies.order.infrastructure.adapter.
 export declare const GetOrderDetailsResponse: typeof com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse;
 export declare const getOrderDetailsResponseFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.response.getOrderDetailsResponseFromJson;
 
+export type GetOrdersResponse = com.munchies.order.infrastructure.adapter.outbound.response.GetOrdersResponse;
+export declare const GetOrdersResponse: typeof com.munchies.order.infrastructure.adapter.outbound.response.GetOrdersResponse;
+export declare const getOrdersResponseFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.response.getOrdersResponseFromJson;
+
 export type PlaceOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse;
 export declare const PlaceOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse;
 export declare const placeOrderResponseFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.response.placeOrderResponseFromJson;
