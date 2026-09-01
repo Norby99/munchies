@@ -3,9 +3,15 @@ package com.munchies.restaurant.bdd.application.menu
 import com.munchies.restaurant.application.MenuService
 import com.munchies.restaurant.application.usecase.menu.*
 import com.munchies.restaurant.domain.aggregate.Menu
-import com.munchies.restaurant.domain.valueobject.RestaurantId
+import com.munchies.restaurant.domain.aggregate.Restaurant
+import com.munchies.restaurant.domain.repository.RestaurantRepository
+import com.munchies.restaurant.domain.valueobject.UserId
 import com.munchies.restaurant.domain.valueobject.menu.Validity
 import com.munchies.restaurant.domain.valueobject.menu.Validity.Period
+import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.Phone
+import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -24,18 +30,29 @@ class MenuSteps @Inject constructor(
   private val context: MenuContext,
   private val service: MenuService,
   private val helper: MenuHelper,
+  private val restaurantRepository: RestaurantRepository,
 ) {
 
   @Given("a restaurant exists")
   fun restaurantExists() {
-    context.restaurantId = RestaurantId().value
+    val restaurant = Restaurant.create(
+      managerId = UserId(),
+      name = RestaurantName.of("Trattoria da Piero"),
+      address = Address.of("Via Roma 1, Milano"),
+      phone = Phone.of("+39 333 1234567"),
+      email = Email.of("piero@example.com"),
+    )
+    restaurantRepository.save(restaurant)
+    context.restaurantId = restaurant.id.value
+    context.managerId = restaurant.managerId.value
   }
 
   // --- Scenario: Create a new menu ---
 
   @When("I create a {string} menu valid from {word} to {word}")
   fun whenCreateMenu(name: String, start: String, end: String) {
-    context.lastResult = helper.createMenu(context.restaurantId, name, start, end)
+    context.lastResult =
+      helper.createMenu(context.restaurantId, context.managerId, name, start, end)
   }
 
   @Then("the menu should be created successfully")
@@ -55,7 +72,7 @@ class MenuSteps @Inject constructor(
 
   @Given("the restaurant has a {string} menu valid from {word} to {word}")
   fun givenRestaurantHasAMenuNamed(name: String, start: String, end: String) {
-    val result = helper.createMenu(context.restaurantId, name, start, end)
+    val result = helper.createMenu(context.restaurantId, context.managerId, name, start, end)
     check(result is CreateMenuResult.Success) { "Menu creation failed" }
     context.menuId = result.menu.id.value
   }
@@ -87,6 +104,7 @@ class MenuSteps @Inject constructor(
     val command = UpdateMenuCommand(
       restaurantId = context.restaurantId,
       menuId = context.menuId,
+      managerId = context.managerId,
       name = newName,
       validity = ValidityInput.Period(start, end),
     )
@@ -103,7 +121,7 @@ class MenuSteps @Inject constructor(
   @When("I remove the {string} menu")
   fun removeMenu(name: String) {
     checkMenuExistence(name)
-    val command = DeleteMenuCommand(context.restaurantId, context.menuId)
+    val command = DeleteMenuCommand(context.restaurantId, context.menuId, context.managerId)
     context.lastResult = runBlocking { service.deleteMenu(command) }
   }
 

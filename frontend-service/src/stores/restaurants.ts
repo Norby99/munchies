@@ -58,5 +58,27 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
     else items.value.push(restaurant)
   }
 
-  return { items, activeId, status, errorMessage, fetchMine, create, update, remove, setActive, cacheOne }
+  // Wipes this manager's data on logout — otherwise the next signed-in
+  // account (even on the same browser tab) would see the previous manager's
+  // restaurants until a fetch happens to overwrite them.
+  function reset(): void {
+    items.value = []
+    activeId.value = null
+    status.value = 'ready'
+    errorMessage.value = null
+  }
+
+  return {
+    items,
+    activeId,
+    status,
+    errorMessage,
+    fetchMine,
+    create,
+    update,
+    remove,
+    setActive,
+    cacheOne,
+    reset,
+  }
 })

@@ -5,7 +5,11 @@ import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
+import com.munchies.order.application.port.inbound.command.GetOrdersCommand
+import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
@@ -47,6 +51,7 @@ import jakarta.inject.Inject
 @SerdeImport(UpdateDeliveryOrderRequest::class)
 @SerdeImport(UpdateTakeawayOrderRequest::class)
 @SerdeImport(GetOrderDetailsResponse::class)
+@SerdeImport(GetOrdersResponse::class)
 @SerdeImport(PlaceOrderResponse::class)
 @SerdeImport(AdvanceOrderStatusResponse::class)
 @SerdeImport(DiscardOrderResponse::class)
@@ -69,6 +74,7 @@ class MicronautOrderController(
   private val services: OrderServices,
 ) :
   OrderAPI.GetOrderDetailsAPI<HttpResponse<GetOrderDetailsResponse>>,
+  OrderAPI.GetOrdersAPI<HttpResponse<GetOrdersResponse>>,
   OrderAPI.PlaceOrderAPI<HttpResponse<PlaceOrderResponse>>,
   OrderAPI.AdvanceOrderStatusAPI<HttpResponse<AdvanceOrderStatusResponse>>,
   OrderAPI.DiscardOrderAPI<HttpResponse<DiscardOrderResponse>>,
@@ -77,6 +83,7 @@ class MicronautOrderController(
   OrderAPI.UpdateTakeawayOrderInfoAPI<HttpResponse<UpdateTakeawayOrderResponse>> {
 
   private val getOrderDetails: GetOrderDetails = services.getOrderDetails
+  private val getOrders: GetOrders = services.getOrders
   private val placeOrder: PlaceOrder = services.placeOrder
   private val advanceOrderStatus: AdvanceOrderStatus = services.advanceOrderStatus
   private val discardOrder: DiscardOrder = services.discardOrder
@@ -112,6 +119,47 @@ class MicronautOrderController(
         ),
       )
       is GetOrderDetails.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
+    }
+  }
+
+  /**
+   * Handles `GET orders/?restaurantId={restaurantId}&customerId={customerId}&status={status}`.
+   *
+   * Translates the application-layer result into an HTTP response:
+   * - `200 OK` with a list of order DTOs if orders are found
+   * - `200 OK` with an empty list if no orders match the filters
+   *
+   * @param restaurantId Optional filter for restaurant identifier.
+   * @param customerId Optional filter for customer identifier.
+   * @param orderStatus Optional filter for order status.
+   * @return An HTTP response containing a list of order DTOs or an empty list.
+   */
+  @Get(OrderServiceConfig.GET_ORDERS_PATH)
+  @Operation(
+    summary = "Get orders with optional filters",
+    description = "Retrieves all orders filtered by customerId, restaurantId and order status.",
+  )
+  @ApiResponse(responseCode = "200", description = "Orders found")
+  override fun getOrders(
+    @QueryValue("restaurantId") restaurantId: String?,
+    @QueryValue("customerId") customerId: String?,
+    @QueryValue("status") orderStatus: String?,
+  ): HttpResponse<GetOrdersResponse> {
+    val command = GetOrdersCommand(
+      restaurantId = restaurantId?.let { RestaurantId(it) },
+      customerId = customerId?.let { CustomerId(it) },
+      orderStatus = orderStatus?.let { OrderStatus.valueOf(it) },
+    )
+
+    return when (val res = getOrders.execute(command)) {
+      is GetOrders.Result.Success -> HttpResponse.ok(
+        GetOrdersResponse(
+          result = res.orders,
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is GetOrders.Result.Failure.OrderNotFound ->
+        throw NotFoundException("No orders found matching the provided filters")
     }
   }
 

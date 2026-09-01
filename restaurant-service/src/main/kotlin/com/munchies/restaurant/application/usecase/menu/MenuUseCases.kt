@@ -4,15 +4,19 @@ import com.munchies.restaurant.application.UseCase
 import com.munchies.restaurant.domain.aggregate.Menu
 import com.munchies.restaurant.domain.aggregate.MenuId
 import com.munchies.restaurant.domain.repository.MenuRepository
+import com.munchies.restaurant.domain.repository.RestaurantRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.menu.MenuName
 import jakarta.inject.Singleton
 
 @Singleton
-data class MenuUseCases(val repository: MenuRepository) {
-  val create = CreateMenuUseCase(repository)
-  val update = UpdateMenuUseCase(repository)
-  val delete = DeleteMenuUseCase(repository)
+data class MenuUseCases(
+  val repository: MenuRepository,
+  val restaurantRepository: RestaurantRepository,
+) {
+  val create = CreateMenuUseCase(repository, restaurantRepository)
+  val update = UpdateMenuUseCase(repository, restaurantRepository)
+  val delete = DeleteMenuUseCase(repository, restaurantRepository)
   val getMenu = GetMenuUseCase(repository)
   val getRestaurantMenus = GetRestaurantMenusUseCase(repository)
 }
@@ -57,22 +61,32 @@ class GetRestaurantMenusUseCase(
 
 data class CreateMenuCommand(
   val restaurantId: String,
+  val managerId: String,
   val name: String,
   val validity: ValidityInput,
 )
 
 sealed interface CreateMenuResult {
   data class Success(val menu: Menu) : CreateMenuResult
+  data object RestaurantNotFound : CreateMenuResult
+  data object Unauthorized : CreateMenuResult
   data class InvalidMenu(val error: String) : CreateMenuResult
 }
 
 class CreateMenuUseCase(
   private val menuRepository: MenuRepository,
+  private val restaurantRepository: RestaurantRepository,
 ) : UseCase<CreateMenuCommand, CreateMenuResult> {
   override suspend operator fun invoke(command: CreateMenuCommand): CreateMenuResult {
+    val restaurant = restaurantRepository.findById(RestaurantId(command.restaurantId))
+      ?: return CreateMenuResult.RestaurantNotFound
+    if (restaurant.managerId.value != command.managerId) {
+      return CreateMenuResult.Unauthorized
+    }
+
     return runCatching {
       val menu = Menu.create(
-        restaurantId = RestaurantId(command.restaurantId),
+        restaurantId = restaurant.id,
         name = MenuName.of(command.name),
         validity = command.validity.toDomain(),
       )
@@ -85,6 +99,7 @@ class CreateMenuUseCase(
 data class UpdateMenuCommand(
   val restaurantId: String,
   val menuId: String,
+  val managerId: String,
   val name: String,
   val validity: ValidityInput,
 )
@@ -92,11 +107,13 @@ data class UpdateMenuCommand(
 sealed interface UpdateMenuResult {
   data class Success(val menu: Menu) : UpdateMenuResult
   data object MenuNotFound : UpdateMenuResult
+  data object Unauthorized : UpdateMenuResult
   data class InvalidMenu(val error: String) : UpdateMenuResult
 }
 
 class UpdateMenuUseCase(
   private val menuRepository: MenuRepository,
+  private val restaurantRepository: RestaurantRepository,
 ) : UseCase<UpdateMenuCommand, UpdateMenuResult> {
   override suspend operator fun invoke(command: UpdateMenuCommand): UpdateMenuResult {
     val menu = menuRepository.findByIdAndRestaurantId(
@@ -105,10 +122,15 @@ class UpdateMenuUseCase(
     )
       ?: return UpdateMenuResult.MenuNotFound
 
+    val restaurant = restaurantRepository.findById(menu.restaurantId)
+    if (restaurant == null || restaurant.managerId.value != command.managerId) {
+      return UpdateMenuResult.Unauthorized
+    }
+
     return runCatching {
       menu.updateName(MenuName.of(command.name))
       menu.updateValidity(command.validity.toDomain())
-      menuRepository.save(menu)
+      menuRepository.update(menu)
       UpdateMenuResult.Success(menu)
     }.getOrElse { UpdateMenuResult.InvalidMenu(it.message.orEmpty()) }
   }
@@ -117,16 +139,19 @@ class UpdateMenuUseCase(
 data class DeleteMenuCommand(
   val restaurantId: String,
   val menuId: String,
+  val managerId: String,
 )
 
 sealed interface DeleteMenuResult {
   data class Success(val menuId: String) : DeleteMenuResult
   data object MenuNotFound : DeleteMenuResult
+  data object Unauthorized : DeleteMenuResult
   data class InvalidMenu(val error: String) : DeleteMenuResult
 }
 
 class DeleteMenuUseCase(
   private val menuRepository: MenuRepository,
+  private val restaurantRepository: RestaurantRepository,
 ) : UseCase<DeleteMenuCommand, DeleteMenuResult> {
   override suspend operator fun invoke(command: DeleteMenuCommand): DeleteMenuResult {
     val menu = menuRepository.findByIdAndRestaurantId(
@@ -134,6 +159,11 @@ class DeleteMenuUseCase(
       RestaurantId(command.restaurantId),
     )
       ?: return DeleteMenuResult.MenuNotFound
+
+    val restaurant = restaurantRepository.findById(menu.restaurantId)
+    if (restaurant == null || restaurant.managerId.value != command.managerId) {
+      return DeleteMenuResult.Unauthorized
+    }
 
     return runCatching {
       menuRepository.delete(menu)

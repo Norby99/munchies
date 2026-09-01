@@ -10,6 +10,7 @@ import {
 } from "munchies-commons/kotlin/commons-modules";
 import {
   DeleteMenuAPI,
+  DeleteMenuRequest,
   DeleteMenuResponse,
 } from "munchies-restaurant-service-shared/kotlin/restaurant-modules";
 import { AuthedRequest } from "../../auth";
@@ -37,6 +38,7 @@ export class DeleteMenuRoute
   async deleteMenu(
     restaurantId: string,
     menuId: string,
+    req: DeleteMenuRequest,
   ): Promise<DeleteMenuResponse | ErrorResponse> {
     const uri = process.env.RESTAURANT_SERVICE_URL;
     if (!uri)
@@ -47,7 +49,7 @@ export class DeleteMenuRoute
     const response = request<DeleteMenuResponse>(
       fillPath(uri + this.path, restaurantId, menuId),
       this.method,
-      "",
+      req.toJson(),
       this.parseResponse,
       this.parseError,
     );
@@ -63,7 +65,14 @@ export class DeleteMenuRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        return this.deleteMenu(req.params.restaurantId, req.params.menuId);
+        const deleteReq: DeleteMenuRequest = this.parseRequest(
+          JSON.stringify({ managerId: req.user!!.id }),
+        );
+        return this.deleteMenu(
+          req.params.restaurantId,
+          req.params.menuId,
+          deleteReq,
+        );
       } catch (err: any) {
         return new ErrorResponse(
           "DeleteMenu forward: \n" + String(err),

@@ -37,6 +37,8 @@ function createRoute(
   switch (method.name) {
     case HttpMethod.POST.name:
       return app.post(convertRouteToExpress(path), ...handlers);
+    case HttpMethod.PUT.name:
+      return app.put(convertRouteToExpress(path), ...handlers);
     case HttpMethod.DELETE.name:
       return app.delete(convertRouteToExpress(path), ...handlers);
     case HttpMethod.PATCH.name:

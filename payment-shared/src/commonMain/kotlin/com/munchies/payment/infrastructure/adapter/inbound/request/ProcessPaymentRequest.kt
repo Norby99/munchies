@@ -1,5 +1,6 @@
 package com.munchies.payment.infrastructure.adapter.inbound.request
 
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.payment.infrastructure.adapter.dto.PaymentDetails
 import kotlin.js.JsExport
 import kotlinx.serialization.Serializable
@@ -12,7 +13,7 @@ data class ProcessPaymentRequest(
   val orderId: String,
   val paymentDetails: PaymentDetails,
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

@@ -45,12 +45,12 @@ class UpdateRestaurantTest {
 
     coEvery { restaurantRepository.findById(any()) } returns existing
     coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
-    coEvery { restaurantRepository.save(any()) } returns Unit
+    coEvery { restaurantRepository.update(any()) } returns Unit
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.Success -> {
         assertEquals(existing.id.value, result.restaurantId)
-        coVerify(exactly = 1) { restaurantRepository.save(any()) }
+        coVerify(exactly = 1) { restaurantRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected Success, but got $result" }
@@ -65,7 +65,7 @@ class UpdateRestaurantTest {
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.NotFound -> {
-        coVerify(exactly = 0) { restaurantRepository.save(any()) }
+        coVerify(exactly = 0) { restaurantRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected NotFound, but got $result" }
@@ -90,7 +90,7 @@ class UpdateRestaurantTest {
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.Unauthorized -> {
-        coVerify(exactly = 0) { restaurantRepository.save(any()) }
+        coVerify(exactly = 0) { restaurantRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected Unauthorized, but got $result" }
@@ -131,7 +131,7 @@ class UpdateRestaurantTest {
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.NameAlreadyExists -> {
-        coVerify(exactly = 0) { restaurantRepository.save(any()) }
+        coVerify(exactly = 0) { restaurantRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected NameAlreadyExists, but got $result" }
@@ -153,12 +153,12 @@ class UpdateRestaurantTest {
 
     coEvery { restaurantRepository.findById(any()) } returns existing
     coEvery { restaurantRepository.findAllByManagerId(any()) } returns listOf(existing)
-    coEvery { restaurantRepository.save(any()) } returns Unit
+    coEvery { restaurantRepository.update(any()) } returns Unit
 
     when (val result = updateRestaurantUseCase(command)) {
       is UpdateRestaurantResult.Success -> {
         assertEquals(existing.id.value, result.restaurantId)
-        coVerify(exactly = 1) { restaurantRepository.save(any()) }
+        coVerify(exactly = 1) { restaurantRepository.update(any()) }
       }
       else -> {
         assert(false) { "Expected Success, but got $result" }

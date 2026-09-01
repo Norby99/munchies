@@ -3,6 +3,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant
 import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.restaurant.infrastructure.adapter.dto.RestaurantDto
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -13,11 +14,11 @@ import kotlinx.serialization.json.Json
 @JsExport
 @Serializable
 @SerialName("GetRestaurantResponse")
-open class GetRestaurantResponse(
+class GetRestaurantResponse(
   override val result: RestaurantDto,
   override val code: Int = 200,
 ) : WebResponse<RestaurantDto>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -29,7 +30,7 @@ fun getRestaurantResponseFromJson(json: String): GetRestaurantResponse = Json.de
 data class GetManagerRestaurantsRequest(
   val managerId: String = "",
 ) : AuthenticatedRequest<GetManagerRestaurantsRequest>, JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): GetManagerRestaurantsRequest = copy(managerId = userId)
 }
 
@@ -40,11 +41,11 @@ fun getManagerRestaurantsRequestFromJson(json: String): GetManagerRestaurantsReq
 @JsExport
 @Serializable
 @SerialName("GetManagerRestaurantsResponse")
-open class GetManagerRestaurantsResponse(
+class GetManagerRestaurantsResponse(
   override val result: Array<RestaurantDto> = emptyArray(),
   override val code: Int = 200,
 ) : WebResponse<Array<RestaurantDto>>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

@@ -9,4 +9,12 @@ import com.munchies.order.domain.model.OrderId
  *
  * @see com.munchies.commons.Repository
  */
-interface OrderRepository : Repository<OrderId, Order>
+interface OrderRepository : Repository<OrderId, Order> {
+
+  /**
+   * Retrieves all orders from the repository.
+   *
+   * @return A list of all orders.
+   */
+  fun findAll(): List<Order>
+}

@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.outbound.mongo.repository
 
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.fixtures.createDeliveryOrder
+import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.infrastructure.adapter.outbound.mongo.factory.OrderDocumentFactory.toDocument
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
@@ -34,6 +35,23 @@ class MongoOrderRepositoryUnitTest {
     order shouldNotBe null
     order?.id?.shouldBeEqual(orderId) ?: fail()
     verify(crudOrderRepository).findById(orderId.value)
+  }
+
+  @Test
+  fun `mongo repository correctly return all orders`() {
+    val orders = listOf(createDeliveryOrder(), createTakeawayOrder())
+    val orderDocuments = orders.map { it.toDocument() }
+
+    val crudOrderRepository = mock<MongoCrudOrderRepository> {
+      on { findAll() } doReturn orderDocuments
+    }
+
+    val mongoOrderRepository = MongoOrderRepository(crudOrderRepository)
+
+    val result = mongoOrderRepository.findAll()
+
+    result shouldNotBe null
+    result.shouldBeEqual(orders)
   }
 
   @Test

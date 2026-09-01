@@ -1,9 +1,9 @@
 package com.munchies.restaurant.infrastructure.adapter.dto
 
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 @JsExport
 @Serializable
@@ -11,16 +11,16 @@ class VariationOptionDto(
   val name: String,
   val additionalPrice: String,
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
 @Serializable
 class VariationDto(
   val name: String,
-  val options: Array<VariationOptionDto>,
+  val options: Array<VariationOptionDto> = emptyArray(),
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -29,7 +29,7 @@ class MenuSummaryDto(
   val id: String,
   val name: String,
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -41,7 +41,7 @@ class MenuItemDto(
   val price: String,
   val variations: Array<VariationDto> = emptyArray(),
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -49,10 +49,10 @@ class MenuItemDto(
 class CategoryDto(
   val id: String,
   val name: String,
-  val items: Array<MenuItemDto>,
+  val items: Array<MenuItemDto> = emptyArray(),
   val variations: Array<VariationDto> = emptyArray(),
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -63,5 +63,5 @@ class MenuDto(
   val categories: Array<CategoryDto> = emptyArray(),
   val validity: Array<ValidityDto> = emptyArray(),
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }

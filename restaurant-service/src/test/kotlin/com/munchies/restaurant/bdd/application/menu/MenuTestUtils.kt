@@ -14,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 @Singleton
 class MenuContext {
   lateinit var restaurantId: String
+  lateinit var managerId: String
   lateinit var menuId: String
   lateinit var categoryId: String
   lateinit var itemId: String
@@ -22,9 +23,16 @@ class MenuContext {
 
 @Singleton
 class MenuHelper @Inject constructor(private val service: MenuService) {
-  fun createMenu(restaurantId: String, name: String, start: String, end: String): CreateMenuResult {
+  fun createMenu(
+    restaurantId: String,
+    managerId: String,
+    name: String,
+    start: String,
+    end: String,
+  ): CreateMenuResult {
     val command = CreateMenuCommand(
       restaurantId = restaurantId,
+      managerId = managerId,
       name = name,
       validity = ValidityInput.Period(start, end),
     )

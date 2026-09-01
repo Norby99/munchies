@@ -18,7 +18,7 @@ snakeyaml = "2.6"
 dokka = "2.2.0"
 node = "7.1.0"
 docker = "9.4.0"
-compose = "0.17.21"
+compose = "0.17.12"
 kotlinx-serialization = "1.6.3"
 mockk = "1.13.17"
 cucumber = "7.34.7"
@@ -63,10 +63,13 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
 cucumber-junit = { module = "io.cucumber:cucumber-junit", version.ref = "cucumber" }
 cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+cucumber-picocontainer = { module = "io.cucumber:cucumber-picocontainer", version.ref = "cucumber" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
+junit-platform-suite-engine = { module = "org.junit.platform:junit-platform-suite-engine", version.ref = "junit-platform" }
+junit-platform-suite-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "java-jwt" }
 micronaut-test-junit5 = { module = "io.micronaut.test:micronaut-test-junit5", version.ref = "micronaut-test" }
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
@@ -84,7 +87,8 @@ junit = [
 cucumber = [
     "cucumber-java",
     "cucumber-junit",
-    "cucumber-junit-platform-engine"
+    "cucumber-junit-platform-engine",
+    "cucumber-picocontainer"
 ]
 
 micronaut-serialization = [

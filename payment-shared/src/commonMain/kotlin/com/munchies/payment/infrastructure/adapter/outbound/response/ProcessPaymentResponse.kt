@@ -1,5 +1,6 @@
 package com.munchies.payment.infrastructure.adapter.outbound.response
 
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.payment.infrastructure.adapter.dto.Currency
 import com.munchies.payment.infrastructure.adapter.dto.PaymentStatus
 import kotlin.js.JsExport
@@ -15,7 +16,7 @@ data class ProcessPaymentResponse(
   val amount: Int,
   val currency: Currency,
 ) {
-  fun toJson(): String = Json.encodeToString(this)
+  fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

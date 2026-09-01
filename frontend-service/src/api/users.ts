@@ -12,7 +12,9 @@ export async function getProfile(): Promise<User> {
   return unwrap(http.get(BASE))
 }
 
-export async function updateProfile(user: { username: string; email: string; role: Role }): Promise<string> {
+export async function updateProfile(
+  user: { username: string; email: string; role: Role; isEmailVerified: boolean },
+): Promise<string> {
   return unwrap(http.patch(BASE + 'update-info/', { user: { id: '', ...user } }))
 }
 

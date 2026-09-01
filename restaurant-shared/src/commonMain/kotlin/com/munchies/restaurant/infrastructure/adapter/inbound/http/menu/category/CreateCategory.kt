@@ -2,6 +2,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.categor
 
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.restaurant.infrastructure.adapter.dto.CategoryDto
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
 import kotlin.js.JsExport
@@ -17,7 +18,7 @@ data class CreateCategoryRequest(
   val name: String,
   val variations: Array<VariationDto> = emptyArray(),
 ) : JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -26,11 +27,11 @@ fun createCategoryRequestFromJson(json: String): CreateCategoryRequest = Json.de
 @JsExport
 @Serializable
 @SerialName("CreateCategoryResponse")
-open class CreateCategoryResponse(
+class CreateCategoryResponse(
   override val result: CategoryDto,
   override val code: Int = 201,
 ) : WebResponse<CategoryDto>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

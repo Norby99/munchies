@@ -31,6 +31,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
     "restaurant",
     "scheduler",
     "munchies",
+    "e2e-test",
   )
   val stringExpressProjects = listOf(
     "payment",
@@ -55,7 +56,6 @@ fun Project.getProjectLanguage(): ProjectLanguage {
 enum class ProjectType {
   SERVICE,
   SHARED,
-  CLIENT,
   UTILS,
 }
 
@@ -63,12 +63,12 @@ fun Project.getProjectType(): ProjectType {
   val exlcuded = listOf(
     "commons",
     "architecture-rules",
+    "e2e-test",
   )
 
   return when {
     name.endsWith("-service") -> ProjectType.SERVICE
     name.endsWith("-shared") -> ProjectType.SHARED
-    name.endsWith("-client") -> ProjectType.CLIENT
     name in exlcuded -> ProjectType.UTILS
     else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
   }

@@ -3,6 +3,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant
 import com.munchies.commons.infrastructure.adapter.AuthenticatedRequest
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,7 +16,7 @@ import kotlinx.serialization.json.Json
 data class DeleteRestaurantRequest(
   val managerId: String = "",
 ) : AuthenticatedRequest<DeleteRestaurantRequest>, JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): DeleteRestaurantRequest = copy(managerId = userId)
 }
 
@@ -26,11 +27,11 @@ fun deleteRestaurantRequestFromJson(json: String): DeleteRestaurantRequest =
 @JsExport
 @Serializable
 @SerialName("DeleteRestaurantResponse")
-open class DeleteRestaurantResponse(
+class DeleteRestaurantResponse(
   override val result: String,
   override val code: Int = 200,
 ) : WebResponse<String>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport

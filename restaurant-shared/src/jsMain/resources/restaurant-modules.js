@@ -71,6 +71,8 @@ module.exports = {
   UpdateMenuResponse: _httpMenu.UpdateMenuResponse,
   updateMenuResponseFromJson: _httpMenu.updateMenuResponseFromJson,
 
+  DeleteMenuRequest: _httpMenu.DeleteMenuRequest,
+  deleteMenuRequestFromJson: _httpMenu.deleteMenuRequestFromJson,
   DeleteMenuResponse: _httpMenu.DeleteMenuResponse,
   deleteMenuResponseFromJson: _httpMenu.deleteMenuResponseFromJson,
 

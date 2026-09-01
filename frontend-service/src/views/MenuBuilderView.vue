@@ -6,15 +6,17 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CategoryTree from '@/components/CategoryTree.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ItemInspector from '@/components/ItemInspector.vue'
 import MenuList from '@/components/MenuList.vue'
 import ValidityEditor from '@/components/ValidityEditor.vue'
 import * as restaurantsApi from '@/api/restaurants'
+import { ApiError } from '@/api/client'
 import { useMenusStore } from '@/stores/menus'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { isValid } from '@/utils/validity'
 import type { MenuItemInput } from '@/api/menus'
-import type { Validity } from '@/types'
+import type { Menu, Validity } from '@/types'
 
 const props = defineProps<{ restaurantId: string }>()
 
@@ -25,6 +27,11 @@ const router = useRouter()
 const restaurantName = ref('')
 const newMenuOpen = ref(false)
 const newMenuName = ref('')
+const deleteTarget = ref<Menu | null>(null)
+const deleteError = ref<string | null>(null)
+const addItemError = ref<string | null>(null)
+const saveItemError = ref<string | null>(null)
+const validityEditorRef = ref<InstanceType<typeof ValidityEditor> | null>(null)
 
 const summaries = computed(() => menus.summaries[props.restaurantId] ?? [])
 const activeMenu = computed(() => (menus.activeMenuId ? menus.cache[menus.activeMenuId] ?? null : null))
@@ -56,6 +63,12 @@ onMounted(load)
 watch(() => props.restaurantId, load)
 
 async function selectMenu(menuId: string): Promise<void> {
+  // Flush against the *current* activeMenu before switching — validityEditorRef
+  // is still the editor for the menu we're leaving at this point. Waiting for
+  // it to unmount and flush from there would be one tick too late: by then
+  // menus.setActiveMenu() below has already moved activeMenu on, so
+  // saveValidity() would attribute the flushed edit to the *new* menu.
+  validityEditorRef.value?.flush()
   menus.setActiveMenu(menuId)
   await menus.fetchFull(props.restaurantId, menuId)
 }
@@ -68,29 +81,52 @@ async function createMenu(): Promise<void> {
   await selectMenu(menu.id)
 }
 
+async function confirmDeleteMenu(): Promise<void> {
+  if (!deleteTarget.value) return
+  deleteError.value = null
+  try {
+    await menus.deleteMenu(props.restaurantId, deleteTarget.value.id)
+    deleteTarget.value = null
+  } catch (err) {
+    deleteError.value = err instanceof ApiError ? err.message : 'Something went wrong.'
+  }
+}
+
 async function saveValidity(validity: Validity[]): Promise<void> {
   if (!activeMenu.value) return
   await menus.updateMenu(props.restaurantId, activeMenu.value.id, activeMenu.value.name, validity)
 }
 
-async function onAddItem(categoryId: string): Promise<void> {
+async function onAddItem(categoryId: string, input: MenuItemInput): Promise<void> {
   if (!activeMenu.value) return
-  await menus.createItem(props.restaurantId, activeMenu.value.id, categoryId, {
-    name: 'New item',
-    description: '',
-    price: '0.00',
-    variations: [],
-  })
-  const category = activeMenu.value.categories.find((c) => c.id === categoryId)
-  const created = category?.items[category.items.length - 1]
-  if (created) menus.setActiveItem(created.id)
+  addItemError.value = null
+  try {
+    await menus.createItem(props.restaurantId, activeMenu.value.id, categoryId, input)
+    const category = activeMenu.value.categories.find((c) => c.id === categoryId)
+    const created = category?.items[category.items.length - 1]
+    if (created) menus.setActiveItem(created.id)
+  } catch (err) {
+    addItemError.value = err instanceof ApiError ? err.message : 'Something went wrong.'
+  }
 }
 
 async function onSaveItem(input: MenuItemInput): Promise<void> {
   if (!activeMenu.value || !menus.activeItemId) return
   const category = activeMenu.value.categories.find((c) => c.items.some((i) => i.id === menus.activeItemId))
   if (!category) return
-  await menus.updateItem(props.restaurantId, activeMenu.value.id, category.id, menus.activeItemId, input)
+  saveItemError.value = null
+  try {
+    await menus.updateItem(props.restaurantId, activeMenu.value.id, category.id, menus.activeItemId, input)
+  } catch (err) {
+    saveItemError.value = err instanceof ApiError ? err.message : 'Something went wrong.'
+  }
+}
+
+async function onDeleteItem(): Promise<void> {
+  if (!activeMenu.value || !menus.activeItemId) return
+  const category = activeMenu.value.categories.find((c) => c.items.some((i) => i.id === menus.activeItemId))
+  if (!category) return
+  await menus.removeItem(props.restaurantId, activeMenu.value.id, category.id, menus.activeItemId)
 }
 
 const emptyCopy = {
@@ -115,7 +151,12 @@ const emptyCopy = {
       >
         All restaurants
       </button>
-      <button class="btn btn-primary" type="button" style="flex: none; white-space: nowrap" @click="newMenuOpen = true">
+      <button
+        class="btn btn-primary"
+        type="button"
+        style="flex: none; white-space: nowrap"
+        @click="newMenuOpen = true"
+      >
         New menu
       </button>
     </div>
@@ -147,9 +188,19 @@ const emptyCopy = {
             >
               {{ isValid(activeMenu.validity) ? 'Available now' : 'Closed now' }}
             </span>
+            <button
+              class="btn btn-ghost"
+              type="button"
+              style="flex: none; white-space: nowrap; margin-left: auto"
+              @click="deleteTarget = activeMenu"
+            >
+              Delete menu
+            </button>
           </div>
 
           <ValidityEditor
+            ref="validityEditorRef"
+            :key="activeMenu.id"
             :model-value="activeMenu.validity"
             @update:model-value="saveValidity"
           />
@@ -162,9 +213,11 @@ const emptyCopy = {
             :categories="activeMenu.categories"
             :expanded="menus.expandedCategories"
             :active-item-id="menus.activeItemId"
+            :add-item-error="addItemError"
             @toggle="menus.toggleCategory"
             @select-item="menus.setActiveItem"
             @add-item="onAddItem"
+            @clear-add-item-error="addItemError = null"
             @delete-category="(categoryId) => menus.deleteCategory(props.restaurantId, activeMenu!.id, categoryId)"
             @add-category="
               (input) => menus.createCategory(props.restaurantId, activeMenu!.id, input.name, input.variations)
@@ -179,10 +232,32 @@ const emptyCopy = {
       </div>
 
       <div class="menu-builder__inspector">
-        <ItemInspector v-if="activeItem" :item="activeItem" @save="onSaveItem" />
+        <ItemInspector
+          v-if="activeItem"
+          :item="activeItem"
+          :save-error="saveItemError"
+          @save="onSaveItem"
+          @delete="onDeleteItem"
+          @clear-save-error="saveItemError = null"
+        />
         <p v-else class="text-muted" style="font-size: 13px">Select an item to edit it.</p>
       </div>
     </div>
+
+    <ConfirmDialog
+      :open="deleteTarget !== null"
+      title="Delete this menu?"
+      :body="deleteError ?? `${deleteTarget?.name ?? ''} and its categories will be removed permanently.`"
+      confirm-label="Delete permanently"
+      cancel-label="Keep menu"
+      @cancel="
+        () => {
+          deleteTarget = null
+          deleteError = null
+        }
+      "
+      @confirm="confirmDeleteMenu"
+    />
   </div>
 </template>
 

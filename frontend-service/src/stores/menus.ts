@@ -130,8 +130,20 @@ export const useMenusStore = defineStore('menus', () => {
     activeItemId.value = null
   }
 
-  function setActiveItem(itemId: string): void {
+  function setActiveItem(itemId: string | null): void {
     activeItemId.value = itemId
+  }
+
+  // Wipes this manager's cached menus on logout — otherwise the next
+  // signed-in account would still see (and could still edit) the previous
+  // manager's menus until every view happened to re-fetch them.
+  function reset(): void {
+    summaries.value = {}
+    cache.value = {}
+    activeMenuId.value = null
+    activeItemId.value = null
+    expandedCategories.clear()
+    status.value = 'ready'
   }
 
   return {
@@ -155,5 +167,6 @@ export const useMenusStore = defineStore('menus', () => {
     removeItem,
     setActiveMenu,
     setActiveItem,
+    reset,
   }
 })

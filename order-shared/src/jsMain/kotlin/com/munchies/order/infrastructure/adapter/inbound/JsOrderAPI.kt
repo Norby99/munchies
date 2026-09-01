@@ -18,6 +18,7 @@ abstract class JsGetOrderDetailsAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetOrderDetailsResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.GET_ORDER_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -26,6 +27,29 @@ abstract class JsGetOrderDetailsAPI<E : WebResponse<Any>> :
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
   override fun parseResponse(json: String): GetOrderDetailsResponse =
     getOrderDetailsResponseFromJson(json)
+
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+}
+
+@JsExport
+abstract class JsGetOrdersAPI<E : WebResponse<Any>> :
+  OrderAPI.GetOrdersAPI<Promise<E>>,
+  SimpleAPI<Nothing, GetOrdersResponse>() {
+  override fun getPath(): String =
+    OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.GET_ORDER_PATH
+
+  override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
+  abstract override fun getOrders(
+    restaurantId: String?,
+    customerId: String?,
+    orderStatus: String?,
+  ): Promise<E>
+
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+  override fun parseResponse(json: String): GetOrdersResponse = getOrdersResponseFromJson(json)
+
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }
 
@@ -35,6 +59,7 @@ abstract class JsPlaceOrderAPI<E : WebResponse<Any>> :
   SimpleAPI<PlaceOrderRequest, PlaceOrderResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.PLACE_ORDER_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -51,6 +76,7 @@ abstract class JsAdvanceOrderStatusAPI<E : WebResponse<Any>> :
   SimpleAPI<AdvanceOrderStatusRequest, AdvanceOrderStatusResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.ADVANCE_ORDER_STATUS_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.POST
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -60,8 +86,10 @@ abstract class JsAdvanceOrderStatusAPI<E : WebResponse<Any>> :
     advanceOrderStatusRequestFromJson(
       json,
     )
+
   override fun parseResponse(json: String): AdvanceOrderStatusResponse =
     advanceOrderStatusResponseFromJson(json)
+
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }
 
@@ -71,6 +99,7 @@ abstract class JsDiscardOrderAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, DiscardOrderResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.DISCARD_ORDER_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -79,6 +108,7 @@ abstract class JsDiscardOrderAPI<E : WebResponse<Any>> :
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
   override fun parseResponse(json: String): DiscardOrderResponse =
     discardOrderResponseFromJson(json)
+
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }
 
@@ -88,6 +118,7 @@ abstract class JsUpdateOrderItemsAPI<E : WebResponse<Any>> :
   SimpleAPI<UpdateOrderItemsRequest, UpdateOrderItemsResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -97,8 +128,10 @@ abstract class JsUpdateOrderItemsAPI<E : WebResponse<Any>> :
     updateOrderItemsRequestFromJson(
       json,
     )
+
   override fun parseResponse(json: String): UpdateOrderItemsResponse =
     updateOrderItemsResponseFromJson(json)
+
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }
 
@@ -108,6 +141,7 @@ abstract class JsUpdateDeliveryOrderInfoAPI<E : WebResponse<Any>> :
   SimpleAPI<UpdateDeliveryOrderRequest, UpdateDeliveryOrderResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.UPDATE_DELIVERY_ORDER_INFO_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -117,8 +151,10 @@ abstract class JsUpdateDeliveryOrderInfoAPI<E : WebResponse<Any>> :
     updateDeliveryOrderRequestFromJson(
       json,
     )
+
   override fun parseResponse(json: String): UpdateDeliveryOrderResponse =
     updateDeliveryOrderResponseFromJson(json)
+
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }
 
@@ -128,6 +164,7 @@ abstract class JsUpdateTakeawayOrderInfoAPI<E : WebResponse<Any>> :
   SimpleAPI<UpdateTakeawayOrderRequest, UpdateTakeawayOrderResponse>() {
   override fun getPath(): String =
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.UPDATE_TAKEAWAY_ORDER_INFO_PATH
+
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
@@ -137,7 +174,9 @@ abstract class JsUpdateTakeawayOrderInfoAPI<E : WebResponse<Any>> :
     updateTakeawayOrderRequestFromJson(
       json,
     )
+
   override fun parseResponse(json: String): UpdateTakeawayOrderResponse =
     updateTakeawayOrderResponseFromJson(json)
+
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
 }

@@ -2,6 +2,7 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.menu.menuite
 
 import com.munchies.commons.infrastructure.adapter.JsonEncodable
 import com.munchies.commons.infrastructure.adapter.WebResponse
+import com.munchies.commons.infrastructure.adapter.wireJson
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
@@ -18,7 +19,7 @@ data class CreateMenuItemRequest(
   val price: String,
   val variations: Array<VariationDto> = emptyArray(),
 ) : JsonEncodable() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
@@ -27,11 +28,11 @@ fun createMenuItemRequestFromJson(json: String): CreateMenuItemRequest = Json.de
 @JsExport
 @Serializable
 @SerialName("CreateMenuItemResponse")
-open class CreateMenuItemResponse(
+class CreateMenuItemResponse(
   override val result: String,
   override val code: Int = 201,
 ) : WebResponse<String>() {
-  override fun toJson(): String = Json.encodeToString(this)
+  override fun toJson(): String = wireJson.encodeToString(this)
 }
 
 @JsExport
