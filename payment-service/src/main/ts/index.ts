@@ -57,6 +57,10 @@ async function main(): Promise<void> {
   const app = express();
   app.use(express.json());
 
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "UP" });
+  });
+
   const controller = new PaymentController();
 
   app.post("/payments", (req, res) => {
