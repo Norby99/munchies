@@ -14,6 +14,16 @@ x-kafka-dependency: &kafka-dependency
 x-kafka-env: &kafka-env
   KAFKA_BOOTSTRAP_SERVERS: munchies-kafka:9092
 
+# Liveness check against the Micronaut management `/health` endpoint
+# (enabled + non-sensitive in each service's application.yml).
+# `curl` ships with the eclipse-temurin:21-jre base image.
+x-micronaut-healthcheck: &micronaut-healthcheck
+  test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:8080/health" ]
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 20s
+
 services:
   order-service:
     <<: *service-common
@@ -29,6 +39,7 @@ services:
     environment:
       <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-mongo-order-service:27017/order-service
+    healthcheck: *micronaut-healthcheck
 
   user-service:
     <<: *service-common
@@ -47,6 +58,7 @@ services:
       GATEWAY_SERVICE_URL: http://gateway-service:8080
       PAYMENT_SERVICE_URL: http://payment-service:8080
       MONGODB_URI: mongodb://munchies-mongo-user-service:27017/user-service
+    healthcheck: *micronaut-healthcheck
 
   payment-service:
     <<: *service-common
@@ -108,6 +120,7 @@ services:
     environment:
       <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-mongo-restaurant-service:27017/restaurant-service
+    healthcheck: *micronaut-healthcheck
 
   gateway-service:
     <<: *service-common
@@ -120,6 +133,12 @@ services:
       <<: *kafka-dependency
       munchies-mongo-gateway-service:
         condition: service_healthy
+      user-service:
+        condition: service_healthy
+      restaurant-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
       JWT_SECRET: blastimus_prime
@@ -127,3 +146,10 @@ services:
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
       ORDER_SERVICE_URL: http://order-service:8080
       MONGODB_URI: mongodb://munchies-mongo-gateway-service:27017/gateway-service
+    healthcheck:
+      # node:*-alpine base image ships busybox wget, not curl
+      test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
