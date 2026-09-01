@@ -6,6 +6,11 @@ async function main(): Promise<void> {
   const app = express();
   app.use(express.raw({ type: "application/json", limit: '1mb'}));
   app.use(cookieParser());
+
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "UP" });
+  });
+
   applyRoutes(app);
 
   const PORT = process.env.PORT ?? 8080;

@@ -6,3 +6,8 @@ micronaut:
   serde:
     serialization:
       inclusion: ALWAYS
+
+endpoints:
+  health:
+    enabled: true
+    sensitive: false
