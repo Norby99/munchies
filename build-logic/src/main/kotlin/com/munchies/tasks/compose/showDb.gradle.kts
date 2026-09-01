@@ -13,7 +13,9 @@ tasks.register<DockerExecContainer>("composeShowDb") {
 
   val serviceNameProvider = project.provider {
     project.findProperty("service") as? String
-      ?: throw GradleException("You must specify a service: ./gradlew composeShowDb -Pservice=<name>")
+      ?: throw GradleException(
+        "You must specify a service: ./gradlew composeShowDb -Pservice=<name>",
+      )
   }
 
   targetContainerId(serviceNameProvider.map { "munchies-mongo-$it" })
@@ -28,6 +30,6 @@ tasks.register<DockerExecContainer>("composeShowDb") {
           "db.getSiblingDB('$serviceName').getCollectionNames().forEach(c => print(' - ' + c))"
       }
       arrayOf("mongosh", "--quiet", "--eval", mongoScript)
-    }
+    },
   )
 }
