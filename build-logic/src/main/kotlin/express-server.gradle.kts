@@ -24,7 +24,7 @@ node {
   npmVersion.set(nodePackageVersion)
 }
 
-val serviceName = getServiceName(project.parent!!)
+val serviceName = getServiceName(project)
 
 afterEvaluate {
   val input = project.configurations["jsImplementation"]
