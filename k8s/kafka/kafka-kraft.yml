@@ -46,6 +46,8 @@ spec:
               value: "1"
             - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
               value: "1"
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
             - name: KAFKA_LOG_DIRS
               value: "/var/lib/kafka/data"
           volumeMounts:
