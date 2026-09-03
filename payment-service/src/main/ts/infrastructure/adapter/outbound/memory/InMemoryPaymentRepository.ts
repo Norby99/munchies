@@ -1,12 +1,21 @@
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import { PaymentRepository } from "@main/domain/port/payment-repository";
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 
 export class InMemoryPaymentRepository implements PaymentRepository {
   private map: Map<string, Payment> = new Map();
 
   findById(id: PaymentId): Promise<Payment | null> {
     const payment = this.map.get(id.value) ?? null;
+    return Promise.resolve(payment);
+  }
+
+  findByOrderId(orderId: UUIDEntityId): Promise<Payment | null> {
+    const payment =
+      Array.from(this.map.values()).find(
+        (p) => p.orderId.stringValue() === orderId.stringValue()
+      ) ?? null;
     return Promise.resolve(payment);
   }
 
