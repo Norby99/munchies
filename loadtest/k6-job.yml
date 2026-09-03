@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-load
+  namespace: loadtest
+spec:
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: k6-load
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: k6
+          image: grafana/k6:latest # pin a version (e.g. grafana/k6:0.55.0) for reproducible runs
+          args: ["run", "--summary-trend-stats", "avg,min,med,p(90),p(95),p(99),max", "/scripts/test.js"]
+          env:
+            - name: TARGET_URL
+              value: "http://gateway-service.gateway-service.svc.cluster.local:8080/health"
+            - name: PEAK_VUS
+              value: "150"
+            - name: SUSTAIN
+              value: "3m"
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+            limits:
+              cpu: "1"
+              memory: "256Mi"
+      volumes:
+        - name: script
+          configMap:
+            name: k6-script
