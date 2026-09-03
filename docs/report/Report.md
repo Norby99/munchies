@@ -4,7 +4,6 @@
 **Repository link:** [https://github.com/Norby99/munchies](https://github.com/Norby99/munchies)
 
 ## 1. Introduzione
-[Descrivi in 2-3 paragrafi l'obiettivo del progetto e il dominio applicativo. Se il progetto è stato sviluppato in sinergia con altri corsi o per una tesi, specificalo qui spiegando come i requisiti si sono integrati.]
 
 Il presente documento descrive la progettazione, l'architettura e le pratiche di sviluppo di una piattaforma distribuita per la gestione degli ordini alimentari e delle prenotazioni nei ristoranti. Il progetto nasce con l'obiettivo di applicare in un contesto realistico le metodologie avanzate di *Software Project Engineering*, focalizzandosi in modo particolare sul Domain-Driven Design, sull'automazione dei processi DevOps e sulla realizzazione di un'architettura multi-target scalabile.
 
@@ -21,6 +20,20 @@ Per supportare l'indipendenza di questi domini e garantire elevati standard di m
 * **Branching Model:** [es. GitFlow, GitHub Flow, Trunk-based development]
 * **Issue Tracking e PR:** [Come avete gestito le task board, le code review e la tracciabilità delle modifiche]
 
+### 2.1 Branching Model
+
+Per coordinare lo sviluppo parallelo e garantire la massima stabilità della codebase, abbiamo adottato GitFlow come branching model, affiancato da rigide policy di repository su GitHub.Protezione dei Branch Principali:
+- Sui branch **master** e **develop** è configurato il divieto assoluto di force push per prevenire alterazioni distruttive della cronologia.
+- Pull Request e Merge Strategy: Qualsiasi immissione di codice verso master o develop richiede obbligatoriamente l'apertura di una Pull Request. Per preservare una commit history lineare e pulita, la strategia di merge è forzata esclusivamente sul Rebase and Merge.
+- Status Check Bloccanti: Il merge di una PR è interdetto finché non vengono superati con successo tutti i controlli automatici eseguiti da GitHub Actions (fasi di build, test e code quality).
+- Gestione Proattiva dei Conflitti: Prima di poter unire una feature branch in develop, la branch stessa deve risultare strettamente allineata con l'ultimo stato di develop. Questo vincolo delega la responsabilità della risoluzione degli eventuali merge conflict al singolo sviluppatore, che deve aggiornare e ribasare localmente il proprio codice prima di finalizzare la Pull Request.
+
+### 2.2 Issue Tracking e Segnalazione Bug
+
+Per standardizzare la raccolta delle anomalie e facilitarne la riproduzione, abbiamo implementato degli *Issue Template*. Il modulo dedicato ai bug report obbliga la compilazione di campi essenziali per il debugging, richiedendo i dettagli dell'azione utente (comportamento atteso vs reale), gli eventuali log applicativi e l'ambiente di esecuzione. Inoltre, impone una classificazione esplicita della gravità (da *Critical* a *Cosmetic/Trivial*), permettendo team di valutare immediatamente l'impatto del bug sull'applicazione e stabilire un ordine di priorità chiaro per le correzioni.
+
+###### Non so se ha senso mettere che abbiamo usato la roba di github project per tenere traccia delle robe fatte.
+
 ## 3. Domain-Driven Design (DDD)
 [Questa è una delle sezioni a cui il corso tiene di più. Mostra come il codice riflette il dominio reale.]
 * **Ubiquitous Language:** [Breve glossario dei termini chiave usati sia nel dominio che nel codice]
@@ -32,6 +45,16 @@ Per supportare l'indipendenza di questi domini e garantire elevati standard di m
 * **Piattaforma 1 (es. Backend JVM/Kotlin):** [Descrizione, ruolo e build system (es. Gradle)]
 * **Piattaforma 2 (es. Frontend NodeJS o Core in Rust/C++):** [Descrizione, ruolo e build system (es. npm/Cargo)]
 * **Integrazione:** [Spiega come i due target comunicano tra loro (es. API REST, gRPC, FFI)]
+
+- frontend
+- gateway
+- notification
+- order
+- payment
+- restaurant
+- scheduler
+- table
+- user
 
 ## 5. Pratiche DevOps e Continuous Integration
 [Descrivi la "Full-scale automation" che avete implementato tramite GitHub Actions, GitLab CI, ecc.]
@@ -76,7 +99,10 @@ L'intero ciclo di rilascio locale è stato mascherato e automatizzato dietro a t
 Allo stesso modo, il comando `./gradlew composeDown` si occupa dello smantellamento pulito dell'ambiente.
 
 ### 6.3 Verso l'Ambiente di Produzione (Kubernetes)
-Sebbene Docker Compose fornisca un'automazione eccellente per il testing e lo sviluppo, la topologia di rilascio definitiva (attualmente in fase di sviluppo) prevede l'utilizzo di **Kubernetes** come orchestratore di produzione. Questo ci permetterà di gestire nativamente aspetti avanzati come lo scaling orizzontale dei singoli microservizi, la resilienza e la gestione dei segreti, completando la pipeline di Continuous Delivery in un vero ambiente cloud-native.
-
+Sebbene Docker Compose fornisca un'automazione eccellente per il testing e lo sviluppo, **TODO**
 ## 7. Conclusioni
 [Riepilogo finale sui vantaggi riscontrati nell'applicare l'ingegneria del software, l'automazione e il DDD al vostro specifico problema.]
+
+NOTE:
+- i commit verificati su github li abbiamo provati, ma l'integrazione di github fa cagare al cazzo (microsoft sei del mestiere?)
+- 
