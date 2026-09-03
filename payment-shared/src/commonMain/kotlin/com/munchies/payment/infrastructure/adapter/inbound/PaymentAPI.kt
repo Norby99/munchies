@@ -1,10 +1,11 @@
 package com.munchies.payment.infrastructure.adapter.inbound
 
 import com.munchies.payment.infrastructure.adapter.inbound.request.ProcessPaymentRequest
-import com.munchies.payment.infrastructure.adapter.outbound.response.ProcessPaymentResponse
 import kotlin.js.JsExport
 
 @JsExport
-abstract class PaymentAPI {
-  abstract fun processPayment(request: ProcessPaymentRequest): ProcessPaymentResponse
+object PaymentAPI {
+  interface ProcessPaymentAPI<Response> {
+    fun processPayment(request: ProcessPaymentRequest): Response
+  }
 }
