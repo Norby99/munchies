@@ -3,6 +3,7 @@ import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import {
   Currency,
+  PaymentMethod,
   PaymentStatus,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
 vi.mock(
@@ -11,6 +12,7 @@ vi.mock(
     PaymentDocument: {},
     PaymentModel: {
       findById: vi.fn(),
+      findOne: vi.fn(),
       findByIdAndUpdate: vi.fn(),
       findByIdAndDelete: vi.fn(),
       find: vi.fn(),
@@ -51,6 +53,7 @@ describe("PaymentMongoRepository", () => {
       amount,
       new UUIDEntityId(`${id}-order`),
       Currency.AUD,
+      PaymentMethod.CARD,
       null
     );
 
@@ -60,6 +63,7 @@ describe("PaymentMongoRepository", () => {
     amount,
     orderId: `${id}-order`,
     currency: Currency.AUD,
+    method: PaymentMethod.CARD,
     payedAt: null,
   });
 
@@ -75,6 +79,21 @@ describe("PaymentMongoRepository", () => {
     ).resolves.toEqual(payment);
     expect(mockedPaymentModel.findById).toHaveBeenCalledWith("payment-1");
     expect(mockedPaymentFactory.toDomain).toHaveBeenCalledWith(document);
+  });
+
+  it("finds payment by order id", async () => {
+    const document = createDocument("payment-order-1", 30);
+    const payment = createPayment("payment-order-1", 30);
+
+    mockedPaymentModel.findOne.mockResolvedValue(document as never);
+    mockedPaymentFactory.toDomain.mockReturnValue(payment);
+
+    await expect(
+      repository.findByOrderId(new UUIDEntityId("payment-order-1-order"))
+    ).resolves.toEqual(payment);
+    expect(mockedPaymentModel.findOne).toHaveBeenCalledWith({
+      orderId: "payment-order-1-order",
+    });
   });
 
   it("returns null when the payment document does not exist", async () => {

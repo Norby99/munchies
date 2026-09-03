@@ -1,6 +1,7 @@
 import { Payment } from "@main/domain/model/Payment";
 import { PaymentId } from "@main/domain/model/PaymentId";
 import { PaymentRepository } from "@main/domain/port/payment-repository";
+import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 import {
   PaymentDocument,
   PaymentModel,
@@ -14,6 +15,13 @@ export class PaymentMongoRepository implements PaymentRepository {
     return doc ? PaymentFactory.toDomain(doc) : null;
   }
 
+  async findByOrderId(orderId: UUIDEntityId): Promise<Payment | null> {
+    const doc: PaymentDocument | null = await PaymentModel.findOne({
+      orderId: orderId.stringValue(),
+    });
+    return doc ? PaymentFactory.toDomain(doc) : null;
+  }
+
   async save(entity: Payment): Promise<void> {
     const data = PaymentFactory.toDocument(entity);
     await PaymentModel.findByIdAndUpdate(data._id, data, {
@@ -21,6 +29,7 @@ export class PaymentMongoRepository implements PaymentRepository {
       new: true,
     });
   }
+
   async update(entity: Payment): Promise<Payment> {
     const data = PaymentFactory.toDocument(entity);
     const doc: PaymentDocument | null = await PaymentModel.findByIdAndUpdate(
@@ -28,8 +37,9 @@ export class PaymentMongoRepository implements PaymentRepository {
       { $set: data },
       { new: true, runValidators: true }
     );
-    return PaymentFactory.toDomain(doc!!);
+    return PaymentFactory.toDomain(doc!);
   }
+
   async delete(entity: Payment): Promise<Payment> {
     const _id = entity.id.value;
     const doc: PaymentDocument | null = await PaymentModel.findByIdAndDelete(
@@ -38,6 +48,7 @@ export class PaymentMongoRepository implements PaymentRepository {
     if (!doc) throw new Error(`Payment ${_id} not found`);
     return PaymentFactory.toDomain(doc);
   }
+
   async findByPredicate(
     predicate: (e: Payment) => boolean
   ): Promise<Payment | null> {
