@@ -11,18 +11,25 @@ tasks.register<DockerExecContainer>("composeShowDb") {
   description = "Shows MongoDB data for a service. " +
     "Usage: ./gradlew composeShowDb -Pservice=<name> [-Pcollection=<name>]"
 
-  val serviceName = project.findProperty("service") as? String
-    ?: throw GradleException("You must specify a service: ./gradlew composeShowDb -Pservice=<name>")
-  val collection = project.findProperty("collection") as? String
-
-  targetContainerId("munchies-mongo-$serviceName")
-
-  val mongoScript = if (collection != null) {
-    "db.getSiblingDB('$serviceName').$collection.find().forEach(printjson)"
-  } else {
-    "print('Collections:'); " +
-      "db.getSiblingDB('$serviceName').getCollectionNames().forEach(c => print(' - ' + c))"
+  val serviceNameProvider = project.provider {
+    project.findProperty("service") as? String
+      ?: throw GradleException(
+        "You must specify a service: ./gradlew composeShowDb -Pservice=<name>",
+      )
   }
 
-  commands.add(arrayOf("mongosh", "--quiet", "--eval", mongoScript))
+  targetContainerId(serviceNameProvider.map { "munchies-mongo-$it" })
+
+  commands.add(
+    serviceNameProvider.map { serviceName ->
+      val collection = project.findProperty("collection") as? String
+      val mongoScript = if (collection != null) {
+        "db.getSiblingDB('$serviceName').$collection.find().forEach(printjson)"
+      } else {
+        "print('Collections:'); " +
+          "db.getSiblingDB('$serviceName').getCollectionNames().forEach(c => print(' - ' + c))"
+      }
+      arrayOf("mongosh", "--quiet", "--eval", mongoScript)
+    },
+  )
 }

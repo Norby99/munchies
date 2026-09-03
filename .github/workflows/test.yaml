@@ -39,7 +39,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Run tests with Gradle
-        run: ./gradlew test integrationTest componentTest -PtestOutput=all
+        run: ./gradlew test integrationTest componentTest e2eTest -PtestOutput=all
 
       - name: Check code linting
         run: ./gradlew spotlessCheck

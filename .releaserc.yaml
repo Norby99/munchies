@@ -1,10 +1,24 @@
 {
   "branches": ["master"],
   "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
        # TODO "@semantic-release/changelog",
       "@semantic-release/git",
-      "@semantic-release/github"
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "scripts/deploy.sh",
+              "label": "deploy.sh"
+            }
+          ]
+        }
+      ]
   ]
 }
