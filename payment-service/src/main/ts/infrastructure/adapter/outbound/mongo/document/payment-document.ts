@@ -2,13 +2,16 @@ import { Schema, model, HydratedDocument } from "mongoose";
 import {
   PaymentStatus,
   Currency,
+  PaymentMethod,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
+
 interface _PaymentDocument {
   _id: string;
   status: PaymentStatus;
   amount: Number;
   orderId: string;
   currency: Currency;
+  method?: PaymentMethod;
   payedAt: Date | null;
 }
 
@@ -23,6 +26,11 @@ const PaymentSchema = new Schema<_PaymentDocument>(
     amount: { type: Number, required: true },
     orderId: { type: String, required: true },
     currency: { type: String, required: true, enum: Object(Currency.values()) },
+    method: {
+      type: String,
+      required: false,
+      enum: Object(PaymentMethod.values()),
+    },
     payedAt: { type: Date, default: null },
   },
   {
