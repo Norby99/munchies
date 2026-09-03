@@ -17,6 +17,7 @@ sealed class Order(
   open val customerId: CustomerId,
   open val status: OrderStatus,
   open val items: List<OrderItem>,
+  open val payed: Boolean,
 ) : Entity<OrderId>(id) {
 
   /**
@@ -25,6 +26,13 @@ sealed class Order(
    * @return An [AdvanceStatusResult] indicating success or failure of the status advancement.
    */
   abstract fun nextStatus(): AdvanceStatusResult
+
+  /**
+   * Processes the payment for the order.
+   *
+   * @return A [PayResult] indicating success or failure of the payment operation.
+   */
+  abstract fun pay(): PayResult
 
   /**
    * Cancels the order if it is in a cancellable state.
@@ -82,6 +90,16 @@ sealed class Order(
     data class Success(val order: Order) : AdvanceStatusResult
     sealed interface Failure : AdvanceStatusResult {
       data object InvalidTransition : Failure
+    }
+  }
+
+  /**
+   * Represents the result of attempting to pay for an order.
+   */
+  sealed interface PayResult {
+    data class Success(val order: Order) : PayResult
+    sealed interface Failure : PayResult {
+      data object AlreadyPaid : Failure
     }
   }
 
