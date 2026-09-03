@@ -23,6 +23,8 @@ enum class ProjectLanguage {
 }
 
 fun Project.getProjectLanguage(): ProjectLanguage {
+  if (this.name.contains("-shared")) return ProjectLanguage.KOTLIN
+
   val stringKotlinProjects = listOf(
     "commons",
     "architecture-rules",
@@ -41,10 +43,8 @@ fun Project.getProjectLanguage(): ProjectLanguage {
   )
   return when (
     this.name
-      .replace("-service", "")
       .replace("-client", "")
       .replace("-service", "")
-      .replace("-shared", "")
       .replace(":", "")
   ) {
     in stringKotlinProjects -> ProjectLanguage.KOTLIN
