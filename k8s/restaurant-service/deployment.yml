@@ -1,39 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-service
-  namespace: user-service
+  name: restaurant-service
+  namespace: restaurant-service
   labels:
-    app: user-service
+    app: restaurant-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: user-service
+      app: restaurant-service
   template:
     metadata:
       labels:
-        app: user-service
+        app: restaurant-service
     spec:
       containers:
-        - name: user-service
-          image: user-service:latest
+        - name: restaurant-service
+          image: restaurant-service:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
             - name: MICRONAUT_ENVIRONMENTS
               value: "k8s,prod"
-            - name: MONGODB_URI
-              value: "mongodb://user-mongodb.user-service.svc.cluster.local:27017/user-service"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
-            - name: JWT_SECRET
-              value: "blastimus_prime"
-            - name: GATEWAY_SERVICE_URL
-              value: "http://gateway-service.gateway-service.svc.cluster.local:8080"
-            - name: PAYMENT_SERVICE_URL
-              value: "http://payment-service.payment-service.svc.cluster.local:8080"
+            - name: MONGODB_URI
+              value: "mongodb://restaurant-mongodb.restaurant-service.svc.cluster.local:27017/restaurant-service"
           resources:
             requests:
               memory: "128Mi"
@@ -51,11 +45,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-service
-  namespace: user-service
+  name: restaurant-service
+  namespace: restaurant-service
 spec:
   selector:
-    app: user-service
+    app: restaurant-service
   ports:
     - port: 8080
       targetPort: 8080
