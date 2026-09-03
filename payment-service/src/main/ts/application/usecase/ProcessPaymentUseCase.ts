@@ -7,13 +7,13 @@ import { PaymentRepository } from "@main/domain/port/payment-repository";
 import { PaymentGateway } from "@main/domain/port/payment-gateway";
 import {
   UUIDEntityId,
-  InvalidInput,
 } from "munchies-commons/kotlin/commons-modules";
 import {
   ProcessPaymentRequest,
   ProcessPaymentResponse,
   ProcessPaymentRequestValidator,
   PaymentStatus,
+  InvalidInput,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
 
 export class ProcessPaymentUseCase implements ProcessPayment {

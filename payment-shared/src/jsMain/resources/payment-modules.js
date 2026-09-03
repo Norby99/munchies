@@ -3,6 +3,7 @@ const generated = require("./munchies-payment-shared.js");
 const _payment = generated.com.munchies.payment;
 const _inbound = _payment.infrastructure.adapter.inbound;
 const _outbound = _payment.infrastructure.adapter.outbound;
+const _commons = generated.com.munchies.commons;
 
 module.exports = {
   Currency: _payment.infrastructure.adapter.dto.Currency,
@@ -20,4 +21,8 @@ module.exports = {
     _outbound.response.processPaymentResponseFromJson,
   ProcessPaymentRequestValidator:
     _payment.infrastructure.adapter.validator.ProcessPaymentRequestValidator,
+  InputValidator: _commons.domain.port.InputValidator,
+  InputValidatorResult: _commons.domain.port.InputValidatorResult,
+  ValidInput: _commons.domain.port.ValidInput,
+  InvalidInput: _commons.domain.port.InvalidInput,
 };
