@@ -1,0 +1,38 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: restaurant-service
+  namespace: restaurant-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: restaurant-service
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # % of the pod's cpu *request* (100m in deployment.yml), averaged across pods.
+          # With request=100m the JVM crosses this quickly under load and marches to
+          # maxReplicas — expected. A fresh replica also spikes CPU during JIT warm-up
+          # before settling. For a gentler ramp, raise resources.requests.cpu (e.g. 250m)
+          # and limits.cpu (e.g. "1") in deployment.yml.
+          averageUtilization: 60
+  behavior:
+    # Tightened from the defaults so the demo doesn't take 10 minutes.
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+    scaleDown:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
