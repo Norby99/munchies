@@ -167,6 +167,16 @@ class MicronautOrderController(
     }
   }
 
+  /** Handles `GET orders/{id}/pay`.
+   *
+   * Translates the application-layer result into an HTTP response:
+   * - `200 OK` if the order is successfully marked as paid
+   * - `400 Bad Request` if the order is already paid
+   * - `404 Not Found` if the order does not exist
+   *
+   * @param id The order identifier received from the path.
+   * @return An HTTP response indicating the payment result.
+   */
   @Get(OrderServiceConfig.PAY_ORDER_PATH)
   @Operation(
     summary = "Pay an order",

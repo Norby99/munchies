@@ -4,6 +4,7 @@ import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.application.port.inbound.GetOrderDetails
 import com.munchies.order.application.port.inbound.GetOrders
+import com.munchies.order.application.port.inbound.PayOrder
 import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.application.port.inbound.UpdateOrderItems
@@ -22,6 +23,7 @@ abstract class BaseOrderController {
   val discardOrder = mockk<DiscardOrder>()
   val getOrderDetails = mockk<GetOrderDetails>()
   val getOrders = mockk<GetOrders>()
+  val payOrder = mockk<PayOrder>()
   val placeOrder = mockk<PlaceOrder>()
   val updateDeliveryOrderInfo = mockk<UpdateDeliveryOrderInfo>()
   val updateOrderItems = mockk<UpdateOrderItems>()
@@ -33,6 +35,7 @@ abstract class BaseOrderController {
       discardOrder,
       getOrderDetails,
       getOrders,
+      payOrder,
       placeOrder,
       updateDeliveryOrderInfo,
       updateOrderItems,
