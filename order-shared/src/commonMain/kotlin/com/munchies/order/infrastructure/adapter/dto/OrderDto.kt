@@ -38,6 +38,7 @@ data class OrderDto(
   val customerId: String,
   val status: String,
   val items: List<OrderItemDto>,
+  val payed: Boolean,
 
   // Delivery
   val estimatedDeliveryTime: String? = null,

@@ -56,6 +56,16 @@ object OrderAPI {
   }
 
   /**
+   * The PayOrderAPI interface defines the contract for processing the payment of an order.
+   * It extends the OrderAPI interface and provides a method to pay for an order.
+   *
+   * @param Response The type of the response object returned after processing the payment.
+   */
+  interface PayOrderAPI<Response> {
+    fun payOrder(id: String): Response
+  }
+
+  /**
    * The PlaceOrderAPI interface defines the contract for placing a new order.
    * It extends the OrderAPI interface and provides a method to place an order.
    *

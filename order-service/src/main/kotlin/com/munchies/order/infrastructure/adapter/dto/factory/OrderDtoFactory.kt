@@ -33,6 +33,7 @@ object OrderDtoFactory {
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
+        payed = payed,
         estimatedDeliveryTime = deliveryInfo.estimatedDeliveryTime.toString(),
         deliveryAddress = deliveryInfo.deliveryAddress,
         bellName = deliveryInfo.bellName,
@@ -45,6 +46,7 @@ object OrderDtoFactory {
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
+        payed = payed,
         pickupTime = takeawayInfo.pickupTime.toString(),
         customerName = takeawayInfo.customerName,
       )
@@ -55,6 +57,7 @@ object OrderDtoFactory {
         customerId = customerId.value,
         status = status.name,
         items = itemsDto,
+        payed = payed,
         tableNumber = tableInfo.tableNumber,
         numberOfGuests = tableInfo.numberOfGuests,
       )
@@ -83,6 +86,7 @@ object OrderDtoFactory {
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
+        payed = requireField(payed, "payed"),
         deliveryInfo = DeliveryInfo(
           estimatedDeliveryTime = requireLongField(estimatedDeliveryTime, "estimatedDeliveryTime"),
           deliveryAddress = requireField(deliveryAddress, "deliveryAddress"),
@@ -96,6 +100,7 @@ object OrderDtoFactory {
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
+        payed = requireField(payed, "payed"),
         takeawayInfo = TakeawayInfo(
           pickupTime = requireLongField(pickupTime, "pickupTime"),
           customerName = requireField(customerName, "customerName"),
@@ -107,6 +112,7 @@ object OrderDtoFactory {
         customerId = domainCustomerId,
         status = domainStatus,
         items = domainItems,
+        payed = requireField(payed, "payed"),
         tableInfo = TableInfo(
           tableNumber = requireField(tableNumber, "tableNumber"),
           numberOfGuests = requireField(numberOfGuests, "numberOfGuests"),

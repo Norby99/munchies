@@ -54,6 +54,10 @@ export type GetOrdersResponse = com.munchies.order.infrastructure.adapter.outbou
 export declare const GetOrdersResponse: typeof com.munchies.order.infrastructure.adapter.outbound.response.GetOrdersResponse;
 export declare const getOrdersResponseFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.response.getOrdersResponseFromJson;
 
+export type PayOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.PayOrderResponse;
+export declare const PayOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.response.PayOrderResponse;
+export declare const payOrderResponseFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.response.payOrderResponseFromJson;
+
 export type PlaceOrderResponse = com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse;
 export declare const PlaceOrderResponse: typeof com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse;
 export declare const placeOrderResponseFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.response.placeOrderResponseFromJson;
@@ -79,6 +83,10 @@ export declare const GetOrderDetailsAPI: typeof com.munchies.order.infrastructur
 export type GetOrdersAPI =
     com.munchies.order.infrastructure.adapter.inbound.JsGetOrdersAPI;
 export declare const GetOrdersAPI: typeof com.munchies.order.infrastructure.adapter.inbound.JsGetOrdersAPI;
+
+export type PayOrderAPI =
+    com.munchies.order.infrastructure.adapter.inbound.JsPayOrderAPI;
+export declare const PayOrderAPI: typeof com.munchies.order.infrastructure.adapter.inbound.JsPayOrderAPI;
 
 export type PlaceOrderAPI =
     com.munchies.order.infrastructure.adapter.inbound.JsPlaceOrderAPI;
