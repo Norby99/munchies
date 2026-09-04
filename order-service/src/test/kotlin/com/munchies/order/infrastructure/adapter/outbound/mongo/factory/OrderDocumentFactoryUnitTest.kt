@@ -35,6 +35,7 @@ class OrderDocumentFactoryUnitTest {
     document.customerId shouldBe order.customerId.value
     document.status shouldBe order.status.name
     document.items.size shouldBe order.items.size
+    document.payed shouldBe order.payed
     document.deliveryInfo shouldBe DeliveryInfoDocument(
       estimatedDeliveryTime = order.deliveryInfo.estimatedDeliveryTime,
       deliveryAddress = order.deliveryInfo.deliveryAddress,
@@ -57,6 +58,7 @@ class OrderDocumentFactoryUnitTest {
     document.customerId shouldBe order.customerId.value
     document.status shouldBe order.status.name
     document.items.size shouldBe order.items.size
+    document.payed shouldBe order.payed
     document.tableInfo shouldBe TableInfoDocument(
       tableNumber = order.tableInfo.tableNumber,
       numberOfGuests = order.tableInfo.numberOfGuests,
@@ -77,6 +79,7 @@ class OrderDocumentFactoryUnitTest {
     document.customerId shouldBe order.customerId.value
     document.status shouldBe order.status.name
     document.items.size shouldBe order.items.size
+    document.payed shouldBe order.payed
     document.takeawayInfo shouldBe TakeawayInfoDocument(
       pickupTime = order.takeawayInfo.pickupTime,
       customerName = order.takeawayInfo.customerName,
@@ -99,6 +102,7 @@ class OrderDocumentFactoryUnitTest {
     order.customerId.value shouldBe document.customerId
     order.status.name shouldBe document.status
     order.items.size shouldBe document.items.size
+    order.payed shouldBe document.payed
     order.deliveryInfo.estimatedDeliveryTime shouldBe document.deliveryInfo!!.estimatedDeliveryTime
     order.deliveryInfo.deliveryAddress shouldBe document.deliveryInfo!!.deliveryAddress
     order.deliveryInfo.bellName shouldBe document.deliveryInfo!!.bellName
@@ -119,6 +123,7 @@ class OrderDocumentFactoryUnitTest {
     order.customerId.value shouldBe document.customerId
     order.status.name shouldBe document.status
     order.items.size shouldBe document.items.size
+    order.payed shouldBe document.payed
     order.tableInfo.tableNumber shouldBe document.tableInfo!!.tableNumber
     order.tableInfo.numberOfGuests shouldBe document.tableInfo!!.numberOfGuests
   }
@@ -137,6 +142,7 @@ class OrderDocumentFactoryUnitTest {
     order.customerId.value shouldBe document.customerId
     order.status.name shouldBe document.status
     order.items.size shouldBe document.items.size
+    order.payed shouldBe document.payed
     order.takeawayInfo.pickupTime shouldBe document.takeawayInfo!!.pickupTime
     order.takeawayInfo.customerName shouldBe document.takeawayInfo!!.customerName
   }

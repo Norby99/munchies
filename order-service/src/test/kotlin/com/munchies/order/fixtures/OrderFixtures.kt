@@ -126,14 +126,18 @@ fun createDineInOrder(
 /**
  * Creates a default Order with valid items, using [Address1] by default.
  * @param status The status of the order. Defaults to PENDING.
+ * @param payed Whether the order is paid. Defaults to false.
  */
-fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder = TakeawayOrder(
+fun createSampleOrder(
+  status: OrderStatus = OrderStatus.PENDING,
+  payed: Boolean = false
+): TakeawayOrder = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
   status = status,
   items = createNewItems(),
-  payed = false,
+  payed = payed,
   takeawayInfo = createTakeawayInfo(),
 )
 
