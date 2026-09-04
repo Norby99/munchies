@@ -30,6 +30,7 @@ object OrderDocumentFactory {
       customerId = this.customerId.value,
       status = this.status.name,
       items = this.items.map { it.toDocument() },
+      payed = this.payed,
       deliveryInfo = this.deliveryInfo.toDocument(),
     )
     is DineInOrder -> OrderDocument(
@@ -39,6 +40,7 @@ object OrderDocumentFactory {
       customerId = this.customerId.value,
       status = this.status.name,
       items = this.items.map { it.toDocument() },
+      payed = this.payed,
       tableInfo = this.tableInfo.toDocument(),
     )
     is TakeawayOrder -> OrderDocument(
@@ -48,6 +50,7 @@ object OrderDocumentFactory {
       customerId = this.customerId.value,
       status = this.status.name,
       items = this.items.map { it.toDocument() },
+      payed = this.payed,
       takeawayInfo = this.takeawayInfo.toDocument(),
     )
   }
@@ -72,6 +75,7 @@ object OrderDocumentFactory {
         customerId = customerId,
         status = status,
         items = items,
+        payed = this.payed,
         deliveryInfo = requireNotNull(this.deliveryInfo) {
           "Missing deliveryInfo for DELIVERY order"
         }.toDomain(),
@@ -82,6 +86,7 @@ object OrderDocumentFactory {
         customerId = customerId,
         status = status,
         items = items,
+        payed = this.payed,
         tableInfo = requireNotNull(
           this.tableInfo,
         ) { "Missing tableInfo for DINE_IN order" }.toDomain(),
@@ -92,6 +97,7 @@ object OrderDocumentFactory {
         customerId = customerId,
         status = status,
         items = items,
+        payed = this.payed,
         takeawayInfo = requireNotNull(this.takeawayInfo) {
           "Missing takeawayInfo for TAKEAWAY order"
         }.toDomain(),
