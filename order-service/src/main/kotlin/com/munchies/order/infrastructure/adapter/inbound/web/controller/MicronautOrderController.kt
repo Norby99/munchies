@@ -6,6 +6,7 @@ import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
 import com.munchies.order.application.port.inbound.command.GetOrdersCommand
+import com.munchies.order.application.port.inbound.command.PayOrderCommand
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderStatus
@@ -52,6 +53,7 @@ import jakarta.inject.Inject
 @SerdeImport(UpdateTakeawayOrderRequest::class)
 @SerdeImport(GetOrderDetailsResponse::class)
 @SerdeImport(GetOrdersResponse::class)
+@SerdeImport(PayOrderResponse::class)
 @SerdeImport(PlaceOrderResponse::class)
 @SerdeImport(AdvanceOrderStatusResponse::class)
 @SerdeImport(DiscardOrderResponse::class)
@@ -75,6 +77,7 @@ class MicronautOrderController(
 ) :
   OrderAPI.GetOrderDetailsAPI<HttpResponse<GetOrderDetailsResponse>>,
   OrderAPI.GetOrdersAPI<HttpResponse<GetOrdersResponse>>,
+  OrderAPI.PayOrderAPI<HttpResponse<PayOrderResponse>>,
   OrderAPI.PlaceOrderAPI<HttpResponse<PlaceOrderResponse>>,
   OrderAPI.AdvanceOrderStatusAPI<HttpResponse<AdvanceOrderStatusResponse>>,
   OrderAPI.DiscardOrderAPI<HttpResponse<DiscardOrderResponse>>,
@@ -84,6 +87,7 @@ class MicronautOrderController(
 
   private val getOrderDetails: GetOrderDetails = services.getOrderDetails
   private val getOrders: GetOrders = services.getOrders
+  private val payOrder: PayOrder = services.payOrder
   private val placeOrder: PlaceOrder = services.placeOrder
   private val advanceOrderStatus: AdvanceOrderStatus = services.advanceOrderStatus
   private val discardOrder: DiscardOrder = services.discardOrder
@@ -160,6 +164,27 @@ class MicronautOrderController(
       )
       is GetOrders.Result.Failure.OrderNotFound ->
         throw NotFoundException("No orders found matching the provided filters")
+    }
+  }
+
+  @Get(OrderServiceConfig.PAY_ORDER_PATH)
+  @Operation(
+    summary = "Pay an order",
+    description = "Flags an order as paid, indicating that payment has been successfully processed."
+  )
+  @ApiResponse(responseCode = "200", description = "Payment successful")
+  @ApiResponse(responseCode = "400", description = "Order already paid")
+  @ApiResponse(responseCode = "404", description = "Order not found")
+  override fun payOrder(@PathVariable id: String): HttpResponse<PayOrderResponse> {
+    return when (val res = payOrder.execute(PayOrderCommand(OrderId(id)))) {
+      is PayOrder.Result.Success -> HttpResponse.ok(
+        PayOrderResponse(
+          result = "Payment successful",
+          code = HttpStatus.OK.code,
+        ),
+      )
+      is PayOrder.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
+      is PayOrder.Result.Failure.AlreadyPaid -> throw ValidationException("Order already paid")
     }
   }
 

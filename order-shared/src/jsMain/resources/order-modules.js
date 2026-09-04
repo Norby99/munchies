@@ -15,6 +15,7 @@ module.exports = {
     // API
     GetOrderDetailsAPI: _inbound.JsGetOrderDetailsAPI,
     GetOrdersAPI: _inbound.JsGetOrdersAPI,
+    PayOrderAPI: _inbound.JsPayOrderAPI,
     PlaceOrderAPI: _inbound.JsPlaceOrderAPI,
     AdvanceOrderStatusAPI: _inbound.JsAdvanceOrderStatusAPI,
     DiscardOrderAPI: _inbound.JsDiscardOrderAPI,
@@ -44,6 +45,9 @@ module.exports = {
 
     GetOrdersResponse: _outbound.response.GetOrdersResponse,
     getOrdersResponseFromJson: _outbound.response.getOrdersResponseFromJson,
+
+    PayOrderResponse: _outbound.response.PayOrderResponse,
+    payOrderResponseFromJson: _outbound.response.payOrderResponseFromJson,
 
     PlaceOrderResponse: _outbound.response.PlaceOrderResponse,
     placeOrderResponseFromJson: _outbound.response.placeOrderResponseFromJson,
