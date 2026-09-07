@@ -1,18 +1,22 @@
-import { SimpleRoute } from "../simple-route";
-import { GetOrderDetailsRoute } from "./get-order-details.route";
-import { PlaceOrderRoute } from "./place-order.route";
-import { AdvanceOrderStatusRoute } from "./advance-order-status.route";
-import { DiscardOrderRoute } from "./discard-order.route";
-import { UpdateOrderItemsRoute } from "./update-order-items.route";
-import { UpdateDeliveryOrderRoute } from "./update-delivery-order.route";
-import { UpdateTakeawayOrderRoute } from "./update-takeaway-order.route";
+import {SimpleRoute} from "../simple-route";
+import {GetOrderDetailsRoute} from "./get-order-details.route";
+import {GetOrdersRoute} from "./get-orders.route";
+import {PlaceOrderRoute} from "./place-order.route";
+import {PayOrderRoute} from "./pay-order.route";
+import {AdvanceOrderStatusRoute} from "./advance-order-status.route";
+import {DiscardOrderRoute} from "./discard-order.route";
+import {UpdateOrderItemsRoute} from "./update-order-items.route";
+import {UpdateDeliveryOrderRoute} from "./update-delivery-order.route";
+import {UpdateTakeawayOrderRoute} from "./update-takeaway-order.route";
 
 export const orderRoutes: SimpleRoute<any>[] = [
-  new GetOrderDetailsRoute(),
-  new PlaceOrderRoute(),
-  new AdvanceOrderStatusRoute(),
-  new DiscardOrderRoute(),
-  new UpdateOrderItemsRoute(),
-  new UpdateDeliveryOrderRoute(),
-  new UpdateTakeawayOrderRoute(),
+    new GetOrderDetailsRoute(),
+    new GetOrdersRoute(),
+    new PlaceOrderRoute(),
+    new PayOrderRoute(),
+    new AdvanceOrderStatusRoute(),
+    new DiscardOrderRoute(),
+    new UpdateOrderItemsRoute(),
+    new UpdateDeliveryOrderRoute(),
+    new UpdateTakeawayOrderRoute(),
 ];
