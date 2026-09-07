@@ -54,7 +54,7 @@ class UpdateUserProfileSteps(private val world: WordResult) {
 
   @Then("only the correct changes are allowed")
   fun onlyTheCorrectChangesAreAllowed() {
-    world.responseStatus.shouldBe(500)
+    world.responseStatus.shouldBe(400)
     val updateRequest = UpdateUserInfoRequest(
       UserDTO(
         id = "",
