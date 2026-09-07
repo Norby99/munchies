@@ -130,7 +130,7 @@ fun createDineInOrder(
  */
 fun createSampleOrder(
   status: OrderStatus = OrderStatus.PENDING,
-  payed: Boolean = false
+  payed: Boolean = false,
 ): TakeawayOrder = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
