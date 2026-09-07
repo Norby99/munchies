@@ -82,6 +82,7 @@ fun createDeliveryOrder(
   customerId = defaultCustomerId,
   status = status,
   items = items,
+  payed = false,
   deliveryInfo = deliveryInfo,
 )
 
@@ -100,6 +101,7 @@ fun createTakeawayOrder(
   customerId = defaultCustomerId,
   status = status,
   items = items,
+  payed = false,
   takeawayInfo = takeawayInfo,
 )
 
@@ -118,6 +120,7 @@ fun createDineInOrder(
   customerId = defaultCustomerId,
   status = status,
   items = items,
+  payed = false,
   tableInfo = tableInfo,
 )
 
@@ -131,6 +134,7 @@ fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder 
   customerId = defaultCustomerId,
   status = status,
   items = createNewItems(),
+  payed = false,
   takeawayInfo = createTakeawayInfo(),
 )
 
@@ -144,6 +148,7 @@ fun createDeliveryOrderDto() = OrderDto(
   customerId = defaultCustomerId.value,
   status = OrderStatus.PENDING.name,
   items = emptyList(),
+  payed = false,
   estimatedDeliveryTime = futureTime.toString(),
   deliveryAddress = Address1.deliveryAddress,
   bellName = Address1.bellName,
@@ -160,6 +165,7 @@ fun createTakeawayOrderDto() = OrderDto(
   customerId = defaultCustomerId.value,
   status = OrderStatus.PENDING.name,
   items = emptyList(),
+  payed = false,
   pickupTime = futureTime.toString(),
   customerName = Address1.bellName,
 )
@@ -174,6 +180,7 @@ fun createDineInOrderDto() = OrderDto(
   customerId = defaultCustomerId.value,
   status = OrderStatus.PENDING.name,
   items = emptyList(),
+  payed = false,
   tableNumber = 5,
   numberOfGuests = 2,
 )

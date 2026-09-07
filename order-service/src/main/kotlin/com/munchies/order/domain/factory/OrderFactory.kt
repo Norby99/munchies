@@ -21,7 +21,7 @@ import com.munchies.order.domain.model.TakeawayOrder
  */
 object OrderFactory {
 
-  val DEFAULT_PAYED = false
+  const val DEFAULT_PAYED = false
 
   /**
    * Creates a Delivery order with the specified parameters.

@@ -177,10 +177,11 @@ class MicronautOrderController(
    * @param id The order identifier received from the path.
    * @return An HTTP response indicating the payment result.
    */
-  @Get(OrderServiceConfig.PAY_ORDER_PATH)
+  @Patch(OrderServiceConfig.PAY_ORDER_PATH)
   @Operation(
     summary = "Pay an order",
-    description = "Flags an order as paid, indicating that payment has been successfully processed."
+    description =
+    "Flags an order as paid, indicating that payment has been successfully processed.",
   )
   @ApiResponse(responseCode = "200", description = "Payment successful")
   @ApiResponse(responseCode = "400", description = "Order already paid")

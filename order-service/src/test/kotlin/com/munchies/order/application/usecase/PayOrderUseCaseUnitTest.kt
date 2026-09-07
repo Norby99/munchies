@@ -2,7 +2,6 @@ package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.PayOrder
 import com.munchies.order.application.port.inbound.command.PayOrderCommand
-import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.ports.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
@@ -60,5 +59,4 @@ class PayOrderUseCaseUnitTest {
     result shouldBeEqual PayOrder.Result.Failure.OrderNotFound
     verify(exactly = 0) { repository.update(any()) }
   }
-
 }
