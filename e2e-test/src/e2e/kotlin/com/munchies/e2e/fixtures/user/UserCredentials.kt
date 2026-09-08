@@ -2,7 +2,7 @@ package com.munchies.e2e.fixtures.user
 
 import com.munchies.commons.domain.port.AuthRole
 import com.munchies.user.infrastructure.adapter.inbound.request.RegisterUserRequest
-import java.util.UUID
+import java.util.*
 
 object UserCredentials {
 
@@ -15,6 +15,17 @@ object UserCredentials {
       hashedPassword = "test-password-$id",
       saltValue = "salt",
     ).toJson()
+  }
+
+  fun getRegisterUserRequest(): RegisterUserRequest {
+    val id = UUID.randomUUID().toString().take(8)
+    return RegisterUserRequest(
+      username = "customer-$id",
+      email = "customer-$id@e2e-test.local",
+      role = AuthRole.CUSTOMER.toString(),
+      hashedPassword = "test-password-$id",
+      saltValue = "salt",
+    )
   }
 
   fun newManager(): String {

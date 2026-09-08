@@ -81,6 +81,7 @@ fun createDeliveryOrder(
   customerId = defaultCustomerId,
   status = status,
   items = items,
+  payed = false,
   deliveryInfo = deliveryInfo,
 )
 
@@ -99,6 +100,7 @@ fun createTakeawayOrder(
   customerId = defaultCustomerId,
   status = status,
   items = items,
+  payed = false,
   takeawayInfo = takeawayInfo,
 )
 
@@ -117,19 +119,25 @@ fun createDineInOrder(
   customerId = defaultCustomerId,
   status = status,
   items = items,
+  payed = false,
   tableInfo = tableInfo,
 )
 
 /**
  * Creates a default Order with valid items, using [Address1] by default.
  * @param status The status of the order. Defaults to PENDING.
+ * @param payed Whether the order is paid. Defaults to false.
  */
-fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder = TakeawayOrder(
+fun createSampleOrder(
+  status: OrderStatus = OrderStatus.PENDING,
+  payed: Boolean = false,
+): TakeawayOrder = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
   status = status,
   items = createNewItems(),
+  payed = payed,
   takeawayInfo = createTakeawayInfo(),
 )
 
@@ -146,6 +154,7 @@ fun createDeliveryOrderDto() = OrderDto(
   estimatedDeliveryTime = futureTime.toString(),
   deliveryAddress = Address1.deliveryAddress,
   bellName = Address1.bellName,
+  payed = false,
   customerPhone = Address1.customerPhone,
 )
 
@@ -160,6 +169,7 @@ fun createTakeawayOrderDto() = OrderDto(
   status = OrderStatus.PENDING.name,
   items = emptyList(),
   pickupTime = futureTime.toString(),
+  payed = false,
   customerName = Address1.bellName,
 )
 
@@ -173,6 +183,7 @@ fun createDineInOrderDto() = OrderDto(
   customerId = defaultCustomerId.value,
   status = OrderStatus.PENDING.name,
   items = emptyList(),
+  payed = false,
   tableNumber = 5,
   numberOfGuests = 2,
 )

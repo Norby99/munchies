@@ -21,6 +21,8 @@ import com.munchies.order.domain.model.TakeawayOrder
  */
 object OrderFactory {
 
+  const val DEFAULT_PAYED = false
+
   /**
    * Creates a Delivery order with the specified parameters.
    *
@@ -42,7 +44,7 @@ object OrderFactory {
       OrderCreationResult.Failure.InvalidDate
     } else {
       OrderCreationResult.Success(
-        DeliveryOrder(id, restaurantId, customerId, PENDING, items, info),
+        DeliveryOrder(id, restaurantId, customerId, PENDING, items, DEFAULT_PAYED, info),
       )
     }
   }
@@ -68,7 +70,7 @@ object OrderFactory {
       OrderCreationResult.Failure.InvalidDate
     } else {
       OrderCreationResult.Success(
-        TakeawayOrder(id, restaurantId, customerId, PENDING, items, info),
+        TakeawayOrder(id, restaurantId, customerId, PENDING, items, DEFAULT_PAYED, info),
       )
     }
   }
@@ -92,7 +94,7 @@ object OrderFactory {
   ): OrderCreationResult {
     validate(items)?.let { return it }
     return OrderCreationResult.Success(
-      DineInOrder(id, restaurantId, customerId, PENDING, items, info),
+      DineInOrder(id, restaurantId, customerId, PENDING, items, DEFAULT_PAYED, info),
     )
   }
 

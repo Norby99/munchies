@@ -54,6 +54,23 @@ abstract class JsGetOrdersAPI<E : WebResponse<Any>> :
 }
 
 @JsExport
+abstract class JsPayOrderAPI<E : WebResponse<Any>> :
+  OrderAPI.PayOrderAPI<Promise<E>>,
+  SimpleAPI<Nothing, PayOrderResponse>() {
+  override fun getPath(): String =
+    OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.PAY_ORDER_PATH
+
+  override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.POST
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
+  abstract override fun payOrder(id: String): Promise<E>
+
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+  override fun parseResponse(json: String): PayOrderResponse = payOrderResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+}
+
+@JsExport
 abstract class JsPlaceOrderAPI<E : WebResponse<Any>> :
   OrderAPI.PlaceOrderAPI<Promise<E>>,
   SimpleAPI<PlaceOrderRequest, PlaceOrderResponse>() {

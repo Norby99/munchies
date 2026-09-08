@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 // Thanks gradle
 
+import utils.MUNCHIES_BASE_PACKAGE
 import utils.libs
 
 plugins {
@@ -76,6 +77,24 @@ kover {
     }
     sources {
       excludedSourceSets.addAll(testTasksToExclude)
+    }
+  }
+
+  reports {
+    filters {
+      excludes {
+        classes(
+          "$MUNCHIES_BASE_PACKAGE.architecture.*",
+          "$MUNCHIES_BASE_PACKAGE.commons.*",
+          "$MUNCHIES_BASE_PACKAGE.e2e.*",
+        )
+      }
+    }
+
+    verify {
+      rule {
+        // minBound(70) TODO
+      }
     }
   }
 }

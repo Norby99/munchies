@@ -30,6 +30,7 @@ data class OrderDocument(
   val customerId: String,
   val status: String,
   val items: List<OrderItemDocument>,
+  val payed: Boolean = false,
   val deliveryInfo: DeliveryInfoDocument? = null,
   val tableInfo: TableInfoDocument? = null,
   val takeawayInfo: TakeawayInfoDocument? = null,

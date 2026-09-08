@@ -36,6 +36,7 @@ class OrderDtoFactoryUnitTest {
     dto.customerId shouldBe order.customerId.value
     dto.status shouldBe order.status.name
     dto.items.size shouldBe order.items.size
+    dto.payed shouldBe order.payed
     dto.estimatedDeliveryTime shouldBe order.deliveryInfo.estimatedDeliveryTime.toString()
     dto.deliveryAddress shouldBe order.deliveryInfo.deliveryAddress
     dto.bellName shouldBe order.deliveryInfo.bellName
@@ -54,6 +55,7 @@ class OrderDtoFactoryUnitTest {
     dto.customerId shouldBe order.customerId.value
     dto.status shouldBe order.status.name
     dto.items.size shouldBe order.items.size
+    dto.payed shouldBe order.payed
     dto.pickupTime shouldBe order.takeawayInfo.pickupTime.toString()
     dto.customerName shouldBe order.takeawayInfo.customerName
   }
@@ -70,6 +72,7 @@ class OrderDtoFactoryUnitTest {
     dto.customerId shouldBe order.customerId.value
     dto.status shouldBe order.status.name
     dto.items.size shouldBe order.items.size
+    dto.payed shouldBe order.payed
     dto.tableNumber shouldBe order.tableInfo.tableNumber
     dto.numberOfGuests shouldBe order.tableInfo.numberOfGuests
   }
@@ -86,6 +89,7 @@ class OrderDtoFactoryUnitTest {
     order.customerId shouldBe CustomerId(dto.customerId)
     order.status shouldBe OrderStatus.valueOf(dto.status)
     order.items.size shouldBe dto.items.size
+    order.payed shouldBe dto.payed
     order.deliveryInfo shouldBe DeliveryInfo(
       estimatedDeliveryTime = dto.estimatedDeliveryTime.orEmpty().toLong(),
       deliveryAddress = dto.deliveryAddress.orEmpty(),
@@ -106,6 +110,7 @@ class OrderDtoFactoryUnitTest {
     order.customerId shouldBe CustomerId(dto.customerId)
     order.status shouldBe OrderStatus.valueOf(dto.status)
     order.items.size shouldBe dto.items.size
+    order.payed shouldBe dto.payed
     order.takeawayInfo shouldBe TakeawayInfo(
       pickupTime = dto.pickupTime.orEmpty().toLong(),
       customerName = dto.customerName.orEmpty(),
@@ -124,6 +129,7 @@ class OrderDtoFactoryUnitTest {
     order.customerId shouldBe CustomerId(dto.customerId)
     order.status shouldBe OrderStatus.valueOf(dto.status)
     order.items.size shouldBe dto.items.size
+    order.payed shouldBe dto.payed
     order.tableInfo.tableNumber shouldBe dto.tableNumber
     order.tableInfo.numberOfGuests shouldBe dto.numberOfGuests
   }
