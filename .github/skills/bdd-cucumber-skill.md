@@ -55,6 +55,7 @@ class <ServiceName>CucumberTest
 
 ```gherkin
 Feature: User management
+
   Scenario: Create a user and retrieve it
     Given an empty user repository
     When a new user is created
@@ -69,8 +70,3 @@ Feature: User management
 - business-result assertions
 
 ## Run
-
-```bash
-./gradlew :<microservice>:service:test
-```
-
