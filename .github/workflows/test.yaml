@@ -24,8 +24,9 @@ jobs:
         with:
           filters: |
             code:
+              - '**'
               - '!docs/**'
-              - '!*.md'
+              - '!**/*.md'
 
   commitlint:
     runs-on: ubuntu-latest
