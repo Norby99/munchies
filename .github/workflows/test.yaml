@@ -1,8 +1,32 @@
 on:
   workflow_call:
+    outputs:
+      code:
+        description: "Whether non-documentation code files were changed"
+        value: ${{ jobs.changes.outputs.code }}
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check for code changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '!docs/**'
+              - '!*.md'
+
   commitlint:
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +47,11 @@ jobs:
         if: github.event_name == 'pull_request'
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-  build:
+  check-and-test:
+    needs:
+      - changes
+      - commitlint
+    if: needs.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -38,11 +66,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: Run tests with Gradle
-        run: ./gradlew test integrationTest componentTest e2eTest -PtestOutput=all
-
       - name: Check code linting
         run: ./gradlew spotlessCheck
 
       - name: Check dokka documentation
         run: ./gradlew dokkaGeneratePublicationHtml
+
+      - name: Run tests with Gradle
+        run: ./gradlew test integrationTest componentTest e2eTest -PtestOutput=all

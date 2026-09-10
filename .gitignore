@@ -428,3 +428,6 @@ build
 # Postman
 postman/* 
 .postman/*
+
+# Generated reports
+./docs/pages/reports/*

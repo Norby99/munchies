@@ -55,6 +55,17 @@ jobs:
       - name: Move Typescript docs
         run: cp -r build/typescript/ docs/pages/
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MkDocs & Material
+        run: pip install -r requirements-docs.txt
+
+      - name: Build MkDocs Reports
+        run: mkdocs build
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

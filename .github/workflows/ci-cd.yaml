@@ -8,16 +8,23 @@ on:
       - develop # Run tests for contributors and for bots
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
-  test: # Always run test, gatekeeper for build and publish
+  test: # Always run test workflow (commitlint runs on PRs, Gradle tests run if code changed)
+    permissions:
+      contents: read
     uses: ./.github/workflows/test.yaml
 
-  build:
+  build: # If test was skipped then build is skipped => deploy-docs is still called on master push
+    permissions:
+      contents: read
     needs:
       - test
     if: |
       always() && 
       needs.test.result == 'success' &&
+      needs.test.outputs.code == 'true' &&
       github.event_name == 'push' && 
       github.ref == 'refs/heads/master'
     uses: ./.github/workflows/build.yaml
@@ -47,6 +54,7 @@ jobs:
     uses: ./.github/workflows/deploy-docs.yaml
 
   success:
+    permissions: {}
     runs-on: ubuntu-latest
     needs:
       - test
