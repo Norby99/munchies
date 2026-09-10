@@ -9,12 +9,27 @@ use_directory_urls: true
 theme:
   name: material
   palette:
-    scheme: slate
-    primary: indigo
-    accent: light blue
+    # Dark Mode (Default)
+    - scheme: slate
+      primary: indigo
+      accent: light blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+    # Light Mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
   features:
     - navigation.instant
     - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
     - navigation.top
@@ -39,7 +54,7 @@ markdown_extensions:
 
 nav:
   - Reports Home: index.md
-  - Software Process Engineering (SPE):
+  - SPE:
       - Overview: spe/index.md
       - Deliverables:
           - Glossary: spe/01-deliverables/glossary.md
@@ -56,13 +71,13 @@ nav:
       - Deployment: spe/04-deployment.md
       - Benchmark: spe/05-benchmark.md
       - Conclusions: spe/06-conclusions.md
-  - Applicazioni e Servizi Web (ASW):
+  - ASW:
       - Overview: asw/index.md
-  - Distributed Systems (DS):
+  - DS:
       - Overview: ds/index.md
-  - Software Architecture And Platforms (SAAP):
+  - SAAP:
       - Overview: saap/index.md
-  - Advanced Software Modeling and Development (ASMD):
+  - ASMD:
       - Overview: asmd/index.md
   - Other Munchies Docs:
       - Main Docs Hub: https://norby99.github.io/munchies/
