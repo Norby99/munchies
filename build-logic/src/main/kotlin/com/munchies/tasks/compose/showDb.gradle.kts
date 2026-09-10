@@ -7,7 +7,7 @@ plugins {
 }
 
 tasks.register<DockerExecContainer>("composeShowDb") {
-  group = "compose"
+  group = "munchies"
   description = "Shows MongoDB data for a service. " +
     "Usage: ./gradlew composeShowDb -Pservice=<name> [-Pcollection=<name>]"
 

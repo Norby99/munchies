@@ -67,6 +67,7 @@ kotlin {
 }
 
 tasks.register<NpmTask>("pack_${project.name}") {
+  group = "munchies"
   println("Packing ${project.name}...")
 
   dependsOn(project.tasks.named("build"))
