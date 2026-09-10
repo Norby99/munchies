@@ -53,6 +53,42 @@ These dockerfiles and images, were also used to be able to utilize kubernetes as
 We've also created two tasks to help during the deploy-docs workflow that copies the generated docs to be then further
 translated into a web page.
 
+
+These are all the tasks we've created:
+```
+Munchies tasks
+--------------
+composeBuild - Builds images for services of docker-compose project
+composeDown - Stops and removes containers of docker-compose project (only if stopContainers is set to true)
+composeShowDb - Shows MongoDB data for a service. Usage: ./gradlew composeShowDb -Pservice=<name> [-Pcollection=<name>]
+composeUp - Builds and starts containers of docker-compose project
+deploy - Deploys all services to Minikube. Usage: ./gradlew deploy
+deployServices
+dockerBuild
+dockerCreate
+graphDump - Dumps project dependencies to a mermaid file.
+graphUpdate - Updates Markdown file with the corresponding dependency graph.
+k8sInfo - Prints the current pods and deployments across all namespaces in Minikube (except for kubernetes' pods).
+moveJsDeps
+pack_commons
+pack_gateway-shared
+pack_notification-shared
+pack_order-shared
+pack_payment-shared
+pack_restaurant-shared
+pack_table-reservation-shared
+pack_user-shared
+printJsDeps
+run
+showDb - Shows MongoDB data for a specific service. Usage: ./gradlew showDb -Pservice=<name> [-Pcollection=<name>]
+showKf - Tails a Kafka topic from Minikube. Usage: ./gradlew showKf -Ptopic=<name>
+test
+typeDocs
+undeploy - Undeploys all services from Minikube. Usage: ./gradlew undeploy [-PwipeData=true]
+undeployServices
+vitestCoverageVerify
+```
+
 Lastly, we've created a ```./gradlew graphUpdate``` task which updates a [
 ```README.md```](https://github.com/Norby99/munchies/blob/master/order-service/README.md) file for each Gradle
 subproject that displays its dependencies to other subprojects.
@@ -86,31 +122,30 @@ conventions also have a hierarchical structure.
 
 These are the currenct build conventions available:
 
-- dokka-convention
-- express-server
-- kotlin-jvm
-- linter-convention
-- maven-publish-convention
-- micronaut-base
-- micronaut-server
-- multiplatform-base
-- munchies-subproject
-- test-suites
+- ```dokka-convention```: dokka configuration for jvm projects
+- ```express-server```: configuration for TypeScript projects
+- ```kotlin-jvm```: base jvm configuration
+- ```linter-convention```: linter for both Kotlin and TypeScript
+- ```maven-publish-convention```: configuration for maven publishing
+- ```micronaut-base```: micronaut base plugins
+- ```micronaut-server```: Kotlin micronaut service configuration
+- ```multiplatform-base```: Kotlin Multiplatform configuration
+- ```munchies-subproject```: subproject with dependency README
+- ```test-suites```: component and integration configuration for Micronaut services
 
 ```mermaid
 
 flowchart TB
-    ms["micronaut-server"]
-
+    ms["micronaut-server"]:::pj
     dk["dokka-convention"]
     kj["kotlin-jvm"]
     mb["micronaut-base"]
     ts["test-suites"]
-    mpb["multiplatform-base"]
+    mpb["multiplatform-base"]:::pj
     lc["linter-convention"]
     mpc["maven-publish-convention"]
     msp["munchies-subproject"]
-    es["express-server"]
+    es["express-server"]:::pj
 
     ms --> msp
     es --> msp
@@ -125,6 +160,8 @@ flowchart TB
     ms --> mpc
     mb --> kj
     ms --> mb
+
+    classDef pj fill:#9956e0,stroke:#333,stroke-width:2px,color:#fff
 ```
 
 ## Dependencies
