@@ -9,15 +9,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  test: # Always run test, gatekeeper for build and publish
+  test: # Always run test workflow (commitlint runs on PRs, Gradle tests run if code changed)
     uses: ./.github/workflows/test.yaml
 
-  build:
+  build: # If test was skipped then build is skipped => deploy-docs is still called on master push
     needs:
       - test
     if: |
       always() && 
       needs.test.result == 'success' &&
+      needs.test.outputs.code == 'true' &&
       github.event_name == 'push' && 
       github.ref == 'refs/heads/master'
     uses: ./.github/workflows/build.yaml
