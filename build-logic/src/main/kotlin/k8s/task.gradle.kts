@@ -6,13 +6,13 @@ plugins {
 }
 
 tasks.register("deploy") {
-  group = "kubernetes"
+  group = "munchies"
   description = "Deploys all services to Minikube. Usage: ./gradlew deploy"
   dependsOn("deployServices")
 }
 
 tasks.register("undeploy") {
-  group = "kubernetes"
+  group = "munchies"
   description = "Undeploys all services from Minikube. Usage: ./gradlew undeploy [-PwipeData=true]"
   dependsOn("undeployServices")
 }

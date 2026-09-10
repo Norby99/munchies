@@ -35,7 +35,7 @@ configure<ComposeExtension> {
 }
 
 tasks.named("composeBuild") {
-  group = "compose"
+  group = "munchies"
   rootProject.subprojects.forEach { proj ->
     if (proj.getProjectType() == ProjectType.SERVICE &&
       proj.getProjectLanguage() == ProjectLanguage.KOTLIN
@@ -52,9 +52,9 @@ tasks.named("composeBuild") {
 }
 
 tasks.named("composeUp") {
-  group = "compose"
+  group = "munchies"
 }
 
 tasks.named("composeDown") {
-  group = "compose"
+  group = "munchies"
 }
