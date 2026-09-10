@@ -23,8 +23,27 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```user-service``` (Kotlin): contains the user's microservice code
 - ```user-shared``` (Multiplatform): contains the user's API signatures
 
+Meanwhile, these folders:
+
+- ```build-logic```: contains the gradle conventions, tasks and configurations for the projects
+- ```config```: contains the detekt and docker images configurations
+- ```docs```: contains the internal and external documentation
+- ```k8s```: contains the Kubernetes configurations
+- ```loadtest```: contains a minikube load testing configuration with autoscaling
+- ```scripts```: contains the script for building documentation, publishing to NPM, DockerHub, Maven and a script to deploy and run our project.
 
 ## Build System
+Our project heavely relies on Gradle to test, compile, build artifacts and run.
+
+We've written custom _tasks_ that allow to link and execute commands in different platform such as the JVM and Node; this was possible by a plugin which allows gradle to run npm commands.
+We linked the ```./gradlew build``` command to also run a Typescript project's ```npm run build``` using a multiplatform's generated Javascript code, which is beforehand compressed in a .tgz archive in order to have the up-to-date code.
+
+We've also created tasks to create the service's dockerfiles', their images and link them via a ```./gradlew composeUp``` to run the whole project with a single command, furthermore ```showDb``` tasks were created to better analyze the mongodb containers running.
+These dockerfiles and images, were also used to be able to utilize kubernetes as a deployment method instead of docker.
+
+We've also created two tasks to help during the deploy-docs workflow that copies the generated docs to be then further translated into a web page. 
+
+Lastly, we've created a ```./gradlew graphUpdate``` task which updates a [```README.md```](https://github.com/Norby99/munchies/blob/master/order-service/README.md) file for each gradle subproject that displays its dependencies to other subprojects. 
 
 ## Shared build logic
 
