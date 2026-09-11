@@ -45,6 +45,59 @@ microservices architecture.
 Every service has both a `service` and a `shared` module. The shared module contains common code, that can be accessed
 by other services. The service module contains the business logic.
 
+## Service Internal Structure
+
+Backend services follow a Hexagonal Architecture (Ports & Adapters) layout inside the DDD layering, regardless of
+stack. Reference implementations for new code:
+
+- **Kotlin + Micronaut**: `order-service`
+- **Express.js**: `payment-service`
+
+The folder names are the same across both stacks, only the language differs:
+
+- `domain/`: the core domain, framework-agnostic.
+    - `model/`: entities and value objects.
+    - `factory/`: domain factories for building complex aggregates (used where construction logic is non-trivial;
+      not every service needs one).
+    - `port/`: outbound port interfaces the domain depends on (e.g. repositories, external service clients),
+      implemented by adapters in `infrastructure`.
+- `application/`: orchestrates the domain to fulfill use cases.
+    - `usecase/`: one class per use case, implementing the matching interface from `port/inbound`.
+    - `port/inbound/`: one inbound port interface per use case; controllers depend on this interface, never on the
+      concrete use case class.
+    - `port/inbound/command/`: input Command objects for use cases. Optional: use cases with a trivial input (e.g.
+      one or two primitive parameters) may skip the Command and take parameters directly instead.
+- `infrastructure/`: framework- and technology-specific adapters.
+    - `adapter/inbound/web/controller/`: REST controllers, translating HTTP to/from Commands and delegating to
+      inbound ports.
+    - `adapter/inbound/web/config/`: framework wiring (DI beans/setup, OpenAPI configuration).
+    - `adapter/outbound/mongo/`: MongoDB adapters implementing the domain's outbound ports (`document/` for Mongo
+      documents, `repository/` for the repository implementation, `factory/` for domain <-> document mapping,
+      `config/` for connection setup).
+    - `adapter/outbound/kafka/`: Kafka producers/consumers implementing outbound ports, for services that publish
+      or react to events (e.g. `payment-service` publishing a payment-success event).
+    - `adapter/outbound/<other-service>/`: clients for other microservices' REST APIs (e.g. `payment-service`'s
+      `order/` adapter calling `order-service`), implementing an outbound port from `domain/port`.
+    - `adapter/dto/factory/`: mapping between DTOs and Commands.
+
+New services, and new code in existing ones, should follow this structure.
+
+### Known deviations
+
+- `restaurant-service` uses a different, more fine-grained domain split (`aggregate/`, `repository/`,
+  `valueobject/`) that predates this convention. Do not replicate it in new services or new code; when touching
+  `restaurant-service`, prefer staying locally consistent with its existing style over silently migrating it
+  mid-change, unless the task is explicitly to realign it with the reference structure.
+- `gateway-service` intentionally has no `domain/` or `application/`: as an API Gateway it holds no business logic,
+  only routing, auth middleware, and proxying to other services (`infrastructure/adapter/middleware/`).
+- `notification-service` intentionally has no `application/` layer: it follows an agent-based, event-driven
+  architecture and reacts to Kafka messages directly in `infrastructure/adapter/inbound/kafka/`, with no use cases
+  to orchestrate.
+- `table-reservation-service` does not yet implement this structure (only a stub controller exists); it should
+  adopt it, following `payment-service`, as business logic is added.
+- `frontend-service` (Vue.js) does not follow this backend layering; it is structured separately as a frontend
+  application.
+
 ## Language & Framework Rules
 
 ### Kotlin / Micronaut
