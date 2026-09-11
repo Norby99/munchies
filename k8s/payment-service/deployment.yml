@@ -24,6 +24,8 @@ spec:
           env:
             - name: MICRONAUT_ENVIRONMENTS
               value: "k8s,prod"
+            - name: ORDER_SERVICE_URL
+              value: "http://order-service.order-service.svc.cluster.local:8080"
             - name: MONGODB_URI
               value: "mongodb://payment-mongodb:27017/payment-service"
           resources:

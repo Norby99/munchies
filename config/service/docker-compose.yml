@@ -71,9 +71,12 @@ services:
       <<: *kafka-dependency
       munchies-mongo-payment-service:
         condition: service_healthy
+      order-service:
+        condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
       USER_SERVICE_URL: http://user-service:8080
+      ORDER_SERVICE_URL: http://order-service:8080
       MONGODB_URI: mongodb://munchies-mongo-payment-service:27017/payment-service
 
   notification-service:

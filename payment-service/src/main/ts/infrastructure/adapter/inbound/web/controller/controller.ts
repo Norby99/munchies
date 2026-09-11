@@ -4,6 +4,7 @@ import {
   ProcessPaymentResponse,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
 import { ProcessPayment } from "@main/application/port/inbound/ProcessPayment";
+import { OrderServiceClient } from "@main/domain/port/order-service-client";
 import { PaymentBeans } from "@main/infrastructure/adapter/inbound/web/config/PaymentBeans";
 
 /**
@@ -13,14 +14,25 @@ import { PaymentBeans } from "@main/infrastructure/adapter/inbound/web/config/Pa
 @Tags("Payments")
 export class PaymentController {
   private readonly processPaymentUseCase: ProcessPayment;
+  private readonly orderServiceClient: OrderServiceClient;
 
-  constructor(processPaymentUseCase?: ProcessPayment) {
+  constructor(
+    processPaymentUseCase?: ProcessPayment,
+    orderServiceClient?: OrderServiceClient
+  ) {
     this.processPaymentUseCase =
       processPaymentUseCase ?? PaymentBeans.getDefaultServices().processPayment;
+    this.orderServiceClient =
+      orderServiceClient ?? PaymentBeans.getDefaultServices().orderServiceClient;
   }
 
   /**
    * Creates and processes a payment for the provided order.
+   *
+   * On success, order-service is notified over its REST API so the order
+   * can be flagged as paid. This notification is best-effort: order-service
+   * being unreachable does not roll back the already-completed payment, it
+   * is only logged, since compensating this case is not yet handled.
    *
    * @param request Request body containing order and amount information.
    * @returns The created payment details and acceptance status.
@@ -35,8 +47,18 @@ export class PaymentController {
     const result = await this.processPaymentUseCase.execute(request);
 
     switch (result.type) {
-      case "SUCCESS":
+      case "SUCCESS": {
+        const notification = await this.orderServiceClient.markOrderAsPaid(
+          request.orderId
+        );
+        if (!notification.success) {
+          console.error(
+            `Failed to notify order-service that order ${request.orderId} was paid: ` +
+              notification.errorMessage
+          );
+        }
         return result.response;
+      }
       case "INVALID_REQUEST":
       case "PAYMENT_REJECTED":
       case "FAILURE":
