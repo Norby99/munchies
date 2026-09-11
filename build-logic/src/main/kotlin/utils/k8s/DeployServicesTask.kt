@@ -46,9 +46,28 @@ abstract class DeployServicesTask @Inject constructor(
 
       loadImageIntoMinikube(srv)
 
+      val helmValuesFile = root.resolve("helm/values/$srv.yaml")
+      val helmChart = root.resolve("helm/munchies-service")
       val singleManifest = root.resolve("k8s/$srv.yml")
       val manifestDir = root.resolve("k8s/$srv")
       when {
+        helmValuesFile.exists() -> {
+          println("Deploying $srv via Helm (helm/munchies-service, -f ${helmValuesFile.name})...")
+          execOps.exec {
+            commandLine(
+              "helm",
+              "upgrade",
+              "--install",
+              srv,
+              helmChart.absolutePath,
+              "-n",
+              srv,
+              "--create-namespace",
+              "-f",
+              helmValuesFile.absolutePath,
+            )
+          }
+        }
         singleManifest.exists() -> {
           println("Applying Kubernetes manifest $singleManifest...")
           execOps.exec {

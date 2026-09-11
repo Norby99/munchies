@@ -1,0 +1,9 @@
+apiVersion: v2
+name: munchies-service
+description: >
+  Generic chart for a single munchies microservice: Deployment + Service, an optional
+  HorizontalPodAutoscaler, and an optional dedicated MongoDB StatefulSet + PVC.
+  One instantiation per service via helm/values/<service>.yaml — see helm/README.md.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

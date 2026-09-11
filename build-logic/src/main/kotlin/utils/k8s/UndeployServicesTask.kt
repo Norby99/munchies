@@ -35,10 +35,19 @@ abstract class UndeployServicesTask @Inject constructor(
       println("Undeploying: $srv")
       println("===========================================")
 
+      val helmValuesFile = root.resolve("helm/values/$srv.yaml")
       val singleManifest = root.resolve("k8s/$srv.yml")
       val manifestDir = root.resolve("k8s/$srv")
 
       when {
+        helmValuesFile.exists() -> {
+          println("Uninstalling Helm release $srv...")
+          execOps.exec {
+            commandLine("helm", "uninstall", srv, "-n", srv)
+            isIgnoreExitValue = true
+          }
+        }
+
         singleManifest.exists() -> {
           println("Deleting resources from k8s/$srv.yml...")
           execOps.exec {

@@ -1,6 +1,17 @@
 # Build setup
 
-Every service must include a YAML file in the `/k8s/` folder named with its own service name. This could be a single file (es. `/k8s/order-service.yml`) or a directory containing multiple YAML files (es. `/k8s/order-service/*.yml`).
+A service is deployed one of two ways:
+
+- **Helm** (`gateway-service`, `user-service`, `order-service`, `restaurant-service`): a
+  values file in `/helm/values/<service>.yaml`, rendered by the generic
+  `helm/munchies-service` chart. See `helm/README.md`.
+- **Raw manifests** (everything else — `kafka`, `payment-service`, `notification-service`,
+  `table-reservation-service`): a YAML file in the `/k8s/` folder named with its own service
+  name, either a single file (es. `/k8s/order-service.yml`) or a directory containing
+  multiple YAML files (es. `/k8s/order-service/*.yml`).
+
+`./gradlew deploy`/`undeploy` (below) discover both kinds together and pick whichever one
+exists for a given service — a Helm values file takes priority if somehow both exist.
 
 # Helpful scripts
 

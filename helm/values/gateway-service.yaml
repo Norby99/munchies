@@ -1,0 +1,27 @@
+# Stateless Express gateway: no Mongo, no Kafka — only routes to the other services.
+serviceName: gateway-service
+namespace: gateway-service
+
+image:
+  repository: gateway-service
+
+service:
+  type: NodePort
+
+env:
+  - name: PORT
+    value: "8080"
+  - name: JWT_SECRET
+    value: "blastimus_prime"
+  - name: USER_SERVICE_URL
+    value: "http://user-service.user-service.svc.cluster.local:8080"
+  - name: RESTAURANT_SERVICE_URL
+    value: "http://restaurant-service.restaurant-service.svc.cluster.local:8080"
+  - name: ORDER_SERVICE_URL
+    value: "http://order-service.order-service.svc.cluster.local:8080"
+
+readinessProbe:
+  initialDelaySeconds: 5
+
+autoscaling:
+  enabled: true

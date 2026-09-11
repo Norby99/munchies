@@ -1,0 +1,26 @@
+serviceName: order-service
+namespace: order-service
+
+image:
+  repository: order-service
+
+service:
+  type: NodePort
+
+env:
+  - name: MICRONAUT_ENVIRONMENTS
+    value: "k8s,prod"
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
+  - name: MONGODB_URI
+    # Note: the app's own default db name is "orders" (see order-service/application.yml),
+    # kept as-is here; MONGO_INITDB_DATABASE below is independent and only seeds the
+    # container's default db, which is why the two names differ.
+    value: "mongodb://order-mongodb.order-service.svc.cluster.local:27017/orders"
+
+autoscaling:
+  enabled: true
+
+mongodb:
+  enabled: true
+  databaseName: order-service
