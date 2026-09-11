@@ -74,3 +74,6 @@ jobs:
 
       - name: Run tests with Gradle
         run: ./gradlew test integrationTest componentTest e2eTest -PtestOutput=all
+
+      - name: Check code coverage
+        run: ./gradlew koverVerify vitestCoverageVerify
