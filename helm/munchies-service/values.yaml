@@ -1,0 +1,74 @@
+# Default values for the munchies-service chart.
+#
+# This file documents every knob and gives it a safe default; each service under
+# helm/values/<service>.yaml only overrides what actually differs (name, image, env,
+# whether it owns a MongoDB, whether it's autoscaled) — see helm/README.md.
+
+serviceName: "" # required override: used for the Deployment/Service/HPA/Mongo names, pod
+# labels and (by default) the namespace — matches the project's one-namespace-per-service
+# convention already used by the hand-written manifests under k8s/.
+namespace: "" # required override: usually == serviceName.
+
+image:
+  repository: "" # required override: matches the image built by `./gradlew :<service>:dockerBuild`.
+  tag: latest
+  pullPolicy: Never # minikube only: images are loaded directly with `minikube image load`,
+  # never pulled from a registry. Switch to IfNotPresent/Always + a real repository for a
+  # non-minikube cluster.
+
+replicaCount: 1
+containerPort: 8080
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# Extra container env vars, verbatim Kubernetes `env` entries.
+env: []
+# - name: SOME_VAR
+#   value: "some-value"
+
+readinessProbe:
+  enabled: true
+  path: /health
+  port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 60
+  # Tightened from Kubernetes' defaults (5 min scale-down stabilization) so a scaling demo
+  # doesn't take 10 minutes to show a result.
+  behavior:
+    scaleUpStabilizationSeconds: 0
+    scaleUpPodsValue: 2
+    scaleUpPeriodSeconds: 30
+    scaleDownStabilizationSeconds: 30
+    scaleDownPodsValue: 1
+    scaleDownPeriodSeconds: 30
+
+# A dedicated single-instance MongoDB for this service (database-per-service, per the
+# project's DDD bounded-context isolation). Disabled for stateless services (the gateway).
+mongodb:
+  enabled: false
+  image: mongo:7
+  storage: 1Gi
+  databaseName: "" # MONGO_INITDB_DATABASE; defaults to serviceName when empty
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
