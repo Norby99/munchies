@@ -138,7 +138,7 @@ These are the currenct build conventions available:
 flowchart TB
     ms["micronaut-server"]:::pj
     dk["dokka-convention"]
-    kj["kotlin-jvm"]
+    kj["kotlin-jvm"]:::pj
     mb["micronaut-base"]
     ts["test-suites"]
     mpb["multiplatform-base"]:::pj
@@ -164,4 +164,10 @@ flowchart TB
     classDef pj fill:#9956e0,stroke:#333,stroke-width:2px,color:#fff
 ```
 
-## Dependencies
+### Express Server Convention
+Many of our subproject are developed in TypeScript, as such we needed to find a way to share the same functionalities and code between JVM, Multiplatform and TypeScript subprojects.
+
+We did so through the [express-server.gradle.kts](https://github.com/Norby99/munchies/blob/master/build-logic/src/main/kotlin/express-server.gradle.kts), which is tasked with integrating Gradle's most used tasks (clean, build, run) into a npm-reliant subsystem;
+this was done through a plugin which allows Gradle to run npm commands and a custom dependency (```jsImplementation```) between subproject that builds, archives and links JavaScript modules from Multiplaform subprojects.
+
+We've decided to go along with these steps, so that during the development of TypeScript subprojects the library dependencies would align with the local version and as a result be up-to-date.
