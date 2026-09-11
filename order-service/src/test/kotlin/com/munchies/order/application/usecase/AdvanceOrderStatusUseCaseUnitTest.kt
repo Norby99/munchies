@@ -3,7 +3,7 @@ package com.munchies.order.application.usecase
 import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCommand
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import io.kotest.matchers.equals.shouldBeEqual

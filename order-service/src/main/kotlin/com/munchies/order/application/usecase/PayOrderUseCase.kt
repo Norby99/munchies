@@ -3,7 +3,7 @@ package com.munchies.order.application.usecase
 import com.munchies.order.application.port.inbound.PayOrder
 import com.munchies.order.application.port.inbound.command.PayOrderCommand
 import com.munchies.order.domain.model.Order
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 
 class PayOrderUseCase(private val repository: OrderRepository) : PayOrder {
   override fun execute(command: PayOrderCommand): PayOrder.Result {

@@ -3,7 +3,7 @@ package com.munchies.order.application.usecase
 import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCommand
 import com.munchies.order.domain.model.Order
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 
 /**
  * Use case implementation for advancing the status of an order.

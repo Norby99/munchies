@@ -5,7 +5,7 @@ import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo.Resul
 import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo.Result.Success
 import com.munchies.order.application.port.inbound.command.UpdateTakeawayOrderCommand
 import com.munchies.order.domain.model.TakeawayOrder
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 
 /**
  * Use case implementation for updating the information of a takeaway order.
