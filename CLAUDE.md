@@ -104,11 +104,12 @@ by other services. The service module contains the business logic.
 - **Build System:** Gradle multi-project build orchestrating Kotlin across services. Configuration logic is centralized
   in the `build-logic` directory using Gradle convention plugins.
 - **Git Hooks:** The project uses the `danilopianini.gradle-pre-commit-git-hooks` plugin.
-    - **Pre-commit:** Enforces spotless formatting (`spotlessCheck`) and static analysis (`detekt`).
-    - **Pre-push:** Runs all tests (`test`).
+    - **Pre-push:** Runs the `check` task, which includes tests, spotless formatting (`spotlessCheck`), and static
+      analysis (`detekt`).
     - **Conventional Commits:** Commit messages must strictly follow the Conventional Commits specification.
-- **Local Testing:** Docker compose is set up in `config/docker/docker-compose.yml` for standing up local integrations
-  or databases.
+- **Local Testing:** Docker compose files are set up under `config/` (`config/kafka/docker-compose.yml`,
+  `config/mongodb/docker-compose.yml`, `config/service/docker-compose.yml`) for standing up local integrations or
+  databases.
 
 ## Commands
 
