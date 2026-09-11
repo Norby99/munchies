@@ -6,51 +6,44 @@ x-mongo-healthcheck: &mongo-healthcheck
   start_period: 5s
 
 services:
-  munchies-mongo-order-service:
+  munchies-order-mongo:
     image: mongo:7.0
-    container_name: munchies-mongo-order-service
+    container_name: munchies-order-mongo
     ports: [ "27018:27017" ]
     volumes: [ "mongo_order_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
-  munchies-mongo-user-service:
+  munchies-user-mongo:
     image: mongo:7.0
-    container_name: munchies-mongo-user-service
+    container_name: munchies-user-mongo
     ports: [ "27019:27017" ]
     volumes: [ "mongo_user_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
-  munchies-mongo-payment-service:
+  munchies-payment-mongo:
     image: mongo:7.0
-    container_name: munchies-mongo-payment-service
+    container_name: munchies-payment-mongo
     ports: [ "27020:27017" ]
     volumes: [ "mongo_payment_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
-  munchies-mongo-notification-service:
+  munchies-notification-mongo:
     image: mongo:7.0
-    container_name: munchies-mongo-notification-service
+    container_name: munchies-notification-mongo
     ports: [ "27021:27017" ]
     volumes: [ "mongo_notification_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
-  #  munchies-mongo-table-reservation-service:
+  #  munchies-table-reservation-mongo:
   #    image: mongo:7.0
-  #    container_name: munchies-mongo-table-reservation-service
+  #    container_name: munchies-table-reservation-mongo
   #    ports: [ "27022:27017" ]
   #    volumes: [ "mongo_table_reservation_data:/data/db" ]
   #    healthcheck: *mongo-healthcheck
 
-  munchies-mongo-gateway-service:
+  munchies-restaurant-mongo:
     image: mongo:7.0
-    container_name: munchies-mongo-gateway-service
-    ports: [ "27023:27017" ]
-    volumes: [ "mongo_gateway_data:/data/db" ]
-    healthcheck: *mongo-healthcheck
-
-  munchies-mongo-restaurant-service:
-    image: mongo:7.0
-    container_name: munchies-mongo-restaurant-service
+    container_name: munchies-restaurant-mongo
     ports: [ "27024:27017" ]
     volumes: [ "mongo_restaurant_data:/data/db" ]
     healthcheck: *mongo-healthcheck
@@ -61,5 +54,4 @@ volumes:
   mongo_payment_data:
   mongo_notification_data:
   mongo_table_reservation_data:
-  mongo_gateway_data:
   mongo_restaurant_data:

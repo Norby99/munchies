@@ -34,11 +34,11 @@ services:
     ports: [ "8081:8080" ]
     depends_on:
       <<: *kafka-dependency
-      munchies-mongo-order-service:
+      munchies-order-mongo:
         condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
-      MONGODB_URI: mongodb://munchies-mongo-order-service:27017/order-service
+      MONGODB_URI: mongodb://munchies-order-mongo:27017/order-service
     healthcheck: *micronaut-healthcheck
 
   user-service:
@@ -50,14 +50,14 @@ services:
     ports: [ "8082:8080" ]
     depends_on:
       <<: *kafka-dependency
-      munchies-mongo-user-service:
+      munchies-user-mongo:
         condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
       JWT_SECRET: blastimus_prime
       GATEWAY_SERVICE_URL: http://gateway-service:8080
       PAYMENT_SERVICE_URL: http://payment-service:8080
-      MONGODB_URI: mongodb://munchies-mongo-user-service:27017/user-service
+      MONGODB_URI: mongodb://munchies-user-mongo:27017/user-service
     healthcheck: *micronaut-healthcheck
 
   payment-service:
@@ -69,12 +69,12 @@ services:
     ports: [ "8083:8080" ]
     depends_on:
       <<: *kafka-dependency
-      munchies-mongo-payment-service:
+      munchies-payment-mongo:
         condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
       USER_SERVICE_URL: http://user-service:8080
-      MONGODB_URI: mongodb://munchies-mongo-payment-service:27017/payment-service
+      MONGODB_URI: mongodb://munchies-payment-mongo:27017/payment-service
 
   notification-service:
     <<: *service-common
@@ -85,11 +85,11 @@ services:
     #? no need for port mapping (no API exposed)
     depends_on:
       <<: *kafka-dependency
-      munchies-mongo-notification-service:
+      munchies-notification-mongo:
         condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
-      MONGODB_URI: mongodb://munchies-mongo-notification-service:27017/notification-service
+      MONGODB_URI: mongodb://munchies-notification-mongo:27017/notification-service
 
   #  table-reservation-service:
   #    <<: *service-common
@@ -100,11 +100,11 @@ services:
   #    ports: [ "8085:8080" ]
   #    depends_on:
   #      <<: *kafka-dependency
-  #      munchies-mongo-table-reservation-service:
+  #      munchies-table-reservation-mongo:
   #        condition: service_healthy
   #    environment:
   #      <<: [ *kafka-env, *service-env ]
-  #      MONGODB_URI: mongodb://munchies-mongo-table-reservation-service:27017/table-reservation-service
+  #      MONGODB_URI: mongodb://munchies-table-reservation-mongo:27017/table-reservation-service
 
   restaurant-service:
     <<: *service-common
@@ -115,11 +115,11 @@ services:
     ports: [ "8087:8080" ]
     depends_on:
       <<: *kafka-dependency
-      munchies-mongo-restaurant-service:
+      munchies-restaurant-mongo:
         condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
-      MONGODB_URI: mongodb://munchies-mongo-restaurant-service:27017/restaurant-service
+      MONGODB_URI: mongodb://munchies-restaurant-mongo:27017/restaurant-service
     healthcheck: *micronaut-healthcheck
 
   gateway-service:
@@ -130,9 +130,6 @@ services:
     image: munchies-gateway-service:latest
     ports: [ "8086:8080" ]
     depends_on:
-      <<: *kafka-dependency
-      munchies-mongo-gateway-service:
-        condition: service_healthy
       user-service:
         condition: service_healthy
       restaurant-service:
@@ -140,12 +137,10 @@ services:
       order-service:
         condition: service_healthy
     environment:
-      <<: [ *kafka-env, *service-env ]
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
       ORDER_SERVICE_URL: http://order-service:8080
-      MONGODB_URI: mongodb://munchies-mongo-gateway-service:27017/gateway-service
     healthcheck:
       # node:*-alpine base image ships busybox wget, not curl
       test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]
