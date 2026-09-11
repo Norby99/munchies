@@ -21,6 +21,17 @@ These are the following code testing techniques and tools to ensure code quality
 - Behavioral tests using the Cucumber's Gherkin language
 - End-to-End tests to test the whole system behavior and correctness
 
+Lastly, through a Gradle plugin, [```org.danilopianini.gradle-pre-commit-git-hooks```](https://github.com/DanySK/gradle-pre-commit-git-hooks), any development done locally by a developer requires a ```./gradlew check``` before it can be pushed to a remote-branch.
+
+As shown by this configuration:
+```
+plugins { id("org.danilopianini.gradle-pre-commit-git-hooks") }
+gitHooks {
+  hook("pre-push") { tasks("check") }
+  createHooks(overwriteExisting = true)
+}
+```
+
 ## Code Coverage
 Code coverage is a metric that measures the percentage of code that is executed during automated tests.
 
