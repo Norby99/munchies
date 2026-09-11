@@ -40,3 +40,35 @@ data:
       const res = http.get(URL);
       check(res, { 'status is 200': (r) => r.status === 200 });
     }
+
+    // Overriding handleSummary() replaces k6's default end-of-test table. We print a short
+    // human-readable summary AND the full summary object as a single JSON line prefixed with
+    // K6_JSON: — run.sh greps that prefix out of `kubectl logs` to save a machine-readable
+    // summary.json, since the Job's own filesystem disappears once the pod is cleaned up.
+    export function handleSummary(data) {
+      const val = (name, key) => {
+        const v = data.metrics[name] && data.metrics[name].values;
+        return v ? v[key] : undefined;
+      };
+      const num = (n, d = 1) => (typeof n === 'number' ? n.toFixed(d) : 'n/a');
+      const pct = (n) => (typeof n === 'number' ? (n * 100).toFixed(2) + '%' : 'n/a');
+
+      const text = [
+        '',
+        '=== k6 summary ===',
+        `target ............. ${URL}`,
+        `peak VUs ............ ${PEAK_VUS}`,
+        `iterations (reqs) ... ${val('iterations', 'count') ?? 'n/a'}`,
+        `throughput .......... ${num(val('http_reqs', 'rate'), 2)} req/s`,
+        `latency avg/p95/p99 . ${num(val('http_req_duration', 'avg'))}ms / ` +
+          `${num(val('http_req_duration', 'p(95)'))}ms / ${num(val('http_req_duration', 'p(99)'))}ms`,
+        `latency max ......... ${num(val('http_req_duration', 'max'))}ms`,
+        `error rate .......... ${pct(val('http_req_failed', 'rate'))}`,
+        '===================',
+        '',
+      ].join('\n');
+
+      return {
+        stdout: text + '\nK6_JSON:' + JSON.stringify(data) + '\n',
+      };
+    }
