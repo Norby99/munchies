@@ -5,7 +5,7 @@ import com.munchies.order.application.port.inbound.command.GetOrdersCommand
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.RestaurantId
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto

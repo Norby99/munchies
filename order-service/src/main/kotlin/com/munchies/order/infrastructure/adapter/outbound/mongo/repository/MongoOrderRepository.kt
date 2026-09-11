@@ -2,7 +2,7 @@ package com.munchies.order.infrastructure.adapter.outbound.mongo.repository
 
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderId
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderDocument
 import com.munchies.order.infrastructure.adapter.outbound.mongo.factory.OrderDocumentFactory.toDocument
 import com.munchies.order.infrastructure.adapter.outbound.mongo.factory.OrderDocumentFactory.toNullableDomain
