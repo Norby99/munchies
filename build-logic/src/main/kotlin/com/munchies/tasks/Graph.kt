@@ -70,6 +70,7 @@ fun Project.configureGraphTasks() {
   if (!buildFile.exists()) return
 
   val dumpTask = tasks.register<GraphDumpTask>("graphDump") {
+    group = "munchies"
     val graph = Graph(this@configureGraphTasks).invoke()
     projectPath = this@configureGraphTasks.path
     dependencies = graph.dependencies()

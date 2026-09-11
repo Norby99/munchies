@@ -33,6 +33,7 @@ afterEvaluate {
     .map { it.dependencyProject.name }
 
   tasks.register("printJsDeps") {
+    group = "munchies"
     doLast {
       println(input)
     }
@@ -43,6 +44,7 @@ afterEvaluate {
   }
 
   tasks.register("moveJsDeps") {
+    group = "munchies"
     dependsOn("printJsDeps")
     dependsOn(packTasks)
 
@@ -95,11 +97,13 @@ tasks.named("build") {
 }
 
 tasks.register("test") {
+  group = "munchies"
   dependsOn(project.tasks.named("build"))
   dependsOn("npm_run_test")
 }
 
 tasks.register<NodeTask>("run") {
+  group = "munchies"
   dependsOn(
     project.tasks.named("build"),
   )
@@ -114,6 +118,7 @@ tasks.named("clean") {
 }
 
 tasks.register("dockerCreate", Dockerfile::class) {
+  group = "munchies"
   dependsOn(project.tasks.named("build"))
 
   from("node:$nodeVersion-alpine")
@@ -160,12 +165,14 @@ tasks.register("dockerCreate", Dockerfile::class) {
 }
 
 tasks.register<DockerBuildImage>("dockerBuild") {
+  group = "munchies"
   dependsOn("dockerCreate")
   inputDir.set(project.layout.buildDirectory.dir("docker/main/"))
   images.set(listOf("$serviceName-service:latest"))
 }
 
 tasks.register<NpxTask>("typeDocs") {
+  group = "munchies"
   dependsOn(project.tasks.named("build"))
   command.set("typedoc")
   workingDir.set(project.projectDir.resolve("src"))
@@ -182,6 +189,7 @@ tasks.register<NpxTask>("typeDocs") {
   )
 }
 tasks.register("vitestCoverageVerify") {
+  group = "munchies"
   mustRunAfter(project.tasks.named("test"))
   dependsOn("npm_run_coverage")
 }

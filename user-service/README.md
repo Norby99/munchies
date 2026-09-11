@@ -13,12 +13,9 @@ config:
 graph TB
   :user-shared[user-shared]:::unknown
   :user-service[user-service]:::unknown
-  :payment-shared[payment-shared]:::unknown
   :commons[commons]:::unknown
 
-  :payment-shared -.->|commonMainImplementation| :commons
   :user-service -.-> :commons
-  :user-service -.-> :payment-shared
   :user-service -.-> :user-shared
   :user-shared -.->|commonMainImplementation| :commons
 

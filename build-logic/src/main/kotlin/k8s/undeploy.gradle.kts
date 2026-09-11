@@ -4,6 +4,7 @@ import utils.k8s.UndeployServicesTask
 import utils.k8s.discoverServices
 
 tasks.register<UndeployServicesTask>("undeployServices") {
+  group = "munchies"
   val service = (project.findProperty("service") as? String) ?: "all"
   services.set(discoverServices(rootProject.rootDir.resolve("k8s"), service))
   rootDir.set(rootProject.rootDir)

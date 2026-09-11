@@ -1,7 +1,7 @@
 package k8s
 
 tasks.register<Exec>("k8sInfo") {
-  group = "kubernetes"
+  group = "munchies"
   description = "Prints the current pods and deployments across all namespaces in Minikube " +
     "(except for kubernetes' pods)."
 
@@ -23,7 +23,7 @@ tasks.register<Exec>("k8sInfo") {
 }
 
 tasks.register<Exec>("showDb") {
-  group = "kubernetes"
+  group = "munchies"
   description = "Shows MongoDB data for a specific service. " +
     "Usage: ./gradlew showDb -Pservice=<name> [-Pcollection=<name>]"
 
@@ -47,7 +47,7 @@ tasks.register<Exec>("showDb") {
 }
 
 tasks.register<Exec>("showKf") {
-  group = "kubernetes"
+  group = "munchies"
   description = "Tails a Kafka topic from Minikube. " +
     "Usage: ./gradlew showKf -Ptopic=<name>"
 
