@@ -1,0 +1,83 @@
+{
+  "title": "Munchies — Scaling",
+  "uid": "munchies-scaling",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "utc",
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "textbox",
+        "label": "Namespace",
+        "current": { "text": "gateway-service", "value": "gateway-service" },
+        "query": "gateway-service"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Ready replicas",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "kube_deployment_status_replicas_ready{namespace=\"$namespace\"}",
+          "legendFormat": "{{ deployment }} ready",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "HPA current vs desired replicas",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"$namespace\"}",
+          "legendFormat": "{{ horizontalpodautoscaler }} current",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"$namespace\"}",
+          "legendFormat": "{{ horizontalpodautoscaler }} desired",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "CPU usage per pod (cAdvisor) vs request",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", container!=\"\", container!=\"POD\"}[1m])) by (pod)",
+          "legendFormat": "{{ pod }} cpu cores",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", resource=\"cpu\"}) by (pod)",
+          "legendFormat": "{{ pod }} requested",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

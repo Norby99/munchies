@@ -1,0 +1,135 @@
+# Trimmed override for the upstream `grafana-community/grafana` chart (the canonical repo
+# as of 2026 — the old grafana.github.io/helm-charts repo is deprecated/migrating).
+#
+# Deliberately temporary and opt-in, like `loadtest/` and Prometheus above — not part of
+# `k8s/` or `./gradlew deploy`. Bring it up right before a benchmark run, tear it down after.
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 96Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+persistence:
+  enabled: false # ephemeral: dashboards/datasource are provisioned from values on every start, nothing to persist
+
+service:
+  type: ClusterIP # internal only; `kubectl port-forward svc/grafana 3000:80 -n observability` to view
+
+# Provisioned datasource — points at the Prometheus Service from observability/values/prometheus.yaml
+# (release name "prometheus", namespace "observability" — adjust both if you install under different names).
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.observability.svc.cluster.local
+        isDefault: true
+
+# Provisioned dashboard — inlined so this values file is fully self-contained (no external
+# dashboards.grafana.com fetch, no dependency on a file living on the target cluster's disk).
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: munchies
+        orgId: 1
+        folder: Munchies
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/munchies
+
+dashboards:
+  munchies:
+    scaling:
+      json: |
+        {
+          "title": "Munchies — Scaling",
+          "uid": "munchies-scaling",
+          "schemaVersion": 39,
+          "version": 1,
+          "editable": true,
+          "timezone": "utc",
+          "time": { "from": "now-30m", "to": "now" },
+          "refresh": "10s",
+          "templating": {
+            "list": [
+              {
+                "name": "namespace",
+                "type": "textbox",
+                "label": "Namespace",
+                "current": { "text": "gateway-service", "value": "gateway-service" },
+                "query": "gateway-service"
+              }
+            ]
+          },
+          "panels": [
+            {
+              "id": 1,
+              "title": "Ready replicas",
+              "type": "timeseries",
+              "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+              "targets": [
+                {
+                  "datasource": { "type": "prometheus", "uid": "Prometheus" },
+                  "expr": "kube_deployment_status_replicas_ready{namespace=\"$namespace\"}",
+                  "legendFormat": "{{ deployment }} ready",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "title": "HPA current vs desired replicas",
+              "type": "timeseries",
+              "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+              "targets": [
+                {
+                  "datasource": { "type": "prometheus", "uid": "Prometheus" },
+                  "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"$namespace\"}",
+                  "legendFormat": "{{ horizontalpodautoscaler }} current",
+                  "refId": "A"
+                },
+                {
+                  "datasource": { "type": "prometheus", "uid": "Prometheus" },
+                  "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"$namespace\"}",
+                  "legendFormat": "{{ horizontalpodautoscaler }} desired",
+                  "refId": "B"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "title": "CPU usage per pod (cAdvisor) vs request",
+              "type": "timeseries",
+              "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+              "targets": [
+                {
+                  "datasource": { "type": "prometheus", "uid": "Prometheus" },
+                  "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", container!=\"\", container!=\"POD\"}[1m])) by (pod)",
+                  "legendFormat": "{{ pod }} cpu cores",
+                  "refId": "A"
+                },
+                {
+                  "datasource": { "type": "prometheus", "uid": "Prometheus" },
+                  "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", resource=\"cpu\"}) by (pod)",
+                  "legendFormat": "{{ pod }} requested",
+                  "refId": "B"
+                }
+              ]
+            }
+          ]
+        }
