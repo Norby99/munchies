@@ -12,7 +12,10 @@ k6-based load test used to verify that services scale horizontally under Kuberne
 | `k6-job.yml` | the k6 runner Job — target URL and load profile are set via `env` here |
 | `run.sh` | applies the Job and prints replica count + HPA CPU% every 10s next to the k6 output |
 
-The HPA itself lives with the service it scales: `k8s/gateway-service/hpa.yml`.
+The HPA itself lives with the service it scales, in `helm/values/gateway-service.yaml`
+(`autoscaling:` block) — see `helm/README.md`. `gateway-service`, `user-service`,
+`order-service` and `restaurant-service` are all deployed via that Helm chart, not raw
+manifests under `k8s/`.
 
 ---
 
@@ -34,10 +37,12 @@ The HPA itself lives with the service it scales: `k8s/gateway-service/hpa.yml`.
 
 ## Option A — deploy with Gradle (normal machines)
 
-The Gradle task builds each image, loads it into minikube, and applies the manifests.
+The Gradle task builds each image, loads it into minikube, and applies the manifests — raw
+`k8s/` manifests for kafka/payment/notification/table-reservation, `helm upgrade --install`
+for gateway/user/order/restaurant (see `helm/README.md`).
 
 ```bash
-# everything under k8s/ (kafka first, then every service dir):
+# everything: kafka first, then every service (k8s/ and helm/ ones alike):
 ./gradlew deploy
 
 # or one at a time:
@@ -71,7 +76,10 @@ Tear down (keeps PVCs/namespaces unless `-PwipeData=true`):
 ## Option B — deploy without Gradle (low-memory machines)
 
 Idea: **do the heavy compile while minikube is stopped**, then start a small cluster and
-apply the plain manifests by hand. No nested Gradle process runs against the live cluster.
+install by hand (`helm upgrade --install`, same command `DeployServicesTask` runs, minus the
+nested Gradle process). No compile runs against the live cluster.
+
+Needs `helm` — see `helm/README.md` for install instructions.
 
 For the **gateway scaling test** you only need `gateway-service` — it has no Mongo and no
 Kafka dependency, so this is the lightest possible setup.
@@ -88,17 +96,19 @@ minikube addons enable metrics-server
 # 3. load the pre-built image into minikube (no rebuild)
 minikube image load gateway-service:latest
 
-# 4. apply the manifests by hand — namespace FIRST, then the rest
-minikube kubectl -- apply -f k8s/gateway-service/namespace.yml
-minikube kubectl -- apply -f k8s/gateway-service/
+# 4. install via Helm (creates the namespace, Deployment, Service, HPA)
+helm upgrade --install gateway-service ./helm/munchies-service \
+  -n gateway-service --create-namespace \
+  -f helm/values/gateway-service.yaml
 
 # 5. wait until Ready
 minikube kubectl -- get pods -n gateway-service -w
 ```
 
-To redeploy after a code change, repeat steps 1–4 (stop → build → start → load → apply).
+To redeploy after a code change, repeat steps 1–4 (stop → build → start → load → install).
 `minikube kubectl -- rollout restart deploy -n gateway-service` forces pods onto the new
-image (the tag is always `:latest`, so k8s won't notice otherwise).
+image (the tag is always `:latest`, so k8s won't notice otherwise; `helm upgrade` alone
+won't trigger a restart when nothing in the values changed).
 
 ### Testing a JVM service instead (restaurant / user)
 
@@ -114,13 +124,14 @@ minikube image load restaurant-service:latest    # kafka/mongo images pull from 
 
 minikube kubectl -- apply -f k8s/kafka/namespace.yml
 minikube kubectl -- apply -f k8s/kafka/
-minikube kubectl -- apply -f k8s/restaurant-service/namespace.yml
-minikube kubectl -- apply -f k8s/restaurant-service/
+helm upgrade --install restaurant-service ./helm/munchies-service \
+  -n restaurant-service --create-namespace \
+  -f helm/values/restaurant-service.yaml
 ```
 
-Each service ships its own HPA (`k8s/<svc>/hpa.yml` for gateway, user, order, restaurant),
-applied automatically with the rest of the folder. Point the load test at the service you
-want to scale via `TARGET_URL` in `k6-job.yml`.
+Each service ships its own HPA (`autoscaling:` in `helm/values/<svc>.yaml`, for gateway,
+user, order, restaurant), installed automatically with the rest of the release. Point the
+load test at the service you want to scale via `TARGET_URL` in `k6-job.yml`.
 
 ---
 
@@ -144,7 +155,9 @@ minikube kubectl -- scale deploy/gateway-service -n gateway-service --replicas=3
 ### 2. HPA (autoscaling)
 
 ```bash
-minikube kubectl -- apply -f k8s/gateway-service/hpa.yml
+# recreates the HPA deleted in step 1 (helm upgrade reconciles the full release state)
+helm upgrade --install gateway-service ./helm/munchies-service \
+  -n gateway-service -f helm/values/gateway-service.yaml
 minikube kubectl -- get hpa -n gateway-service          # TARGETS shows a %, not <unknown>
 
 ./loadtest/run.sh                        # prints "ready=N cpu%=X" every 10s
@@ -153,7 +166,8 @@ minikube kubectl -- get hpa,pods -n gateway-service -w
 ```
 
 Expected: replicas climb during the 3-minute sustain phase, then step back down ~30s
-after the load stops (`scaleDown.stabilizationWindowSeconds: 30` in `hpa.yml`).
+after the load stops (`scaleDown.stabilizationWindowSeconds` in the chart's `hpa.yaml`
+template, set via `autoscaling.behavior` in `values.yaml`).
 
 `run.sh` takes the watched namespace as `$1` (default `gateway-service`):
 
@@ -165,34 +179,37 @@ after the load stops (`scaleDown.stabilizationWindowSeconds: 30` in `hpa.yml`).
 
 ## Reading the output
 
-`run.sh` streams two things to the terminal (nothing is saved to a file):
+`run.sh` streams the same two things to the terminal as before, and now **also saves them**
+to `loadtest/results/<UTC timestamp>/` (git-ignored — copy the numbers you want into the
+report, don't commit raw run dumps):
 
-- **k6 end-of-test summary** — the important numbers:
-  - `http_reqs` .......... total requests + **rate (req/s)** = aggregate throughput
-  - `http_req_duration` .. avg / med / **p(95)** / p(99) / max latency
-  - `http_req_failed` .... error rate (threshold: < 1%)
-  - `iterations` ......... = requests here (1 GET per iteration)
-  - `✓ / ✗` on thresholds
+| File | Contents |
+| --- | --- |
+| `k6.log` | raw k6 stdout: live progress line + the `handleSummary()` text block |
+| `summary.json` | k6's full summary object (all metrics, all percentiles), extracted from `k6.log` |
+| `scaling.csv` | `timestamp,ready_replicas,cpu_percent`, sampled every 10s for the whole run |
+| `hpa-events.txt` | `kubectl describe hpa` + `kubectl get events --sort-by=.lastTimestamp`, captured once at the end |
+
+The Job's own filesystem disappears with the pod, so getting `summary.json` out doesn't use
+`kubectl cp` — the k6 script's `handleSummary()` prints the JSON as a single line prefixed
+with `K6_JSON:`, and `run.sh` greps that prefix out of the log it's already tailing.
+
+Terminal output during and after the run:
+
+- **k6 summary block** (`=== k6 summary ===` … `===================`) — throughput (req/s),
+  latency avg/p95/p99/max, error rate. Same numbers as `summary.json`, human-readable.
 - **watcher line** every 10s: `[HH:MM:SS] gateway-service ready=N cpu%=X`
-  - `ready` = current ready replicas, `cpu%` = HPA's averaged CPU utilisation
-
-The live progress line during the run:
-```
-running (4m13.0s), 150/150 VUs, 662259 complete and 0 interrupted iterations
-```
-= elapsed time, active VUs (virtual users) / target, cumulative completed iterations (≈ requests),
-and interrupted iterations (should stay 0).
+  — `ready` = current ready replicas, `cpu%` = HPA's averaged CPU utilisation.
+- **live progress line**, e.g. `running (4m13.0s), 150/150 VUs, 662259 complete and 0 interrupted iterations`
+  = elapsed time, active VUs / target, cumulative completed iterations (≈ requests), and
+  interrupted iterations (should stay 0).
 
 Interpreting it:
 - throughput roughly flat while `ready` climbs → bottleneck is elsewhere
   (k6 pod CPU, the single node's cores, or the Service), not the app.
 - `cpu%` pegged well above 60 and `ready` marching to `maxReplicas` (4) → HPA working.
-
-For richer analysis, capture after the run:
-```bash
-minikube kubectl -- describe hpa gateway-service -n gateway-service
-minikube kubectl -- get events -n gateway-service --sort-by=.lastTimestamp
-```
+- `scaling.csv` plotted over time is the evidence to paste into the Benchmark report
+  (replicas ramping up during the sustain phase, back down ~30s after load stops).
 
 ---
 
@@ -208,7 +225,7 @@ Edit `env` in `k6-job.yml` before running:
 
 `/health` is cheap — if `cpu%` won't cross 60, raise `PEAK_VUS` to 300–400.
 For a gentler HPA ramp, raise `resources.requests.cpu` (and `limits.cpu`) in
-`k8s/gateway-service/deployment.yml` — the HPA percentage is measured against the request.
+`helm/values/gateway-service.yaml` — the HPA percentage is measured against the request.
 
 Pin the k6 image (`grafana/k6:latest` → e.g. `grafana/k6:0.55.0`) for reproducible numbers.
 

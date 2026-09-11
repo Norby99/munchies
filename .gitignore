@@ -431,3 +431,6 @@ postman/*
 
 # Generated reports
 ./docs/pages/reports/*
+
+# Load test run artifacts (k6 logs/summaries, scaling CSVs) — regenerate with loadtest/run.sh
+loadtest/results/
