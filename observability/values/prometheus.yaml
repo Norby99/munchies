@@ -1,0 +1,53 @@
+# Trimmed override for the upstream `prometheus-community/prometheus` chart.
+#
+# Deliberately scoped down for a memory-constrained single-node minikube: no Alertmanager,
+# no node-exporter, no Pushgateway, no Prometheus Operator/CRDs (this chart predates the
+# operator pattern — it ships a classic ConfigMap-based scrape config instead, which is
+# exactly what we want here). Only two Deployments come out of this: `prometheus-server`
+# and `prometheus-kube-state-metrics`.
+#
+# This is a deliberately temporary, opt-in addition for benchmarking — like `loadtest/`, it
+# is NOT part of `k8s/` or `./gradlew deploy`. Bring it up right before a benchmark run,
+# tear it down after (see observability/README.md).
+
+alertmanager:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+# kube-state-metrics exports Deployment/HPA object state as metrics — this is what gives us
+# `kube_horizontalpodautoscaler_status_current_replicas` / `..._desired_replicas` and
+# `kube_deployment_status_replicas_ready` time series for the scaling graphs. Its Service
+# already ships a `prometheus.io/scrape: "true"` annotation, so the chart's built-in
+# `kubernetes-service-endpoints` scrape job picks it up automatically — no scrape config of
+# our own needed.
+kube-state-metrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+server:
+  # Actual per-container CPU/memory usage (not just requests/limits) comes from the
+  # `kubernetes-nodes-cadvisor` scrape job, enabled by default by this chart — the same
+  # cAdvisor data metrics-server itself reads to drive the HPA, now retained as history.
+  persistentVolume:
+    enabled: false # emptyDir: this is a short-lived session, data doesn't need to survive a pod restart
+  retention: 2h # more than enough for one benchmark run
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP # internal only; use `kubectl port-forward` to view the Prometheus UI directly
