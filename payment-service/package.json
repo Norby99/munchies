@@ -20,7 +20,7 @@
     "express": "^4.18.2",
     "mongoose": "^9.5.0",
     "munchies-commons": "file:./build/libs/munchies-commons.tgz",
-    "munchies-order-service-shared": "file:./build/libs/munchies-order-shared.tgz",
+    "munchies-order-service-shared": "file:build/libs/munchies-order-shared.tgz",
     "munchies-payment-service-shared": "file:./build/libs/munchies-payment-shared.tgz"
   },
   "devDependencies": {
