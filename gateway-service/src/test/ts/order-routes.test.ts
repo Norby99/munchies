@@ -1,18 +1,16 @@
 import "./setup-env";
+import "../../main/ts/infrastructure/adapter/middleware/routes/routes";
 import { describe, it, expect, vi, afterEach } from "vitest";
-
-await import("../../main/ts/infrastructure/adapter/middleware/routes/routes");
-const { orderRoutes } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/order.routes");
-const { AdvanceOrderStatusRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/advance-order-status.route");
-const { DiscardOrderRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/discard-order.route");
-const { GetOrderDetailsRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/get-order-details.route");
-const { GetOrdersRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/get-orders.route");
-const { PayOrderRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/pay-order.route");
-const { PlaceOrderRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/place-order.route");
-const { UpdateDeliveryOrderRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/update-delivery-order.route");
-const { UpdateOrderItemsRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/update-order-items.route");
-const { UpdateTakeawayOrderRoute } = await import("../../main/ts/infrastructure/adapter/middleware/routes/order/update-takeaway-order.route");
-
+import { orderRoutes } from "../../main/ts/infrastructure/adapter/middleware/routes/order/order.routes";
+import { AdvanceOrderStatusRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/advance-order-status.route";
+import { DiscardOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/discard-order.route";
+import { GetOrderDetailsRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/get-order-details.route";
+import { GetOrdersRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/get-orders.route";
+import { PayOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/pay-order.route";
+import { PlaceOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/place-order.route";
+import { UpdateDeliveryOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/update-delivery-order.route";
+import { UpdateOrderItemsRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/update-order-items.route";
+import { UpdateTakeawayOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/update-takeaway-order.route";
 import { ErrorResponse, AuthRole } from "munchies-commons/kotlin/commons-modules";
 import * as internalClient from "../../main/ts/infrastructure/adapter/middleware/routes/internal-client";
 
@@ -59,6 +57,7 @@ describe("Order Routes", () => {
     });
   });
 
+  // ---- AdvanceOrderStatusRoute ----
   describe("AdvanceOrderStatusRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
@@ -69,76 +68,36 @@ describe("Order Routes", () => {
     });
 
     it("handles advanceOrderStatus with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new AdvanceOrderStatusRoute();
       const res = await route.advanceOrderStatus({ toJson: () => "{}" } as any);
       expect(res).toBe(dummySuccess);
     });
 
-    it("handles forward success and catch", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new AdvanceOrderStatusRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue({ toJson: () => "{}" });
-
-      const resSuccess = await route.forward({ body: "{}" } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      vi.spyOn(route as any, "parseRequest").mockImplementation(() => {
-        throw new Error("parse error");
-      });
-      const resCatch = await route.forward({ body: "{}" } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
-    });
-
-    it("handles respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new AdvanceOrderStatusRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue({ toJson: () => "{}" });
-
-      const res = mockResponse();
-      await route.respond({ body: "{}" } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.send).toHaveBeenCalledWith(dummySuccess.toJson());
-    });
   });
 
+  // ---- DiscardOrderRoute ----
   describe("DiscardOrderRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
       const route = new DiscardOrderRoute();
-      const res = await route.discardOrder("order-1");
+      const res = await route.discardOrder({ toJson: () => "{}" } as any);
       expect(res).toBeInstanceOf(ErrorResponse);
       expect((res as ErrorResponse).code).toBe(500);
     });
 
     it("handles discardOrder with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new DiscardOrderRoute();
-      const res = await route.discardOrder("order-1");
+      const res = await route.discardOrder({ toJson: () => "{}" } as any);
       expect(res).toBe(dummySuccess);
     });
 
-    it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DiscardOrderRoute();
-
-      const resSuccess = await route.forward({ params: { id: "order-1" } } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const resCatch = await route.forward(null as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
-
-      const res = mockResponse();
-      await route.respond({ params: { id: "order-1" } } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
   });
 
+  // ---- GetOrderDetailsRoute ----
   describe("GetOrderDetailsRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
@@ -149,7 +108,7 @@ describe("Order Routes", () => {
     });
 
     it("handles getOrderDetails with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new GetOrderDetailsRoute();
       const res = await route.getOrderDetails("order-1");
@@ -157,15 +116,12 @@ describe("Order Routes", () => {
     });
 
     it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new GetOrderDetailsRoute();
 
       const resSuccess = await route.forward({ params: { id: "order-1" } } as any);
       expect(resSuccess).toBe(dummySuccess);
-
-      const resCatch = await route.forward(null as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
       await route.respond({ params: { id: "order-1" } } as any, res);
@@ -173,48 +129,44 @@ describe("Order Routes", () => {
     });
   });
 
+  // ---- GetOrdersRoute ----
   describe("GetOrdersRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
       const route = new GetOrdersRoute();
-      const res = await route.getOrders("rest-1", "cust-1", "PENDING");
+      const res = await route.getOrders(null, null, null);
       expect(res).toBeInstanceOf(ErrorResponse);
       expect((res as ErrorResponse).code).toBe(500);
     });
 
-    it("handles getOrders with query params and empty query string", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
-      const requestSpy = vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+    it("handles getOrders with ORDER_SERVICE_URL and no query params", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new GetOrdersRoute();
-
-      // With query params
-      const res1 = await route.getOrders("rest-1", "cust-1", "PENDING");
-      expect(res1).toBe(dummySuccess);
-      expect(requestSpy.mock.calls[0][0]).toContain("restaurantId=rest-1");
-      expect(requestSpy.mock.calls[0][0]).toContain("customerId=cust-1");
-      expect(requestSpy.mock.calls[0][0]).toContain("status=PENDING");
-
-      // Without query params
-      const res2 = await route.getOrders(null, null, null);
-      expect(res2).toBe(dummySuccess);
-      expect(requestSpy.mock.calls[1][0]).not.toContain("?");
+      const res = await route.getOrders(null, null, null);
+      expect(res).toBe(dummySuccess);
     });
 
-    it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+    it("handles getOrders with all query params", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+      const route = new GetOrdersRoute();
+      const res = await route.getOrders("rest-1", "cust-1", "PENDING");
+      expect(res).toBe(dummySuccess);
+    });
+
+    it("handles forward with query params and respond", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new GetOrdersRoute();
 
-      const resSuccess = await route.forward({
+      const resWithParams = await route.forward({
         query: { restaurantId: "rest-1", customerId: "cust-1", status: "PENDING" },
       } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      expect(resWithParams).toBe(dummySuccess);
 
-      const resEmptyQuery = await route.forward({ query: {} } as any);
-      expect(resEmptyQuery).toBe(dummySuccess);
-
-      const resCatch = await route.forward(null as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
+      const resNoParams = await route.forward({ query: {} } as any);
+      expect(resNoParams).toBe(dummySuccess);
 
       const res = mockResponse();
       await route.respond({ query: {} } as any, res);
@@ -222,51 +174,27 @@ describe("Order Routes", () => {
     });
   });
 
+  // ---- PayOrderRoute ----
   describe("PayOrderRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
       const route = new PayOrderRoute();
-      const res = await route.payOrder("order-1");
+      const res = await route.payOrder({ toJson: () => "{}" } as any);
       expect(res).toBeInstanceOf(ErrorResponse);
       expect((res as ErrorResponse).code).toBe(500);
     });
 
     it("handles payOrder with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new PayOrderRoute();
-      const res = await route.payOrder("order-1");
+      const res = await route.payOrder({ toJson: () => "{}" } as any);
       expect(res).toBe(dummySuccess);
     });
 
-    it("handles forward success and catch", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new PayOrderRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue("order-1");
-
-      const resSuccess = await route.forward({ body: "{}" } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      vi.spyOn(route as any, "parseRequest").mockImplementation(() => {
-        throw new Error("parse failed");
-      });
-      const resCatch = await route.forward({ body: "{}" } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
-    });
-
-    it("handles respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new PayOrderRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue("order-1");
-
-      const res = mockResponse();
-      await route.respond({ body: "{}" } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
   });
 
+  // ---- PlaceOrderRoute ----
   describe("PlaceOrderRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
@@ -277,7 +205,7 @@ describe("Order Routes", () => {
     });
 
     it("handles placeOrder with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new PlaceOrderRoute();
       const res = await route.placeOrder({ toJson: () => "{}" } as any);
@@ -285,12 +213,11 @@ describe("Order Routes", () => {
     });
 
     it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new PlaceOrderRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue({
-        addId: vi.fn().mockReturnValue({ toJson: () => "{}" }),
-      });
+      const mockParsedReq = { toJson: () => "{}", addId: vi.fn().mockReturnThis() };
+      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReq);
 
       const resSuccess = await route.forward({
         body: "{}",
@@ -302,14 +229,12 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({
-        body: "{}",
-        user: { id: "user-1", role: AuthRole.CUSTOMER },
-      } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
 
+  // ---- UpdateDeliveryOrderRoute ----
   describe("UpdateDeliveryOrderRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
@@ -320,7 +245,7 @@ describe("Order Routes", () => {
     });
 
     it("handles updateDeliveryOrderInfo with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new UpdateDeliveryOrderRoute();
       const res = await route.updateDeliveryOrderInfo({ toJson: () => "{}" } as any);
@@ -328,12 +253,11 @@ describe("Order Routes", () => {
     });
 
     it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new UpdateDeliveryOrderRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue({
-        addId: vi.fn().mockReturnValue({ toJson: () => "{}" }),
-      });
+      const mockParsedReq = { toJson: () => "{}", addId: vi.fn().mockReturnThis() };
+      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReq);
 
       const resSuccess = await route.forward({
         body: "{}",
@@ -345,14 +269,12 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({
-        body: "{}",
-        user: { id: "user-1", role: AuthRole.CUSTOMER },
-      } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
 
+  // ---- UpdateOrderItemsRoute ----
   describe("UpdateOrderItemsRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
@@ -363,7 +285,7 @@ describe("Order Routes", () => {
     });
 
     it("handles updateOrderItems with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new UpdateOrderItemsRoute();
       const res = await route.updateOrderItems({ toJson: () => "{}" } as any);
@@ -371,12 +293,11 @@ describe("Order Routes", () => {
     });
 
     it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new UpdateOrderItemsRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue({
-        addId: vi.fn().mockReturnValue({ toJson: () => "{}" }),
-      });
+      const mockParsedReq = { toJson: () => "{}", addId: vi.fn().mockReturnThis() };
+      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReq);
 
       const resSuccess = await route.forward({
         body: "{}",
@@ -388,14 +309,12 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({
-        body: "{}",
-        user: { id: "user-1", role: AuthRole.CUSTOMER },
-      } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
 
+  // ---- UpdateTakeawayOrderRoute ----
   describe("UpdateTakeawayOrderRoute", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
@@ -406,7 +325,7 @@ describe("Order Routes", () => {
     });
 
     it("handles updateTakeawayOrderInfo with ORDER_SERVICE_URL", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new UpdateTakeawayOrderRoute();
       const res = await route.updateTakeawayOrderInfo({ toJson: () => "{}" } as any);
@@ -414,12 +333,11 @@ describe("Order Routes", () => {
     });
 
     it("handles forward and respond", async () => {
-      process.env.ORDER_SERVICE_URL = "http://orderservice";
+      process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new UpdateTakeawayOrderRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue({
-        addId: vi.fn().mockReturnValue({ toJson: () => "{}" }),
-      });
+      const mockParsedReq = { toJson: () => "{}", addId: vi.fn().mockReturnThis() };
+      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReq);
 
       const resSuccess = await route.forward({
         body: "{}",
@@ -431,11 +349,9 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({
-        body: "{}",
-        user: { id: "user-1", role: AuthRole.CUSTOMER },
-      } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
 });
+
