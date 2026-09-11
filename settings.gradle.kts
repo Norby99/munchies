@@ -33,6 +33,7 @@ gitHooks {
 }
 
 include(":commons")
+include(":micronaut-commons")
 include(":restaurant-service")
 include(":restaurant-shared")
 include(":architecture-rules")

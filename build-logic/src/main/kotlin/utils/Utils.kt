@@ -27,6 +27,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
 
   val stringKotlinProjects = listOf(
     "commons",
+    "micronaut-commons",
     "architecture-rules",
     "user",
     "order",
@@ -62,6 +63,7 @@ enum class ProjectType {
 fun Project.getProjectType(): ProjectType {
   val exlcuded = listOf(
     "commons",
+    "micronaut-commons",
     "architecture-rules",
     "e2e-test",
   )
