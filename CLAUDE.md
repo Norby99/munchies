@@ -109,6 +109,10 @@ New services, and new code in existing ones, should follow this structure.
 
 - Structure routes and controllers cleanly, adhering to DDD where applicable.
 - Use asynchronous operations and robust error handling.
+- When importing a `-shared` package (e.g. `munchies-order-service-shared`) as a local tarball dependency
+  (`file:build/libs/*.tgz`), remove the `integrity` field from the corresponding entry in `package-lock.json`.
+  The tarball is rebuilt locally on every build, so its hash changes each time; keeping `integrity` causes it to
+  go stale and breaks `npm ci`/installs.
 
 ### Vue.js
 
