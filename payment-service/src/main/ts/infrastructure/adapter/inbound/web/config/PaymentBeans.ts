@@ -3,14 +3,17 @@ import { ProcessPaymentUseCase } from "@main/application/usecase/ProcessPaymentU
 import { PaymentRepository } from "@main/domain/port/payment-repository";
 import { PaymentGateway } from "@main/domain/port/payment-gateway";
 import { OrderServiceClient } from "@main/domain/port/order-service-client";
+import { PaymentNotificationPublisher } from "@main/domain/port/payment-notification-publisher";
 import { InMemoryPaymentRepository } from "@main/infrastructure/adapter/outbound/memory/InMemoryPaymentRepository";
 import { PaymentMongoRepository } from "@main/infrastructure/adapter/outbound/mongo/repository/payment-mongo-repository";
 import { FakePaymentGateway } from "@main/infrastructure/adapter/outbound/payment/FakePaymentGateway";
 import { OrderServiceHttpClient } from "@main/infrastructure/adapter/outbound/order/OrderServiceHttpClient";
+import { KafkaPaymentNotificationPublisher } from "@main/infrastructure/adapter/outbound/kafka/KafkaPaymentNotificationPublisher";
 
 export interface PaymentServices {
   processPayment: ProcessPayment;
   orderServiceClient: OrderServiceClient;
+  paymentNotificationPublisher: PaymentNotificationPublisher;
 }
 
 export class PaymentBeans {
@@ -28,6 +31,7 @@ export class PaymentBeans {
     const paymentRepository = new InMemoryPaymentRepository();
     const paymentGateway = new FakePaymentGateway();
     const orderServiceClient = new OrderServiceHttpClient();
+    const paymentNotificationPublisher = new KafkaPaymentNotificationPublisher();
     const processPayment = new ProcessPaymentUseCase(
       paymentRepository,
       paymentGateway
@@ -39,6 +43,7 @@ export class PaymentBeans {
       paymentServices: {
         processPayment,
         orderServiceClient,
+        paymentNotificationPublisher,
       },
     };
   }
@@ -51,6 +56,7 @@ export class PaymentBeans {
     const paymentRepository = new PaymentMongoRepository();
     const paymentGateway = new FakePaymentGateway();
     const orderServiceClient = new OrderServiceHttpClient();
+    const paymentNotificationPublisher = new KafkaPaymentNotificationPublisher();
     const processPayment = new ProcessPaymentUseCase(
       paymentRepository,
       paymentGateway
@@ -62,6 +68,7 @@ export class PaymentBeans {
       paymentServices: {
         processPayment,
         orderServiceClient,
+        paymentNotificationPublisher,
       },
     };
   }
