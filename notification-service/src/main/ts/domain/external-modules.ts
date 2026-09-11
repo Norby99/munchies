@@ -32,8 +32,6 @@ export const UserEmailConfirmationGroupId =
   _userNotification.UserEmailConfirmationNotificationInfo
     .USER_EMAIL_CONFIRMATION_GROUP_ID;
 
-console.log(userModule.com.munchies.user.infrastructure.adapter);
-
 export const _UserEmailConfirmationNotificationObserver =
   _userNotification.UserEmailConfirmationNotificationObserver;
 
@@ -47,3 +45,12 @@ export const _UserEmailConfirmationNotificationSubject =
 
 export const UserEmailConfirmationNotificationSubject =
   _userNotification.UserEmailConfirmationNotificationSubject;
+
+// Payment notifications, published by payment-service after a successful payment.
+export {
+  PaymentSuccessNotification,
+  PaymentSuccessNotificationInfo,
+  PaymentSuccessNotificationObserver,
+  PaymentSuccessNotificationSubject,
+  paymentSuccessNotificationFromJson,
+} from "munchies-payment-service-shared/kotlin/payment-modules";
