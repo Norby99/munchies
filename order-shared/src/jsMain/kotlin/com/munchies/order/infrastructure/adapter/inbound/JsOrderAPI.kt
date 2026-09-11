@@ -61,7 +61,7 @@ abstract class JsPayOrderAPI<E : WebResponse<Any>> :
     OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.PAY_ORDER_PATH
 
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
-  override fun getMethod(): HttpMethod = HttpMethod.POST
+  override fun getMethod(): HttpMethod = HttpMethod.PATCH
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   abstract override fun payOrder(id: String): Promise<E>
 
