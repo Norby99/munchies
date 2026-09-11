@@ -28,6 +28,8 @@ spec:
               value: "http://order-service.order-service.svc.cluster.local:8080"
             - name: MONGODB_URI
               value: "mongodb://payment-mongodb:27017/payment-service"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
           resources:
             requests:
               memory: "128Mi"
