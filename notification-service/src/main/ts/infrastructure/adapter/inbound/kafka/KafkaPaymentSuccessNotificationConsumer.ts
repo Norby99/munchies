@@ -1,16 +1,16 @@
 import {
-  _UserEmailConfirmationNotification,
-  _UserEmailConfirmationNotificationObserver,
-  getUserEmailConfirmationNotificationFromJson,
+  PaymentSuccessNotification,
+  PaymentSuccessNotificationObserver,
+  paymentSuccessNotificationFromJson,
 } from "@main/domain/external-modules";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { Kafka, Consumer } from "kafkajs";
 
 /**
- * Kafka consumer for the user email-confirmation topic. Parses incoming
- * messages and forwards them to the shared {@link NotificationController}.
+ * Kafka consumer for the payment-success topic. Parses incoming messages
+ * and forwards them to the shared {@link NotificationController}.
  */
-export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailConfirmationNotificationObserver {
+export class KafkaPaymentSuccessNotificationConsumer extends PaymentSuccessNotificationObserver {
   private consumer: Consumer;
   private topic: string;
 
@@ -39,22 +39,19 @@ export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailCo
       eachMessage: async ({ message }) => {
         if (message.value) {
           try {
-            const event = getUserEmailConfirmationNotificationFromJson(
+            const event = paymentSuccessNotificationFromJson(
               message.value.toString()
             );
             this.update(event);
           } catch (err) {
-            console.error(
-              "Failed to parse UserEmailConfirmationNotification message",
-              err
-            );
+            console.error("Failed to parse PaymentSuccessNotification message", err);
           }
         }
       },
     });
   }
 
-  override update(event: _UserEmailConfirmationNotification): void {
-    this.controller.handleUserEmailConfirmation(event);
+  override update(event: PaymentSuccessNotification): void {
+    this.controller.handlePaymentSuccess(event);
   }
 }

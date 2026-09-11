@@ -3,5 +3,5 @@ const generated = require("./munchies-notification-shared.js");
 const _notification = generated.com.munchies.notification;
 
 module.exports = {
-  NotificationAPI: _notification.infrastructue.adapter.inbound.NotificationAPI,
+  NotificationAPI: _notification.infrastructure.adapter.inbound.NotificationAPI,
 };
