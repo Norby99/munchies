@@ -43,13 +43,6 @@ const dummySuccess = {
   toJson: () => JSON.stringify({ result: "ok", code: 200 }),
 } as any;
 
-const mockParsedReqWithAddId = {
-  toJson: () => "{}",
-  addId: vi.fn(function () {
-    return this;
-  }),
-};
-
 const mockParsedReqSimple = {
   toJson: () => "{}",
 };
@@ -90,600 +83,509 @@ describe("Restaurant Routes", () => {
       expect(res).toBe(dummySuccess);
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateRestaurantRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqWithAddId);
+    // ---- GetManagerRestaurantsRoute ----
+    describe("GetManagerRestaurantsRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new GetManagerRestaurantsRoute();
+        const res = await route.getManagerRestaurants("mgr-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        body: "{}",
-        user: { id: "user-1", role: AuthRole.MANAGER },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles getManagerRestaurants with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetManagerRestaurantsRoute();
+        const res = await route.getManagerRestaurants("mgr-1");
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resCatch = await route.forward({ body: "{}", user: undefined } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetManagerRestaurantsRoute();
 
-      const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "u1", role: AuthRole.MANAGER } } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+        const resSuccess = await route.forward({
+          user: { id: "mgr-1", role: AuthRole.MANAGER },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-  // ---- GetManagerRestaurantsRoute ----
-  describe("GetManagerRestaurantsRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new GetManagerRestaurantsRoute();
-      const res = await route.getManagerRestaurants("mgr-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
+        const resCatch = await route.forward({ user: undefined } as any);
+        expect(resCatch).toBeInstanceOf(ErrorResponse);
 
-    it("handles getManagerRestaurants with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetManagerRestaurantsRoute();
-      const res = await route.getManagerRestaurants("mgr-1");
-      expect(res).toBe(dummySuccess);
+        const res = mockResponse();
+        await route.respond({ user: { id: "mgr-1", role: AuthRole.MANAGER } } as any, res, () => { });
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetManagerRestaurantsRoute();
+    // ---- GetRestaurantRoute ----
+    describe("GetRestaurantRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new GetRestaurantRoute();
+        const res = await route.getRestaurant("rest-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        user: { id: "mgr-1", role: AuthRole.MANAGER },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles getRestaurant with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetRestaurantRoute();
+        const res = await route.getRestaurant("rest-1");
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resCatch = await route.forward({ user: undefined } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetRestaurantRoute();
 
-      const res = mockResponse();
-      await route.respond({ user: { id: "mgr-1", role: AuthRole.MANAGER } } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+        const resSuccess = await route.forward({ params: { restaurantId: "rest-1" } } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-  // ---- GetRestaurantRoute ----
-  describe("GetRestaurantRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new GetRestaurantRoute();
-      const res = await route.getRestaurant("rest-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles getRestaurant with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetRestaurantRoute();
-      const res = await route.getRestaurant("rest-1");
-      expect(res).toBe(dummySuccess);
+        const res = mockResponse();
+        await route.respond({ params: { restaurantId: "rest-1" } } as any, res, () => { });
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetRestaurantRoute();
+    // ---- UpdateRestaurantRoute ----
+    describe("UpdateRestaurantRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new UpdateRestaurantRoute();
+        const res = await route.updateRestaurant("rest-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({ params: { restaurantId: "rest-1" } } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const res = mockResponse();
-      await route.respond({ params: { restaurantId: "rest-1" } } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- UpdateRestaurantRoute ----
-  describe("UpdateRestaurantRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new UpdateRestaurantRoute();
-      const res = await route.updateRestaurant("rest-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
+      it("handles updateRestaurant with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new UpdateRestaurantRoute();
+        const res = await route.updateRestaurant("rest-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
     });
 
-    it("handles updateRestaurant with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateRestaurantRoute();
-      const res = await route.updateRestaurant("rest-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
+    // ---- DeleteRestaurantRoute ----
+    describe("DeleteRestaurantRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new DeleteRestaurantRoute();
+        const res = await route.deleteRestaurant("mgr-1", "rest-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
+
+      it("handles deleteRestaurant with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new DeleteRestaurantRoute();
+        const res = await route.deleteRestaurant("mgr-1", "rest-1");
+        expect(res).toBe(dummySuccess);
+      });
+
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new DeleteRestaurantRoute();
+
+        const resSuccess = await route.forward({
+          user: { id: "mgr-1", role: AuthRole.MANAGER },
+          params: { restaurantId: "rest-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
+
+        const resCatch = await route.forward({ user: undefined, params: {} } as any);
+        expect(resCatch).toBeInstanceOf(ErrorResponse);
+
+        const res = mockResponse();
+        await route.respond(
+          { user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateRestaurantRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqWithAddId);
+    // ---- CreateMenuRoute ----
+    describe("CreateMenuRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new CreateMenuRoute();
+        const res = await route.createMenu("rest-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        body: "{}",
-        user: { id: "mgr-1", role: AuthRole.MANAGER },
-        params: { restaurantId: "rest-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const resCatch = await route.forward({ body: "{}", user: undefined, params: {} } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
-
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- DeleteRestaurantRoute ----
-  describe("DeleteRestaurantRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new DeleteRestaurantRoute();
-      const res = await route.deleteRestaurant("mgr-1", "rest-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
+      it("handles createMenu with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new CreateMenuRoute();
+        const res = await route.createMenu("rest-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
     });
 
-    it("handles deleteRestaurant with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DeleteRestaurantRoute();
-      const res = await route.deleteRestaurant("mgr-1", "rest-1");
-      expect(res).toBe(dummySuccess);
+    // ---- GetMenuRoute ----
+    describe("GetMenuRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new GetMenuRoute();
+        const res = await route.getMenu("rest-1", "menu-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
+
+      it("handles getMenu with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetMenuRoute();
+        const res = await route.getMenu("rest-1", "menu-1");
+        expect(res).toBe(dummySuccess);
+      });
+
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetMenuRoute();
+
+        const resSuccess = await route.forward({
+          params: { restaurantId: "rest-1", menuId: "menu-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
+
+        const res = mockResponse();
+        await route.respond({ params: { restaurantId: "rest-1", menuId: "menu-1" } } as any, res, () => { });
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DeleteRestaurantRoute();
+    // ---- GetRestaurantMenusRoute ----
+    describe("GetRestaurantMenusRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new GetRestaurantMenusRoute();
+        const res = await route.getRestaurantMenus("rest-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        user: { id: "mgr-1", role: AuthRole.MANAGER },
-        params: { restaurantId: "rest-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles getRestaurantMenus with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetRestaurantMenusRoute();
+        const res = await route.getRestaurantMenus("rest-1");
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resCatch = await route.forward({ user: undefined, params: {} } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new GetRestaurantMenusRoute();
 
-      const res = mockResponse();
-      await route.respond(
-        { user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+        const resSuccess = await route.forward({ params: { restaurantId: "rest-1" } } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-  // ---- CreateMenuRoute ----
-  describe("CreateMenuRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new CreateMenuRoute();
-      const res = await route.createMenu("rest-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles createMenu with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateMenuRoute();
-      const res = await route.createMenu("rest-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
+        const res = mockResponse();
+        await route.respond({ params: { restaurantId: "rest-1" } } as any, res, () => { });
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateMenuRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqWithAddId);
+    // ---- UpdateMenuRoute ----
+    describe("UpdateMenuRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new UpdateMenuRoute();
+        const res = await route.updateMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        body: "{}",
-        user: { id: "mgr-1", role: AuthRole.MANAGER },
-        params: { restaurantId: "rest-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles updateMenu with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new UpdateMenuRoute();
+        const res = await route.updateMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resCatch = await route.forward({ body: "{}", user: undefined, params: {} } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
-
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- GetMenuRoute ----
-  describe("GetMenuRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new GetMenuRoute();
-      const res = await route.getMenu("rest-1", "menu-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
     });
 
-    it("handles getMenu with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetMenuRoute();
-      const res = await route.getMenu("rest-1", "menu-1");
-      expect(res).toBe(dummySuccess);
+    // ---- DeleteMenuRoute ----
+    describe("DeleteMenuRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new DeleteMenuRoute();
+        const res = await route.deleteMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
+
+      it("handles deleteMenu with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new DeleteMenuRoute();
+        const res = await route.deleteMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
+
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new DeleteMenuRoute();
+
+        const resSuccess = await route.forward({
+          user: { id: "mgr-1", role: AuthRole.MANAGER },
+          params: { restaurantId: "rest-1", menuId: "menu-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
+
+        const resCatch = await route.forward({ user: undefined, params: {} } as any);
+        expect(resCatch).toBeInstanceOf(ErrorResponse);
+
+        const res = mockResponse();
+        await route.respond(
+          { user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1", menuId: "menu-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetMenuRoute();
+    // ---- CreateCategoryRoute ----
+    describe("CreateCategoryRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new CreateCategoryRoute();
+        const res = await route.createCategory("rest-1", "menu-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        params: { restaurantId: "rest-1", menuId: "menu-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles createCategory with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new CreateCategoryRoute();
+        const res = await route.createCategory("rest-1", "menu-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
 
-      const res = mockResponse();
-      await route.respond({ params: { restaurantId: "rest-1", menuId: "menu-1" } } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new CreateCategoryRoute();
+        vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
 
-  // ---- GetRestaurantMenusRoute ----
-  describe("GetRestaurantMenusRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new GetRestaurantMenusRoute();
-      const res = await route.getRestaurantMenus("rest-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
+        const resSuccess = await route.forward({
+          body: "{}",
+          params: { restaurantId: "rest-1", menuId: "menu-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-    it("handles getRestaurantMenus with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetRestaurantMenusRoute();
-      const res = await route.getRestaurantMenus("rest-1");
-      expect(res).toBe(dummySuccess);
-    });
-
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new GetRestaurantMenusRoute();
-
-      const resSuccess = await route.forward({ params: { restaurantId: "rest-1" } } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const res = mockResponse();
-      await route.respond({ params: { restaurantId: "rest-1" } } as any, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- UpdateMenuRoute ----
-  describe("UpdateMenuRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new UpdateMenuRoute();
-      const res = await route.updateMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
+        const res = mockResponse();
+        await route.respond(
+          { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles updateMenu with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateMenuRoute();
-      const res = await route.updateMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
+    // ---- UpdateCategoryRoute ----
+    describe("UpdateCategoryRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new UpdateCategoryRoute();
+        const res = await route.updateCategory("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
+
+      it("handles updateCategory with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new UpdateCategoryRoute();
+        const res = await route.updateCategory("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
+
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new UpdateCategoryRoute();
+        vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
+
+        const resSuccess = await route.forward({
+          body: "{}",
+          params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
+
+        const res = mockResponse();
+        await route.respond(
+          { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateMenuRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqWithAddId);
+    // ---- DeleteCategoryRoute ----
+    describe("DeleteCategoryRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new DeleteCategoryRoute();
+        const res = await route.deleteCategory("rest-1", "menu-1", "cat-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        body: "{}",
-        user: { id: "mgr-1", role: AuthRole.MANAGER },
-        params: { restaurantId: "rest-1", menuId: "menu-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles deleteCategory with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new DeleteCategoryRoute();
+        const res = await route.deleteCategory("rest-1", "menu-1", "cat-1");
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resCatch = await route.forward({ body: "{}", user: undefined, params: {} } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new DeleteCategoryRoute();
 
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1", menuId: "menu-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+        const resSuccess = await route.forward({
+          params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-  // ---- DeleteMenuRoute ----
-  describe("DeleteMenuRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new DeleteMenuRoute();
-      const res = await route.deleteMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles deleteMenu with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DeleteMenuRoute();
-      const res = await route.deleteMenu("rest-1", "menu-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
+        const res = mockResponse();
+        await route.respond(
+          { params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DeleteMenuRoute();
+    // ---- CreateMenuItemRoute ----
+    describe("CreateMenuItemRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new CreateMenuItemRoute();
+        const res = await route.createMenuItem("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        user: { id: "mgr-1", role: AuthRole.MANAGER },
-        params: { restaurantId: "rest-1", menuId: "menu-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles createMenuItem with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new CreateMenuItemRoute();
+        const res = await route.createMenuItem("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resCatch = await route.forward({ user: undefined, params: {} } as any);
-      expect(resCatch).toBeInstanceOf(ErrorResponse);
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new CreateMenuItemRoute();
+        vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
 
-      const res = mockResponse();
-      await route.respond(
-        { user: { id: "mgr-1", role: AuthRole.MANAGER }, params: { restaurantId: "rest-1", menuId: "menu-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+        const resSuccess = await route.forward({
+          body: "{}",
+          params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-  // ---- CreateCategoryRoute ----
-  describe("CreateCategoryRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new CreateCategoryRoute();
-      const res = await route.createCategory("rest-1", "menu-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles createCategory with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateCategoryRoute();
-      const res = await route.createCategory("rest-1", "menu-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
+        const res = mockResponse();
+        await route.respond(
+          { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateCategoryRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
+    // ---- UpdateMenuItemRoute ----
+    describe("UpdateMenuItemRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new UpdateMenuItemRoute();
+        const res = await route.updateMenuItem("rest-1", "menu-1", "cat-1", "item-1", { toJson: () => "{}" } as any);
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-      const resSuccess = await route.forward({
-        body: "{}",
-        params: { restaurantId: "rest-1", menuId: "menu-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles updateMenuItem with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new UpdateMenuItemRoute();
+        const res = await route.updateMenuItem("rest-1", "menu-1", "cat-1", "item-1", { toJson: () => "{}" } as any);
+        expect(res).toBe(dummySuccess);
+      });
 
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new UpdateMenuItemRoute();
+        vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
 
-  // ---- UpdateCategoryRoute ----
-  describe("UpdateCategoryRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new UpdateCategoryRoute();
-      const res = await route.updateCategory("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
+        const resSuccess = await route.forward({
+          body: "{}",
+          params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-    it("handles updateCategory with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateCategoryRoute();
-      const res = await route.updateCategory("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
-    });
-
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateCategoryRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
-
-      const resSuccess = await route.forward({
-        body: "{}",
-        params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- DeleteCategoryRoute ----
-  describe("DeleteCategoryRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new DeleteCategoryRoute();
-      const res = await route.deleteCategory("rest-1", "menu-1", "cat-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
+        const res = mockResponse();
+        await route.respond(
+          { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
     });
 
-    it("handles deleteCategory with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DeleteCategoryRoute();
-      const res = await route.deleteCategory("rest-1", "menu-1", "cat-1");
-      expect(res).toBe(dummySuccess);
-    });
+    // ---- RemoveMenuItemRoute ----
+    describe("RemoveMenuItemRoute", () => {
+      it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
+        delete process.env.RESTAURANT_SERVICE_URL;
+        const route = new RemoveMenuItemRoute();
+        const res = await route.removeMenuItem("rest-1", "menu-1", "cat-1", "item-1");
+        expect(res).toBeInstanceOf(ErrorResponse);
+        expect((res as ErrorResponse).code).toBe(500);
+      });
 
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new DeleteCategoryRoute();
+      it("handles removeMenuItem with RESTAURANT_SERVICE_URL", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new RemoveMenuItemRoute();
+        const res = await route.removeMenuItem("rest-1", "menu-1", "cat-1", "item-1");
+        expect(res).toBe(dummySuccess);
+      });
 
-      const resSuccess = await route.forward({
-        params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
+      it("handles forward and respond", async () => {
+        process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
+        vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+        const route = new RemoveMenuItemRoute();
 
-      const res = mockResponse();
-      await route.respond(
-        { params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
+        const resSuccess = await route.forward({
+          params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" },
+        } as any);
+        expect(resSuccess).toBe(dummySuccess);
 
-  // ---- CreateMenuItemRoute ----
-  describe("CreateMenuItemRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new CreateMenuItemRoute();
-      const res = await route.createMenuItem("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles createMenuItem with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateMenuItemRoute();
-      const res = await route.createMenuItem("rest-1", "menu-1", "cat-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
-    });
-
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new CreateMenuItemRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
-
-      const resSuccess = await route.forward({
-        body: "{}",
-        params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- UpdateMenuItemRoute ----
-  describe("UpdateMenuItemRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new UpdateMenuItemRoute();
-      const res = await route.updateMenuItem("rest-1", "menu-1", "cat-1", "item-1", { toJson: () => "{}" } as any);
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles updateMenuItem with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateMenuItemRoute();
-      const res = await route.updateMenuItem("rest-1", "menu-1", "cat-1", "item-1", { toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
-    });
-
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new UpdateMenuItemRoute();
-      vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReqSimple);
-
-      const resSuccess = await route.forward({
-        body: "{}",
-        params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const res = mockResponse();
-      await route.respond(
-        { body: "{}", params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- RemoveMenuItemRoute ----
-  describe("RemoveMenuItemRoute", () => {
-    it("returns 500 when RESTAURANT_SERVICE_URL is missing", async () => {
-      delete process.env.RESTAURANT_SERVICE_URL;
-      const route = new RemoveMenuItemRoute();
-      const res = await route.removeMenuItem("rest-1", "menu-1", "cat-1", "item-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("handles removeMenuItem with RESTAURANT_SERVICE_URL", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new RemoveMenuItemRoute();
-      const res = await route.removeMenuItem("rest-1", "menu-1", "cat-1", "item-1");
-      expect(res).toBe(dummySuccess);
-    });
-
-    it("handles forward and respond", async () => {
-      process.env.RESTAURANT_SERVICE_URL = "http://restaurant-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new RemoveMenuItemRoute();
-
-      const resSuccess = await route.forward({
-        params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" },
-      } as any);
-      expect(resSuccess).toBe(dummySuccess);
-
-      const res = mockResponse();
-      await route.respond(
-        { params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" } } as any,
-        res,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-});
+        const res = mockResponse();
+        await route.respond(
+          { params: { restaurantId: "rest-1", menuId: "menu-1", categoryId: "cat-1", itemId: "item-1" } } as any,
+          res, () => { },
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
+    })
+  })
+})

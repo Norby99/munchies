@@ -124,7 +124,7 @@ describe("Order Routes", () => {
       expect(resSuccess).toBe(dummySuccess);
 
       const res = mockResponse();
-      await route.respond({ params: { id: "order-1" } } as any, res);
+      await route.respond({ params: { id: "order-1" } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -169,7 +169,7 @@ describe("Order Routes", () => {
       expect(resNoParams).toBe(dummySuccess);
 
       const res = mockResponse();
-      await route.respond({ query: {} } as any, res);
+      await route.respond({ query: {} } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -229,7 +229,7 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -269,7 +269,7 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -309,7 +309,7 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -349,7 +349,7 @@ describe("Order Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "u1" } } as any, res);
+      await route.respond({ body: "{}", user: { id: "u1" } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });

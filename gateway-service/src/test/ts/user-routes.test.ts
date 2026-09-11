@@ -92,7 +92,7 @@ describe("User Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res);
+      await route.respond({ user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -129,7 +129,7 @@ describe("User Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res);
+      await route.respond({ user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -172,7 +172,7 @@ describe("User Routes", () => {
       vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReq);
 
       const res = mockResponse();
-      await route.respond({ body: "{}" } as any, res);
+      await route.respond({ body: "{}" } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(401);
     });
   });
@@ -206,7 +206,7 @@ describe("User Routes", () => {
       const res = mockResponse();
       await route.respond(
         { body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any,
-        res,
+        res, () => {},
       );
       expect(res.status).toHaveBeenCalledWith(200);
     });
@@ -220,7 +220,7 @@ describe("User Routes", () => {
       const res = mockResponse();
       await route.respond(
         { body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any,
-        res,
+        res, () => {},
       );
       expect(res.status).toHaveBeenCalledWith(500);
     });
@@ -255,7 +255,7 @@ describe("User Routes", () => {
       vi.spyOn(route as any, "parseRequest").mockReturnValue(mockParsedReq);
 
       const res = mockResponse();
-      await route.respond({ body: "{}" } as any, res);
+      await route.respond({ body: "{}" } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(409);
     });
   });
@@ -295,7 +295,7 @@ describe("User Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res);
+      await route.respond({ body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -335,7 +335,7 @@ describe("User Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res);
+      await route.respond({ body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -375,7 +375,7 @@ describe("User Routes", () => {
       expect(resCatch).toBeInstanceOf(ErrorResponse);
 
       const res = mockResponse();
-      await route.respond({ body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res);
+      await route.respond({ body: "{}", user: { id: "user-1", role: AuthRole.CUSTOMER } } as any, res, () => {});
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
