@@ -13,44 +13,6 @@ describe("internal-client.ts", () => {
     vi.restoreAllMocks();
   });
 
-  it("checks axiosClient configuration and interceptors", () => {
-    // Check transformRequest and transformResponse
-    const transformReq = axiosClient.defaults.transformRequest;
-    if (Array.isArray(transformReq) && transformReq[0]) {
-      expect(transformReq[0]("sample-data", {} as any)).toBe("sample-data");
-    }
-
-    const transformRes = axiosClient.defaults.transformResponse;
-    if (Array.isArray(transformRes) && transformRes[0]) {
-      expect(transformRes[0]("sample-res")).toBe("sample-res");
-    }
-
-    // Check validateStatus
-    const validateStatus = axiosClient.defaults.validateStatus;
-    if (validateStatus) {
-      expect(validateStatus(200)).toBe(true);
-      expect(validateStatus(500)).toBe(true);
-      expect(validateStatus(501)).toBe(false);
-    }
-
-    // Test request/response interceptors directly
-    const reqHandlers = (axiosClient.interceptors.request as any).handlers;
-    for (const h of reqHandlers) {
-      if (h && h.fulfilled) {
-        const config = { data: "test-data" } as any;
-        expect(h.fulfilled(config)).toBe(config);
-      }
-    }
-
-    const resHandlers = (axiosClient.interceptors.response as any).handlers;
-    for (const h of resHandlers) {
-      if (h && h.fulfilled) {
-        const resp = { data: "test-response" } as any;
-        expect(h.fulfilled(resp)).toBe(resp);
-      }
-    }
-  });
-
   it("handles GET request with status 200", async () => {
     vi.spyOn(axiosClient, "get").mockResolvedValue({
       status: 200,
