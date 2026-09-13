@@ -31,9 +31,12 @@ The repository is structured as follows:
 - a ```develop``` branch where team member converge their changes and enforce quality standards.
 - a branch where each developer pushes changed based on tasks to then merge into develop after the required checks go through.
 
-aGGIUNGERE REGOLE DEI BRANCH
+On GitHub's rules may be enforced in branches, such as protection from "force push" or ensuring some workflows are successful before merging a branch. 
 
+In the _munchies_ repository we've added the following rules:
+- Commits by a developer must be verified within his own branch
+- "Develop" and "Master" can only receive changes only by rebases/merges
+- A rebase/merge can only happen whenever all tests and quality checks pass
+- Only "Develop" can be merged into "Master"
+- A branch must be up-to-date with "Develop" before being rebased into it 
 
-## Pull Requests
-
-WORKFLOW DELLE PULL REQUEST E REBASE
