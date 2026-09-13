@@ -40,3 +40,8 @@ In the _munchies_ repository we've added the following rules:
 - Only "Develop" can be merged into "Master"
 - A branch must be up-to-date with "Develop" before being rebased into it 
 
+### Issue Tracking
+
+We've added a user-friendly [issue template](https://github.com/Norby99/munchies/tree/master/.github/ISSUE_TEMPLATE), in case a user would encounter bugs in our software.
+
+We've also used custom issues, also tracked in our repository's "[Issues](https://github.com/Norby99/munchies/issues)" tab, where we kept track of features, fixes and other work to do. 
