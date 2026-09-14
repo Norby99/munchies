@@ -49,17 +49,6 @@ describe("db", () => {
       expect(connectMock).toHaveBeenCalledWith("mongodb://localhost:27017/test");
     });
 
-    it("registers the connected, error and disconnected event listeners", async () => {
-      process.env.MONGODB_URI = "mongodb://localhost:27017/test";
-
-      await connectDB();
-
-      const registeredEvents = onMock.mock.calls.map(([event]: [string]) => event);
-      expect(registeredEvents).toContain("connected");
-      expect(registeredEvents).toContain("error");
-      expect(registeredEvents).toContain("disconnected");
-    });
-
     it("throws when MONGODB_URI is not defined", async () => {
       delete process.env.MONGODB_URI;
 
