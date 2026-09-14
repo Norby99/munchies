@@ -2,7 +2,7 @@ package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.PayOrder
 import com.munchies.order.application.port.inbound.command.PayOrderCommand
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import io.kotest.matchers.equals.shouldBeEqual

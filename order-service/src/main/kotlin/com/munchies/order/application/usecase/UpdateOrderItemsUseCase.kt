@@ -7,7 +7,7 @@ import com.munchies.order.application.port.inbound.command.UpdateOrderItemsComma
 import com.munchies.order.domain.model.Order.ItemsValidationError
 import com.munchies.order.domain.model.Order.UpdateResult.Failure.InvalidItems
 import com.munchies.order.domain.model.OrderItem
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 
 /**
  * Use case implementation for updating the items of an existing order.

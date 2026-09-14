@@ -5,7 +5,7 @@ import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo.Resul
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo.Result.Success
 import com.munchies.order.application.port.inbound.command.UpdateDeliveryOrderCommand
 import com.munchies.order.domain.model.DeliveryOrder
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 
 /**
  * Use case implementation for updating the information of a delivery order.

@@ -4,7 +4,7 @@ import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.createUpdateDeliveryOrderInfoCommand

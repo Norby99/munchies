@@ -5,7 +5,7 @@ import com.munchies.order.application.port.inbound.DiscardOrder.Result.*
 import com.munchies.order.application.port.inbound.DiscardOrder.Result.Failure.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.domain.model.Order
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 
 /**
  * Use case implementation for discarding an order.

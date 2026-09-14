@@ -8,7 +8,7 @@ import com.munchies.order.domain.model.DeliveryInfo
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 
 /**

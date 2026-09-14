@@ -3,7 +3,7 @@ package com.munchies.order.application.usecase
 import com.munchies.order.application.port.inbound.UpdateOrderItems
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createInvalidItemsZeroCount
 import com.munchies.order.fixtures.createNewItems

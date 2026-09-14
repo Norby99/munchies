@@ -1,18 +1,25 @@
 import {
   _UserEmailConfirmationNotification,
   _UserEmailConfirmationNotificationObserver,
-  UserEmailConfirmationNotification,
-  UserEmailConfirmationNotificationSubject,
   getUserEmailConfirmationNotificationFromJson,
 } from "@main/domain/external-modules";
+import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { Kafka, Consumer } from "kafkajs";
 
+/**
+ * Kafka consumer for the user email-confirmation topic. Parses incoming
+ * messages and forwards them to the shared {@link NotificationController}.
+ */
 export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailConfirmationNotificationObserver {
   private consumer: Consumer;
-  private observers = new Set<_UserEmailConfirmationNotificationObserver>();
   private topic: string;
 
-  constructor(kafka: Kafka, topic: string, groupId: string) {
+  constructor(
+    kafka: Kafka,
+    topic: string,
+    groupId: string,
+    private readonly controller: NotificationController
+  ) {
     super();
     this.consumer = kafka.consumer({ groupId });
     this.topic = topic;
@@ -37,7 +44,10 @@ export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailCo
             );
             this.update(event);
           } catch (err) {
-            console.log("Failed to parse" + message);
+            console.error(
+              "Failed to parse UserEmailConfirmationNotification message",
+              err
+            );
           }
         }
       },
@@ -45,6 +55,6 @@ export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailCo
   }
 
   override update(event: _UserEmailConfirmationNotification): void {
-    console.log("Ha funzionato" + event.toString());
+    this.controller.handleUserEmailConfirmation(event);
   }
 }

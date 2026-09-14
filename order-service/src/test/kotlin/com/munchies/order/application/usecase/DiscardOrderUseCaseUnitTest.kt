@@ -4,7 +4,7 @@ import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import io.kotest.matchers.equals.shouldBeEqual

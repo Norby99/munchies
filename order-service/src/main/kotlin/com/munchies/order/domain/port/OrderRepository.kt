@@ -1,4 +1,4 @@
-package com.munchies.order.domain.ports
+package com.munchies.order.domain.port
 
 import com.munchies.commons.Repository
 import com.munchies.order.domain.model.Order

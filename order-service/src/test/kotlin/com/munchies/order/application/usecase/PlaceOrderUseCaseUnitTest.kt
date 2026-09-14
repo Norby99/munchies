@@ -4,7 +4,7 @@ import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.domain.factory.OrderCreationResult
 import com.munchies.order.domain.factory.OrderFactory
 import com.munchies.order.domain.model.*
-import com.munchies.order.domain.ports.OrderRepository
+import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createDineInOrder
 import com.munchies.order.fixtures.createTakeawayOrder

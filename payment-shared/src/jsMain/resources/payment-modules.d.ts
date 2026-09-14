@@ -52,3 +52,19 @@ export declare const InvalidInput: typeof com.munchies.commons.domain.port.Inval
 
 export declare const processPaymentRequestFromJson: typeof com.munchies.payment.infrastructure.adapter.inbound.request.processPaymentRequestFromJson;
 export declare const processPaymentResponseFromJson: typeof com.munchies.payment.infrastructure.adapter.outbound.response.processPaymentResponseFromJson;
+
+export declare const PaymentSuccessNotificationInfo: typeof com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotificationInfo;
+
+export type PaymentSuccessNotification =
+  com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotification;
+export declare const PaymentSuccessNotification: typeof com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotification;
+
+export declare const paymentSuccessNotificationFromJson: typeof com.munchies.payment.infrastructure.adapter.outbound.notification.paymentSuccessNotificationFromJson;
+
+export type PaymentSuccessNotificationObserver =
+  com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotificationObserver;
+export declare const PaymentSuccessNotificationObserver: typeof com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotificationObserver;
+
+export type PaymentSuccessNotificationSubject =
+  com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotificationSubject;
+export declare const PaymentSuccessNotificationSubject: typeof com.munchies.payment.infrastructure.adapter.outbound.notification.PaymentSuccessNotificationSubject;

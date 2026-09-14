@@ -93,7 +93,7 @@ kover {
 
     verify {
       rule {
-        // minBound(70) TODO
+        minBound(70)
       }
     }
   }
