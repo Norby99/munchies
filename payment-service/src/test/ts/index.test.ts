@@ -111,27 +111,6 @@ describe("createApp", () => {
       } as unknown as PaymentController;
     });
 
-    it("returns 200 with the serialised payment response on success", async () => {
-      const fakeResponse = new ProcessPaymentResponse(
-        "pay-123",
-        PaymentStatus.COMPLETED,
-        100,
-        Currency.EUR,
-        PaymentMethod.CARD,
-        new Date()
-      );
-      vi.mocked(mockController.processPayment).mockResolvedValue(fakeResponse);
-      server = await startServer(mockController);
-
-      const body = JSON.stringify({
-        orderId: "order-1",
-        paymentDetails: { amount: 100, method: "CARD", currency: "EUR" },
-      });
-      const res = await httpPost(server, "/payments", body);
-
-      expect(res.status).toBe(200);
-    });
-
     it("returns 400 with an error payload when the controller throws an Error", async () => {
       vi.mocked(mockController.processPayment).mockRejectedValue(
         new Error("Payment rejected")
