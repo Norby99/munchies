@@ -30,17 +30,17 @@ microservices architecture.
 
 ## Microservices Structure
 
-| Package                     | Stack              | Role                                                                                                                                   |
-|-----------------------------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| `user-service`              | Kotlin + Micronaut | Manages user accounts, authentication, and authorization.                                                                              |
-| `restaurant-service`        | Kotlin + Micronaut | Manages restaurant data, menus, and availability of dishes.                                                                            |
-| `order-service`             | Kotlin + Micronaut | Handles order creation, processing, and status tracking.                                                                               |
-| `gateway-service`           | Express.js         | Acts as the API gateway, routing requests to appropriate services.                                                                     |
-| `notification-service`      | Express.js         | Sends notifications to users and restaurant staff via email/SMS. Recives messages only via Kafka. Follows the agent-based architecture |
-| `payment-service`           | Express.js         | Handles payment processing and integration with payment gateways.                                                                      |
-| `scheduler-service`         | Kotlin + Micronaut | Manages delivery scheduling and logistics. It acts as a middleware between the user and the order-service.                             |
-| `table-reservation-service` | Express.js         | Manages table reservations for restaurants.                                                                                            |
-| `frontend-service`          | Vue.js             | Provides the user interface for customers and restaurant staff.                                                                        |
+| Package                     | Stack              | Role                                                                                                       |
+|-----------------------------|--------------------|------------------------------------------------------------------------------------------------------------|
+| `user-service`              | Kotlin + Micronaut | Manages user accounts, authentication, and authorization.                                                  |
+| `restaurant-service`        | Kotlin + Micronaut | Manages restaurant data, menus, and availability of dishes.                                                |
+| `order-service`             | Kotlin + Micronaut | Handles order creation, processing, and status tracking.                                                   |
+| `gateway-service`           | Express.js         | Acts as the API gateway, routing requests to appropriate services.                                         |
+| `notification-service`      | Express.js         | Sends notifications to users. Recives messages only via Kafka. Follows the event-based architecture        |
+| `payment-service`           | Express.js         | Handles payment processing and integration with payment gateways.                                          |
+| `scheduler-service`         | Kotlin + Micronaut | Manages delivery scheduling and logistics. It acts as a middleware between the user and the order-service. |
+| `table-reservation-service` | Express.js         | Manages table reservations for restaurants.                                                                |
+| `frontend-service`          | Vue.js             | Provides the user interface for customers and restaurant staff.                                            |
 
 Every service has both a `service` and a `shared` module. The shared module contains common code, that can be accessed
 by other services. The service module contains the business logic.
