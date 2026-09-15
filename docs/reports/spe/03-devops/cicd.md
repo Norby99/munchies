@@ -43,7 +43,7 @@ As mentioned before, we've used custom scripts, tasks and GH actions available f
 
 The file [.github/workflows/publish.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/publish.yaml) is tasked with:
 - Computing the expected versioning from the semantic commits being merged
-- Preparing and publishing our generated Javascript *-shared modules to NPM
-- Preparing and publishing our *-service images to DockerHub
-- Publishing our *-shared modules to Maven
+- Preparing and publishing our generated Javascript *-shared modules to [NPM](https://www.npmjs.com/~maggico-munchies)
+- Preparing and publishing our *-service images to [DockerHub](https://hub.docker.com/u/maggicomunchies)
+- Publishing our *-shared modules to [Maven](https://central.sonatype.com/search?q=norby99)
 - Updating the Changelog and creating a new release in GitHub's "Release Page" 
