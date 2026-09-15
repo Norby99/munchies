@@ -53,8 +53,8 @@ These dockerfiles and images, were also used to be able to utilize kubernetes as
 We've also created two tasks to help during the deploy-docs workflow that copies the generated docs to be then further
 translated into a web page.
 
-
 These are all the tasks we've created:
+
 ```
 Munchies tasks
 --------------
@@ -114,13 +114,12 @@ graph TB
     classDef unknown fill:#FFADAD,stroke:#000,stroke-width:2px,color:#000;
 ```
 
-
 ## Shared build logic
 
 Many subproject share the same build logic configuration, that are defined in the ```build-logic``` folder, these
 conventions also have a hierarchical structure.
 
-These are the currenct build conventions available:
+These are the current build conventions available:
 
 - ```dokka-convention```: dokka configuration for jvm projects
 - ```express-server```: configuration for TypeScript projects
