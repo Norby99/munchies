@@ -25,7 +25,7 @@ We used a [plugin](https://semantic-release.org/) tasked with computing such ver
 Although each subproject experiences different development changes and by conventional commits standards' it should have different version numbers from other subprojects; we decided to keep a single version number for the whole project such that the whole project is being brought forward.
 ## Repository Management
 
-The repository is structured as follows:
+The repository follows the "Git Flow" structure that is as follows:
 
 - a ```master``` branch where we store stable releases of our code and where release workflows trigger from.
 - a ```develop``` branch where team member converge their changes and enforce quality standards.
