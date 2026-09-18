@@ -4,6 +4,7 @@ const _order = generated.com.munchies.order;
 const _inbound = _order.infrastructure.adapter.inbound;
 const _outbound = _order.infrastructure.adapter.outbound;
 const _dto = _order.infrastructure.adapter.dto;
+const _outboundNotification = _outbound.notification;
 
 module.exports = {
     OrderDTO: _dto.OrderDto,
@@ -66,4 +67,11 @@ module.exports = {
 
     UpdateTakeawayOrderResponse: _outbound.response.UpdateTakeawayOrderResponse,
     updateTakeawayOrderResponseFromJson: _outbound.response.updateTakeawayOrderResponseFromJson,
+
+    // Notifications
+    OrderStatusChangedNotificationInfo: _outboundNotification.OrderStatusChangedNotificationInfo,
+    OrderStatusChangedNotification: _outboundNotification.OrderStatusChangedNotification,
+    orderStatusChangedNotificationFromJson: _outboundNotification.orderStatusChangedNotificationFromJson,
+    OrderStatusChangedNotificationObserver: _outboundNotification.OrderStatusChangedNotificationObserver,
+    OrderStatusChangedNotificationSubject: _outboundNotification.OrderStatusChangedNotificationSubject,
 };
