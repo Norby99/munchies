@@ -3,6 +3,7 @@ package com.munchies.order.application.usecase
 import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCommand
 import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.domain.port.OrderRepository
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
@@ -15,7 +16,8 @@ import org.junit.jupiter.api.Test
 class AdvanceOrderStatusUseCaseUnitTest {
 
   private val repository = mockk<OrderRepository>(relaxed = false)
-  private val useCase = AdvanceOrderStatusUseCase(repository)
+  private val notificationPublisher = mockk<OrderNotificationPublisher>(relaxed = true)
+  private val useCase = AdvanceOrderStatusUseCase(repository, notificationPublisher)
 
   private val command = AdvanceOrderStatusCommand(defaultOrderId)
 
@@ -27,6 +29,7 @@ class AdvanceOrderStatusUseCaseUnitTest {
 
     result shouldBeEqual AdvanceOrderStatus.Result.Failure.OrderNotFound
     verify(exactly = 0) { repository.update(any()) }
+    verify(exactly = 0) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   @Test
@@ -39,6 +42,7 @@ class AdvanceOrderStatusUseCaseUnitTest {
 
     result shouldBeEqual AdvanceOrderStatus.Result.Failure.InvalidTransition
     verify(exactly = 0) { repository.update(any()) }
+    verify(exactly = 0) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   @Test
@@ -53,6 +57,14 @@ class AdvanceOrderStatusUseCaseUnitTest {
     result shouldBeEqual AdvanceOrderStatus.Result.Success
     verify(exactly = 1) {
       repository.update(
+        withArg { updatedOrder ->
+          updatedOrder.status shouldBeEqual OrderStatus.PREPARING
+          updatedOrder.id shouldBeEqual command.orderId
+        },
+      )
+    }
+    verify(exactly = 1) {
+      notificationPublisher.publishStatusChanged(
         withArg { updatedOrder ->
           updatedOrder.status shouldBeEqual OrderStatus.PREPARING
           updatedOrder.id shouldBeEqual command.orderId

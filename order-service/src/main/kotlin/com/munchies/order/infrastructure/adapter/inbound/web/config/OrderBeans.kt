@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.config
 
 import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.usecase.*
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.domain.port.OrderRepository
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
@@ -10,8 +11,10 @@ import jakarta.inject.Singleton
 class OrderBeans {
 
   @Singleton
-  fun advanceOrderStatus(repo: OrderRepository): AdvanceOrderStatus =
-    AdvanceOrderStatusUseCase(repo)
+  fun advanceOrderStatus(
+    repo: OrderRepository,
+    notificationPublisher: OrderNotificationPublisher,
+  ): AdvanceOrderStatus = AdvanceOrderStatusUseCase(repo, notificationPublisher)
 
   @Singleton
   fun discardOrder(repo: OrderRepository): DiscardOrder = DiscardOrderUseCase(repo)
