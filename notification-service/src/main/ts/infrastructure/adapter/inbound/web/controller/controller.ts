@@ -2,6 +2,7 @@ import { Post, Route, Tags } from "tsoa";
 import { NotificationAPI } from "munchies-notification-service-shared/kotlin/notification-modules";
 import {
   _UserEmailConfirmationNotification,
+  OrderStatusChangedNotification,
   PaymentSuccessNotification,
 } from "@main/domain/external-modules";
 
@@ -49,6 +50,16 @@ export class NotificationController extends NotificationAPI {
   public handlePaymentSuccess(event: PaymentSuccessNotification): void {
     console.log(
       `[notification-service] Received PaymentSuccessNotification: ${event.toString()}`
+    );
+  }
+
+  /**
+   * Handles an order status-change event, published by order-service whenever
+   * an order transitions to a new status.
+   */
+  public handleOrderStatusChanged(event: OrderStatusChangedNotification): void {
+    console.log(
+      `[notification-service] Received OrderStatusChangedNotification: ${event.toString()}`
     );
   }
 }
