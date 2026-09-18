@@ -4,9 +4,11 @@ import {
   UserEmailConfirmationGroupId,
   UserEmailConfirmationTopic,
   PaymentSuccessNotificationInfo,
+  OrderStatusChangedNotificationInfo,
 } from "@main/domain/external-modules";
 import { KafkaUserEmailConfirmationNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaUserNotificationConsumer";
 import { KafkaPaymentSuccessNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaPaymentSuccessNotificationConsumer";
+import { KafkaOrderStatusChangedNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaOrderStatusChangedNotificationConsumer";
 import { NotificationController } from "./infrastructure/adapter/inbound/web/controller/controller";
 
 async function main() {
@@ -38,6 +40,21 @@ async function main() {
   );
   await paymentSuccessConsumer.connect();
   paymentSuccessConsumer.run();
+
+  const orderStatusChangedTopic =
+    OrderStatusChangedNotificationInfo.ORDER_STATUS_CHANGED_TOPIC;
+  const orderStatusChangedGroupId =
+    OrderStatusChangedNotificationInfo.ORDER_STATUS_CHANGED_GROUP_ID;
+  const orderStatusChangedKafka = await getKafka(orderStatusChangedTopic);
+  const orderStatusChangedConsumer =
+    new KafkaOrderStatusChangedNotificationConsumer(
+      orderStatusChangedKafka,
+      orderStatusChangedTopic,
+      orderStatusChangedGroupId,
+      controller
+    );
+  await orderStatusChangedConsumer.connect();
+  orderStatusChangedConsumer.run();
 }
 
 main();
