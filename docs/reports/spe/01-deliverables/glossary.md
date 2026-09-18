@@ -1,35 +1,140 @@
 # Glossary
 
-The ubiquitous language shared between the domain and the code — every term below names a class, enum, or field somewhere in the codebase, not just a concept on paper.
+The first step of knowledge crunching is agreeing on a shared, unambiguous vocabulary for the domain — the ubiquitous language every team member, and every class/field in the code, uses for the same concept. This glossary lists the terms identified for Munchies, first as a flat list of concepts and actions, then regrouped per bounded context.
 
-| Term | Meaning | Where it lives |
-| --- | --- | --- |
-| **Customer** | An end user who browses restaurants, places orders and books tables. The default `UserRole`. | [`UserRole.CUSTOMER`](https://github.com/Norby99/munchies/blob/master/user-service/src/main/kotlin/com/munchies/user/domain/model/UserRole.kt) |
-| **Manager** | A user who owns and administers one restaurant: its details, menus, categories and items. `MANAGER` visibility is a superset of `CUSTOMER` — a manager can do everything a customer can, plus restaurant administration. | [`UserRole.MANAGER`](https://github.com/Norby99/munchies/blob/master/user-service/src/main/kotlin/com/munchies/user/domain/model/UserRole.kt) |
-| **Restaurant** | An establishment owned by exactly one manager, identified by name, address, phone and email. Aggregate root for restaurant identity/details. | [`Restaurant`](https://github.com/Norby99/munchies/blob/master/restaurant-service/src/main/kotlin/com/munchies/restaurant/domain/aggregate/Restaurant.kt) |
-| **Menu** | A named, orderable listing of `Category` → `MenuItem`, scoped to one restaurant. A restaurant can have more than one (e.g. a lunch menu and a dinner menu), each independently time-bounded by its own `Validity`. | [`Menu`](https://github.com/Norby99/munchies/blob/master/restaurant-service/src/main/kotlin/com/munchies/restaurant/domain/aggregate/Menu.kt) |
-| **Category** | A grouping of menu items inside a `Menu` (e.g. "Starters"), itself entity-identified so items can be added, moved or removed without touching the rest of the menu. | `Category`, same file as `Menu` |
-| **Menu Item** | A single orderable dish: name, description, `Money` price, optional `Variation`s, and its own `Validity` window (an item can be limited-time even inside an always-available menu). | `MenuItem`, same file as `Menu` |
-| **Variation** | A named customization option on a menu item or category (e.g. size, spice level). | [`Variation`](https://github.com/Norby99/munchies/blob/master/restaurant-service/src/main/kotlin/com/munchies/restaurant/domain/valueobject/menu/Variation.kt) |
-| **Validity** | *When* something is orderable — a composable rule (`Period`, `Weekly`, `Yearly`, `Hours`, or `Always`, combinable with `.combine()`) attached to a `Menu` or `MenuItem`. | [`Validity`](https://github.com/Norby99/munchies/blob/master/restaurant-service/src/main/kotlin/com/munchies/restaurant/domain/valueobject/menu/Validity.kt) |
-| **Order** | A customer's request to buy a set of `OrderItem`s from one restaurant. Comes in three shapes — see below. Tracks its own `OrderStatus` and whether it's `payed`. | [`Order`](https://github.com/Norby99/munchies/blob/master/order-service/src/main/kotlin/com/munchies/order/domain/model/Order.kt) (sealed) |
-| **Delivery Order** | An `Order` fulfilled by delivery to an address, carrying `DeliveryInfo` (estimated time, address, bell name, contact phone). | [`DeliveryOrder`](https://github.com/Norby99/munchies/blob/master/order-service/src/main/kotlin/com/munchies/order/domain/model/DeliveryOrder.kt) |
-| **Takeaway Order** | An `Order` the customer collects in person. | `TakeawayOrder`, same package |
-| **Dine-In Order** | An `Order` placed at a table inside the restaurant. | `DineInOrder`, same package |
-| **Order Status** | The order's position in its lifecycle: `PENDING → PREPARING → READY → ON_THE_WAY → COMPLETED`, with `CANCELLED` reachable only from `PENDING`. | [`OrderStatus`](https://github.com/Norby99/munchies/blob/master/order-service/src/main/kotlin/com/munchies/order/domain/model/OrderStatus.kt) |
-| **Payment** | The record of money changing hands for an order: amount, `Currency`, `PaymentMethod`, and its own lifecycle (`PENDING → COMPLETED`/`FAILED`/`CANCELLED`). Modeled independently of `Order` — a separate bounded context. | [`Payment`](https://github.com/Norby99/munchies/blob/master/payment-service/src/main/ts/domain/model/Payment.ts) |
-| **Table Reservation** | A customer's booking of a restaurant table for a given time (bounded context present in the codebase but incomplete — see [Microservices](../02-implementation/microservices.md)). | `table-reservation-service` |
-| **Notification** | An asynchronous message about something that happened elsewhere in the system (e.g. "a user registered") that another bounded context reacts to — the mechanism behind cross-context integration. See [Domain Model](domain-model.md#context-integration-domain-events-over-kafka). | [`Notification`](https://github.com/Norby99/munchies/blob/master/commons/src/commonMain/kotlin/com/munchies/commons/domain/port/Notification.kt) |
+## Global Concepts
 
-## Shared building blocks (not domain terms, but load-bearing vocabulary)
-
-These aren't part of the *business* language, but every bounded context is built out of them, so they're worth defining once:
-
-| Term | Meaning |
+| Term | Definition |
 | --- | --- |
-| **Entity** | Something with a persistent identity (`EntityId`) that survives changes to its other fields — equality is by ID, not by value. |
-| **Value Object** | Something defined entirely by its data — equality is structural (`Money(10) == Money(10)` regardless of instance). No identity of its own. |
-| **Aggregate Root** | The single entry point into a cluster of entities/value objects that must change together under one consistency boundary (e.g. you don't reach a `MenuItem` except through its `Menu`). |
-| **Factory** | Encapsulates validated construction of an entity, often returning a `Success`/`Failure` result instead of throwing, so invalid domain objects can never exist. |
+| System | The Munchies platform as a whole |
+| Customer | A registered user who browses restaurants, orders food and books tables |
+| Manager | A registered user who administers the one restaurant they own; a manager satisfies every permission a customer has, plus restaurant administration |
+| User Profile | A user's username, email (with its verification state) and role |
+| Restaurant | An establishment, owned by exactly one manager, identified by name, address, phone and email |
+| Menu | A named, orderable listing of categories and items belonging to one restaurant |
+| Category | A named grouping of menu items inside a menu |
+| Menu Item | A single orderable dish: name, description, price, and optional variations |
+| Variation | A customization option on a menu item or category (e.g. size, spice level) |
+| Validity | The time window during which a menu or menu item is orderable |
+| Order | A customer's request to buy a set of items from one restaurant, fulfilled by delivery, takeaway or dine-in |
+| Order Item | A menu item and the quantity of it requested in an order |
+| Order Status | The order's position in its fulfilment lifecycle |
+| Payment | The record of money changing hands for one order |
+| Table Reservation | A customer's booking of a restaurant table for a given time |
+| Notification | An asynchronous message about something that happened in one bounded context, delivered to another |
 
-See [Domain Model](domain-model.md) for how these are actually implemented and where each bounded context uses them.
+## Actions
+
+### User
+
+| Term | Definition |
+| --- | --- |
+| Registering | The action performed by a person to create an account and become a user |
+| Logging in | The action performed by a user to authenticate and enter the system |
+| Verifying an email | The action performed by a user to confirm ownership of the email address on their profile |
+| Updating a user profile | The action performed by a user to change their username, email or password |
+| Deleting an account | The action performed by a user to permanently remove their account |
+
+### Restaurant
+
+| Term | Definition |
+| --- | --- |
+| Creating a restaurant | The action performed by a manager to register a new restaurant under their account |
+| Updating restaurant details | The action performed by a manager to change their restaurant's name, address, phone or email |
+| Creating a menu | The action performed by a manager to add a new menu to their restaurant |
+| Creating a category | The action performed by a manager to add a category to one of their menus |
+| Creating a menu item | The action performed by a manager to add an orderable item to a category |
+| Updating a menu item | The action performed by a manager to change a menu item's details, price, variations or validity |
+| Removing a menu item | The action performed by a manager to remove an item from a category |
+
+### Order
+
+| Term | Definition |
+| --- | --- |
+| Placing an order | The action performed by a customer to submit a new order to a restaurant |
+| Updating order items | The action performed by a customer to change the items of a pending order |
+| Advancing order status | The action performed by the system to move an order to the next stage of its lifecycle |
+| Paying an order | The action performed by a customer to mark an order as paid |
+| Cancelling an order | The action performed by a customer to cancel a still-pending order |
+
+### Payment
+
+| Term | Definition |
+| --- | --- |
+| Processing a payment | The action performed by the system to charge a customer for an order |
+| Completing a payment | The action performed by the system when a payment succeeds |
+| Failing a payment | The action performed by the system when a payment cannot be completed |
+
+## Bounded-Context Glossary
+
+### User Bounded Context
+
+| Term | Definition |
+| --- | --- |
+| User | A person who is registered and uses the system |
+| Customer | The default role of a registered user |
+| Manager | A user with restaurant-administration privileges, superset of Customer |
+| User Profile | Username, email and role of a user |
+| Registering | Creating an account |
+| Logging in | Authenticating to enter the system |
+| Verifying an email | Confirming ownership of the profile's email address |
+| Updating a user profile | Changing username, email or password |
+| Deleting an account | Permanently removing an account |
+
+### Restaurant Bounded Context
+
+| Term | Definition |
+| --- | --- |
+| Restaurant | An establishment owned by one manager |
+| Menu | A named listing of categories and items for one restaurant |
+| Category | A grouping of menu items inside a menu |
+| Menu Item | A single orderable dish, with price and variations |
+| Variation | A customization option on an item or category |
+| Validity | The time window in which a menu or item is orderable |
+| Creating a restaurant | Registering a new restaurant |
+| Updating restaurant details | Changing a restaurant's name, address, phone or email |
+| Creating/updating/removing a menu, category or item | Administering a restaurant's offering |
+
+### Order Bounded Context
+
+| Term | Definition |
+| --- | --- |
+| Order | A request to buy items from one restaurant |
+| Delivery Order | An order fulfilled by delivery to an address |
+| Takeaway Order | An order the customer collects in person |
+| Dine-in Order | An order placed at a table inside the restaurant |
+| Order Item | A menu item and its requested quantity |
+| Order Status | `PENDING → PREPARING → READY → ON_THE_WAY → COMPLETED`, or `CANCELLED` (from `PENDING` only) |
+| Placing an order | Submitting a new order |
+| Updating order items | Changing a pending order's items |
+| Advancing order status | Moving an order to its next lifecycle stage |
+| Paying an order | Marking an order as paid |
+| Cancelling an order | Cancelling a still-pending order |
+
+### Payment Bounded Context
+
+| Term | Definition |
+| --- | --- |
+| Payment | The record of money changing hands for one order |
+| Payment Method | How the payment was made (e.g. card) |
+| Payment Status | `PENDING → COMPLETED`/`FAILED`/`CANCELLED` |
+| Processing a payment | Charging a customer for an order |
+| Completing/Failing/Cancelling a payment | A payment's terminal outcomes |
+
+### Notification Bounded Context
+
+| Term | Definition |
+| --- | --- |
+| Notification | An asynchronous message describing something that happened in another bounded context |
+| Email Confirmation Notification | The notification sent when a user registers, prompting email verification |
+| Payment Success Notification | The notification sent when a payment for an order completes |
+
+### Table Reservation Bounded Context
+
+| Term | Definition |
+| --- | --- |
+| Table Reservation | A customer's booking of a restaurant table for a given time |
+
+*Present in the codebase but incomplete — see [Microservices](../02-implementation/microservices.md).*
+
+See [Domain Model](domain-model.md) for how these concepts are actually implemented as entities, value objects and aggregates, and how the bounded contexts above integrate with each other.
