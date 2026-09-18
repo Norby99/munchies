@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import {
+  OrderStatusChangedNotification,
   PaymentSuccessNotification,
   UserEmailConfirmationNotification,
 } from "@main/domain/external-modules";
@@ -40,5 +41,23 @@ describe("NotificationController", () => {
     const [loggedMessage] = logSpy.mock.calls[0];
     expect(loggedMessage).toContain("PaymentSuccessNotification");
     expect(loggedMessage).toContain("payment-1");
+  });
+
+  it("logs an order status-change event instead of sending a notification", () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const controller = new NotificationController();
+    const event = new OrderStatusChangedNotification(
+      "order-1",
+      "restaurant-1",
+      "customer-1",
+      "PREPARING"
+    );
+
+    controller.handleOrderStatusChanged(event);
+
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    const [loggedMessage] = logSpy.mock.calls[0];
+    expect(loggedMessage).toContain("OrderStatusChangedNotification");
+    expect(loggedMessage).toContain("order-1");
   });
 });
