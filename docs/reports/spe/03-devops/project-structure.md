@@ -9,7 +9,7 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```architecture-rules``` (Kotlin): contains Konsist's architectural tests for a clean DDD architecture
 - ```commons``` (Multiplatform): contains common code for all other projects
 - ```e2e-test``` (Kotlin): contains end-to-end tests for the services
-- ```frontend-service``` (TypeScript): contains the code for the frontend
+- ```frontend-service``` (TypeScript): contains the code for the frontend (INCOMPLETE)
 - ```gateway-service``` (TypeScript): contains the gateway's microservice code
 - ```gateway-shared``` (Multiplatform): contains the gateway's API signatures
 - ```notification-service``` (TypeScript): contains the notification's microservice code
