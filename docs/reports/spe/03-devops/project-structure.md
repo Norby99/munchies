@@ -12,6 +12,8 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```frontend-service``` (TypeScript): contains the code for the frontend (INCOMPLETE)
 - ```gateway-service``` (TypeScript): contains the gateway's microservice code
 - ```gateway-shared``` (Multiplatform): contains the gateway's API signatures
+- ```micronaut-commons``` (Kotlin): contains Micronaut beans shared across every JVM microservice — currently a
+  custom `MongoHealthIndicator`, added to close a gap in `/health` (see below)
 - ```notification-service``` (TypeScript): contains the notification's microservice code
 - ```notification-shared``` (Multiplatform): contains the notification's API signatures
 - ```order-service``` (Kotlin): contains the order's microservice code
@@ -128,6 +130,9 @@ These are the current build conventions available:
 - ```linter-convention```: linter for both Kotlin and TypeScript
 - ```maven-publish-convention```: configuration for maven publishing
 - ```micronaut-base```: micronaut base plugins
+- ```micronaut-library```: minimal Micronaut setup (KSP annotation processing + allopen) for a plain library
+  module that contributes beans to every service, without the `application`/Docker/AOT machinery a full service
+  needs
 - ```micronaut-server```: Kotlin micronaut service configuration
 - ```multiplatform-base```: Kotlin Multiplatform configuration
 - ```munchies-subproject```: subproject with dependency README
@@ -146,10 +151,12 @@ flowchart TB
     mpc["maven-publish-convention"]
     msp["munchies-subproject"]
     es["express-server"]:::pj
+    ml["micronaut-library"]:::pj
 
     ms --> msp
     es --> msp
     mpb --> msp
+    ml --> msp
     mpb --> mpc
     mpb --> lc
     es --> lc
@@ -158,8 +165,10 @@ flowchart TB
     mb --> ts
     mpb --> dk
     ms --> mpc
+    ml --> mpc
     mb --> kj
     ms --> mb
+    ml --> kj
 
     classDef pj fill:#9956e0,stroke:#333,stroke-width:2px,color:#fff
 ```
@@ -171,3 +180,44 @@ We did so through the [express-server.gradle.kts](https://github.com/Norby99/mun
 this was done through a plugin which allows Gradle to run npm commands and a custom dependency (```jsImplementation```) between subproject that builds, archives and links JavaScript modules from Multiplaform subprojects.
 
 We've decided to go along with these steps, so that during the development of TypeScript subprojects the library dependencies would align with the local version and as a result be up-to-date.
+
+### Micronaut Library Convention
+
+Not every shared piece of code between our JVM services is a plain Kotlin class — some of it needs to be a real
+Micronaut *bean*, picked up automatically by every service's dependency-injection context. A plain
+```kotlin-jvm``` module can't do that: Micronaut only turns a class into an injectable bean if it was compiled
+with Micronaut's own KSP annotation processor, which a bare Kotlin module doesn't run.
+
+This came up concretely while investigating why our Kubernetes `readinessProbe` — which gates whether a pod
+receives traffic — couldn't be fully trusted: Micronaut's Kafka health indicator does a genuine broker
+round-trip, but no equivalent exists for our MongoDB setup (the built-in one only ships for the *reactive*
+driver, and our services use the synchronous one through Micronaut Data). Rather than copy-paste a fix into
+`user-service`, `order-service` and `restaurant-service` individually, we wrote it once, as a real shared
+Micronaut bean.
+
+[```micronaut-library.gradle.kts```](https://github.com/Norby99/munchies/blob/master/build-logic/src/main/kotlin/micronaut-library.gradle.kts)
+is the minimal convention that makes this possible: just enough Micronaut (KSP processing, `allopen`) for a
+project's classes to become real beans, without the ```io.micronaut.application```, Docker or AOT machinery a
+full deployable service needs.
+
+```kotlin
+plugins {
+  id("kotlin-jvm")
+  id("org.jetbrains.kotlin.plugin.allopen")
+  id("com.google.devtools.ksp")
+  id("io.micronaut.library")
+}
+```
+
+[```micronaut-commons```](https://github.com/Norby99/munchies/tree/master/micronaut-commons) is the one project
+using it, currently holding a single class: a custom `MongoHealthIndicator` that pings MongoDB through the
+synchronous client our repositories already use, so `/health` genuinely reflects whether a pod can reach its
+database — verified live, not just assumed, by watching `/health` flip to `503` when Mongo was stopped. Every
+service using the ```micronaut-server``` convention pulls it in with a single line:
+
+```kotlin
+implementation(project(":micronaut-commons"))
+```
+
+— so the fix exists once and every JVM service gets it automatically, the same "write it once, share it" idea
+the Express Server Convention above applies to the TypeScript side.
