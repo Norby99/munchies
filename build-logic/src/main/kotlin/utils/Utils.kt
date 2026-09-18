@@ -32,12 +32,12 @@ fun Project.getProjectLanguage(): ProjectLanguage {
     "user",
     "order",
     "restaurant",
-    "scheduler",
     "munchies",
     "e2e-test",
   )
   val stringExpressProjects = listOf(
     "payment",
+    "scheduler",
     "gateway",
     "table-reservation",
     "notification",

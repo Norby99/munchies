@@ -22,6 +22,7 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```restaurant-shared``` (Multiplatform): contains the restaurant's API signatures
 - table-reservation-service (TypeScript): contains the table reservation's microservice code (INCOMPLETE)
 - table-reservation-shared (Multiplatform): contains the table reservation's API signatures (INCOMPLETE)
+- scheduler-service (Typescript): contains the order scheduler microservice code (INCOMPLETE)
 - ```user-service``` (Kotlin): contains the user's microservice code
 - ```user-shared``` (Multiplatform): contains the user's API signatures
 
