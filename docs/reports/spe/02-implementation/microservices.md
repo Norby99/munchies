@@ -61,7 +61,7 @@ in Express.js.
 
 ## Scheduler Service
 
-**Stack:** Kotlin + Micronaut.
+**Stack:** Express.js.
 
 Manages delivery scheduling and logistics, acting as a middleware between the user and ```order-service```.
 
