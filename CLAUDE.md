@@ -21,7 +21,20 @@ microservices architecture.
 
 - **Domain-Driven Design (DDD)**: Always structure code according to DDD principles. Ensure clear separation between
   Domain, Application, and Infrastructure layers.
-- **Event-Driven Architecture**: Use Kafka for asynchronous communication between microservices.
+- **Event-Driven Architecture**: confined to `notification-service` only. It is the sole service that behaves as an
+  event-driven agent, consuming Kafka topics and reacting to them; every other service stays REST/hexagonal and, at
+  most, adds a narrow single-topic Kafka producer for one event that is genuinely notification-bound (e.g.
+  `payment-service`'s payment-success producer) — that alone does not make the producing service event-driven.
+  Events published to `notification-service` must use the event-carried state transfer style: the payload carries
+  everything the consumer needs, so `notification-service` never has to call back into the source service. Every
+  call inside `notification-service`'s consume/process/produce pipeline (Kafka message handlers, notification
+  dispatch, the future event-store write, the future WebSocket push) must be asynchronous/non-blocking — a blocking
+  call inside a Kafka message handler stalls every other topic the service is meant to process concurrently. See
+  the `event-driven` skill for the full guide.
+- **Event Sourcing**: used only inside `notification-service`, to persist every event it receives as an
+  append-only log in its own MongoDB collection, before converting it into a user notification. Not used elsewhere
+  in the system — other services persist current state directly (plain CRUD-on-Mongo), not an event log. See the
+  `event-sourcing` skill for the implementation pattern.
 - **Microservices Patterns**:
     - API Gateway
     - SAGA Pattern (for distributed transactions)
@@ -122,7 +135,11 @@ New services, and new code in existing ones, should follow this structure.
 ## Communication
 
 - Use OpenAPI for defining RESTful APIs, ensuring clear documentation and consistency across services.
-- Kafka is used to communicate to the Notification service. Ensure proper topic naming conventions and message schemas.
+- Kafka is used only to communicate to the Notification service — not between other microservices. Ensure proper
+  topic naming conventions and message schemas, one topic per notification-bound event, with a full
+  event-carried-state-transfer payload (see "Event-Driven Architecture" above).
+- Every call in `notification-service`'s Kafka consume/process pipeline must be asynchronous (non-blocking I/O
+  throughout); never a synchronous/blocking call inside a Kafka message handler.
 
 ## Testing Standards
 
