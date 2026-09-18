@@ -9,7 +9,7 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```architecture-rules``` (Kotlin): contains Konsist's architectural tests for a clean DDD architecture
 - ```commons``` (Multiplatform): contains common code for all other projects
 - ```e2e-test``` (Kotlin): contains end-to-end tests for the services
-- ```frontend-service``` (TypeScript): contains the code for the frontend
+- ```frontend-service``` (TypeScript): contains the code for the frontend (INCOMPLETE)
 - ```gateway-service``` (TypeScript): contains the gateway's microservice code
 - ```gateway-shared``` (Multiplatform): contains the gateway's API signatures
 - ```notification-service``` (TypeScript): contains the notification's microservice code
@@ -22,6 +22,7 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```restaurant-shared``` (Multiplatform): contains the restaurant's API signatures
 - table-reservation-service (TypeScript): contains the table reservation's microservice code (INCOMPLETE)
 - table-reservation-shared (Multiplatform): contains the table reservation's API signatures (INCOMPLETE)
+- scheduler-service (Typescript): contains the order scheduler microservice code (INCOMPLETE)
 - ```user-service``` (Kotlin): contains the user's microservice code
 - ```user-shared``` (Multiplatform): contains the user's API signatures
 

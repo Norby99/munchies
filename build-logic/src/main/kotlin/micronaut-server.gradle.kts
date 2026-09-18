@@ -14,6 +14,7 @@ dependencies {
   ksp("io.micronaut:micronaut-http-validation")
 
   implementation("io.micronaut:micronaut-management")
+  implementation(project(":micronaut-commons"))
 
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("org.junit.platform:junit-platform-suite-engine")

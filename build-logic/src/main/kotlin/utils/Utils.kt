@@ -27,16 +27,17 @@ fun Project.getProjectLanguage(): ProjectLanguage {
 
   val stringKotlinProjects = listOf(
     "commons",
+    "micronaut-commons",
     "architecture-rules",
     "user",
     "order",
     "restaurant",
-    "scheduler",
     "munchies",
     "e2e-test",
   )
   val stringExpressProjects = listOf(
     "payment",
+    "scheduler",
     "gateway",
     "table-reservation",
     "notification",
@@ -62,6 +63,7 @@ enum class ProjectType {
 fun Project.getProjectType(): ProjectType {
   val exlcuded = listOf(
     "commons",
+    "micronaut-commons",
     "architecture-rules",
     "e2e-test",
   )
