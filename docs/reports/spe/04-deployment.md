@@ -48,7 +48,7 @@ flowchart LR
 
 ### Readiness and self-healing
 
-Every Deployment declares a `readinessProbe` against the `/health` endpoint that Micronaut exposes out of the box via `micronaut-management`. A pod only joins its Service's load-balancing pool once that probe succeeds, which is what makes both rolling updates and, as covered in the [Benchmark](05-benchmark.md) chapter, autoscaling safe operations.
+Every Deployment declares a `readinessProbe` against the `/health` endpoint that Micronaut exposes out of the box via `micronaut-management`. A pod only joins its Service's load-balancing pool once that probe succeeds, which is what makes both rolling updates and autoscaling safe operations.
 
 !!! note "Closing a gap: readiness now also covers MongoDB"
     Investigating this endpoint surfaced a real gap: Micronaut's Kafka health indicator performs a genuine check (it asks the broker's `AdminClient` to describe the cluster), but the equivalent MongoDB indicator only ships for the *reactive* Mongo driver — our services use the synchronous driver through Micronaut Data, so that bean was never created and `/health` never reflected MongoDB connectivity.
@@ -77,6 +77,6 @@ We verified it the same way we verify everything else here, *before* removing an
 
 ## Horizontal Scaling
 
-Every service deployed to Kubernetes (`gateway`, `user`, `order` and `restaurant`) additionally ships a `HorizontalPodAutoscaler` (`k8s/<service>/hpa.yml`, `autoscaling/v2`) targeting 60% average CPU utilization relative to the pod's declared `resources.requests.cpu`, between 1 and 4 replicas. This is what turns the load-balancing Service described above into an autonomously scaling one: as load increases, the cluster provisions more replicas on its own, and scales back down once the load subsides.
+Every service deployed to Kubernetes (`gateway`, `user`, `order` and `restaurant`) additionally ships a `HorizontalPodAutoscaler` (`autoscaling:` in its `helm/values/<service>.yaml`, rendered as `autoscaling/v2`) targeting 60% average CPU utilization relative to the pod's declared `resources.requests.cpu`, between 1 and 4 replicas. This is what turns the load-balancing Service described above into an autonomously scaling one: as load increases, the cluster provisions more replicas on its own, and scales back down once the load subsides.
 
-Whether this actually works — and by how much throughput improves as replicas increase — is verified empirically with an in-cluster load test, covered in the [Benchmark](05-benchmark.md) chapter.
+Empirically validating this behaviour under real load — throughput, latency and the scaling timeline itself — falls outside this report's scope and is covered by the companion Software Architecture and Platforms report instead.
