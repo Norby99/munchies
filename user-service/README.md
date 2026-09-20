@@ -13,9 +13,11 @@ config:
 graph TB
   :user-shared[user-shared]:::unknown
   :user-service[user-service]:::unknown
+  :micronaut-commons[micronaut-commons]:::unknown
   :commons[commons]:::unknown
 
   :user-service -.-> :commons
+  :user-service -.-> :micronaut-commons
   :user-service -.-> :user-shared
   :user-shared -.->|commonMainImplementation| :commons
 

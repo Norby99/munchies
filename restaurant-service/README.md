@@ -13,9 +13,11 @@ config:
 graph TB
   :restaurant-shared[restaurant-shared]:::unknown
   :restaurant-service[restaurant-service]:::unknown
+  :micronaut-commons[micronaut-commons]:::unknown
   :commons[commons]:::unknown
 
   :restaurant-service -.-> :commons
+  :restaurant-service -.-> :micronaut-commons
   :restaurant-service -.-> :restaurant-shared
   :restaurant-shared -.->|commonMainImplementation| :commons
 
