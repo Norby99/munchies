@@ -6,4 +6,5 @@ class WordResult {
   var responseStatus: Int? = null
   var responseBody: String? = null
   var authCookie: Cookie? = null
+  var orderId: String? = null
 }
