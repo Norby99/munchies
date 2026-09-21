@@ -3,6 +3,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.fixtures.createAdvanceOrderStatusRequest
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.defaultOrderId
@@ -15,7 +16,11 @@ import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import io.micronaut.test.annotation.MockBean
+import io.mockk.every
+import io.mockk.mockk
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -28,6 +33,13 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
 
   @Inject
   lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
+
+  @MockBean(OrderNotificationPublisher::class)
+  @Singleton
+  fun orderNotificationPublisher(): OrderNotificationPublisher =
+    mockk<OrderNotificationPublisher>(relaxed = false).also {
+      every { it.publishStatusChanged(any()) } returns Unit
+    }
 
   @AfterEach
   fun cleanupMongo() {
