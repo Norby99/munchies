@@ -26,7 +26,7 @@ export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailCo
   }
 
   async connect() {
-    this.consumer.connect();
+    await this.consumer.connect();
     await this.consumer.subscribe({ topic: this.topic, fromBeginning: true });
   }
 
