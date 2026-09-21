@@ -26,7 +26,7 @@ export class KafkaPaymentSuccessNotificationConsumer extends PaymentSuccessNotif
   }
 
   async connect() {
-    this.consumer.connect();
+    await this.consumer.connect();
     await this.consumer.subscribe({ topic: this.topic, fromBeginning: true });
   }
 
