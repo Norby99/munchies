@@ -34,6 +34,7 @@ The repository follows the "Git Flow" structure that is as follows:
 On GitHub's rules may be enforced in branches, such as protection from "force push" or ensuring some workflows are successful before merging a branch. 
 
 In the _munchies_ repository we've added the following rules:
+
 - Commits by a developer must be verified within his own branch
 - "Develop" and "Master" can only receive changes only by rebases/merges
 - A rebase/merge can only happen whenever all tests and quality checks pass
