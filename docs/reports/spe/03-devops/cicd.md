@@ -33,6 +33,7 @@ The file [.github/workflows/build.yaml](https://github.com/Norby99/munchies/blob
 The file [.github/workflows/deploy-docs.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/deploy-docs.yaml) is tasked with building and publishing all documentation regarding our project.
 
 As mentioned before, we've used custom scripts, tasks and GH actions available from the marketplace; in this workflow:
+
 - Generate OpenAPI docs from OpenAPI specs, created from ```@Annotations```
 - Generate Kotlin Docs using Dokka
 - Generate TypeScript docs using TypeDocs
@@ -42,6 +43,7 @@ As mentioned before, we've used custom scripts, tasks and GH actions available f
 ### Publish
 
 The file [.github/workflows/publish.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/publish.yaml) is tasked with:
+
 - Computing the expected versioning from the semantic commits being merged
 - Preparing and publishing our generated Javascript *-shared modules to [NPM](https://www.npmjs.com/~maggico-munchies)
 - Preparing and publishing our *-service images to [DockerHub](https://hub.docker.com/u/maggicomunchies)
