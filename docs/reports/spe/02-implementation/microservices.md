@@ -59,13 +59,13 @@ since there is no real money movement in this project, confirms the correspondin
 and publishes a payment-success event on Kafka. It is our reference implementation for the Hexagonal Architecture layout
 in Express.js.
 
-## Scheduler Service
+## Scheduler Service - not implemented
 
 **Stack:** Express.js.
 
 Manages delivery scheduling and logistics, acting as a middleware between the user and ```order-service```.
 
-## Table Reservation Service
+## Table Reservation Service - not implemented
 
 **Stack:** Express.js.
 
@@ -79,3 +79,22 @@ Provides the user interface for both customers and restaurant staff, and is the 
 ```gateway-service```. It follows a standard Vue project layout rather than the backend's hexagonal one, organized
 into ```views```, reusable ```components```, ```composables``` for shared reactive logic, Pinia ```stores``` for
 state, and a ```router``` for navigation between pages.
+
+## Communication between services
+
+Services communicate over **synchronous REST** by default. Every service exposes its API described with OpenAPI, and
+the endpoint paths and request/response types are defined once in its ```<service>-shared``` module and reused by
+callers on both runtimes (see [Multiplatform](multiplatform.md)), so a caller cannot drift from the API it calls.
+The two flows that matter most:
+
+- The browser only ever talks to ```gateway-service```, which routes each request to the service that owns it and
+  issues and verifies the session token itself.
+- ```payment-service``` calls ```order-service``` to confirm an order once its payment has succeeded.
+
+**Asynchronous messaging over Kafka is the exception**, kept for the few cases where two microservices are better
+decoupled than chained together, so that the publisher neither waits on nor depends on the consumer being up. At the
+moment both cases feed ```notification-service```: ```user-service``` publishes an email-confirmation event when a
+user registers, and ```payment-service``` publishes a payment-success event. ```notification-service``` receives
+messages only through Kafka. The events themselves, and how they fit between the bounded contexts, are described in
+the [context map](../01-deliverables/domain-model.md#context-map-communication-between-contexts) of the Domain
+Model.

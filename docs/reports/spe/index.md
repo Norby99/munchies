@@ -11,14 +11,14 @@ Two roles, hierarchical:
 
 ## Why microservices, and why this report structure
 
-The system is deliberately engineered as an independent microservice per bounded context — one team-sized area of the domain, one dedicated database, communicating with the rest of the system only through its HTTP API or asynchronous events (see [Domain Model](01-deliverables/domain-model.md)). That split is also what makes "2+ target platforms" a real architectural property rather than a checkbox: three services run on the JVM (Micronaut/Kotlin), four on Node.js (Express/TypeScript), sharing a compiled Kotlin Multiplatform domain layer across the runtime boundary (see [Multiplatform](02-implementation/multiplatform.md)).
+The system is deliberately engineered as an independent microservice per bounded context — one team-sized area of the domain, one dedicated database, communicating with the rest of the system through its HTTP API and, in a few cases, asynchronous events over Kafka (see [Domain Model](01-deliverables/domain-model.md)). That split is also what makes "2+ target platforms" a real architectural property rather than a checkbox: three services run on the JVM (Micronaut/Kotlin), four on Node.js (Express/TypeScript), sharing a compiled Kotlin Multiplatform domain layer across the runtime boundary (see [Multiplatform](02-implementation/multiplatform.md)).
 
 This report follows the shape of the system itself:
 
 1. **[Deliverables](01-deliverables/glossary.md)** — the ubiquitous language and the domain model it's built from.
 2. **[Implementation](02-implementation/microservices.md)** — how the services are structured, tested, and how two runtimes share one domain layer.
 3. **[DevOps](03-devops/project-structure.md)** — the build system, version control practices, quality gates, and CI/CD pipeline.
-4. **[Deployment](04-deployment.md)** — containerization and Kubernetes/Helm orchestration, including a real gap found and fixed along the way (MongoDB readiness checking) and a Helm migration verified equivalent before anything was deleted.
-5. **[Conclusions](05-conclusions.md)** — what held up, what didn't, and what's explicitly left for the companion Software Architecture and Platforms report instead.
+4. **[Deployment](04-deployment.md)** — containerization and orchestration, including a real gap found and fixed along the way (MongoDB readiness checking) and a Helm migration verified equivalent before anything was deleted.
+5. **[Conclusions](05-conclusions.md)** — the problems met along the way (chiefly serialization across the JVM/JS boundary) and the future work, including what is explicitly left for the companion Software Architecture and Platforms report.
 
 Repository: [github.com/Norby99/munchies](https://github.com/Norby99/munchies).
