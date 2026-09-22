@@ -104,7 +104,7 @@ The first step of knowledge crunching is agreeing on a shared, unambiguous vocab
 | Takeaway Order | An order the customer collects in person |
 | Dine-in Order | An order placed at a table inside the restaurant |
 | Order Item | A menu item and its requested quantity |
-| Order Status | `PENDING → PREPARING → READY → ON_THE_WAY → COMPLETED`, or `CANCELLED` (from `PENDING` only) |
+| Order Status | `PENDING → PREPARING → READY → COMPLETED` (delivery orders pass through `ON_THE_WAY` between `READY` and `COMPLETED`), or `CANCELLED` (from `PENDING` only) |
 | Placing an order | Submitting a new order |
 | Updating order items | Changing a pending order's items |
 | Advancing order status | Moving an order to its next lifecycle stage |
