@@ -1,28 +1,28 @@
 # Glossary
 
-The first step of knowledge crunching is agreeing on a shared, unambiguous vocabulary for the domain — the ubiquitous language every team member, and every class/field in the code, uses for the same concept. This glossary lists the terms identified for Munchies, first as a flat list of concepts and actions, then regrouped per bounded context.
+The first step of knowledge crunching is agreeing on a shared, unambiguous vocabulary for the domain: the ubiquitous language every team member, and every class/field in the code, uses for the same concept. This glossary lists the terms identified for Munchies, first as a flat list of concepts and actions, then regrouped per bounded context.
 
 ## Global Concepts
 
-| Term | Definition |
-| --- | --- |
-| System | The Munchies platform as a whole |
-| Customer | A registered user who browses restaurants, orders food and books tables |
-| Manager | A registered user who administers the one restaurant they own; a manager satisfies every permission a customer has, plus restaurant administration |
-| User Profile | A user's username, email (with its verification state) and role |
-| Restaurant | An establishment, owned by exactly one manager, identified by name, address, phone and email |
-| Menu | A named, orderable listing of categories and items belonging to one restaurant |
-| Category | A named grouping of menu items inside a menu |
-| Menu Item | A single orderable dish: name, description, price, and optional variations |
-| Variation | A customization option on a menu item or category (e.g. size, spice level) |
-| Validity | The time window during which a menu or menu item is orderable |
-| Order | A customer's request to buy a set of items from one restaurant, fulfilled by delivery, takeaway or dine-in |
-| Order Item | A menu item and the quantity of it requested in an order |
-| Order Status | The order's position in its fulfilment lifecycle |
-| Payment | The record of money changing hands for one order |
-| Table Reservation | A customer's booking of a restaurant table for a given time |
-| Notification | An asynchronous message about something that happened in one bounded context, delivered to another |
-
+| Term | Definition                                                                                                                                                                                  |
+| --- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| System | The Munchies platform as a whole                                                                                                                                                            |
+| User | A person using the system that is registered and can be a customer or a manager                                                                                                             |
+| User Profile | User's informations like username, email or role                                                                                                                                            |
+| Customer | A user who browses restaurants, orders food and books tables                                                                                                                                |
+| Manager | A user who creates and administers one or more restaurants. It can do all customer's actions                                                                                                |
+| Restaurant | An establishment, owned by exactly one manager, identified by name, address, phone and email                                                                                                |
+| Menu | A named, orderable listing of categories and items belonging to one restaurant                                                                                                              |
+| Category | A named grouping of menu items inside a menu. It can have variations appliable to all sub items by customers                                                                                |
+| Menu Item | A single orderable dish: name, description, price, and optional variations                                                                                                                  |
+| Variation | A customization option with a price appliable on a menu item (e.g. size, spice level). <br/>It can be configured on a category or menu item by the manager and can be applied by a customer |
+| Validity | The time window during which a menu or menu item is orderable (e.g. seasonal menus or menu items)                                                                                           |
+| Order | A customer's request to buy a set of items from one restaurant, fulfilled by delivery, takeaway or dine-in                                                                                  |
+| Order Item | A menu item and the quantity of it requested in an order                                                                                                                                    |
+| Order Status | The order's position in its fulfilment lifecycle                                                                                                                                            |
+| Payment | The record of money changing hands for one order                                                                                                                                            |
+| Table Reservation | A customer's booking of a restaurant table for a given time                                                                                                                                 |
+| Notification | A message describing something that happened in another bounded context                                                                                                                     |
 ## Actions
 
 ### User
@@ -41,8 +41,13 @@ The first step of knowledge crunching is agreeing on a shared, unambiguous vocab
 | --- | --- |
 | Creating a restaurant | The action performed by a manager to register a new restaurant under their account |
 | Updating restaurant details | The action performed by a manager to change their restaurant's name, address, phone or email |
+| Removing a restaurant | The action performed by a manager to permanently remove a restaurant |
 | Creating a menu | The action performed by a manager to add a new menu to their restaurant |
+| Updating a menu | The action performed by a manager to change a menu's name or validity |
+| Removing a menu | The action performed by a manager to remove a menu from their restaurant |
 | Creating a category | The action performed by a manager to add a category to one of their menus |
+| Updating a category | The action performed by a manager to change a category's name or variations |
+| Removing a category | The action performed by a manager to remove a category from a menu |
 | Creating a menu item | The action performed by a manager to add an orderable item to a category |
 | Updating a menu item | The action performed by a manager to change a menu item's details, price, variations or validity |
 | Removing a menu item | The action performed by a manager to remove an item from a category |
@@ -93,7 +98,16 @@ The first step of knowledge crunching is agreeing on a shared, unambiguous vocab
 | Validity | The time window in which a menu or item is orderable |
 | Creating a restaurant | Registering a new restaurant |
 | Updating restaurant details | Changing a restaurant's name, address, phone or email |
-| Creating/updating/removing a menu, category or item | Administering a restaurant's offering |
+| Removing a restaurant | Permanently removing a restaurant |
+| Creating a menu | Adding a new menu to a restaurant |
+| Updating a menu | Changing a menu's name or validity |
+| Removing a menu | Removing a menu from a restaurant |
+| Creating a category | Adding a category to a menu |
+| Updating a category | Changing a category's name or variations |
+| Removing a category | Removing a category from a menu |
+| Creating a menu item | Adding an orderable item to a category |
+| Updating a menu item | Changing a menu item's details, price, variations or validity |
+| Removing a menu item | Removing an item from a category |
 
 ### Order Bounded Context
 
@@ -135,6 +149,6 @@ The first step of knowledge crunching is agreeing on a shared, unambiguous vocab
 | --- | --- |
 | Table Reservation | A customer's booking of a restaurant table for a given time |
 
-*Present in the codebase but incomplete — see [Microservices](../02-implementation/microservices.md).*
+*Present in the codebase but incomplete; see [Microservices](../02-implementation/microservices.md).*
 
 See [Domain Model](domain-model.md) for how these concepts are actually implemented as entities, value objects and aggregates, and how the bounded contexts above integrate with each other.
