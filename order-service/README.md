@@ -13,9 +13,11 @@ config:
 graph TB
   :order-shared[order-shared]:::unknown
   :order-service[order-service]:::unknown
+  :micronaut-commons[micronaut-commons]:::unknown
   :commons[commons]:::unknown
 
   :order-service -.-> :commons
+  :order-service -.-> :micronaut-commons
   :order-service -.-> :order-shared
   :order-shared -.->|commonMainImplementation| :commons
 
