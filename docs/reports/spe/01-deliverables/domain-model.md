@@ -1,284 +1,184 @@
 # Domain Model
 
-## Bounded contexts
+The backend of _Munchies_ is divided into microservices that follows the Domain-Driven Design, inside a Hexagonal
+layout.
+Each microservice has the same folder structure and naming regardless of technological stack.
 
-Each microservice *is* a bounded context: one Kotlin/TypeScript module, one dedicated MongoDB database
-(see [Microservices](../02-implementation/microservices.md)), one team-sized area of the 
-[ubiquitous language](glossary.md). Nothing reaches across a context boundary except through its published HTTP API or,
-in a few deliberate cases, an asynchronous event.
+This section describes that structure, its class hierarchy, and how the layers depend on one another, using
+[
+```order-service```](https://github.com/Norby99/munchies/tree/master/order-service/src/main/kotlin/com/munchies/order) (
+implemented in Kotlin)
+and [```payment-service```](https://github.com/Norby99/munchies/tree/master/payment-service/src/main/ts) (implemented in
+Express).
 
-### User context
+## Layers and dependency direction
 
-Owns user registration, authentication and profile management. The `User` aggregate and the `CUSTOMER`/`MANAGER` role
-hierarchy live here.
-
-### Restaurant context
-
-Owns restaurant identity and menu administration: the `Restaurant` and `Menu` aggregates, and everything nested
-inside a menu (categories, items, variations, validity windows).
-
-### Order context
-
-Owns the order lifecycle across its three fulfilment shapes (delivery, takeaway, dine-in): the `Order` aggregate and 
-its state machine.
-
-### Payment context
-
-Owns the payment lifecycle for an order: the `Payment` aggregate, modeled independently of `Order` rather than as a
-field on it.
-
-### Notification context
-
-Owns delivering notifications to users. Unlike the others it has **no inbound HTTP API of its own**; it exists purely 
-to react to events published by other contexts (see the context map below).
-
-### Table Reservation context
-
-Owns table booking. Present in the codebase but incomplete (see [Microservices](../02-implementation/microservices.md));
-excluded from the diagrams and the deployment.
+As mentioned above, each microservice follows the Hexagonal layout, with it's ```infrastructure```,  ```application```
+and ```domain``` layers:
 
 ```mermaid
 flowchart LR
-    subgraph User["User context"]
-        U["User<br/>(CUSTOMER / MANAGER)"]
-    end
-    subgraph Restaurant["Restaurant context"]
-        R["Restaurant"] --> M["Menu"] --> C["Category"] --> MI["MenuItem"]
-    end
-    subgraph Order["Order context"]
-        O["Order<br/>(Delivery / Takeaway / DineIn)"]
-    end
-    subgraph Payment["Payment context"]
-        P["Payment"]
-    end
-    subgraph Notification["Notification context"]
-        N["email / push notifications"]
+    subgraph infra["infrastructure"]
+        direction TB
+        controller["adapter/inbound/web/controller"]
+        mongo["adapter/outbound/mongo"]
+        kafka["adapter/outbound/kafka"]
+        client["adapter/outbound/&lt;other-service&gt;"]
     end
 
-    U -. manages .-> R
-    O -. references restaurantId .-> R
-    O -. references customerId .-> U
-    O -. paid via .-> P
-    P -. references orderId .-> O
-    U == "UserEmailConfirmationNotification" ==> N
-    P == "PaymentSuccessNotification" ==> N
+    subgraph app["application"]
+        direction TB
+        inbound["port/inbound (one interface per use case)"]
+        usecase["usecase (implements the inbound port)"]
+    end
+
+    subgraph dom["domain"]
+        direction TB
+        model["model (entities, value objects)"]
+        factory["factory (aggregate construction)"]
+        outbound["port (outbound interfaces)"]
+    end
+
+    controller -->|" calls "| inbound
+    inbound -.->|" implemented by "| usecase
+    usecase --> model
+    usecase --> factory
+    usecase -->|" depends on "| outbound
+    mongo -.->|" implements "| outbound
+    kafka -.->|" implements "| outbound
+    client -.->|" implements "| outbound
+    classDef domain fill: #9956e0, stroke: #333, stroke-width: 2px, color: #fff
+    classDef application fill: #4a7fd6, stroke: #333, stroke-width: 2px, color: #fff
+    classDef infrastructure fill: #e07b39, stroke: #333, stroke-width: 2px, color: #fff
 ```
 
-The dotted lines are **references by ID only**: plain value objects, never a foreign key or a shared table. 
-This is a hard requirement of the database-per-service split. The double lines are the few asynchronous (Kafka)
-integrations; every other interaction between contexts is a synchronous REST call through the other context's HTTP API
-(not drawn; see [Microservices](../02-implementation/microservices.md#communication-between-services)). 
-The asynchronous ones are detailed in the context map below.
+Solid arrows are plain calls; dashed arrows represent a dependency from another class/interface.
 
-## Context map: communication between contexts
+## Package structure
 
-Between contexts, communication is synchronous REST by default (gateway routing, `payment-service` confirming an order
-with `order-service`; see [Microservices](../02-implementation/microservices.md#communication-between-services)) and 
-is not modeled as domain events. This section covers the exception: the few cases where a context tells another that 
-something happened without depending on it, so that the publisher must not fail, slow down or even know whether 
-the consumer is running. For those, contexts exchange domain events through Kafka, following a **Published Language** 
-shape defined once in `commons` (see [Tactical building blocks](#tactical-building-blocks)) and specialized per context.
-Both current examples target the Notification context.
+Every service follows the same folder layout under its module root (```<service>/src/main/kotlin/...``` for Kotlin
+services, ```<service>/src/main/ts``` for Express.js ones):
 
-**Published by the User context**
-
-- `UserEmailConfirmationNotification`: emitted when a user registers, carrying what's needed to send a confirmation email.
-
-**Published by the Payment context**
-
-- `PaymentSuccessNotification`: emitted when a payment for an order completes.
-
-**Consumed by the Notification context**
-
-- `UserEmailConfirmationNotification` (from the User context): consumed to send the email-verification message.
-- `PaymentSuccessNotification` (from the Payment context): consumed to notify the customer their payment went through.
-
-The Notification context is a pure event sink: it has no HTTP API of its own, two independent Kafka consumers 
-(one per inbound event type), and publishes nothing. Concretely, `user-service` publishes via a `@KafkaClient` 
-([`EmailConfirmationClient`](https://github.com/Norby99/munchies/blob/master/user-service/src/main/kotlin/com/munchies/user/infrastructure/adapter/outbound/kafka/EmailConfirmationClient.kt)) 
-and `notification-service` consumes it independently 
-([`KafkaUserEmailConfirmationNotificationConsumer`](https://github.com/Norby99/munchies/blob/master/notification-service/src/main/ts/infrastructure/adapter/inbound/kafka/KafkaUserNotificationConsumer.ts)).
-Here asynchrony is the point: user registration completes even if the Notification context is temporarily down,
-because nothing in the registration path waits on the email.
-
-## Tactical building blocks
-
-Rather than reinvent Entity/Value-Object/Aggregate/Repository per context, they're defined once in 
-[`commons`](https://github.com/Norby99/munchies/blob/master/commons/src/commonMain/kotlin/com/munchies/commons/DDD.kt),
-a Kotlin Multiplatform module compiled to both JVM and JS (see [Multiplatform](../02-implementation/multiplatform.md)),
-and every bounded context extends them:
-
-```kotlin
-open class EntityId<Id>(open val value: Id) { /* equality by value */ }
-open class Entity<Id : EntityId<*>>(open val id: Id) { /* equality by id */ }
-open class AggregateRoot<Id : EntityId<*>>(id: Id) : Entity<Id>(id)
-interface Factory<E : Entity<*>>
-interface Repository<Id : EntityId<*>, E : Entity<Id>> { fun findById(id: Id): E?; fun save(entity: E); /* ... */ }
+```
+domain/
+  model/        entities and value objects
+  factory/      aggregate construction logic (only where non-trivial)
+  port/         outbound interfaces (repository, external clients, publishers)
+application/
+  usecase/                    one class per use case
+  port/inbound/               one inbound port interface per use case
+  port/inbound/command/       input Command objects (optional, for non-trivial inputs)
+infrastructure/
+  adapter/inbound/web/controller/     REST controllers
+  adapter/inbound/web/config/         DI wiring, OpenAPI configuration
+  adapter/outbound/mongo/document/    Mongo document classes
+  adapter/outbound/mongo/repository/  repository implementation
+  adapter/outbound/mongo/factory/     domain <-> document mapping
+  adapter/outbound/kafka/             Kafka producers/consumers
+  adapter/outbound/<other-service>/   clients for other microservices' REST APIs
+  adapter/dto/factory/                DTO <-> Command mapping
 ```
 
-The event-publishing shape used for the asynchronous cases in the context map above is defined the same way, generically:
+## Class hierarchy: the `Order` aggregate
 
-```kotlin
-interface Notification
-interface NotificationObserver<N : Notification> { fun update(event: N) }
-interface NotificationSubject<N : Notification, O : NotificationObserver<N>> {
-  fun attach(observer: O); fun detach(observer: O); fun emit(event: N)
-}
-```
-
-This is a textbook Observer pattern, `@JsExport`'d so the same contract shape is usable from a Kotlin service or a 
-TypeScript one, which is how `UserEmailConfirmationNotification` and `PaymentSuccessNotification` both end up 
-structured identically despite living in different languages.
-
-## Aggregates, entities and value objects
-
-| Bounded context | Aggregate root(s) | Notable entities | Notable value objects |
-| --- | --- | --- | --- |
-| User | `User` | — | `UserId`, `UserProfile`, `Email` (with verification state), `UserRole` |
-| Restaurant | `Restaurant`, `Menu` | `Category`, `MenuItem` (inside `Menu`) | `RestaurantId`, `RestaurantName`, `Address`, `Phone`, `Email`, `Money`, `Validity`, `Variation` |
-| Order | `Order` (sealed: `DeliveryOrder` / `TakeawayOrder` / `DineInOrder`) | — | `OrderId`, `RestaurantId`, `CustomerId`, `OrderItem`, `OrderStatus`, `DeliveryInfo` |
-| Payment | `Payment` | — | `PaymentId`, `Currency`, `PaymentMethod`, `PaymentStatus` |
-
-## Class diagram
-
-The class diagram below shows the whole domain at once. It keeps only what carries domain meaning (identifiers, 
-invariants, state transitions) and marks the DDD role of each class with a stereotype: `aggregate root`, `entity`, 
-`factory` or `repository`. Filled diamonds are composition (the part cannot outlive the whole), and dotted arrows 
-across an aggregate or context boundary are references *by identifier only*.
-
-The diagram covers every aggregate in the system, grouped by bounded context. To stay readable it stops at the 
-aggregate level: value objects, enumerations and most attributes are omitted (`...` marks omitted attributes); the 
-value objects of each context are listed in the table above. Each aggregate root is paired with the `Repository` that 
-stores it (`store`) and, where construction is non-trivial, the `Factory` that builds it (`create`); a `create()` 
-operation on the root itself stands for a static factory method (`Restaurant`, `Menu`, `Payment`). Arrows between 
-contexts are identifier references, never object references, which is what keeps each context free to live in its 
-own service and database.
+Here is a high level representation of the domain model of the system.
 
 ```mermaid
 classDiagram
-    direction TB
-    namespace UserContext {
-        class User {
-            <<aggregate root>>
-            UserId id
-            UserProfile profile
-            ...
-        }
-        class UserCredentials {
-            <<aggregate root>>
-            UserId id
-            passwordHash
-            loginAttempts
-            ...
-        }
-        class UserFactory {
-            <<factory>>
-        }
-        class UserRepository {
-            <<repository>>
-        }
-        class UserCredentialsRepository {
-            <<repository>>
-        }
+    class User {
+        +UserId id
+        +UserProfile profile
     }
-    namespace RestaurantContext {
-        class Restaurant {
-            <<aggregate root>>
-            RestaurantId id
-            UserId managerId
-            RestaurantDetails details
-            create()
-        }
-        class Menu {
-            <<aggregate root>>
-            MenuId id
-            RestaurantId restaurantId
-            Validity validity
-            create()
-        }
-        class Category {
-            <<entity>>
-            CategoryId id
-            CategoryName name
-            ...
-        }
-        class MenuItem {
-            <<entity>>
-            MenuItemId id
-            Money price
-            ...
-        }
-        class RestaurantRepository {
-            <<repository>>
-        }
-        class MenuRepository {
-            <<repository>>
-        }
+    class UserProfile {
+        +String username
+        +Email email
+        +UserRole role
     }
-    namespace OrderContext {
-        class Order {
-            <<aggregate root>>
-            OrderId id
-            OrderStatus status
-            boolean payed
-            ...
-        }
-        class DeliveryOrder
-        class TakeawayOrder
-        class DineInOrder
-        class OrderFactory {
-            <<factory>>
-        }
-        class OrderRepository {
-            <<repository>>
-        }
+    class UserCredentials {
+        +UserId id
+        +String passwordHash
     }
-    namespace PaymentContext {
-        class Payment {
-            <<aggregate root>>
-            PaymentId id
-            PaymentStatus status
-            amount
-            create()
-        }
-        class PaymentRepository {
-            <<repository>>
-        }
+    class UserRole {
+        <<enumeration>>
+        CUSTOMER
+        MANAGER
     }
-    UserFactory ..> User : create
-    UserRepository ..> User : store
-    UserCredentialsRepository ..> UserCredentials : store
-    RestaurantRepository ..> Restaurant : store
-    MenuRepository ..> Menu : store
-    Menu "1" *-- "0..*" Category
-    Category "1" *-- "0..*" MenuItem
-    OrderFactory ..> Order : create
-    OrderRepository ..> Order : store
+
+    class Restaurant {
+        +RestaurantId id
+        +UserId managerId
+        +RestaurantDetails details
+    }
+    class Menu {
+        +MenuId id
+        +RestaurantId restaurantId
+        +MenuName name
+    }
+    class Category {
+        +CategoryId id
+        +CategoryName name
+    }
+    class MenuItem {
+        +MenuItemId id
+        +MenuItemDetails details
+        +Money price
+    }
+
+    class Order {
+        <<abstract>>
+        +OrderId id
+        +RestaurantId restaurantId
+        +CustomerId customerId
+        +OrderStatus status
+        +List~OrderItem~ items
+        +Boolean payed
+    }
+    class DeliveryOrder {
+        +DeliveryInfo deliveryInfo
+    }
+    class TakeawayOrder {
+        +TakeawayInfo takeawayInfo
+    }
+    class DineInOrder {
+        +TableInfo tableInfo
+    }
+    class OrderItem {
+        +MenuItemId menuItemId
+        +Int quantity
+    }
+    class OrderStatus {
+        <<enumeration>>
+        PENDING
+        PREPARING
+        READY
+        ON_THE_WAY
+        COMPLETED
+        CANCELLED
+    }
+
+    class Payment {
+        +PaymentId id
+        +OrderId orderId
+        +PaymentStatus status
+        +Number amount
+        +Currency currency
+        +PaymentMethod method
+    }
+
+    User "1" *-- "1" UserProfile: has
+    User "1" *-- "0..1" UserCredentials: secures
+    UserProfile --> UserRole: has
+    Restaurant "1" *-- "*" Menu: offers
+    Menu "1" *-- "*" Category: groups
+    Category "1" *-- "*" MenuItem: contains
     Order <|-- DeliveryOrder
     Order <|-- TakeawayOrder
     Order <|-- DineInOrder
-    PaymentRepository ..> Payment : store
-    Restaurant "0..*" ..> "1" User : managed by
-    Menu "0..*" ..> "1" Restaurant : belongs to
-    Order "0..*" ..> "1" Restaurant : placed at
-    Order "0..*" ..> "1" User : placed by
-    Order "0..*" ..> "1..*" MenuItem : items
-    Payment "0..1" ..> "1" Order : pays
+    Order "1" *-- "*" OrderItem: contains
+    Order --> OrderStatus: has
+    Restaurant ..> User: managerId
+    Order ..> Restaurant: restaurantId
+    Order ..> User: customerId
+    OrderItem ..> MenuItem: menuItemId
+    Payment ..> Order: orderId
 ```
-
-Two points are worth reading off the diagram. First, the only cross-context references in the model are by identifier, 
-and they all point towards the contexts that own the referenced data: `Restaurant` to its managing `User`, `Menu` to 
-its `Restaurant`, and `Order` to the `Restaurant`, the customer `User` and the `MenuItem`s it was placed for; 
-`Payment` refers back to the `Order` it settles. Second, `User` and `UserCredentials` are separate aggregates sharing 
-the same `UserId`, which keeps the password hash apart from the profile.
-
-The `aggregate root` stereotype is the DDD role, not the base class: in the code `Restaurant` and `Menu` extend the 
-`AggregateRoot` marker from `commons`, while `User` and `Order` extend `Entity` directly, each being the sole entity 
-of its aggregate.
-
-!!! note "Not every service names its layers the same way"
-    `order-service`, `user-service` and `payment-service` use `domain/model` + `domain/port`; `restaurant-service`
-uses `domain/aggregate` + `domain/valueobject` + `domain/repository`. Both are valid DDD vocabulary for the same 
-concepts, and the [Konsist architecture tests](../02-implementation/microservices.md) don't care which subfolder 
-names are used; they check the *dependency direction* between domain/application/infrastructure, not folder naming. 
-Worth flagging as a real inconsistency rather than presenting the codebase as more uniform than it is.
