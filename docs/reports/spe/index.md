@@ -1,24 +1,77 @@
 # Introduction
 
-**Munchies** is a food-ordering and table-reservation platform, built as the joint project for four courses — Software Process Engineering, Software Architecture and Platforms, Distributed Systems, and Web Services and Applications — with this report covering the Software Process Engineering angle specifically: Domain-Driven Design, development process and DevOps automation.
+## Members
 
-## The domain
+- Alessandro Agosta ([Agostax0](https://github.com/Agostax0))
+- Norbert Gabos ([Norby99](https://github.com/Norby99))
+- Emiliano Rattini ([emirattini](https://github.com/emirattini))
 
-Two roles, hierarchical:
+## Scenario
 
-- **Customers** browse restaurants, order food for delivery/takeaway/dine-in, and book tables.
-- **Managers** additionally administer the one restaurant they own — its details, opening hours, menus and tables. A manager satisfies everything a customer-gated action requires too (see [Glossary](01-deliverables/glossary.md)).
+_Munchies_ is an online food ordering platform that will allow both customers to order their
+favourite food and managers to create and manage their restaurants. The platform allows customers to
+browse the closest restaurants and to order from their menus. They can choose when the food should
+be delivered, and they can also customize each dish. Customers can also choose if they want their order
+to be delivered to their home, if they want a takeaway, or consume their meal at the restaurant allowing them
+to reserve a table.
 
-## Why microservices, and why this report structure
+Meanwhile, managers can create and manage multiple restaurants. Specifically, they can manage
+the business hours, menus and the variations for each dish.
 
-The system is deliberately engineered as an independent microservice per bounded context — one team-sized area of the domain, one dedicated database, communicating with the rest of the system through its HTTP API and, in a few cases, asynchronous events over Kafka (see [Domain Model](01-deliverables/domain-model.md)). That split is also what makes "2+ target platforms" a real architectural property rather than a checkbox: three services run on the JVM (Micronaut/Kotlin), four on Node.js (Express/TypeScript), sharing a compiled Kotlin Multiplatform domain layer across the runtime boundary (see [Multiplatform](02-implementation/multiplatform.md)).
+## Technology Stack
 
-This report follows the shape of the system itself:
+**Infrastructure**
 
-1. **[Deliverables](01-deliverables/glossary.md)** — the ubiquitous language and the domain model it's built from.
-2. **[Implementation](02-implementation/microservices.md)** — how the services are structured, tested, and how two runtimes share one domain layer.
-3. **[DevOps](03-devops/project-structure.md)** — the build system, version control practices, quality gates, and CI/CD pipeline.
-4. **[Deployment](04-deployment.md)** — containerization and orchestration, including a real gap found and fixed along the way (MongoDB readiness checking) and a Helm migration verified equivalent before anything was deleted.
-5. **[Conclusions](05-conclusions.md)** — the problems met along the way (chiefly serialization across the JVM/JS boundary) and the future work, including what is explicitly left for the companion Software Architecture and Platforms report.
+- [Docker](https://www.docker.com/)
+- [Kubernetes](https://kubernetes.io/)
+- [Kafka](https://kafka.apache.org/)
+- [MongoDB](https://www.mongodb.com/)
 
-Repository: [github.com/Norby99/munchies](https://github.com/Norby99/munchies).
+**Kotlin Microservices**
+
+- [Kotlin](https://kotlinlang.org/)
+- [Micronaut](https://micronaut.io/)
+- [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html)
+- [Gradle](https://gradle.org/)
+- [Konsist](https://docs.konsist.lemonappdev.com/) (architectural tests)
+- [Kotest](https://kotest.io/)
+- [Dokka](https://kotlinlang.org/docs/dokka-introduction.html)
+
+**Integrated (Express.js) Microservices**
+
+- [Node.js](https://nodejs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Express.js](https://expressjs.com/)
+- [Mongoose](https://mongoosejs.com/)
+
+**Frontend**
+
+- [Vue.js](https://vuejs.org/)
+- [Pinia](https://pinia.vuejs.org/)
+- [Vue Router](https://router.vuejs.org/)
+- [Axios](https://axios-http.com/)
+
+**API Documentation**
+
+- [OpenAPI](https://www.openapis.org/)
+- [Swagger](https://swagger.io/)
+- [tsoa](https://tsoa-community.github.io/docs/)
+- [Redocly](https://redocly.com/)
+
+**Code Quality**
+
+- [Detekt](https://detekt.dev/)
+- [Spotless](https://github.com/diffplug/spotless)
+
+**Versioning**
+
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Commitlint](https://commitlint.js.org/)
+- [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
+- [Renovate](https://docs.renovatebot.com/)
+
+**CI/CD**
+
+- [GitHub Actions](https://github.com/features/actions)
+- [Docker Hub](https://hub.docker.com/)
+- [Gradle](https://gradle.org/)

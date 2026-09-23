@@ -13,9 +13,12 @@ config:
 graph TB
   :payment-shared[payment-shared]:::unknown
   :payment-service[payment-service]:::unknown
+  :order-shared[order-shared]:::unknown
   :commons[commons]:::unknown
 
+  :order-shared -.->|commonMainImplementation| :commons
   :payment-service -.->|jsImplementation| :commons
+  :payment-service -.->|jsImplementation| :order-shared
   :payment-service -.->|jsImplementation| :payment-shared
   :payment-shared -.->|commonMainImplementation| :commons
 

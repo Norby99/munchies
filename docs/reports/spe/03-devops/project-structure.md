@@ -9,11 +9,10 @@ _Munchies_ is a *monorepo* with a *multi project* structure. These are the proje
 - ```architecture-rules``` (Kotlin): contains Konsist's architectural tests for a clean DDD architecture
 - ```commons``` (Multiplatform): contains common code for all other projects
 - ```e2e-test``` (Kotlin): contains end-to-end tests for the services
-- ```frontend-service``` (TypeScript): contains the code for the frontend (INCOMPLETE)
+- frontend-service (TypeScript): contains the code for the frontend (INCOMPLETE)
 - ```gateway-service``` (TypeScript): contains the gateway's microservice code
 - ```gateway-shared``` (Multiplatform): contains the gateway's API signatures
-- ```micronaut-commons``` (Kotlin): contains Micronaut beans shared across every JVM microservice — currently a
-  custom `MongoHealthIndicator`, added to close a gap in `/health` (see below)
+- ```micronaut-commons``` (Kotlin): contains Micronaut beans shared across every JVM microservice 
 - ```notification-service``` (TypeScript): contains the notification's microservice code
 - ```notification-shared``` (Multiplatform): contains the notification's API signatures
 - ```order-service``` (Kotlin): contains the order's microservice code
@@ -183,13 +182,13 @@ We've decided to go along with these steps, so that during the development of Ty
 
 ### Micronaut Library Convention
 
-Not every shared piece of code between our JVM services is a plain Kotlin class — some of it needs to be a real
+Not every shared piece of code between our JVM services is a plain Kotlin class, some of it needs to be a real
 Micronaut *bean*, picked up automatically by every service's dependency-injection context. A plain
 ```kotlin-jvm``` module can't do that: Micronaut only turns a class into an injectable bean if it was compiled
 with Micronaut's own KSP annotation processor, which a bare Kotlin module doesn't run.
 
-This came up concretely while investigating why our Kubernetes `readinessProbe` — which gates whether a pod
-receives traffic — couldn't be fully trusted: Micronaut's Kafka health indicator does a genuine broker
+This came up concretely while investigating why our Kubernetes `readinessProbe`, which checks whether a pod
+receives traffic, couldn't be fully trusted: Micronaut's Kafka health indicator does a genuine broker
 round-trip, but no equivalent exists for our MongoDB setup (the built-in one only ships for the *reactive*
 driver, and our services use the synchronous one through Micronaut Data). Rather than copy-paste a fix into
 `user-service`, `order-service` and `restaurant-service` individually, we wrote it once, as a real shared
@@ -212,12 +211,9 @@ plugins {
 [```micronaut-commons```](https://github.com/Norby99/munchies/tree/master/micronaut-commons) is the one project
 using it, currently holding a single class: a custom `MongoHealthIndicator` that pings MongoDB through the
 synchronous client our repositories already use, so `/health` genuinely reflects whether a pod can reach its
-database — verified live, not just assumed, by watching `/health` flip to `503` when Mongo was stopped. Every
+database; that is verified live by watching `/health` flip to `503` when Mongo was stopped. Every
 service using the ```micronaut-server``` convention pulls it in with a single line:
 
 ```kotlin
 implementation(project(":micronaut-commons"))
 ```
-
-— so the fix exists once and every JVM service gets it automatically, the same "write it once, share it" idea
-the Express Server Convention above applies to the TypeScript side.

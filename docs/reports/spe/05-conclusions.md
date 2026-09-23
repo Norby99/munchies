@@ -28,4 +28,4 @@ Sharing one Kotlin source between the JVM and Node.js services is the most valua
 
 ## Out of scope for this report
 
-Horizontal scaling and autoscaling *are* implemented (`HorizontalPodAutoscaler` per service — [Deployment](04-deployment.md#horizontal-scaling)), but empirically validating that behavior under load — throughput, latency, the scaling timeline itself — belongs to the companion Software Architecture and Platforms report, since it is a performance and architecture question more than a process-engineering one.
+Horizontal scaling and autoscaling *are* implemented (`HorizontalPodAutoscaler` per service, see [Deployment](04-deployment.md#horizontal-scaling)), but empirically validating that behavior under load (throughput, latency, the scaling timeline itself) belongs to the companion Software Architecture and Platforms report, since it is a performance and architecture question more than a process-engineering one.
