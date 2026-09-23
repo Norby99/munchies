@@ -74,4 +74,6 @@ the business hours, menus and the variations for each dish.
 
 - [GitHub Actions](https://github.com/features/actions)
 - [Docker Hub](https://hub.docker.com/)
+- [Maven](https://central.sonatype.com/)
+- [NPM](https://www.npmjs.com/)
 - [Gradle](https://gradle.org/)
