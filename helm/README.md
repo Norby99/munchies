@@ -3,33 +3,12 @@
 `munchies-service` is a generic chart for one microservice: Deployment + Service, an
 optional HorizontalPodAutoscaler, and an optional dedicated MongoDB StatefulSet + PVC. Each
 real service is just a small values file under `helm/values/`.
-
-This replaced the duplication in `k8s/` — `k8s/order-service/`, `k8s/user-service/` and
-`k8s/restaurant-service/` used to be near-identical copies of each other (the restaurant one
-was literally cloned from order's with a handful of names changed). One chart + four
-~20-line values files replaces that; the old `k8s/{gateway,user,order,restaurant}-service/`
-folders were removed once the chart was proven equivalent.
-
-**Status:** this is now the canonical source of truth for these four services.
-`./gradlew deploy` / `./gradlew undeploy` (see `DeployServicesTask`/`UndeployServicesTask`)
-detect a matching `helm/values/<service>.yaml` and run `helm upgrade --install` /
-`helm uninstall` instead of raw `kubectl apply`/`delete` — no change to the command-line UX
-you already use (`./gradlew deploy -Pservice=gateway-service` works exactly as before).
-`kafka`, `payment-service`, `notification-service` and `table-reservation-service` still use
-the raw manifests under `k8s/`, and both paths are discovered together by `-Pservice=all`.
-
-Verification: rendering each values file and diffing it (structurally, not textually)
-against the removed `k8s/<service>/*.yml` produced **zero differences**, aside from the
-`Namespace` object (this chart doesn't template it — see below) and one deliberate addition,
-a `helm.sh/resource-policy: keep` annotation on the Mongo PVC (see "Data on uninstall" below).
-The Gradle wiring itself is compile-verified but **not exercised against a live cluster** in
-this session — minikube was kept stopped throughout to avoid another OOM cycle. Treat your
-first `./gradlew deploy -Pservice=<one of the four>` as the real end-to-end check.
+This replaced the duplication in `k8s/` from `k8s/order-service/`, `k8s/user-service/` and
+`k8s/restaurant-service/` that used to be almost identical copies of each other.
 
 ## Prerequisite
 
-Install the `helm` CLI (not required by the existing `k8s/`-based deploy path — only for using
-this chart): https://helm.sh/docs/intro/install/. On Arch/Manjaro: `sudo pacman -S helm`.
+`helm` CLI has to be installed.
 
 ## Usage
 
