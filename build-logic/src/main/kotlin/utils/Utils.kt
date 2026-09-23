@@ -61,7 +61,7 @@ enum class ProjectType {
 }
 
 fun Project.getProjectType(): ProjectType {
-  val exlcuded = listOf(
+  val excluded = listOf(
     "commons",
     "micronaut-commons",
     "architecture-rules",
@@ -71,7 +71,7 @@ fun Project.getProjectType(): ProjectType {
   return when {
     name.endsWith("-service") -> ProjectType.SERVICE
     name.endsWith("-shared") -> ProjectType.SHARED
-    name in exlcuded -> ProjectType.UTILS
+    name in excluded -> ProjectType.UTILS
     else -> throw IllegalArgumentException("Unknown project type for project ${this.name}")
   }
 }
