@@ -2,30 +2,43 @@
 
 ## Problems encountered
 
-### Serialization across two runtimes
+### Multiplatform difficulties
 
-Sharing one Kotlin source between the JVM and Node.js services is the most valuable part of the architecture, and also where most of the friction came from. Every problem below was invisible in a single-service unit test and only appeared when a value crossed a service or runtime boundary.
+Sharing one Kotlin source between the JVM and Node.js services was the most crucial part of the solution, and also where most of the difficulties came from.
+Every problem below was invisible in a single-service unit test and only appeared when a data was pushed between services, during the later stages of development.
 
-- **Micronaut cannot see the shared DTOs.** The request and response types live in the `*-shared` modules, which compile to JavaScript too, so they can only carry the multiplatform `kotlinx.serialization` annotation (`@Serializable`, present in 57 files across `commons` and the shared modules) and none of Micronaut's own (`@Serdeable`, present in none). Micronaut Serde therefore generates no serializer for them by itself, and each JVM service has to register every shared type it exposes with `@SerdeImport`: 37 registrations in `restaurant-service`'s `SerdeConfig`, and about twenty each in the `order-service` and `user-service` controllers. A forgotten registration is only noticed when that endpoint is exercised, and the history has fixes of exactly that kind (`f441d384`, `f265f271`). The Mongo documents nested inside `MenuDocument` needed the same treatment through `@Serdeable` (`0021c139`), and the sealed `Validity` hierarchy needed dedicated DTOs and document mappings of its own before it could be persisted through Serde (`e1ff1ca3`, `03325690`).
-- **Default-valued fields silently disappear from the JSON.** `kotlinx.serialization`'s default `Json` instance has `encodeDefaults = false`, so a field sitting at its Kotlin default (`false`, `0`, an empty list) is left out of the encoded output. That is harmless for a service answering a client, but the gateway decodes an incoming request and re-encodes it to forward it downstream, and the field was dropped even though the caller had sent it explicitly, while the receiving service expected it to be present. The fix (`0343bee6`) is a single configured `wireJson` instance in `commons` that every `toJson()` must use, and `restaurant-service`'s Micronaut configuration needed the matching `inclusion: ALWAYS` setting so empty collections are not omitted either (`09e478d4`). The rule is a convention, not something the build enforces: two restaurant delete responses kept calling the bare `Json` and were only corrected later (`bab2d640`).
-- **TypeScript declarations are maintained by hand.** Kotlin/JS exposes each exported type under its full package path (`com.munchies.order.infrastructure.adapter...`), so every shared module ships a hand-written `<service>-modules.d.ts` that re-exports the names the Express services actually use. Each new shared type has to be added there too; the history shows commits that do nothing but extend them as new types get shared (`95e0ff9d`, `d827d95b`).
-- **Generated tarballs break `npm ci`.** A shared module is consumed as a local `.tgz` that is rebuilt on every build, so its hash changes every time and the `integrity` entry in `package-lock.json` goes stale immediately. The workaround, stripping that field, is a documented rule ([Multiplatform](02-implementation/multiplatform.md#packaging)) rather than something automated.
+- **Micronaut cannot see the shared DTOs.** Request and Response types live in the `*-shared` modules, which compile to JavaScript too, so they can only carry the multiplatform `kotlinx.serialization` annotation and not Micronaut's `@Serdeable`; which always requires a `@SerdeImport` annotation for each used Request or Response, for each service; causing a lot of overhead for new features.
+- **Default-valued fields don't appear in the JSON parsing.** `kotlinx.serialization`'s default `Json` instance has `encodeDefaults = false` so any value left at its default doesn't appear in the encoded output.
+- **TypeScript declarations are maintained by hand.** KMP's JavaScript generated code is under its full package path (`com.munchies.order.infrastructure.adapter...`), so every shared module ships has a handwritten `<service>-modules.d.ts` that re-exports the names the Express services actually use for simplyfing importing on the TypeScript side. 
+- **Generated tarballs break `npm ci`.** A shared module is consumed as a local `.tgz` that is rebuilt on every build, so its hash changes every time and the `integrity` entry in `package-lock.json` isn't recognized. The workaround was removing that field by-hand and was only a documented rule ([Multiplatform](02-implementation/multiplatform.md#packaging)) rather than being something automated.
 
 ### Infrastructure
 
-- **`/health` reported `UP` with the database gone.** Declaring a `readinessProbe` against `/health` looked like the end of the deployment story. Checking what the endpoint actually covered showed that Kafka connectivity was verified but MongoDB was not: Micronaut ships a health indicator only for the reactive driver, while these services use the synchronous one through Micronaut Data. Adding the reactive driver did not help either, since the two modules do not compose and the endpoint answered `UNKNOWN` instead of `UP`/`DOWN`. The fix is a small shared `MongoHealthIndicator` ([Deployment](04-deployment.md)), verified live by stopping Mongo and watching the endpoint flip to `503`.
-- **A Helm chart that looked right but was not.** Every values file was rendered and structurally diffed against the manifests it was meant to replace, and the diff caught Mongo resource names that would not have matched the DNS names already hardcoded in `MONGODB_URI`. The raw manifests were deleted only after the render came back identical.
-- **A single laptop is a small cluster.** Building images and running a Minikube cluster at the same time exhausted the memory of the development machine and got the cluster killed. The practical answer was to build the images with the cluster stopped, or to use a smaller cluster, and to keep a separate low-memory path for the load-test scripts.
+- **`/health` reports `UP` even with the database down.** Declaring a `readinessProbe` against `/health` seemed like a correct choice, but we later realized that a service's `UP` status didn't check its dependencies were also `UP`. The fix is a small shared `MongoHealthIndicator` ([Deployment](04-deployment.md)), verified live by stopping Mongo and watching the endpoint flip to `503`.
+- **A single laptop is a small cluster.** Building the project, running tests or even deploying the Minikube clusters always exhausts the available memory of the development machine. During the later stages of development, tests could no longer be run locally and were rather run on the GitHub Runners, with developers avoiding the local Git hooks.
+
+### Repository
+
+- **GitHub's repository rulesets** gave us a lot of trouble and even now, we don't have an up-to-date changelog due to protection rules on the master branch.
+- **GitHub's rebase** strips our commits from their verified tag, conflicting with branch rules that require a verified commit.
+- **Renovate** would more often that not delay new features being pushed, since it would merge automatically and require developer branches to rerun checks with updated branches.
 
 ## Future work
 
-- **Enforce the serialization rules instead of documenting them.** A Konsist or detekt rule that rejects a bare `Json` in a `toJson()` would have caught the delete-response case automatically. Checking that the `*-modules.d.ts` files match the compiled Kotlin exports, or generating them, would remove the manual step. The 37-line `@SerdeImport` registration could be replaced by scanning or generating it, so a forgotten type fails the build and not a request.
-- **Real identifiers on the JS side.** `getUUID()` on JS returns a random `Long` rendered as a string, which is not a UUID and gives weaker uniqueness than the JVM implementation. Using `crypto.randomUUID()` in `jsMain` would make identifiers uniform across the two runtimes.
-- **Coverage of the shared code.** Coverage is enforced at 70% (Kover for the Kotlin services, Vitest for the TypeScript ones), but the Kover report excludes the `commons` package, which is where `wireJson`, the DDD base types and the HTTP client abstraction live.
-- **Connect the release and deploy pipelines.** The Kubernetes and Helm deployment uses locally built `:latest` images, while CI already publishes versioned images to Docker Hub. Deploying those, and gating the deploy on a smoke test against the health endpoints, would close the loop from commit to running system ([Deployment](04-deployment.md)).
-- **Generated changelog.** `@semantic-release/changelog` is configured but commented out in `.releaserc.yaml`; release notes exist only as GitHub Releases, not as a `CHANGELOG.md`.
-- **Finish the remaining services.** `table-reservation-service` is a stub and is excluded from both Docker Compose and the Kubernetes/Helm deployment, and `scheduler-service` and the frontend are still incomplete.
-
+- **Enforce the serialization rules instead of documenting them.** A Konsist or detekt rule that checks missing `@Serdeable` tags.
+- **Checking that `*-modules.d.ts`** files match the compiled Kotlin exports, or generating them, would remove the manual efforts and resulting fatigue.
+- **Coverage of the shared code.** Coverage is enforced at 70% (Kover for the Kotlin services, Vitest for the TypeScript ones), but the Kover report excludes the `commons` package; which contains the DDD base types and the HTTP client abstraction.
+- **Finish the remaining services.** `table-reservation-service` is a stub and is excluded from both Docker Compose and the Kubernetes/Helm deployment, and `scheduler-service` and the `frontend-service` are still incomplete.
+- **Devcontainers** may resolve some issues we've faced with different underlying Operative Systems on developer machines.
+- 
 ## Out of scope for this report
 
-Horizontal scaling and autoscaling *are* implemented (`HorizontalPodAutoscaler` per service, see [Deployment](04-deployment.md#horizontal-scaling)), but empirically validating that behavior under load (throughput, latency, the scaling timeline itself) belongs to the companion Software Architecture and Platforms report, since it is a performance and architecture question more than a process-engineering one.
+Horizontal scaling and autoscaling *are* implemented (`HorizontalPodAutoscaler` per service, see [Deployment](04-deployment.md#horizontal-scaling)), but validating that behavior under load (throughput, latency, the scaling timeline itself) will be written in the Software Architecture and Platforms's report; furthermore this also extends Grafana and Prometheus, available but not reported.
+
+As mentioned before, there is not a fully-complete graphical user interface (our would-be `frontend-service`), so our project's can only be checked via end-to-end tests or raw http requests to endpoints.
+
+## Final Remarks
+
+This project confidently sits atop the rankings as our biggest project yet; as of currently writing this, it took 8 months of development, and there's still much to do.
+
+But we can confidently say that, it has allowed us to explore and discover guidelines, best practises and technologies, unused in other courses; giving us an interesting challenge, much to our delight.  

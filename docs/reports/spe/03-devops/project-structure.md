@@ -50,7 +50,8 @@ up-to-date code.
 We've also created tasks to create the service's dockerfiles', their images and link them via a
 ```./gradlew composeUp``` to run the whole project with a single command, furthermore ```showDb``` tasks were created to
 better analyze the mongodb containers running.
-These dockerfiles and images, were also used to be able to utilize kubernetes as a deployment method instead of docker.
+These dockerfiles and images, were also used to be able to utilize kubernetes as a deployment method instead of docker 
+(see [Deployment](../04-deployment.md)).
 
 We've also created two tasks to help during the deploy-docs workflow that copies the generated docs to be then further
 translated into a web page.
