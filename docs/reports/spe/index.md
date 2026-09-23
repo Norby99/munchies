@@ -1,41 +1,77 @@
 # Introduction
 
-**Munchies** is a food-ordering and table-reservation platform, built as the joint project for four courses:
-Software Process Engineering, Software Architecture and Platforms, Distributed Systems, and Web Services and
-Applications. This report covers the Software Process Engineering angle specifically: Domain-Driven Design,
-development process and DevOps automation.
+## Members
 
-## The team
+- Alessandro Agosta ([Agostax0](https://github.com/Agostax0))
+- Norbert Gabos ([Norby99](https://github.com/Norby99))
+- Emiliano Rattini ([emirattini](https://github.com/emirattini))
 
-- [Norbert Tiberiu Gabos](tiberiunorbert.gabos@studio.unibo.it)
-- [Alessandro Agosta](alessandro.agosta@studio.unibo.it)
-- [Emiliano Rattini](emiliano.rattini@studio.unibo.it)
+## Scenario
 
-## The domain
+_Munchies_ is an online food ordering platform that will allow both customers to order their
+favourite food and managers to create and manage their restaurants. The platform allows customers to
+browse the closest restaurants and to order from their menus. They can choose when the food should
+be delivered, and they can also customize each dish. Customers can also choose if they want their order
+to be delivered to their home, if they want a takeaway, or consume their meal at the restaurant allowing them
+to reserve a table.
 
-Two roles, hierarchical:
+Meanwhile, managers can create and manage multiple restaurants. Specifically, they can manage
+the business hours, menus and the variations for each dish.
 
-- **Customers** browse restaurants, order food for delivery/takeaway/dine-in, and book tables.
-- **Managers** creates and administers one or more restaurants: its details, opening hours, menus and tables.
-A manager satisfies everything a customer-gated action requires too (see [Glossary](01-deliverables/glossary.md)).
+## Technology Stack
 
-## Why microservices, and why this report structure
+**Infrastructure**
 
-The system is deliberately engineered as an independent microservice per bounded context: one team-sized area of
-the domain, one dedicated database, communicating with the rest of the system through its HTTP API and, in a few cases,
-asynchronous events over Kafka (see [Domain Model](01-deliverables/domain-model.md)). 
-That split is also what makes "2+ target platforms" a real architectural property: three services run on the JVM 
-(Micronaut/Kotlin), four on Node.js (Express/TypeScript), sharing one Kotlin Multiplatform source for their REST 
-contracts and DDD base types across the runtime boundary, while each service's own domain logic is implemented once 
-per runtime (see [Multiplatform](02-implementation/multiplatform.md)).
+- [Docker](https://www.docker.com/)
+- [Kubernetes](https://kubernetes.io/)
+- [Kafka](https://kafka.apache.org/)
+- [MongoDB](https://www.mongodb.com/)
 
-This report follows the shape of the system itself:
+**Kotlin Microservices**
 
-1. **[Deliverables](01-deliverables/glossary.md)**: the ubiquitous language and the domain model it's built from.
-2. **[Implementation](02-implementation/microservices.md)**: how the services are structured, how they communicate 
-between each other and how they're tested.
-3. **[DevOps](03-devops/project-structure.md)**: the build system, version control practices, quality gates, and CI/CD pipeline.
-4. **[Deployment](04-deployment.md)**: containerization and orchestration.
-5. **[Conclusions](05-conclusions.md)**: the problems met along the way and the future work.
+- [Kotlin](https://kotlinlang.org/)
+- [Micronaut](https://micronaut.io/)
+- [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html)
+- [Gradle](https://gradle.org/)
+- [Konsist](https://docs.konsist.lemonappdev.com/) (architectural tests)
+- [Kotest](https://kotest.io/)
+- [Dokka](https://kotlinlang.org/docs/dokka-introduction.html)
 
-Repository: [github.com/Norby99/munchies](https://github.com/Norby99/munchies).
+**Integrated (Express.js) Microservices**
+
+- [Node.js](https://nodejs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Express.js](https://expressjs.com/)
+- [Mongoose](https://mongoosejs.com/)
+
+**Frontend**
+
+- [Vue.js](https://vuejs.org/)
+- [Pinia](https://pinia.vuejs.org/)
+- [Vue Router](https://router.vuejs.org/)
+- [Axios](https://axios-http.com/)
+
+**API Documentation**
+
+- [OpenAPI](https://www.openapis.org/)
+- [Swagger](https://swagger.io/)
+- [tsoa](https://tsoa-community.github.io/docs/)
+- [Redocly](https://redocly.com/)
+
+**Code Quality**
+
+- [Detekt](https://detekt.dev/)
+- [Spotless](https://github.com/diffplug/spotless)
+
+**Versioning**
+
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Commitlint](https://commitlint.js.org/)
+- [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
+- [Renovate](https://docs.renovatebot.com/)
+
+**CI/CD**
+
+- [GitHub Actions](https://github.com/features/actions)
+- [Docker Hub](https://hub.docker.com/)
+- [Gradle](https://gradle.org/)
