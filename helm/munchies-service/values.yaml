@@ -10,11 +10,9 @@ serviceName: "" # required override: used for the Deployment/Service/HPA/Mongo n
 namespace: "" # required override: usually == serviceName.
 
 image:
-  repository: "" # required override: matches the image built by `./gradlew :<service>:dockerBuild`.
+  repository: ""
   tag: latest
-  pullPolicy: Never # minikube only: images are loaded directly with `minikube image load`,
-  # never pulled from a registry. Switch to IfNotPresent/Always + a real repository for a
-  # non-minikube cluster.
+  pullPolicy: Never
 
 replicaCount: 1
 containerPort: 8080
@@ -23,10 +21,7 @@ service:
   type: ClusterIP
   port: 8080
 
-# Extra container env vars, verbatim Kubernetes `env` entries.
 env: []
-# - name: SOME_VAR
-#   value: "some-value"
 
 readinessProbe:
   enabled: true
@@ -48,8 +43,6 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 4
   targetCPUUtilizationPercentage: 60
-  # Tightened from Kubernetes' defaults (5 min scale-down stabilization) so a scaling demo
-  # doesn't take 10 minutes to show a result.
   behavior:
     scaleUpStabilizationSeconds: 0
     scaleUpPodsValue: 2
@@ -58,8 +51,6 @@ autoscaling:
     scaleDownPodsValue: 1
     scaleDownPeriodSeconds: 30
 
-# A dedicated single-instance MongoDB for this service (database-per-service, per the
-# project's DDD bounded-context isolation). Disabled for stateless services (the gateway).
 mongodb:
   enabled: false
   image: mongo:7
