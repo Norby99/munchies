@@ -1,37 +1,54 @@
 # VCS & Repository
-Our projects uses **Git** as its Version Control System; furthermore we host our project on GitHub to hold a distributed single trutful repository.
+
+Our projects uses **Git** as its Version Control System; furthermore we host our project on GitHub to hold a distributed
+single trutful repository.
 
 ## Semantic Versioning
 
 This project uses Semantic Version during its development and release processes.
-Any versioned release is available on GitHub, [this](https://github.com/Norby99/munchies/releases/latest) will always be the latest marked release.
+Any versioned release is available on GitHub, [this](https://github.com/Norby99/munchies/releases/latest) will always be
+the latest marked release.
 
 ## Conventional Commits
 
-This project uses Conventional Commits, where each commit follows a strict naming convention to keep track trough commit messages the changes that the commit stores.
+This project uses Conventional Commits, where each commit follows a strict naming convention to keep track trough commit
+messages the changes that the commit stores.
 
 Conventional commits are enforced twice:
 
-1. At the developer level through [```org.danilopianini.gradle-pre-commit-git-hooks```](https://github.com/DanySK/gradle-pre-commit-git-hooks), a Gradle plugin, which runs a regex to check whether a commit contains a message valid by these [rules](https://www.conventionalcommits.org/en/v1.0.0/).  
-2. At the workflow level through [```./github/workflows/test.yaml```](https://github.com/Norby99/munchies/blob/master/.github/workflows/test.yaml)'s "commitlint" step which uses npm's [commitlint](https://www.npmjs.com/package/@commitlint/cli) configured for conventional commits   
+1. At the developer level through [
+   ```org.danilopianini.gradle-pre-commit-git-hooks```](https://github.com/DanySK/gradle-pre-commit-git-hooks), a Gradle
+   plugin, which runs a regex to check whether a commit contains a message valid by
+   these [rules](https://www.conventionalcommits.org/en/v1.0.0/).
+2. At the workflow level through [
+   ```./github/workflows/test.yaml```](https://github.com/Norby99/munchies/blob/master/.github/workflows/test.yaml)'s "
+   commitlint" step which uses npm's [commitlint](https://www.npmjs.com/package/@commitlint/cli) configured for
+   conventional commits
 
 ## Semantic Release
 
-By enforcing conventional commits throughout the project's history, a clear progression can be determined and subsequently an understandable version may be computed for releases.
+By enforcing conventional commits throughout the project's history, a clear progression can be determined and
+subsequently an understandable version may be computed for releases.
 
-We used a [plugin](https://semantic-release.org/) tasked with computing such version during our [./github/workflows/publish.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/publish.yaml) workflow, it also creates a new release in GitHub's "Releases" menu. 
+We used a [plugin](https://semantic-release.org/) tasked with computing such version during
+our [./github/workflows/publish.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/publish.yaml)
+workflow, it also creates a new release in GitHub's "Releases" menu.
 
+Although each subproject experiences different development changes and by conventional commits standards' it should have
+different version numbers from other subprojects; we decided to keep a single version number for the whole project such
+that the whole project is being brought forward.
 
-Although each subproject experiences different development changes and by conventional commits standards' it should have different version numbers from other subprojects; we decided to keep a single version number for the whole project such that the whole project is being brought forward.
 ## Repository Management
 
 The repository follows the "Git Flow" structure that is as follows:
 
 - a ```master``` branch where we store stable releases of our code and where release workflows trigger from.
 - a ```develop``` branch where team member converge their changes and enforce quality standards.
-- a branch where each developer pushes changed based on tasks to then merge into develop after the required checks go through.
+- a branch where each developer pushes changes based on tasks to then merge into develop after the required checks go
+  through.
 
-On GitHub's rules may be enforced in branches, such as protection from "force push" or ensuring some workflows are successful before merging a branch. 
+On GitHub's rules may be enforced in branches, such as protection from "force push" or ensuring some workflows are
+successful before merging a branch.
 
 In the _munchies_ repository we've added the following rules:
 
@@ -39,10 +56,12 @@ In the _munchies_ repository we've added the following rules:
 - "Develop" and "Master" can only receive changes only by rebases/merges
 - A rebase/merge can only happen whenever all tests and quality checks pass
 - Only "Develop" can be merged into "Master"
-- A branch must be up-to-date with "Develop" before being rebased into it 
+- A branch must be up-to-date with "Develop" before being rebased into it
 
 ### Issue Tracking
 
-We've added a user-friendly [issue template](https://github.com/Norby99/munchies/tree/master/.github/ISSUE_TEMPLATE), in case a user would encounter bugs in our software.
+We've added a user-friendly [issue template](https://github.com/Norby99/munchies/tree/master/.github/ISSUE_TEMPLATE), in
+case a user would encounter bugs in our software.
 
-We've also used custom issues, also tracked in our repository's "[Issues](https://github.com/Norby99/munchies/issues)" tab, where we kept track of features, fixes and other work to do. 
+We've also used custom issues, also tracked in our repository's "[Issues](https://github.com/Norby99/munchies/issues)"
+tab, where we kept track of features, fixes and other work to do. 
