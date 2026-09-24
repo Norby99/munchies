@@ -25,6 +25,8 @@ abstract class UndeployServicesTask @Inject constructor(
   @get:Input
   val wipeData: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
 
+  private val keepPvcMessage = "Keeping PersistentVolumeClaims (pass '-PwipeData=true' to delete them)."
+
   @TaskAction
   fun undeploy() {
     val root = rootDir.get().asFile
@@ -46,6 +48,7 @@ abstract class UndeployServicesTask @Inject constructor(
             commandLine("helm", "uninstall", srv, "-n", srv)
             isIgnoreExitValue = true
           }
+          if (wipe) wipePvcAndNamespace(srv) else println(keepPvcMessage)
         }
 
         singleManifest.exists() -> {
@@ -61,6 +64,7 @@ abstract class UndeployServicesTask @Inject constructor(
               "--ignore-not-found",
             )
           }
+          if (wipe) wipePvcAndNamespace(srv) else println(keepPvcMessage)
         }
 
         manifestDir.exists() -> {
@@ -101,41 +105,56 @@ abstract class UndeployServicesTask @Inject constructor(
                   )
                 }
               }
+            println(keepPvcMessage)
           }
         }
 
-        else -> println(
-          "Warning: No manifest found for $srv. Attempting namespace deletion anyway...",
-        )
-      }
-
-      if (wipe) {
-        println("Wiping PersistentVolumeClaims for $srv...")
-        execOps.exec {
-          commandLine(
-            "minikube", "kubectl", "--", "delete", "pvc", "--all", "-n", srv, "--ignore-not-found",
-          )
+        else -> {
+          println("Warning: No manifest found for $srv. Attempting namespace deletion anyway...")
+          if (wipe) wipePvcAndNamespace(srv) else println(keepPvcMessage)
         }
-
-        println("Deleting namespace $srv...")
-        execOps.exec {
-          commandLine(
-            "minikube",
-            "kubectl",
-            "--",
-            "delete",
-            "namespace",
-            srv,
-            "--ignore-not-found",
-          )
-        }
-      } else {
-        println("Keeping PersistentVolumeClaims (pass '-PwipeData=true' to delete them).")
       }
 
       println()
     }
 
     println("Undeploy Completed!")
+  }
+
+  /**
+   * Deletes a service's PVCs and its namespace directly, rather than through the manifests that
+   * created them. Needed whenever those resources aren't guaranteed to be removed by whatever
+   * undeployed the rest of the service: `helm uninstall` respects the chart's
+   * `helm.sh/resource-policy: keep` annotation on the Mongo PVC and never deletes the namespace it
+   * installed into, and there is nothing else to fall back to when no manifest was found at all.
+   */
+  private fun wipePvcAndNamespace(srv: String) {
+    println("Wiping PersistentVolumeClaims for $srv...")
+    execOps.exec {
+      commandLine(
+        "minikube",
+        "kubectl",
+        "--",
+        "delete",
+        "pvc",
+        "--all",
+        "-n",
+        srv,
+        "--ignore-not-found",
+      )
+    }
+
+    println("Deleting namespace $srv...")
+    execOps.exec {
+      commandLine(
+        "minikube",
+        "kubectl",
+        "--",
+        "delete",
+        "namespace",
+        srv,
+        "--ignore-not-found",
+      )
+    }
   }
 }
