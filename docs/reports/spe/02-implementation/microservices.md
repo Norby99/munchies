@@ -1,100 +1,359 @@
 # Microservices
 
-_Munchies_ is split into nine packages, each owning its own data and, where it has any business logic, structured
-according to Domain-Driven Design, with a clear separation between a framework-agnostic domain, an application
-layer orchestrating use cases, and an infrastructure layer of framework-specific adapters (REST controllers,
-MongoDB repositories, Kafka producers/consumers, and clients for other services). The sections below go through
-each package, stating its stack and what it is actually responsible for.
+The _Munchies_ application is split up into multiple microservices, each with its own purpose:
 
-## User Service
+## Microservices Division
+
+### User Service
 
 **Stack:** Kotlin + Micronaut.
 
-Manages accounts, authentication: registering a new user, logging in, updating a user's
-information or password, verifying an email address, and deleting an account.
+#### Behavior
 
-## Restaurant Service
+Microservice responsible for user management like:
 
-**Stack:** Kotlin + Micronaut.
+- User authentication, registration, deletion.
+- Updating user credentials and other information.
+- Email verification.
 
-Manages restaurant data, menus and dish availability: creating and updating restaurants, and managing their menus,
-categories and individual items.
-
-## Order Service
+### Restaurant Service
 
 **Stack:** Kotlin + Micronaut.
 
-Handles order creation, processing and status tracking, for both delivery and takeaway orders: placing an order,
-updating its items or its delivery/takeaway details, advancing or discarding its status, marking it as paid, and
-retrieving order details.
+#### Behavior
 
-## Gateway Service
+Microservice responsible for restaurant management:
 
-**Stack:** Express.js.
+- Create new restaurants.
+- Handle the menu of each restaurant:
+    - Create menu items.
+    - Create categories that organize each dish.
+- Check for dish availability.
 
-Acts as the single entry point for every client request, routing it to the right microservice and issues JWT tokens for
-authentication.
-As an API Gateway it holds no business
-logic of its own, which is why it is the one backend service without a ```domain``` or ```application``` layer: its
-```infrastructure``` layer consists entirely of routing, authentication middleware and proxying to the other
-services.
+### Order Service
 
-## Notification Service
+**Stack:** Kotlin + Micronaut.
 
-**Stack:** Express.js.
+#### Behavior
 
-Sends notifications to users. It never receives requests directly from clients or from the gateway: it
-only reacts to Kafka events, such as a user registering or a payment succeeding, each handled by its own Kafka
-consumer. This reactive, one-consumer-per-event-type design is why it follows an
-agent-based architecture instead of the usual use-case-driven one, and, correspondingly, why it has no
-```application``` layer of its own: each consumer under ```infrastructure/adapter/inbound/kafka``` acts as an
-independent agent reacting directly to its event.
+Microservice responsible for managing orders:
 
-## Payment Service
+- Create orders.
+- Retrieve order information.
+- Advance or discard their status.
+
+### Gateway Service
 
 **Stack:** Express.js.
 
-Handles payment processing for an order. It validates and processes a payment against a fake payment gateway,
-since there is no real money movement in this project, confirms the corresponding order with ```order-service```,
-and publishes a payment-success event on Kafka. It is our reference implementation for the Hexagonal Architecture layout
-in Express.js.
+#### Behavior
 
-## Scheduler Service - not implemented
+The main entry point of the application. Routes every request to the right microservice, managing authentication via
+JWT.
 
-**Stack:** Express.js.
-
-Manages delivery scheduling and logistics, acting as a middleware between the user and ```order-service```.
-
-## Table Reservation Service - not implemented
+### Notification Service
 
 **Stack:** Express.js.
 
-Manages table reservations for restaurants.
+#### Behavior
 
-## Frontend Service
+Microservice responsible for sending notifications to the user through the frontend.
+
+### Payment Service
+
+**Stack:** Express.js.
+
+#### Behavior
+
+Microservice responsible for validation and processing of any payment on the platform, mainly for orders.
+
+### Scheduler Service
+
+**Stack:** Express.js.
+
+#### Behavior
+
+Microservice responsible for delivery scheduling and logistics of every order.
+
+### Table Reservation Service - not implemented
+
+**Stack:** Express.js.
+
+#### Behavior
+
+Microservice responsible for table reservations.
+
+### Frontend Service
 
 **Stack:** Vue.js, using the Composition API.
 
-Provides the user interface for both customers and restaurant staff, and is the only client of
-```gateway-service```. It follows a standard Vue project layout rather than the backend's hexagonal one, organized
-into ```views```, reusable ```components```, ```composables``` for shared reactive logic, Pinia ```stores``` for
-state, and a ```router``` for navigation between pages.
+#### Behavior
 
-## Communication between services
+This microservice provides a user interface for the end user.
 
-Services communicate over **synchronous REST** by default. Every service exposes its API described with OpenAPI, and
-the endpoint paths and request/response types are defined once in its ```<service>-shared``` module and reused by
-callers on both runtimes (see [Multiplatform](multiplatform.md)), so a caller cannot drift from the API it calls.
-The two flows that matter most:
+## Microservice implementation
 
-- The browser only ever talks to ```gateway-service```, which routes each request to the service that owns it and
-  issues and verifies the session token itself.
-- ```payment-service``` calls ```order-service``` to confirm an order once its payment has succeeded.
+Each backend microservice implements the Hexagonal architecture described in
+the [Domain Model](../01-deliverables/domain-model.md):
 
-**Asynchronous messaging over Kafka is the exception**, kept for the few cases where two microservices are better
-decoupled than chained together, so that the publisher neither waits on nor depends on the consumer being up. At the
-moment both cases feed ```notification-service```: ```user-service``` publishes an email-confirmation event when a
-user registers, and ```payment-service``` publishes a payment-success event. ```notification-service``` receives
-messages only through Kafka. The events themselves, and how they fit between the bounded contexts, are described in
-the [context map](../01-deliverables/domain-model.md#context-map-communication-between-contexts) of the Domain
-Model.
+### Domain Layer
+
+The domain layer contains entities, value objects, aggregates, factories. These are the building blocks for
+every business operation of the application.
+
+```kotlin
+// domain/model/User.kt
+class User private constructor(
+    override val id: UserId,
+    val profile: UserProfile,
+) : Entity<UserId>(id) {
+
+    fun updateEmailAsVerified(): User = User(this.id, this.profile.updateEmailAsVerified())
+
+    companion object {
+        // validates username/email/role before constructing a User
+        val factory: UserFactory = DefaultUserFactory()
+    }
+}
+
+// domain/model/UserProfile.kt
+data class UserProfile(
+    val username: String,
+    val email: Email,
+    val role: UserRole,
+)
+```
+
+### Application Layer
+
+This layer contains the business logic. Every operation is encapsulated in "use cases" that can return a result or an
+error, handled by a `result` object. They are used by the controller of the microservice and are responsible for
+validating input.
+
+```kotlin
+// application/port/inbound/RegisterUser.kt
+interface RegisterUser {
+    fun execute(user: User, credentials: UserCredentials): RegisterUserResult
+
+    companion object {
+        sealed interface RegisterUserResult {
+            data class Success(val user: User) : RegisterUserResult
+            data object UserIsAlreadyRegistered : RegisterUserResult
+            data class Failure(val reason: String) : RegisterUserResult
+        }
+    }
+}
+```
+
+```kotlin
+// application/usecase/RegisterUserUseCase.kt
+class RegisterUserUseCase(
+    private val userRepository: UserRepository,
+    private val credentialsRepository: UserCredentialsRepository,
+    private val hasher: PasswordHasher,
+    private val mailer: Mailer,
+) : RegisterUser {
+
+    override fun execute(user: User, credentials: UserCredentials): RegisterUserResult {
+        return findUser(user)
+            ?.let { RegisterUserResult.UserIsAlreadyRegistered }
+            ?: try {
+                userRepository.save(user)
+                credentialsRepository.save(credentials.copy(id = user.id))
+                mailer.sendMail(user.profile.email.address, "...")
+                RegisterUserResult.Success(user)
+            } catch (e: kotlin.Error) {
+                RegisterUserResult.Failure(e.localizedMessage)
+            }
+    }
+    // findUser omitted...
+}
+```
+
+### Infrastructure Layer
+
+#### Persistence
+
+For persistence, each microservice has its own MongoDB database. The CRUD operations are implemented in the `repository`
+subpackage. At the same time, to separate Mongo documents from the domain model we implemented the `document` package
+that maps each domain object to a Mongo `@MappedEntity`.
+
+```kotlin
+// infrastructure/adapter/outbound/mongo/document/UserDocument.kt
+@MappedEntity
+data class UserDocument(
+    @field:Id val id: String,
+    val username: String,
+    val email: String,
+    val isVerified: Boolean,
+    val role: String,
+)
+
+@MongoRepository
+sealed interface MongoCrudUserRepository : CrudRepository<UserDocument, String>
+
+// infrastructure/adapter/outbound/mongo/repository/MongoUserRepository.kt
+@Singleton
+@Requires(env = ["prod"])
+class MongoUserRepository(
+    private val repository: MongoCrudUserRepository,
+) : UserRepository {
+
+    override fun findById(id: UserId): User? = repository.findById(id.value).map {
+        it.toNullableDomain()
+    }.orElse(null)
+
+    override fun save(entity: User) {
+        repository.save(entity.toDocument())
+    }
+    // update, delete, findByEmail, findByUsername omitted...
+}
+```
+
+#### Events
+
+Kafka producers implement a domain outbound port, so the application layer only ever depends on the port
+interface, never on Kafka directly. In `order-service`, `notification-service` subscribes to order lifecycle
+events published through `OrderNotificationPublisher`:
+
+```kotlin
+// domain/port/OrderNotificationPublisher.kt
+interface OrderNotificationPublisher {
+    fun publishStatusChanged(order: Order)
+}
+
+// infrastructure/adapter/outbound/kafka/OrderStatusChangedKafkaClient.kt
+@KafkaClient
+interface OrderStatusChangedKafkaClient {
+    @Topic(OrderStatusChangedNotificationInfo.ORDER_STATUS_CHANGED_TOPIC)
+    fun publish(notification: String)
+}
+
+// infrastructure/adapter/outbound/kafka/KafkaOrderNotificationPublisher.kt
+@Singleton
+class KafkaOrderNotificationPublisher(
+    private val client: OrderStatusChangedKafkaClient,
+) : OrderNotificationPublisher {
+
+    override fun publishStatusChanged(order: Order) {
+        client.publish(
+            OrderStatusChangedNotification(
+                order_id_key = order.id.value,
+                restaurant_id_key = order.restaurantId.value,
+                customer_id_key = order.customerId.value,
+                status_key = order.status.name,
+            ).toJson(),
+        )
+    }
+}
+```
+
+#### Dependency Injection
+
+A Micronaut `@Factory` wires each use case to its concrete infrastructure dependencies, so the rest of the
+application only ever injects the inbound port interface:
+
+```kotlin
+// infrastructure/adapter/inbound/web/config/UserBeans.kt
+@Factory
+class UserBeans {
+
+    @Singleton
+    fun registerUser(
+        userRepository: UserRepository,
+        userCredentialsRepository: UserCredentialsRepository,
+        hasher: PasswordHasher,
+        mailer: Mailer,
+    ): RegisterUser = RegisterUserUseCase(userRepository, userCredentialsRepository, hasher, mailer)
+
+    // one @Singleton factory method per use case...
+}
+```
+
+### Interfaces Layer
+
+This layer houses the engine of the microservice: the controller that receives REST calls, translates and delegates
+them to the inbound ports to the application layer:
+
+```kotlin
+// infrastructure/adapter/inbound/web/controller/MicronautUserController.kt
+@Controller(value = UserServiceConfig.SERVICE_PATH)
+class MicronautUserController(
+    private val services: UserServices,
+) : UserAPI.GetUserAPI<HttpResponse<GetUserResponse>> {
+
+    private val getUser: GetUser = services.getUser
+
+    @Get(UserServiceConfig.GET_USER_PATH)
+    override fun getUser(@PathVariable id: String): HttpResponse<GetUserResponse> {
+        return when (val res = getUser.execute(UserId(id))) {
+            is GetUser.Companion.GetUserResult.Success -> HttpResponse.ok(
+                GetUserResponse(result = res.user.toDTO(), code = HttpStatus.OK.code),
+            )
+            GetUser.Companion.GetUserResult.NotFound -> throw NotFoundException("User not found")
+        }
+    }
+    // other endpoints follow the same pattern...
+}
+```
+
+Micronaut lets us define an exception handler once and have it apply to every controller in the service:
+
+```kotlin
+// infrastructure/adapter/inbound/web/controller/ExceptionHandlers.kt
+@Singleton
+class NotFoundExceptionHandler : ExceptionHandler<NotFoundException, HttpResponse<ErrorResponse>> {
+    override fun handle(
+        request: HttpRequest<*>,
+        exception: NotFoundException,
+    ): HttpResponse<ErrorResponse> {
+        return HttpResponse.status<ErrorResponse>(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(result = exception.message ?: "Resource not found", code = HttpStatus.NOT_FOUND.code))
+    }
+}
+```
+
+### Presentation Layer
+
+To facilitate the controller's job, every DTO has its own mapper that converts it to a domain object through extension
+methods and vice versa:
+
+```kotlin
+// infrastructure/adapter/dto/factory/UserDTOFactory.kt
+object UserDTOFactory {
+    fun User.toDTO(): UserDTO = UserDTO(
+        id = this.id.value,
+        username = this.profile.username,
+        email = this.profile.email.address,
+        role = this.profile.role.toString(),
+        isEmailVerified = this.profile.email.isVerified,
+    )
+    // toDomain omitted...
+}
+```
+
+### Configuration Layer
+
+This layer contains the configuration files used to set up the application using Micronaut properties
+or the `application.yml` file:
+
+```kotlin
+// infrastructure/adapter/inbound/web/config/OpenAPI.kt
+@OpenAPIDefinition(info = Info(title = "Munchies User Service API", version = "1.0"))
+@OpenAPIInclude(classes = [MicronautUserController::class])
+object OpenAPI
+```
+
+```yaml
+# src/main/resources/application.yml
+micronaut:
+  server:
+    port: 8080
+  application:
+    name: user-service
+mongodb:
+  uri: mongodb://localhost:27017/user-service
+kafka:
+  bootstrap:
+    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+```
