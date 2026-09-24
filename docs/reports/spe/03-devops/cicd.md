@@ -16,6 +16,18 @@ The file [.github/workflows/ci-cd.yaml](https://github.com/Norby99/munchies/blob
 
 In GitHub's workflows configuration it is possible to declare dependency associations, meaning a workflow may depend on another completing successfully and as such wait the other's completion; or many workflows may run simoultaneously.
 
+```yaml
+publish:
+  needs:
+    - build
+  if: |
+    always() &&
+    needs.build.result == 'success' &&
+    github.event_name == 'push' &&
+    github.ref == 'refs/heads/master'
+  uses: ./.github/workflows/publish.yaml
+```
+
 ### Test
 The file [.github/workflows/test.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/test.yaml) aggregates all our quality assurance checks and tests.
 
@@ -24,9 +36,26 @@ It runs a commit linter (for redundancy since our developer-hosted commit linter
 It is, by far, our heaviest and most long-running workflow that is triggered almost everytime, as such we've decided to limit it to only run whenever any change
 in the code is detected, skipping execution when only documentation changes are detected.
 
+```yaml
+check-and-test:
+  needs:
+    - changes
+    - commitlint
+  if: needs.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
+  steps:
+    - run: ./gradlew spotlessCheck
+    - run: ./gradlew test integrationTest componentTest e2eTest -PtestOutput=all
+    - run: ./gradlew koverVerify vitestCoverageVerify
+```
+
 ### Build
 
 The file [.github/workflows/build.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/build.yaml) builds the whole project, making sure nothing from the previous workflow is missed or non-functioning. 
+
+```yaml
+- name: Build with Gradle
+  run: ./gradlew build
+```
 
 ### Deploy-Docs
 
@@ -40,6 +69,17 @@ As mentioned before, we've used custom scripts, tasks and GH actions available f
 - Generate Reports from ```.md``` files using MkDocs
 - Upload these documentation to GitHub pages to be statically hosted 
 
+```yaml
+- name: Generate Kotlin docs
+  run: bash ./gradlew dokkaGenerateHtml
+- name: Generate Typescript docs
+  run: bash ./gradlew prepareTypeDocs
+- name: Build MkDocs Reports
+  run: mkdocs build
+- name: Deploy to GitHub Pages
+  uses: actions/deploy-pages@v5
+```
+
 ### Publish
 
 The file [.github/workflows/publish.yaml](https://github.com/Norby99/munchies/blob/master/.github/workflows/publish.yaml) is tasked with:
@@ -49,3 +89,20 @@ The file [.github/workflows/publish.yaml](https://github.com/Norby99/munchies/bl
 - Preparing and publishing our *-service images to [DockerHub](https://hub.docker.com/u/maggicomunchies)
 - Publishing our *-shared modules to [Maven](https://central.sonatype.com/search?q=norby99)
 - Updating the Changelog and creating a new release in GitHub's "Release Page" 
+
+```yaml
+- name: Run semantic-release
+  run: npx semantic-release
+
+- name: Check version for release
+  id: check-version
+  run: |
+    GIT_VERSION=$(git describe --tags --exact-match HEAD || echo '')
+    if [ -n "$GIT_VERSION" ]; then
+      echo "version=$(echo $GIT_VERSION | sed 's/^v//')" >> "$GITHUB_OUTPUT"
+    fi
+
+- name: Publish to docker hub
+  if: steps.check-version.outputs.version != ''
+  run: bash ./scripts/publish/docker.sh "${{ steps.check-version.outputs.version }}"
+```

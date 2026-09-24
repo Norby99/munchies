@@ -58,14 +58,25 @@ Each service module has a matching `-shared` module containing code shared with 
 - Docker (and Docker Compose)
 - Node.js (for the Express.js and Vue.js services)
 
-### Local infrastructure
+### Running the system
 
-Docker Compose files for local dependencies are available under `config/`:
+The whole system (all services and their infrastructure dependencies: MongoDB, Kafka, etc.) is started and stopped
+via Docker Compose, either directly through Gradle or via the deployment script:
 
 ```bash
-docker compose -f config/mongodb/docker-compose.yml up -d
-docker compose -f config/kafka/docker-compose.yml up -d
+./gradlew composeUp    # Build images and start all services
+./gradlew composeDown  # Stop and tear down all services
 ```
+
+Alternatively, [`scripts/deploy.sh`](scripts/deploy.sh) wraps the same `composeDown`/`composeUp` cycle with a git
+pull step and post-deploy health checks, and is meant for deploying to a host:
+
+```bash
+./scripts/deploy.sh
+```
+
+The individual Docker Compose files for each infrastructure dependency are also available under `config/`
+(`config/mongodb`, `config/kafka`, `config/service`) if you need to start a single dependency in isolation.
 
 ### Building and testing
 

@@ -32,8 +32,15 @@ Meanwhile, these folders:
 - ```build-logic```: contains the Gradle conventions, tasks and configurations for the projects
 - ```config```: contains the detekt and docker images configurations
 - ```docs```: contains the internal and external documentation
+- ```helm```: contains the ```munchies-service``` Helm chart, a generic Deployment + Service (+ optional HPA and
+  MongoDB StatefulSet) parameterized per microservice through the values files in ```helm/values```; it replaces
+  the duplicated raw manifests that used to live under ```k8s/order-service```, ```k8s/user-service``` and
+  ```k8s/restaurant-service```
 - ```k8s```: contains the Kubernetes configurations
 - ```loadtest```: contains a minikube load testing configuration with autoscaling
+- ```observability```: contains a scoped-down Prometheus + Grafana Helm-based stack (brought up only around a
+  benchmark run, not part of ```k8s/``` or ```./gradlew deploy```), with a Grafana dashboard showing ready
+  replicas, HPA current vs desired replicas and per-pod CPU usage against its request
 - ```scripts```: contains the script for building documentation, publishing to NPM, DockerHub, Maven and a script to
   deploy and run our project.
 

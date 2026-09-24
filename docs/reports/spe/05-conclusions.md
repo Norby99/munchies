@@ -42,6 +42,8 @@ services, during the later stages of development.
   commit.
 - **Renovate** would more often that not delay new features being pushed, since it would merge automatically and require
   developer branches to rerun checks with updated branches.
+- **Maven** will enforce publishing limits to open source projects. We will be rate limited, and we will have to
+  unfortunately drop any future Maven publish.
 
 ## Future work
 
