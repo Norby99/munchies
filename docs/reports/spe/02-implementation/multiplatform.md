@@ -72,8 +72,7 @@ package generated out of ```order-shared```, and builds the request path from th
 
 ```typescript
 // payment-service, Express.js
-import {com} from "munchies-order-service-shared";
-import OrderServiceConfig = com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig;
+import OrderServiceConfig from "munchies-order-service-shared";
 
 const path = (OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.PAY_ORDER_PATH).replace("{id}", orderId);
 await axios.patch(baseUrl + path, "");
