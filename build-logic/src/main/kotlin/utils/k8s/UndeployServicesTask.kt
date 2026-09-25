@@ -25,7 +25,8 @@ abstract class UndeployServicesTask @Inject constructor(
   @get:Input
   val wipeData: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
 
-  private val keepPvcMessage = "Keeping PersistentVolumeClaims (pass '-PwipeData=true' to delete them)."
+  private val keepPvcMessage = "Keeping PersistentVolumeClaims " +
+    "(pass '-PwipeData=true' to delete them)."
 
   @TaskAction
   fun undeploy() {
