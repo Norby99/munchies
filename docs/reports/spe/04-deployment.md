@@ -35,15 +35,65 @@ databases.
 ### Kubernetes
 As a strong standard for deployment, we decided to use **Kubernetes** for handling the container
 orchestration.
-We decided to use namespace per service, so that each bounded context's boundary is reflected
+We decided to use a namespace per service, so that each bounded context's boundary is reflected
 in the infrastructure, not just in the code.
+
+Here's the architecture at a high level:
+```mermaid
+flowchart LR
+    subgraph gwns["Namespace gateway-service"]
+        gw["Deployment gateway-service"]
+    end
+    subgraph ons["Namespace order-service"]
+        order["Deployment order-service"]
+    end
+    subgraph uns["Namespace user-service"]
+    user["Deployment user-service"]
+    end
+    subgraph rns["Namespace restaurant-service"]
+        rest["Deployment restaurant-service"]
+    end
+    subgraph kns["Namespace kafka"]
+        kafka["StatefulSet kafka"]
+    end
+
+    gw -->|HTTP| order
+    gw -->|HTTP| user
+    gw -->|HTTP| rest
+    user -. "UserEmailConfirmationNotification" .-> kafka
+```
+
+Here's the zoom in on one namespace service:
+```mermaid
+flowchart LR
+    gw["gateway-service<br/>(different namespace)"] -->|"HTTP via cross-namespace DNS"| svc
+    subgraph ns["Namespace: order-service"]
+        direction LR
+        dep["Deployment<br/>order-service"] -.-> pod["order-service Pod"]
+        svc["Service<br/>order-service"] -.-> pod
+        sts["StatefulSet<br/>order-mongodb"] -.-> mpod["mongo Pod"]
+        msvc["Service<br/>order-mongodb"] -.-> mpod
+        mpod --> pvc[("PersistentVolumeClaim")]
+        pod --> |"MONGODB_URI"| msvc
+    end
+```
 
 Configuration files are defined in the `k8s/` folder and are:
 - for `notification`, `payment` and `table-reservation`: *Namespace*, *Deployment*, *Service*,
 *StatefulSet* and a *PersistentVolumeClaim*
-- for `kafka`: *Namespace*, *StatefulSet* and two *Service* objects, a regular one and 
-a headless one (`clusterIP: None`), needed because Kafka clients and brokers must reach
-a specific broker by name rather than a load-balanced address.
+- for `kafka`: *Namespace*, *StatefulSet* and a headless *Service* (`clusterIP: None`), 
+necessary for Kafka clients to reach their broker by name instead of a load-balanced address.
+
+Here's the Kafka setup:
+```mermaid
+flowchart LR
+    subgraph ns["Namespace: kafka"]
+        direction TB
+        sts["StatefulSet<br/>kafka (1 replica)"] -.-> pod["Pod<br/>kafka-0"]
+        hsvc["Service: kafka-headless<br/>(clusterIP: None)"] -.-> pod
+    end
+    client["order-service, user-service, ...<br/>(different namespaces)"] -->|"kafka-0.kafka-headless.kafka.svc.cluster.local:9092"| hsvc
+```
 
 #### Helm
 We used **Helm** for services like `user`, `restaurant`, `order` and `gateway`
@@ -71,7 +121,7 @@ ready (according to `/health` endpoint) and that brings us to the next section.
 In contrast to how Kafka health indicator was correctly handled, for MongoDB Micronaut has
 a certain policy: it brings an `HealthIndicator` only for the *reactive* driver. Since our
 services use different libraries (`micronaut-data-mongodb` + `mongodb-driver-sync`), that is not 
-automatically shipped, so when asking a Micronaut pod its readiness, he answers as if it had 
+automatically shipped, so when asking a Micronaut pod its readiness, it answers as if it had 
 no MongoDB dependency to check. 
 So, this is why it was necessary to implement a `MongoHealthIndicator` into a `micronaut-commons`
 new subproject to be importable to all `micronaut-server` services, bringing MongoDB connectivity
@@ -90,8 +140,9 @@ not the one published by CI on DockerHub, so that deploy and release aren't full
 
 #### Horizontal scaling
 As related to the deployment and orchestration we implemented horizontal scaling.
-The load test and benchmark part will not be considered in this report because it is
-not in the interest of the course.
+Anyway, there is no actual verification and benchmark of the behavior under a load test,
+because it is not in the courses interest: it will be put in Software Architecture and 
+Platforms report.
 At first, we added a `HorizontalPodAutoscaler` as a Helm template driven by `autoscaling:`
 in the service's values file.
 As default values, it is disabled unless a service turns it on, and moves between 1 and 4
