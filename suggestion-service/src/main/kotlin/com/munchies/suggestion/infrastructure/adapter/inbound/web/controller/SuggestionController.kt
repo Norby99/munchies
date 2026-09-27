@@ -10,6 +10,9 @@ import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionRespo
 import com.munchies.suggestion.infrastructure.adapter.inbound.SuggestionAPI
 import com.munchies.suggestion.infrastructure.adapter.inbound.request.SuggestItemRequest
 import com.munchies.suggestion.infrastructure.adapter.inbound.web.config.SuggestionServiceConfig
+import com.munchies.suggestion.infrastructure.adapter.inbound.web.controller.exception.EngineTimeoutException
+import com.munchies.suggestion.infrastructure.adapter.inbound.web.controller.exception.MalformedResponseException
+import com.munchies.suggestion.infrastructure.adapter.outbound.response.SuggestItemResponse as WebSuggestItemResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
@@ -30,25 +33,25 @@ import jakarta.inject.Inject
 class SuggestionController(
   @Inject
   private val suggestionService: SuggestMenuItem,
-) : SuggestionAPI<HttpResponse<SuggestionResponseDTO>> {
+) : SuggestionAPI<HttpResponse<WebSuggestItemResponse>> {
 
   @Get("/")
   override fun suggestMenuItem(
     @PathVariable request: SuggestItemRequest,
-  ): HttpResponse<SuggestionResponseDTO> {
+  ): HttpResponse<WebSuggestItemResponse> {
     val suggestionRequest = request.dto.toDomain()
     return when (val suggestionResponse = suggestionService.execute(suggestionRequest)) {
       is SuggestionSuccess -> {
-        HttpResponse.ok(suggestionResponse.result.toDTO())
+        HttpResponse.ok(WebSuggestItemResponse(suggestionResponse.result.toDTO()))
       }
       is EmptySuggestion -> {
-        HttpResponse.noContent()
+        throw MalformedResponseException("Engine's response was empty")
       }
       is MalformedSuggestion -> {
-        HttpResponse.unprocessableEntity()
+        throw MalformedResponseException("Engine's response was malformed")
       }
       else -> {
-        HttpResponse.serverError()
+        throw EngineTimeoutException("Engine timed out")
       }
     }
   }

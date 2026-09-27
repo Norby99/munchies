@@ -11,3 +11,5 @@ import kotlinx.serialization.Serializable
 data class SuggestionConfidenceDTO(
   val level: String,
 )
+
+//TODO() validator

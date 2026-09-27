@@ -11,3 +11,4 @@ import kotlinx.serialization.Serializable
 data class UserPreferenceDTO(
   val preference: String,
 )
+//TODO() validator
