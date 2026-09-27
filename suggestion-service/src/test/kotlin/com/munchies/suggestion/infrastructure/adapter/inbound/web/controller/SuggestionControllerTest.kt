@@ -12,6 +12,9 @@ import com.munchies.suggestion.infrastructure.adapter.dto.SuggestionResponseDTO
 import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionRequestMapper.toDomain
 import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionResponseMapper.toDomain
 import com.munchies.suggestion.infrastructure.adapter.inbound.request.SuggestItemRequest
+import com.munchies.suggestion.infrastructure.adapter.inbound.web.controller.exception.EngineTimeoutException
+import com.munchies.suggestion.infrastructure.adapter.inbound.web.controller.exception.MalformedResponseException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -67,7 +70,7 @@ class SuggestionControllerTest {
     }
     val controller = getController(suggestMenuItem = suggestMenuItem)
 
-    controller.suggestMenuItem(request)
+    shouldThrow<EngineTimeoutException> { controller.suggestMenuItem(request) }
 
     Mockito.verify(suggestMenuItem).execute(any())
   }
@@ -93,9 +96,7 @@ class SuggestionControllerTest {
 
     val request = SuggestItemRequest(dto)
 
-    val response = controller.suggestMenuItem(request)
-    response.status shouldBe HttpStatus.UNPROCESSABLE_ENTITY
-    response.body() shouldBe null
+    shouldThrow<MalformedResponseException> { controller.suggestMenuItem(request) }
   }
 
   @Test
@@ -119,9 +120,7 @@ class SuggestionControllerTest {
     val controller = getController(suggestMenuItem = suggestMenuItem)
     val request = SuggestItemRequest(dto)
 
-    val response = controller.suggestMenuItem(request)
-    response.status shouldBe HttpStatus.NO_CONTENT
-    response.body() shouldBe null
+    shouldThrow<MalformedResponseException> { controller.suggestMenuItem(request) }
   }
 
   @Test
@@ -145,10 +144,7 @@ class SuggestionControllerTest {
     val controller = getController(suggestMenuItem = suggestMenuItem)
     val request = SuggestItemRequest(dto)
 
-    val response = controller.suggestMenuItem(request)
-
-    response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
-    response.body() shouldBe null
+    shouldThrow<EngineTimeoutException> { controller.suggestMenuItem(request) }
   }
 
   @Test
@@ -182,6 +178,6 @@ class SuggestionControllerTest {
     val res = controller.suggestMenuItem(request)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
-    res.body() shouldBe responseDTO
+    res.body().response shouldBe responseDTO
   }
 }
