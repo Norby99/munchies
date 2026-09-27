@@ -29,6 +29,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
     "commons",
     "micronaut-commons",
     "architecture-rules",
+    "suggestion",
     "user",
     "order",
     "restaurant",
