@@ -16,5 +16,4 @@ class SuggestMenuItemUseCaseTest {
   @Test
   fun getEngine() {
   }
-
 }

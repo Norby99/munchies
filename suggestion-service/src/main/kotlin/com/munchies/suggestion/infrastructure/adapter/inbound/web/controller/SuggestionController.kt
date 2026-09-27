@@ -4,15 +4,11 @@ import com.munchies.suggestion.application.port.inbound.SuggestMenuItem
 import com.munchies.suggestion.domain.port.SuggestionEngine.SuggestionResult.Companion.EmptySuggestion
 import com.munchies.suggestion.domain.port.SuggestionEngine.SuggestionResult.Companion.MalformedSuggestion
 import com.munchies.suggestion.domain.port.SuggestionEngine.SuggestionResult.Companion.SuggestionSuccess
-import com.munchies.suggestion.infrastructure.adapter.dto.MenuItemDTO
-import com.munchies.suggestion.infrastructure.adapter.dto.SuggestedMenuItemDTO
-import com.munchies.suggestion.infrastructure.adapter.dto.SuggestionConfidenceDTO
-import com.munchies.suggestion.infrastructure.adapter.dto.SuggestionRequestDTO
-import com.munchies.suggestion.infrastructure.adapter.dto.SuggestionResponseDTO
-import com.munchies.suggestion.infrastructure.adapter.dto.UserPreferenceDTO
+import com.munchies.suggestion.infrastructure.adapter.dto.*
 import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionRequestMapper.toDomain
 import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionResponseMapper.toDTO
 import com.munchies.suggestion.infrastructure.adapter.inbound.SuggestionAPI
+import com.munchies.suggestion.infrastructure.adapter.inbound.request.SuggestItemRequest
 import com.munchies.suggestion.infrastructure.adapter.inbound.web.config.SuggestionServiceConfig
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -34,13 +30,13 @@ import jakarta.inject.Inject
 class SuggestionController(
   @Inject
   private val suggestionService: SuggestMenuItem,
-) : SuggestionAPI<SuggestionRequestDTO, HttpResponse<SuggestionResponseDTO>> {
+) : SuggestionAPI<HttpResponse<SuggestionResponseDTO>> {
 
   @Get("/")
   override fun suggestMenuItem(
-    @PathVariable request: SuggestionRequestDTO,
+    @PathVariable request: SuggestItemRequest,
   ): HttpResponse<SuggestionResponseDTO> {
-    val suggestionRequest = request.toDomain()
+    val suggestionRequest = request.dto.toDomain()
     return when (val suggestionResponse = suggestionService.execute(suggestionRequest)) {
       is SuggestionSuccess -> {
         HttpResponse.ok(suggestionResponse.result.toDTO())
