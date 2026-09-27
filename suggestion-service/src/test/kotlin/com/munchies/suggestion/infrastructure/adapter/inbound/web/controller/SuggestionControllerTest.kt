@@ -11,6 +11,7 @@ import com.munchies.suggestion.infrastructure.adapter.dto.SuggestionRequestDTO
 import com.munchies.suggestion.infrastructure.adapter.dto.SuggestionResponseDTO
 import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionRequestMapper.toDomain
 import com.munchies.suggestion.infrastructure.adapter.dto.mapper.SuggestionResponseMapper.toDomain
+import com.munchies.suggestion.infrastructure.adapter.inbound.request.SuggestItemRequest
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -59,12 +60,14 @@ class SuggestionControllerTest {
       userPreferences = listOf(),
     )
 
+    val request = SuggestItemRequest(dto)
+
     val suggestMenuItem = mock<SuggestMenuItem> {
       on { execute(dto.toDomain()) } doReturn MalformedSuggestion
     }
     val controller = getController(suggestMenuItem = suggestMenuItem)
 
-    controller.suggestMenuItem(dto)
+    controller.suggestMenuItem(request)
 
     Mockito.verify(suggestMenuItem).execute(any())
   }
@@ -88,7 +91,9 @@ class SuggestionControllerTest {
     )
     val controller = getController(suggestMenuItem = suggestMenuItem)
 
-    val response = controller.suggestMenuItem(dto)
+    val request = SuggestItemRequest(dto)
+
+    val response = controller.suggestMenuItem(request)
     response.status shouldBe HttpStatus.UNPROCESSABLE_ENTITY
     response.body() shouldBe null
   }
@@ -112,8 +117,9 @@ class SuggestionControllerTest {
     )
 
     val controller = getController(suggestMenuItem = suggestMenuItem)
+    val request = SuggestItemRequest(dto)
 
-    val response = controller.suggestMenuItem(dto)
+    val response = controller.suggestMenuItem(request)
     response.status shouldBe HttpStatus.NO_CONTENT
     response.body() shouldBe null
   }
@@ -137,8 +143,9 @@ class SuggestionControllerTest {
     )
 
     val controller = getController(suggestMenuItem = suggestMenuItem)
+    val request = SuggestItemRequest(dto)
 
-    val response = controller.suggestMenuItem(dto)
+    val response = controller.suggestMenuItem(request)
 
     response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
     response.body() shouldBe null
@@ -170,8 +177,9 @@ class SuggestionControllerTest {
       },
     )
     val controller = getController(suggestMenuItem = suggestMenuItem)
+    val request = SuggestItemRequest(requestDTO)
 
-    val res = controller.suggestMenuItem(requestDTO)
+    val res = controller.suggestMenuItem(request)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
     res.body() shouldBe responseDTO

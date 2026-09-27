@@ -31,33 +31,29 @@ class MultipleAttemptSuggestMenuItemUseCaseTest {
   }
 
   @Test
-  fun `engine receives correct max attemps`(){
-
-    shouldNotThrow<AssertionError>{ MultipleAttemptSuggestMenuItemUseCase(mock(), 10) }
+  fun `engine receives correct max attemps`()  {
+    shouldNotThrow<AssertionError> { MultipleAttemptSuggestMenuItemUseCase(mock(), 10) }
     shouldThrow<AssertionError> { MultipleAttemptSuggestMenuItemUseCase(mock(), 0) }
     shouldThrow<AssertionError> { MultipleAttemptSuggestMenuItemUseCase(mock(), -1) }
-
   }
 
   val request = SuggestionRequest(
     id = SuggestionRequestId(""),
     user = UUIDEntityId(""),
     menu = listOf(),
-    userPreferences = listOf()
-    )
-
+    userPreferences = listOf(),
+  )
 
   @Test
-  fun `engine returns after one attempt when correct`(){
-
+  fun `engine returns after one attempt when correct`()  {
     val response = SuggestionResponse(
       rationale = "",
       confidence = SuggestionConfidence.HIGH,
-      suggestedMenuItems = listOf()
+      suggestedMenuItems = listOf(),
     )
 
     val correctEngine: SuggestionEngine = mock {
-       on { suggest(request) } doReturn SuggestionSuccess(response)
+      on { suggest(request) } doReturn SuggestionSuccess(response)
     }
 
     val useCase = MultipleAttemptSuggestMenuItemUseCase(correctEngine, 3)
@@ -67,10 +63,8 @@ class MultipleAttemptSuggestMenuItemUseCaseTest {
     verify(correctEngine).suggest(request)
   }
 
-
   @Test
-  fun `engine returns timeout when runs out of attempts`(){
-
+  fun `engine returns timeout when runs out of attempts`()  {
     val timeoutEngine: SuggestionEngine = mock {
       on { suggest(request) } doReturn TimeoutSuggestion
     }
@@ -82,5 +76,4 @@ class MultipleAttemptSuggestMenuItemUseCaseTest {
     useCase.execute(request).shouldBeInstanceOf<TimeoutSuggestion>()
     verify(timeoutEngine, times(3)).suggest(request)
   }
-
 }

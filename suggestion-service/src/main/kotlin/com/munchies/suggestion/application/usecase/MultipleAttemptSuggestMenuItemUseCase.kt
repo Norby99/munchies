@@ -12,7 +12,7 @@ class MultipleAttemptSuggestMenuItemUseCase(
   private val useCase: SuggestMenuItem = SuggestMenuItemUseCase(engine),
 ) : SuggestMenuItem {
   init {
-      assert(maxAttempts > 0)
+    assert(maxAttempts > 0)
   }
 
   override fun execute(suggestionRequest: SuggestionRequest): SuggestionResult {
