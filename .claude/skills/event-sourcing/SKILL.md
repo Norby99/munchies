@@ -12,8 +12,9 @@ event-sourced.
 ## When this applies
 
 Most Munchies aggregates should stay plain CRUD-on-Mongo (load current state, mutate, save current state) — that's
-simpler and is what `order-service` and `payment-service` do today. Reach for event sourcing only when the domain
-actually needs one of:
+simpler and is what `payment-service` and every other service's aggregates do. The one deliberate exception is
+`order-service`'s `Order` aggregate (see `order-service/CLAUDE.md`): a course requirement to demonstrate Event
+Sourcing on exactly one service. Don't event-source any other aggregate without the domain actually needing one of:
 
 - A full audit trail / history of every state change (not just the current snapshot).
 - The ability to reconstruct past state or replay "what happened" for an aggregate.
@@ -143,15 +144,19 @@ An event store is indexed by aggregate id — it answers "give me this aggregate
 - **Replay cost**: if load latency creeps up as streams grow, that's the signal to add snapshots — don't add them
   before there's a real aggregate with a real long history.
 
-## Notification-service: the planned first real use
+## order-service: the planned first real use
 
-`notification-service` is the intended first consumer of this pattern in the project: it will receive
-notification-bound events over Kafka and persist them into its own append-only collection exactly as described
-above (received event = the thing being event-sourced, `eventType`/`payload`/`occurredAt` etc.), before converting
-them into user notifications and, eventually, pushing them to `frontend-service` over WebSocket. As of writing,
-`notification-service` has only its Kafka consumers/producers and a thin controller — no `domain/` or Mongo adapter
-yet — so this is where the layer mapping above gets applied for real, not just Kafka consumption with no
-persistence.
+`order-service`'s `Order` aggregate is the intended first application of this pattern in the project. Its existing
+CRUD-on-Mongo persistence (`OrderRepository`: `findById`/`save`/`update`/`delete`) is being replaced by the
+`process()`/`apply()` split and an append-only event store, exactly as described above — this is where the layer
+mapping gets applied for real, not just theory.
+
+This is genuine Event Sourcing, not to be confused with the CQRS/materialized-view case discussed above:
+`order-service` owns the `Order` aggregate, generates its own domain events from its own commands, and uses them as
+its primary persistence mechanism. `order-service`'s existing outbound Kafka producer to `notification-service`
+(`OrderStatusChanged`) is unaffected by this change and stays a separate, narrow side-channel — see
+[[event-driven]] for why `notification-service` itself does not use Event Sourcing (it has no event store; it just
+converts received events into notifications).
 
 ## Code skeletons
 

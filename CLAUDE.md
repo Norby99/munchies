@@ -28,13 +28,13 @@ microservices architecture.
   Events published to `notification-service` must use the event-carried state transfer style: the payload carries
   everything the consumer needs, so `notification-service` never has to call back into the source service. Every
   call inside `notification-service`'s consume/process/produce pipeline (Kafka message handlers, notification
-  dispatch, the future event-store write, the future WebSocket push) must be asynchronous/non-blocking — a blocking
-  call inside a Kafka message handler stalls every other topic the service is meant to process concurrently. See
-  the `event-driven` skill for the full guide.
-- **Event Sourcing**: used only inside `notification-service`, to persist every event it receives as an
-  append-only log in its own MongoDB collection, before converting it into a user notification. Not used elsewhere
-  in the system — other services persist current state directly (plain CRUD-on-Mongo), not an event log. See the
-  `event-sourcing` skill for the implementation pattern.
+  dispatch, the future WebSocket push) must be asynchronous/non-blocking — a blocking call inside a Kafka message
+  handler stalls every other topic the service is meant to process concurrently. See the `event-driven` skill for
+  the full guide.
+- **Event Sourcing**: used only inside `order-service`, on the `Order` aggregate, persisted as an append-only event
+  log instead of plain CRUD-on-Mongo. Not used elsewhere in the system — other services persist current state
+  directly (plain CRUD-on-Mongo), not an event log. See `order-service/CLAUDE.md` for how this applies there, and
+  the `event-sourcing` skill for the general implementation pattern.
 - **Microservices Patterns**:
     - API Gateway
     - SAGA Pattern (for distributed transactions)
