@@ -119,15 +119,10 @@ not the common case in this project), add snapshotting:
 ## CQRS: only when you actually need cross-attribute queries
 
 An event store is indexed by aggregate id — it answers "give me this aggregate's history" efficiently, but not
-"find all orders with total > 50" without folding every event. If a use case needs that kind of query:
-
-- Split reads out: the event-sourced side stays the command side (handles `process()`/`apply()`/append).
-- Add a **projection**: a consumer (in-process subscriber, or a Kafka consumer if cross-service) that upserts each
-  new event into a read-optimized Mongo collection/table shaped for the query you actually need.
-- Keep the projection eventually consistent by design — don't have a use case read its own just-appended event back
-  out of the projection synchronously.
-- If only same-service queries are needed, the projection can just be another Mongo collection updated in the same
-  use case, no Kafka involved. Only cross the service boundary with Kafka if another service needs the read model.
+"find all orders with total > 50" without folding every event. If a use case needs that kind of query, that's a
+CQRS read side: the event-sourced aggregate stays the command side, and you add a projection to answer queries.
+See the `cqrs` skill for the full pattern (when a projection is justified, layer mapping, projection consistency,
+checklists, pitfalls) — this section is just the pointer from the event-sourcing side of that composition.
 
 ## Pitfalls to watch for
 
