@@ -35,3 +35,11 @@ Event Sourcing here is only about how `order-service` persists its *own* aggrega
 - Event-Driven Architecture (EDA) remains confined to `notification-service` only — see the `event-driven` skill.
   Don't read the presence of Event Sourcing here as license to make `order-service` consume or react to Kafka
   events from other services.
+
+## CQRS on top of the event-sourced `Order` aggregate
+
+`order-service` applies the **CQRS** (Command Query Responsibility Segregation) pattern, layered on top of the
+Event Sourcing write side above: the event-sourced `Order` aggregate is the command side, and one or more
+read-optimized Mongo projections back the query side instead of folding the event stream on every read. See the
+`cqrs` skill for the full pattern: when a projection is justified, layer mapping, projection consistency, and how
+it composes with the `EventStore` port here.
