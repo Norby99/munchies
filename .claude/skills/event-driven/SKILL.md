@@ -56,12 +56,11 @@ processing for everything else notification-service is supposed to be handling c
 entire reason to make this one service event-driven in the first place.
 
 Rule for this project: every step of notification-service's pipeline — the `eachMessage` handler, every
-`NotificationController.handle*` method, the future event-store write ([[event-sourcing]]), and the future
-WebSocket push — must be `async`/return a `Promise` and use the non-blocking API of whatever client library is
-involved (Mongo driver, Kafka client, WS library), never a synchronous blocking call. The existing consumers
-already follow this (`async run()`, `await consumer.subscribe(...)`) — keep new code consistent with it, and when
-`NotificationController.handle*` methods stop being stub `console.log` calls and start doing real work (persisting,
-dispatching), make them `async` too.
+`NotificationController.handle*` method, and the future WebSocket push — must be `async`/return a `Promise` and use
+the non-blocking API of whatever client library is involved (Mongo driver, Kafka client, WS library), never a
+synchronous blocking call. The existing consumers already follow this (`async run()`, `await
+consumer.subscribe(...)`) — keep new code consistent with it, and when `NotificationController.handle*` methods
+stop being stub `console.log` calls and start dispatching real notifications, make them `async` too.
 
 ## notification-service's agent-based architecture (the reference pattern)
 
@@ -77,8 +76,10 @@ The existing code is already the concrete instance of the course's "agent" patte
   about each other.
 - Every consumer forwards what it receives into the single shared
   `infrastructure/adapter/inbound/web/controller/controller.ts`'s `NotificationController`, one `handle*` method
-  per event type. That's the "process" step, currently a stub that logs — this is where persisting the event
-  (event-sourcing, see [[event-sourcing]]) and turning it into an actual notification will go.
+  per event type. That's the "process" step, currently a stub that logs — this is where turning the received event
+  into an actual notification will go. `notification-service` does not persist an event store of what it
+  receives — Event Sourcing in this project applies to `order-service`'s `Order` aggregate instead, see
+  [[event-sourcing]].
 
 Mapped onto the course's `poll -> process -> produce -> commit` loop:
 
@@ -101,10 +102,9 @@ Mapped onto the course's `poll -> process -> produce -> commit` loop:
 2. **notification-service**: add a consumer class for the new topic (same shape as the two existing ones), wire it
    into `index.ts`'s `main()`.
 3. Add an `async handle*` method to `NotificationController` for the new event type — no blocking calls inside it.
-4. Once event-sourcing lands in `notification-service` (see [[event-sourcing]]), persist the received event via the
-   event store as part of `handle*`, before/while converting it into a notification.
-5. Stop there. Don't add an inbound Kafka side to the producing service, and don't make the producing service react
-   to anything notification-service does.
+4. Stop there. Don't add an inbound Kafka side to the producing service, don't make the producing service react to
+   anything notification-service does, and don't add an event store to `notification-service` — Event Sourcing in
+   this project lives in `order-service` instead (see [[event-sourcing]]).
 
 ## Why the rest of Munchies stays request/response (course's own criteria, applied here)
 
