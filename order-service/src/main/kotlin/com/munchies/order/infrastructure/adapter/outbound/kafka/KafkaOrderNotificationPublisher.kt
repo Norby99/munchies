@@ -2,7 +2,7 @@ package com.munchies.order.infrastructure.adapter.outbound.kafka
 
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.port.OrderNotificationPublisher
-import com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotification
+import com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotification
 import jakarta.inject.Singleton
 
 /**

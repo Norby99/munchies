@@ -5,7 +5,7 @@ import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.defaultCustomerId
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.defaultRestaurantId
-import com.munchies.order.infrastructure.adapter.outbound.notification.orderStatusChangedNotificationFromJson
+import com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.orderStatusChangedNotificationFromJson
 import io.kotest.matchers.equals.shouldBeEqual
 import io.mockk.every
 import io.mockk.mockk

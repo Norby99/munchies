@@ -1,4 +1,4 @@
-package com.munchies.order.infrastructure.adapter.outbound.notification
+package com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged
 
 import com.munchies.commons.domain.port.Notification
 import com.munchies.commons.infrastructure.adapter.wireJson
