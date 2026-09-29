@@ -4,7 +4,7 @@ const _order = generated.com.munchies.order;
 const _inbound = _order.infrastructure.adapter.inbound;
 const _outbound = _order.infrastructure.adapter.outbound;
 const _dto = _order.infrastructure.adapter.dto;
-const _outboundNotification = _outbound.notification;
+const _outboundNotification = _outbound.notification.orderstatuschanged;
 
 module.exports = {
     OrderDTO: _dto.OrderDto,

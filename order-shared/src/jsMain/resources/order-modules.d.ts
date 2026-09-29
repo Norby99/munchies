@@ -114,18 +114,18 @@ export declare const UpdateTakeawayOrderInfoAPI: typeof com.munchies.order.infra
 
 // Notification
 
-export declare const OrderStatusChangedNotificationInfo: typeof com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotificationInfo;
+export declare const OrderStatusChangedNotificationInfo: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationInfo;
 
 export type OrderStatusChangedNotification =
-    com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotification;
-export declare const OrderStatusChangedNotification: typeof com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotification;
+    com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotification;
+export declare const OrderStatusChangedNotification: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotification;
 
-export declare const orderStatusChangedNotificationFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderStatusChangedNotificationFromJson;
+export declare const orderStatusChangedNotificationFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.orderStatusChangedNotificationFromJson;
 
 export type OrderStatusChangedNotificationObserver =
-    com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotificationObserver;
-export declare const OrderStatusChangedNotificationObserver: typeof com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotificationObserver;
+    com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationObserver;
+export declare const OrderStatusChangedNotificationObserver: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationObserver;
 
 export type OrderStatusChangedNotificationSubject =
-    com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotificationSubject;
-export declare const OrderStatusChangedNotificationSubject: typeof com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotificationSubject;
+    com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationSubject;
+export declare const OrderStatusChangedNotificationSubject: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationSubject;

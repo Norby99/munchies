@@ -1,6 +1,6 @@
 package com.munchies.order.infrastructure.adapter.outbound.kafka
 
-import com.munchies.order.infrastructure.adapter.outbound.notification.OrderStatusChangedNotificationInfo
+import com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationInfo
 import io.micronaut.configuration.kafka.annotation.KafkaClient
 import io.micronaut.configuration.kafka.annotation.Topic
 import io.micronaut.serde.annotation.SerdeImport

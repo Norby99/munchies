@@ -1,4 +1,4 @@
-package com.munchies.order.infrastructure.adapter.outbound.notification
+package com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged
 
 import com.munchies.commons.domain.port.NotificationSubject
 import kotlin.js.JsExport
