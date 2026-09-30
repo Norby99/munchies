@@ -3,8 +3,8 @@ package com.munchies.order.domain.port
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.model.OrderView
 import com.munchies.order.domain.model.RestaurantId
+import com.munchies.order.domain.model.view.OrderView
 
 /**
  * Outbound port of the query side (CQRS): storage of the [OrderView] projection.

@@ -4,13 +4,13 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryInfo
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderDetails
-import com.munchies.order.domain.model.OrderEvent
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
-import com.munchies.order.domain.model.OrderPlaced
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
+import com.munchies.order.domain.model.event.OrderEvent
+import com.munchies.order.domain.model.event.OrderPlaced
 
 /**
  * Factory object for the event-sourced [Order] aggregate.

@@ -1,5 +1,8 @@
 package com.munchies.order.domain.model
 
+import com.munchies.order.domain.model.event.DeliveryInfoUpdated
+import com.munchies.order.domain.model.event.OrderEvent
+
 /**
  * Represents a delivery order in the system.
  *

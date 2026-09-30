@@ -12,7 +12,7 @@ import com.munchies.order.domain.port.OrderEventStore
  * Use case implementation for updating the information of a takeaway order.
  *
  * This class handles the business logic for updating the pickup time and customer name
- * of a takeaway order, by appending a [com.munchies.order.domain.model.TakeawayInfoUpdated]
+ * of a takeaway order, by appending a [com.munchies.order.domain.model.event.TakeawayInfoUpdated]
  * event to the order stream.
  *
  * @property eventStore The event store holding the order streams.

@@ -1,4 +1,22 @@
-package com.munchies.order.domain.model
+package com.munchies.order.domain.model.view
+
+import com.munchies.order.domain.model.CustomerId
+import com.munchies.order.domain.model.DeliveryInfo
+import com.munchies.order.domain.model.Order
+import com.munchies.order.domain.model.OrderDetails
+import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.domain.model.RestaurantId
+import com.munchies.order.domain.model.TakeawayInfo
+import com.munchies.order.domain.model.event.DeliveryInfoUpdated
+import com.munchies.order.domain.model.event.OrderCancelled
+import com.munchies.order.domain.model.event.OrderEvent
+import com.munchies.order.domain.model.event.OrderItemsUpdated
+import com.munchies.order.domain.model.event.OrderPaid
+import com.munchies.order.domain.model.event.OrderPlaced
+import com.munchies.order.domain.model.event.OrderStatusAdvanced
+import com.munchies.order.domain.model.event.TakeawayInfoUpdated
 
 /**
  * CQRS read model of an order: a denormalized, query-optimized projection of the [OrderEvent]

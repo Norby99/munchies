@@ -1,5 +1,8 @@
 package com.munchies.order.domain.model
 
+import com.munchies.order.domain.model.event.OrderEvent
+import com.munchies.order.domain.model.event.TakeawayInfoUpdated
+
 /**
  * Represents a takeaway order in the system.
  *

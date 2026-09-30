@@ -1,9 +1,9 @@
 package com.munchies.order.application.projection
 
-import com.munchies.order.domain.model.OrderEvent
 import com.munchies.order.domain.model.OrderId
-import com.munchies.order.domain.model.OrderPlaced
-import com.munchies.order.domain.model.OrderView
+import com.munchies.order.domain.model.event.OrderEvent
+import com.munchies.order.domain.model.event.OrderPlaced
+import com.munchies.order.domain.model.view.OrderView
 import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.domain.port.OrderViewRepository
 

@@ -14,7 +14,7 @@ import com.munchies.order.domain.port.OrderEventStore
  * Use case implementation for updating the items of an existing order.
  *
  * This class handles the business logic for modifying the items associated with an order, by
- * appending an [com.munchies.order.domain.model.OrderItemsUpdated] event to the order stream.
+ * appending an [com.munchies.order.domain.model.event.OrderItemsUpdated] event to the order stream.
  *
  * @property eventStore The event store holding the order streams.
  */

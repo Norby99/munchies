@@ -13,7 +13,7 @@ import com.munchies.order.domain.port.OrderEventStore
  *
  * This class handles the business logic for updating delivery order details such as estimated
  * delivery time, delivery address, bell name, and customer phone number, by appending a
- * [com.munchies.order.domain.model.DeliveryInfoUpdated] event to the order stream.
+ * [com.munchies.order.domain.model.event.DeliveryInfoUpdated] event to the order stream.
  *
  * @property eventStore The event store holding the order streams.
  */

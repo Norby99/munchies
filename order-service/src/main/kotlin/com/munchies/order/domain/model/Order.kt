@@ -1,6 +1,14 @@
 package com.munchies.order.domain.model
 
 import com.munchies.commons.Entity
+import com.munchies.order.domain.model.event.DeliveryInfoUpdated
+import com.munchies.order.domain.model.event.OrderCancelled
+import com.munchies.order.domain.model.event.OrderEvent
+import com.munchies.order.domain.model.event.OrderItemsUpdated
+import com.munchies.order.domain.model.event.OrderPaid
+import com.munchies.order.domain.model.event.OrderPlaced
+import com.munchies.order.domain.model.event.OrderStatusAdvanced
+import com.munchies.order.domain.model.event.TakeawayInfoUpdated
 
 /**
  * Event-sourced aggregate root representing an order, which can be of different types

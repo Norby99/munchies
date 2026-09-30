@@ -12,7 +12,7 @@ import com.munchies.order.domain.port.OrderEventStore
  * Use case implementation for discarding an order.
  *
  * The order can only be discarded if it is in a cancellable state. An
- * [com.munchies.order.domain.model.OrderCancelled] event is appended and the order ends up in
+ * [com.munchies.order.domain.model.event.OrderCancelled] event is appended and the order ends up in
  * the CANCELLED status, keeping its full history.
  *
  * @property eventStore The event store holding the order streams.

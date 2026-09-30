@@ -10,7 +10,7 @@ import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toD
 /**
  * Query-side use case retrieving the details of a specific order.
  *
- * Reads from the [com.munchies.order.domain.model.OrderView] projection (CQRS query side),
+ * Reads from the [com.munchies.order.domain.model.view.OrderView] projection (CQRS query side),
  * never from the event store.
  *
  * @property views The repository of the order read model.
