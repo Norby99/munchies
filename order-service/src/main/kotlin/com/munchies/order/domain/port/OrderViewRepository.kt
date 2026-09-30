@@ -9,9 +9,10 @@ import com.munchies.order.domain.model.RestaurantId
 /**
  * Outbound port of the query side (CQRS): storage of the [OrderView] projection.
  *
- * Query use cases depend only on this port, never on [OrderEventStore]. The only writer of the
- * projection is the projection use case that folds newly appended events into it; no other
- * code is allowed to mutate a view.
+ * Query use cases depend only on this port, never on [OrderEventStore].
+ *
+ * The only writer of the projection is the application-layer projector that folds newly appended
+ * events into it.
  */
 interface OrderViewRepository {
 
