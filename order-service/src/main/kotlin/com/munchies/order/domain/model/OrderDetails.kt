@@ -1,5 +1,7 @@
 package com.munchies.order.domain.model
 
+import com.munchies.order.domain.model.event.OrderPlaced
+
 /**
  * Type-specific details of an order.
  *

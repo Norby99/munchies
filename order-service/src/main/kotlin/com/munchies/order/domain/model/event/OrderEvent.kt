@@ -1,4 +1,14 @@
-package com.munchies.order.domain.model
+package com.munchies.order.domain.model.event
+
+import com.munchies.order.domain.model.CustomerId
+import com.munchies.order.domain.model.DeliveryInfo
+import com.munchies.order.domain.model.Order
+import com.munchies.order.domain.model.OrderDetails
+import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.domain.model.RestaurantId
+import com.munchies.order.domain.model.TakeawayInfo
 
 /**
  * Domain events of the event-sourced [Order] aggregate.

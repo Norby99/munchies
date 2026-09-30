@@ -1,7 +1,7 @@
 package com.munchies.order.domain.port
 
-import com.munchies.order.domain.model.OrderEvent
 import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.model.event.OrderEvent
 
 /**
  * Outbound port of the command side: the append-only event store of the [OrderEvent] streams.

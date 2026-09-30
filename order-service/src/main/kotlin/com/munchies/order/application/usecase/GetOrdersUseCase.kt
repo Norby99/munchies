@@ -9,7 +9,7 @@ import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toD
  * Query-side use case retrieving the orders matching the optional filters of the command.
  *
  * This is the query that motivates the CQRS read side: the event store can only be read by
- * order id, while the [com.munchies.order.domain.model.OrderView] projection is indexed by
+ * order id, while the [com.munchies.order.domain.model.view.OrderView] projection is indexed by
  * restaurant, customer and status.
  *
  * @property views The repository of the order read model.

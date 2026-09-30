@@ -11,7 +11,7 @@ import com.munchies.order.domain.port.OrderNotificationPublisher
  * Use case implementation for advancing the status of an order.
  *
  * Rebuilds the order from its event stream, lets the aggregate decide the resulting
- * [com.munchies.order.domain.model.OrderStatusAdvanced] event, appends it to the event store and,
+ * [com.munchies.order.domain.model.event.OrderStatusAdvanced] event, appends it to the event store and,
  * once it is durable, publishes a status-change notification for notification-service.
  *
  * @property eventStore The event store holding the order streams.

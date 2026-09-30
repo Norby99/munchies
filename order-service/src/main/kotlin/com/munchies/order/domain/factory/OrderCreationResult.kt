@@ -1,6 +1,6 @@
 package com.munchies.order.domain.factory
 
-import com.munchies.order.domain.model.OrderEvent
+import com.munchies.order.domain.model.event.OrderEvent
 
 /**
  * Represents the result of an order creation operation.
