@@ -1,36 +1,38 @@
 package com.munchies.order.application.usecase
 
+import com.munchies.order.application.eventsourcing.loadOrder
 import com.munchies.order.application.port.inbound.AdvanceOrderStatus
 import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCommand
 import com.munchies.order.domain.model.Order
+import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.domain.port.OrderNotificationPublisher
-import com.munchies.order.domain.port.OrderRepository
 
 /**
  * Use case implementation for advancing the status of an order.
  *
- * This class handles the business logic for transitioning an order to its next status
- * in the order processing workflow. It interacts with the OrderRepository to retrieve
- * and update order data, and publishes a status-change event once the transition succeeds.
+ * Rebuilds the order from its event stream, lets the aggregate decide the resulting
+ * [com.munchies.order.domain.model.OrderStatusAdvanced] event, appends it to the event store and,
+ * once it is durable, publishes a status-change notification for notification-service.
  *
- * @property repository The repository used to access and modify order data.
+ * @property eventStore The event store holding the order streams.
  * @property notificationPublisher Publisher used to notify downstream consumers of the status change.
  */
 class AdvanceOrderStatusUseCase(
-  private val repository: OrderRepository,
+  private val eventStore: OrderEventStore,
   private val notificationPublisher: OrderNotificationPublisher,
 ) : AdvanceOrderStatus {
 
   override fun execute(command: AdvanceOrderStatusCommand): AdvanceOrderStatus.Result {
-    val order = repository.findById(command.orderId)
+    val (order, version) = eventStore.loadOrder(command.orderId)
       ?: return AdvanceOrderStatus.Result.Failure.OrderNotFound
 
     return when (val result = order.nextStatus()) {
       is Order.AdvanceStatusResult.Failure.InvalidTransition ->
         AdvanceOrderStatus.Result.Failure.InvalidTransition
       is Order.AdvanceStatusResult.Success -> {
-        repository.update(result.order)
-        notificationPublisher.publishStatusChanged(result.order)
+        val advanced = order.applyAll(result.events)
+        eventStore.append(order.id, version, result.events)
+        notificationPublisher.publishStatusChanged(advanced)
         AdvanceOrderStatus.Result.Success
       }
     }

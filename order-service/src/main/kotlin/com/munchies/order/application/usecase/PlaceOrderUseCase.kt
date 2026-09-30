@@ -8,19 +8,22 @@ import com.munchies.order.domain.model.DeliveryInfo
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
-import com.munchies.order.domain.port.OrderRepository
+import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 
 /**
  * Use case implementation for placing an order.
  *
- * This class handles the business logic for creating a new order based on the provided command.
- * It interacts with the OrderRepository to save the order and returns the result of the operation.
+ * Validates the new order through [OrderFactory], and starts the order's stream in the
+ * event store with it.
  *
- * @property repository The repository used to access order data.
+ * The returned DTO is built from the command-side state rebuilt from that very event,
+ * not from the read model, so the caller always sees its own write.
+ *
+ * @property eventStore The event store holding the order streams.
  */
 class PlaceOrderUseCase(
-  private val repository: OrderRepository,
+  private val eventStore: OrderEventStore,
 ) : PlaceOrder {
 
   override fun execute(command: PlaceOrderCommand): PlaceOrder.Result {
@@ -70,8 +73,11 @@ class PlaceOrderUseCase(
         PlaceOrder.Result.Failure.InvalidItemQuantity
       is OrderCreationResult.Failure.InvalidDate -> PlaceOrder.Result.Failure.InvalidDate
       is OrderCreationResult.Success -> {
-        repository.save(creationResult.order)
-        PlaceOrder.Result.Success(creationResult.order.toDto())
+        val order = checkNotNull(OrderFactory.fromHistory(creationResult.events)) {
+          "Order creation events must start with OrderPlaced"
+        }
+        eventStore.append(id, expectedVersion = 0, events = creationResult.events)
+        PlaceOrder.Result.Success(order.toDto())
       }
     }
   }
