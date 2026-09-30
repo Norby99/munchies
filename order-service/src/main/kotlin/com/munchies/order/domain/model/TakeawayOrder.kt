@@ -20,46 +20,38 @@ data class TakeawayOrder(
   val takeawayInfo: TakeawayInfo,
 ) : Order(id, restaurantId, customerId, status, items, payed) {
 
-  override fun nextStatus(): AdvanceStatusResult {
-    val next = when (status) {
-      OrderStatus.PENDING -> OrderStatus.PREPARING
-      OrderStatus.PREPARING -> OrderStatus.READY
-      OrderStatus.READY -> OrderStatus.COMPLETED
-      else -> return AdvanceStatusResult.Failure.InvalidTransition
-    }
-    return AdvanceStatusResult.Success(copy(status = next))
-  }
-
-  override fun pay(): PayResult {
-    if (payed) {
-      return PayResult.Failure.AlreadyPaid
-    }
-    return PayResult.Success(copy(payed = true))
+  override fun successorOf(status: OrderStatus): OrderStatus? = when (status) {
+    OrderStatus.PENDING -> OrderStatus.PREPARING
+    OrderStatus.PREPARING -> OrderStatus.READY
+    OrderStatus.READY -> OrderStatus.COMPLETED
+    else -> null
   }
 
   override fun copyWithStatus(status: OrderStatus) = copy(status = status)
 
   override fun copyWithItems(items: List<OrderItem>) = copy(items = items)
 
+  override fun copyWithPayed(payed: Boolean) = copy(payed = payed)
+
   /**
-   * Updates the takeaway information of the order.
+   * Process method: validates new takeaway information for the order.
    *
    * @param pickupTime The new pickup time in milliseconds since epoch.
    * @param customerName The new name of the customer picking up the order.
-   * @return An [UpdateResult] indicating success or failure of the update operation.
+   * @return An [UpdateResult] carrying a [TakeawayInfoUpdated] event on success.
    */
   fun updateInfo(pickupTime: Long, customerName: String): UpdateResult {
     val newInfo = TakeawayInfo(pickupTime, customerName)
     if (!newInfo.isValidTime()) return UpdateResult.Failure.InvalidDate
 
-    return UpdateResult.Success(copy(takeawayInfo = newInfo))
+    return UpdateResult.Success(listOf(TakeawayInfoUpdated(id, newInfo)))
   }
 
   /**
    * Represents the result of an update operation on the takeaway order.
    */
   sealed interface UpdateResult {
-    data class Success(val order: TakeawayOrder) : UpdateResult
+    data class Success(val events: List<OrderEvent>) : UpdateResult
     sealed interface Failure : UpdateResult {
       data object InvalidDate : Failure
     }
@@ -75,7 +67,7 @@ data class TakeawayOrder(
 data class TakeawayInfo(
   val pickupTime: Long,
   val customerName: String,
-) {
+) : OrderDetails {
 
   /**
    * Checks if the pickup time is valid (i.e., in the future).
