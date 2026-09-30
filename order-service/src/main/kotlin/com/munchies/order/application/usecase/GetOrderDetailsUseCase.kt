@@ -4,24 +4,18 @@ import com.munchies.order.application.port.inbound.GetOrderDetails
 import com.munchies.order.application.port.inbound.GetOrderDetails.Result.*
 import com.munchies.order.application.port.inbound.GetOrderDetails.Result.Failure.*
 import com.munchies.order.application.port.inbound.command.GetOrderDetailsCommand
-import com.munchies.order.domain.port.OrderRepository
+import com.munchies.order.domain.port.OrderViewRepository
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 
 /**
- * Use case implementation for retrieving the details of a specific order.
+ * Query-side use case retrieving the details of a specific order.
  *
- * This class handles the business logic for fetching order details based on the provided order ID.
- * It interacts with the OrderRepository to retrieve order data and convert it to a DTO format.
+ * Reads from the [com.munchies.order.domain.model.OrderView] projection (CQRS query side),
+ * never from the event store.
  *
- * @property repository The repository used to access order data.
+ * @property views The repository of the order read model.
  */
-class GetOrderDetailsUseCase(private val repository: OrderRepository) : GetOrderDetails {
-  override fun execute(command: GetOrderDetailsCommand): GetOrderDetails.Result {
-    val order = repository.findById(command.orderId)
-    return if (order != null) {
-      Success(order.toDto())
-    } else {
-      OrderNotFound
-    }
-  }
+class GetOrderDetailsUseCase(private val views: OrderViewRepository) : GetOrderDetails {
+  override fun execute(command: GetOrderDetailsCommand): GetOrderDetails.Result =
+    views.findById(command.orderId)?.let { Success(it.toDto()) } ?: OrderNotFound
 }
