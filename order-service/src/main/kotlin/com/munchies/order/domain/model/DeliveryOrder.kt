@@ -20,36 +20,28 @@ data class DeliveryOrder(
   val deliveryInfo: DeliveryInfo,
 ) : Order(id, restaurantId, customerId, status, items, payed) {
 
-  override fun nextStatus(): AdvanceStatusResult {
-    val next = when (status) {
-      OrderStatus.PENDING -> OrderStatus.PREPARING
-      OrderStatus.PREPARING -> OrderStatus.READY
-      OrderStatus.READY -> OrderStatus.ON_THE_WAY
-      OrderStatus.ON_THE_WAY -> OrderStatus.COMPLETED
-      else -> return AdvanceStatusResult.Failure.InvalidTransition
-    }
-    return AdvanceStatusResult.Success(copy(status = next))
-  }
-
-  override fun pay(): PayResult {
-    if (payed) {
-      return PayResult.Failure.AlreadyPaid
-    }
-    return PayResult.Success(copy(payed = true))
+  override fun successorOf(status: OrderStatus): OrderStatus? = when (status) {
+    OrderStatus.PENDING -> OrderStatus.PREPARING
+    OrderStatus.PREPARING -> OrderStatus.READY
+    OrderStatus.READY -> OrderStatus.ON_THE_WAY
+    OrderStatus.ON_THE_WAY -> OrderStatus.COMPLETED
+    else -> null
   }
 
   override fun copyWithStatus(status: OrderStatus) = copy(status = status)
 
   override fun copyWithItems(items: List<OrderItem>) = copy(items = items)
 
+  override fun copyWithPayed(payed: Boolean) = copy(payed = payed)
+
   /**
-   * Updates the delivery information of the order.
+   * Process method: validates new delivery information for the order.
    *
    * @param estimatedDeliveryTime The new estimated delivery time in milliseconds since epoch.
    * @param deliveryAddress The new delivery address.
    * @param bellName The new bell name for the delivery.
    * @param customerPhone The new customer phone number.
-   * @return An [UpdateResult] indicating success or failure of the update operation.
+   * @return An [UpdateResult] carrying a [DeliveryInfoUpdated] event on success.
    */
   fun updateInfo(
     estimatedDeliveryTime: Long,
@@ -60,14 +52,14 @@ data class DeliveryOrder(
     val newInfo = DeliveryInfo(estimatedDeliveryTime, deliveryAddress, bellName, customerPhone)
     if (!newInfo.isValidTime()) return UpdateResult.Failure.InvalidDate
 
-    return UpdateResult.Success(copy(deliveryInfo = newInfo))
+    return UpdateResult.Success(listOf(DeliveryInfoUpdated(id, newInfo)))
   }
 
   /**
    * Represents the result of an update operation on the delivery order.
    */
   sealed interface UpdateResult {
-    data class Success(val order: DeliveryOrder) : UpdateResult
+    data class Success(val events: List<OrderEvent>) : UpdateResult
     sealed interface Failure : UpdateResult {
       data object InvalidDate : Failure
     }
@@ -87,7 +79,7 @@ data class DeliveryInfo(
   val deliveryAddress: String,
   val bellName: String,
   val customerPhone: String,
-) {
+) : OrderDetails {
 
   /**
    * Checks if the estimated delivery time is valid (i.e., in the future).
