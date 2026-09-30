@@ -11,6 +11,7 @@ import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.TakeawayOrder
+import com.munchies.order.domain.model.view.OrderView
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
@@ -62,6 +63,36 @@ object OrderDtoFactory {
         numberOfGuests = tableInfo.numberOfGuests,
       )
     }
+  }
+
+  /**
+   * Converts an [OrderView] read model to its DTO representation.
+   */
+  fun OrderView.toDto(): OrderDto {
+    val delivery = details as? DeliveryInfo
+    val takeaway = details as? TakeawayInfo
+    val table = details as? TableInfo
+    return OrderDto(
+      orderType = when (details) {
+        is DeliveryInfo -> OrderType.DELIVERY
+        is TakeawayInfo -> OrderType.TAKEAWAY
+        is TableInfo -> OrderType.DINE_IN
+      },
+      orderId = orderId.value,
+      restaurantId = restaurantId.value,
+      customerId = customerId.value,
+      status = status.name,
+      items = items.map { it.toDto() },
+      payed = payed,
+      estimatedDeliveryTime = delivery?.estimatedDeliveryTime?.toString(),
+      deliveryAddress = delivery?.deliveryAddress,
+      bellName = delivery?.bellName,
+      customerPhone = delivery?.customerPhone,
+      pickupTime = takeaway?.pickupTime?.toString(),
+      customerName = takeaway?.customerName,
+      tableNumber = table?.tableNumber,
+      numberOfGuests = table?.numberOfGuests,
+    )
   }
 
   /**
