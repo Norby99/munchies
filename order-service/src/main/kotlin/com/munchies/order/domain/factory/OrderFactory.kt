@@ -2,29 +2,29 @@ package com.munchies.order.domain.factory
 
 import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.DeliveryInfo
-import com.munchies.order.domain.model.DeliveryOrder
-import com.munchies.order.domain.model.DineInOrder
 import com.munchies.order.domain.model.Order
+import com.munchies.order.domain.model.OrderDetails
+import com.munchies.order.domain.model.OrderEvent
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
-import com.munchies.order.domain.model.OrderStatus.*
+import com.munchies.order.domain.model.OrderPlaced
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
-import com.munchies.order.domain.model.TakeawayOrder
 
 /**
- * Factory object for creating different types of orders.
+ * Factory object for the event-sourced [Order] aggregate.
  *
- * This factory provides methods to create Delivery, Takeaway, and DineIn orders.
- * It validates the order items and the provided information before creating the order.
+ * It covers both ends of the aggregate's lifecycle:
+ * - creation: the `create*` methods are the process step for a brand new order. They validate
+ *   the input and return the [OrderPlaced] event that creates it, without building any state;
+ * - rehydration: [fromHistory] rebuilds the current state of an existing order by replaying its
+ *   event stream.
  */
 object OrderFactory {
 
-  const val DEFAULT_PAYED = false
-
   /**
-   * Creates a Delivery order with the specified parameters.
+   * Validates a new Delivery order and returns its creation events.
    *
    * @param id The unique identifier for the order.
    * @param restaurantId The unique identifier for the restaurant.
@@ -39,18 +39,15 @@ object OrderFactory {
     customerId: CustomerId,
     items: List<OrderItem>,
     info: DeliveryInfo,
-  ): OrderCreationResult {
-    return validate(items) ?: if (!info.isValidTime()) {
+  ): OrderCreationResult = validate(items)
+    ?: if (!info.isValidTime()) {
       OrderCreationResult.Failure.InvalidDate
     } else {
-      OrderCreationResult.Success(
-        DeliveryOrder(id, restaurantId, customerId, PENDING, items, DEFAULT_PAYED, info),
-      )
+      placed(id, restaurantId, customerId, items, info)
     }
-  }
 
   /**
-   * Creates a Takeaway order with the specified parameters.
+   * Validates a new Takeaway order and returns its creation events.
    *
    * @param id The unique identifier for the order.
    * @param restaurantId The unique identifier for the restaurant.
@@ -65,18 +62,15 @@ object OrderFactory {
     customerId: CustomerId,
     items: List<OrderItem>,
     info: TakeawayInfo,
-  ): OrderCreationResult {
-    return validate(items) ?: if (!info.isValidTime()) {
+  ): OrderCreationResult = validate(items)
+    ?: if (!info.isValidTime()) {
       OrderCreationResult.Failure.InvalidDate
     } else {
-      OrderCreationResult.Success(
-        TakeawayOrder(id, restaurantId, customerId, PENDING, items, DEFAULT_PAYED, info),
-      )
+      placed(id, restaurantId, customerId, items, info)
     }
-  }
 
   /**
-   * Creates a DineIn order with the specified parameters.
+   * Validates a new DineIn order and returns its creation events.
    *
    * @param id The unique identifier for the order.
    * @param restaurantId The unique identifier for the restaurant.
@@ -91,12 +85,30 @@ object OrderFactory {
     customerId: CustomerId,
     items: List<OrderItem>,
     info: TableInfo,
-  ): OrderCreationResult {
-    validate(items)?.let { return it }
-    return OrderCreationResult.Success(
-      DineInOrder(id, restaurantId, customerId, PENDING, items, DEFAULT_PAYED, info),
-    )
+  ): OrderCreationResult = validate(items)
+    ?: placed(id, restaurantId, customerId, items, info)
+
+  /**
+   * Rebuilds the current state of an order by replaying its event stream.
+   * First event must be an [OrderPlaced].
+   *
+   * @param history The full, ordered event stream of the order.
+   * @return The current state of the order, or `null` if the stream is empty (the order does not
+   * exist) or does not start with an [OrderPlaced] event.
+   */
+  fun fromHistory(history: List<OrderEvent>): Order? {
+    val placed = history.firstOrNull() as? OrderPlaced ?: return null
+    return Order.from(placed).applyAll(history.drop(1))
   }
+
+  private fun placed(
+    id: OrderId,
+    restaurantId: RestaurantId,
+    customerId: CustomerId,
+    items: List<OrderItem>,
+    details: OrderDetails,
+  ): OrderCreationResult =
+    OrderCreationResult.Success(listOf(OrderPlaced(id, restaurantId, customerId, items, details)))
 
   /**
    * Validates the list of order items.
