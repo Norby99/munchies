@@ -12,8 +12,6 @@ import { KafkaPaymentNotificationPublisher } from "@main/infrastructure/adapter/
 
 export interface PaymentServices {
   processPayment: ProcessPayment;
-  orderServiceClient: OrderServiceClient;
-  paymentNotificationPublisher: PaymentNotificationPublisher;
 }
 
 export class PaymentBeans {
@@ -34,7 +32,9 @@ export class PaymentBeans {
     const paymentNotificationPublisher = new KafkaPaymentNotificationPublisher();
     const processPayment = new ProcessPaymentUseCase(
       paymentRepository,
-      paymentGateway
+      paymentGateway,
+      orderServiceClient,
+      paymentNotificationPublisher
     );
 
     return {
@@ -42,8 +42,6 @@ export class PaymentBeans {
       paymentGateway,
       paymentServices: {
         processPayment,
-        orderServiceClient,
-        paymentNotificationPublisher,
       },
     };
   }
@@ -59,7 +57,9 @@ export class PaymentBeans {
     const paymentNotificationPublisher = new KafkaPaymentNotificationPublisher();
     const processPayment = new ProcessPaymentUseCase(
       paymentRepository,
-      paymentGateway
+      paymentGateway,
+      orderServiceClient,
+      paymentNotificationPublisher
     );
 
     return {
@@ -67,8 +67,6 @@ export class PaymentBeans {
       paymentGateway,
       paymentServices: {
         processPayment,
-        orderServiceClient,
-        paymentNotificationPublisher,
       },
     };
   }
