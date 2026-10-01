@@ -8,8 +8,6 @@ import com.munchies.order.fixtures.createAdvanceOrderStatusRequest
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.AdvanceOrderStatusResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.advanceOrderStatusResponseFromJson
 import io.kotest.matchers.shouldBe
@@ -19,20 +17,12 @@ import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import io.mockk.every
 import io.mockk.mockk
-import jakarta.inject.Inject
 import jakarta.inject.Singleton
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
-
-  @Inject
-  lateinit var orderRepository: MongoOrderRepository
-
-  @Inject
-  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
 
   @MockBean(OrderNotificationPublisher::class)
   @Singleton
@@ -40,11 +30,6 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
     mockk<OrderNotificationPublisher>(relaxed = false).also {
       every { it.publishStatusChanged(any()) } returns Unit
     }
-
-  @AfterEach
-  fun cleanupMongo() {
-    mongoCrudOrderRepository.deleteAll()
-  }
 
   // ==========================================
   // TEST: POST orders/{id}/advance
