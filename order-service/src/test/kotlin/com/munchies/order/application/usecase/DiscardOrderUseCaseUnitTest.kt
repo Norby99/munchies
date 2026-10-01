@@ -2,63 +2,63 @@ package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.DiscardOrder
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
-import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.port.OrderRepository
+import com.munchies.order.domain.model.event.OrderCancelled
+import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.fixtures.asHistory
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 
 class DiscardOrderUseCaseUnitTest {
 
-  private val repository = mockk<OrderRepository>(relaxed = false)
-  private val useCase = DiscardOrderUseCase(repository)
+  private val eventStore = mockk<OrderEventStore>(relaxed = false)
+  private val useCase = DiscardOrderUseCase(eventStore)
 
   private val command = DiscardOrderCommand(defaultOrderId)
 
   @Test
   fun `execute should return OrderNotFound when order does not exist`() {
-    every { repository.findById(command.orderId) } returns null
+    every { eventStore.load(command.orderId) } returns emptyList()
 
     val result = useCase.execute(command)
 
     result shouldBeEqual DiscardOrder.Result.Failure.OrderNotFound
-    verify(exactly = 0) { repository.delete(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
   fun `execute should return OrderNotCancellable when order status is not PENDING`() {
-    val nonCancellableOrder = createSampleOrder(OrderStatus.PREPARING)
-
-    every { repository.findById(command.orderId) } returns nonCancellableOrder
+    every { eventStore.load(command.orderId) } returns
+      createSampleOrder(OrderStatus.PREPARING).asHistory()
 
     val result = useCase.execute(command)
 
     result shouldBeEqual DiscardOrder.Result.Failure.OrderNotCancellable
-    verify(exactly = 0) { repository.delete(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
-  fun `execute should update repository and return Success when order is pending`() {
-    val cancellableOrder = createSampleOrder(OrderStatus.PENDING)
-
-    every { repository.findById(command.orderId) } returns cancellableOrder
-    every { repository.delete(any<Order>()) } returns Unit
+  fun `execute should append OrderCancelled and return Success when order is pending`() {
+    val history = createSampleOrder(OrderStatus.PENDING).asHistory()
+    every { eventStore.load(command.orderId) } returns history
+    every { eventStore.append(any(), any(), any()) } just Runs
 
     val result = useCase.execute(command)
 
     result shouldBeEqual DiscardOrder.Result.Success
-
     verify(exactly = 1) {
-      repository.delete(
-        withArg { deletedOrder ->
-          deletedOrder.status shouldBeEqual OrderStatus.CANCELLED
-          deletedOrder.id shouldBeEqual command.orderId
-        },
+      eventStore.append(
+        command.orderId,
+        history.size.toLong(),
+        withArg { events -> events.single().shouldBeInstanceOf<OrderCancelled>() },
       )
     }
   }

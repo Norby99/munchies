@@ -2,9 +2,10 @@ package com.munchies.order.application.usecase
 
 import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo
 import com.munchies.order.domain.model.CustomerId
-import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderStatus
-import com.munchies.order.domain.port.OrderRepository
+import com.munchies.order.domain.model.event.DeliveryInfoUpdated
+import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.fixtures.asHistory
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.createUpdateDeliveryOrderInfoCommand
@@ -12,88 +13,86 @@ import com.munchies.order.fixtures.futureTime
 import com.munchies.order.fixtures.pastTime
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 
 class UpdateDeliveryOrderInfoUseCaseUnitTest {
 
-  private val repository = mockk<OrderRepository>(relaxed = false)
-  private val useCase = UpdateDeliveryOrderInfoUseCase(repository)
+  private val eventStore = mockk<OrderEventStore>(relaxed = false)
+  private val useCase = UpdateDeliveryOrderInfoUseCase(eventStore)
 
   @Test
   fun `execute should return OrderNotFound when order does not exist`() {
     val command = createUpdateDeliveryOrderInfoCommand()
-    every { repository.findById(command.orderId) } returns null
+    every { eventStore.load(command.orderId) } returns emptyList()
 
     val result = useCase.execute(command)
 
     result shouldBeEqual UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound
-    verify(exactly = 0) { repository.update(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
   fun `execute should return Unauthorized when order belongs to another customer`() {
     val command = createUpdateDeliveryOrderInfoCommand()
-    val orderOfAnotherCustomer = createDeliveryOrder()
+    every { eventStore.load(command.orderId) } returns createDeliveryOrder()
       .copy(customerId = CustomerId("wrong-customer-id"))
-
-    every { repository.findById(command.orderId) } returns orderOfAnotherCustomer
+      .asHistory()
 
     val result = useCase.execute(command)
 
     result shouldBeEqual UpdateDeliveryOrderInfo.Result.Failure.Unauthorized
-    verify(exactly = 0) { repository.update(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
   fun `execute should return OrderNotFound when order exists but is NOT a DeliveryOrder`() {
     val command = createUpdateDeliveryOrderInfoCommand()
-    val takeawayOrder = createSampleOrder(OrderStatus.PENDING)
-
-    every { repository.findById(command.orderId) } returns takeawayOrder
+    every { eventStore.load(command.orderId) } returns
+      createSampleOrder(OrderStatus.PENDING).asHistory()
 
     val result = useCase.execute(command)
 
     result shouldBeEqual UpdateDeliveryOrderInfo.Result.Failure.OrderNotFound
-    verify(exactly = 0) { repository.update(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
   fun `execute should return InvalidDate when domain logic rejects the estimated time`() {
     val command = createUpdateDeliveryOrderInfoCommand(estimatedDeliveryTime = pastTime)
-    val deliveryOrder = createDeliveryOrder()
-
-    every { repository.findById(command.orderId) } returns deliveryOrder
+    every { eventStore.load(command.orderId) } returns createDeliveryOrder().asHistory()
 
     val result = useCase.execute(command)
 
     result shouldBeEqual UpdateDeliveryOrderInfo.Result.Failure.InvalidDate
-    verify(exactly = 0) { repository.update(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
-  fun `execute should update repository and return Success when command is valid`() {
+  fun `execute should append DeliveryInfoUpdated and return Success when command is valid`() {
     val command = createUpdateDeliveryOrderInfoCommand(estimatedDeliveryTime = futureTime)
-    val deliveryOrder = createDeliveryOrder()
-
-    every { repository.findById(command.orderId) } returns deliveryOrder
-    every { repository.update(any()) } returns Unit
+    val history = createDeliveryOrder().asHistory()
+    every { eventStore.load(command.orderId) } returns history
+    every { eventStore.append(any(), any(), any()) } just Runs
 
     val result = useCase.execute(command)
 
     result shouldBeEqual UpdateDeliveryOrderInfo.Result.Success
     verify(exactly = 1) {
-      repository.update(
-        withArg { updatedOrder ->
-          updatedOrder.shouldBeInstanceOf<DeliveryOrder>()
-
-          updatedOrder.deliveryInfo.deliveryAddress shouldBeEqual command.deliveryAddress
-          updatedOrder.deliveryInfo.bellName shouldBeEqual command.bellName
-          updatedOrder.deliveryInfo.customerPhone shouldBeEqual command.customerPhone
-          updatedOrder.deliveryInfo.estimatedDeliveryTime shouldBeEqual
-            command.estimatedDeliveryTime
+      eventStore.append(
+        command.orderId,
+        history.size.toLong(),
+        withArg { events ->
+          val event = events.single()
+          event.shouldBeInstanceOf<DeliveryInfoUpdated>()
+          event.deliveryInfo.deliveryAddress shouldBeEqual command.deliveryAddress
+          event.deliveryInfo.bellName shouldBeEqual command.bellName
+          event.deliveryInfo.customerPhone shouldBeEqual command.customerPhone
+          event.deliveryInfo.estimatedDeliveryTime shouldBeEqual command.estimatedDeliveryTime
         },
       )
     }

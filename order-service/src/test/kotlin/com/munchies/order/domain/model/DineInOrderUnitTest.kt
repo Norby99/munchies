@@ -2,6 +2,7 @@ package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.AdvanceStatusResult
 import com.munchies.order.domain.model.Order.UpdateResult
+import com.munchies.order.fixtures.after
 import com.munchies.order.fixtures.createDineInOrder
 import com.munchies.order.fixtures.createNewItems
 import io.kotest.matchers.equals.shouldBeEqual
@@ -16,7 +17,7 @@ class DineInOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.PREPARING
+    order.after(result.events).status shouldBeEqual OrderStatus.PREPARING
   }
 
   @Test
@@ -25,7 +26,7 @@ class DineInOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.READY
+    order.after(result.events).status shouldBeEqual OrderStatus.READY
   }
 
   @Test
@@ -34,7 +35,7 @@ class DineInOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.COMPLETED
+    order.after(result.events).status shouldBeEqual OrderStatus.COMPLETED
   }
 
   @Test
@@ -54,6 +55,6 @@ class DineInOrderUnitTest {
     val result = order.updateItems(createNewItems())
 
     result.shouldBeInstanceOf<UpdateResult.Success>()
-    result.order.items shouldBeEqual expectedItems
+    order.after(result.events).items shouldBeEqual expectedItems
   }
 }
