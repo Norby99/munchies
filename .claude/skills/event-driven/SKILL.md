@@ -99,6 +99,10 @@ Mapped onto the course's `poll -> process -> produce -> commit` loop:
    - Express.js: a `KafkaXxxPublisher` class implementing a `domain/port` interface — see
      `payment-service/src/main/ts/infrastructure/adapter/outbound/kafka/KafkaPaymentNotificationPublisher.ts`.
    Don't build a generic "publish everything" producer — one topic, one narrow purpose.
+   Producers never provision topics (no `admin.createTopics`, no `NewTopic` beans): they only publish on the topic
+   named in the event's `-shared` module. Topic provisioning is `notification-service`'s job, since it is the only
+   consumer — its `KafkaClient.ts` creates every subscribed topic with retries and `waitForLeaders: true` before
+   subscribing.
 2. **notification-service**: add a consumer class for the new topic (same shape as the two existing ones), wire it
    into `index.ts`'s `main()`.
 3. Add an `async handle*` method to `NotificationController` for the new event type — no blocking calls inside it.
