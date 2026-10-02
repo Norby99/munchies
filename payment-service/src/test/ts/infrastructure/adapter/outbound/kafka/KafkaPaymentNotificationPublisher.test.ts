@@ -11,7 +11,7 @@ import {
 const connect = vi.fn().mockResolvedValue(undefined);
 const send = vi.fn().mockResolvedValue(undefined);
 const producer = vi.fn(() => ({ connect, send }));
-const getKafka = vi.fn().mockResolvedValue({ producer });
+const getKafka = vi.fn().mockReturnValue({ producer });
 
 vi.mock("@main/infrastructure/adapter/outbound/kafka/KafkaClient", () => ({
   default: (...args: unknown[]) => getKafka(...args),

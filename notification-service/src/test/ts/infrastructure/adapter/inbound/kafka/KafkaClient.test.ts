@@ -51,7 +51,9 @@ describe("getKafka", () => {
     expect(mockAdmin.createTopics).toHaveBeenCalledWith(
       expect.objectContaining({
         topics: [{ topic: "test-topic" }],
-        waitForLeaders: false,
+        // Wait until the topic's partitions have a leader, so consumers never subscribe to a
+        // topic whose leader election is still in progress.
+        waitForLeaders: true,
       })
     );
     expect(mockAdmin.disconnect).toHaveBeenCalled();
