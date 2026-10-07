@@ -6,11 +6,13 @@ import {
   metricsHandler,
   metricsMiddleware,
 } from "./infrastructure/adapter/middleware/metrics";
+import { httpLogger, logger } from "./infrastructure/adapter/middleware/logger";
 async function main(): Promise<void> {
   const app = express();
   app.use(express.raw({ type: "application/json", limit: '1mb'}));
   app.use(cookieParser());
   app.use(metricsMiddleware());
+  app.use(httpLogger);
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "UP" });
@@ -21,10 +23,10 @@ async function main(): Promise<void> {
 
   const PORT = process.env.PORT ?? 8080;
   app.listen(PORT, () => {
-    console.log("Gateway Server online");
+    logger.info({ port: PORT }, "Gateway server online");
 
     expressListEndpoints(app).forEach(({ methods, path }) => {
-      console.log(`${methods.join(",").padEnd(10)} ${path}`);
+      logger.debug({ methods, path }, "Route registered");
     });
   });
 }

@@ -1,4 +1,5 @@
 import { Body, Post, Route, Tags } from "tsoa";
+import { logger } from "../../../middleware/logger";
 /**
  * HTTP controller exposing gateway endpoints.
  */
@@ -6,7 +7,7 @@ import { Body, Post, Route, Tags } from "tsoa";
 @Tags("Notifications")
 export class GatewayController {
   constructor() {
-    console.log("GatewayService constructor called");
+    logger.debug("GatewayController created");
   }
 
   /**
