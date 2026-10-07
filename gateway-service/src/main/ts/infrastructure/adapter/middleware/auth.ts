@@ -1,4 +1,5 @@
 import { AuthTokenDecoder, AuthTokenProvider } from "./token";
+import { logger } from "./logger";
 import {
   AuthRole,
   DecodedTokenFailure,
@@ -44,7 +45,6 @@ export function requireAuth(): ExpressRequestHandler {
     next: NextFunction,
   ) => {
     const missingToken = 401;
-    console.log("cookies", req.cookies["authToken"]);
     if (req.cookies["authToken"] === undefined) {
       res
         .status(missingToken)
@@ -58,7 +58,7 @@ export function requireAuth(): ExpressRequestHandler {
         req.user = { id: tokenRes.id, role: tokenRes.role };
         next();
       } else {
-        console.log("Token decode was not successful");
+        logger.warn("Rejected request: auth token could not be decoded");
         res
           .status(missingToken)
           .type("json")
@@ -89,11 +89,16 @@ export function requireRole(requiredRole: AuthRole): ExpressRequestHandler {
       return;
     }
     if (req.user?.role.visibility >= requiredRole.visibility) next();
-    else
+    else {
+      logger.warn(
+        { userId: req.user.id, path: req.path },
+        "Rejected request: insufficient role",
+      );
       res
         .status(unauthorizedCode)
         .type("json")
         .send(new ErrorResponse("Invalid role", unauthorizedCode).toJson());
+    }
     return;
   };
 }

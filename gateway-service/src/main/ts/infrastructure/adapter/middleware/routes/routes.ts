@@ -3,12 +3,14 @@ import { SimpleRoute } from "./simple-route";
 import { userRoutes } from "./user/user.routes";
 import { restaurantRoutes } from "./restaurant/restaurant.routes";
 import { orderRoutes } from "./order/order.routes";
+import { schedulerRoutes } from "./scheduler/scheduler.routes";
 import { Express, NextFunction, Request, Response } from "express";
 
 const routes: SimpleRoute<any>[] = [
   ...userRoutes,
   ...restaurantRoutes,
   ...orderRoutes,
+  ...schedulerRoutes,
 ];
 
 
@@ -28,6 +30,7 @@ function convertRouteToExpress(path: string): string {
 
 import { RequestHandler } from "express";
 import { requireAuth, requireRole } from "../auth";
+import { logger } from "../logger";
 function createRoute(
   app: Express,
   path: string,
@@ -50,7 +53,8 @@ function createRoute(
 
 function logRequests(path: string, method: string): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    console.log("[ " + method.toUpperCase() + " | " + path + " ] => ", req.body);
+    // The body is not logged: it may carry credentials.
+    logger.debug({ method: method.toUpperCase(), route: path }, "Route matched");
     next();
   };
 }
