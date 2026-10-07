@@ -6,6 +6,7 @@ import com.munchies.order.application.port.inbound.command.AdvanceOrderStatusCom
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.domain.port.OrderNotificationPublisher
+import org.slf4j.LoggerFactory
 
 /**
  * Use case implementation for advancing the status of an order.
@@ -27,14 +28,26 @@ class AdvanceOrderStatusUseCase(
       ?: return AdvanceOrderStatus.Result.Failure.OrderNotFound
 
     return when (val result = order.nextStatus()) {
-      is Order.AdvanceStatusResult.Failure.InvalidTransition ->
+      is Order.AdvanceStatusResult.Failure.InvalidTransition -> {
+        logger.warn("Order {} cannot advance from status {}", order.id.value, order.status)
         AdvanceOrderStatus.Result.Failure.InvalidTransition
+      }
       is Order.AdvanceStatusResult.Success -> {
         val advanced = order.applyAll(result.events)
         eventStore.append(order.id, version, result.events)
         notificationPublisher.publishStatusChanged(advanced)
+        logger.info(
+          "Order {} advanced from {} to {}",
+          order.id.value,
+          order.status,
+          advanced.status,
+        )
         AdvanceOrderStatus.Result.Success
       }
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(AdvanceOrderStatusUseCase::class.java)
   }
 }

@@ -7,6 +7,7 @@ import com.munchies.order.application.port.inbound.UpdateTakeawayOrderInfo.Resul
 import com.munchies.order.application.port.inbound.command.UpdateTakeawayOrderCommand
 import com.munchies.order.domain.model.TakeawayOrder
 import com.munchies.order.domain.port.OrderEventStore
+import org.slf4j.LoggerFactory
 
 /**
  * Use case implementation for updating the information of a takeaway order.
@@ -31,9 +32,14 @@ class UpdateTakeawayOrderInfoUseCase(
         is TakeawayOrder.UpdateResult.Failure.InvalidDate -> InvalidDate
         is TakeawayOrder.UpdateResult.Success -> {
           eventStore.append(order.id, version, result.events)
+          logger.info("Order {} takeaway details updated", order.id.value)
           Success
         }
       }
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(UpdateTakeawayOrderInfoUseCase::class.java)
   }
 }

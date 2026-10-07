@@ -9,6 +9,7 @@ import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.Order.ItemsValidationError
 import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.port.OrderEventStore
+import org.slf4j.LoggerFactory
 
 /**
  * Use case implementation for updating the items of an existing order.
@@ -35,8 +36,13 @@ class UpdateOrderItemsUseCase(
       }
       is Order.UpdateResult.Success -> {
         eventStore.append(order.id, version, result.events)
+        logger.info("Order {} items updated", order.id.value)
         Success
       }
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(UpdateOrderItemsUseCase::class.java)
   }
 }

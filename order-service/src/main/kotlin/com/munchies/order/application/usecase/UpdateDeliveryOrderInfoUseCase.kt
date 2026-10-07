@@ -7,6 +7,7 @@ import com.munchies.order.application.port.inbound.UpdateDeliveryOrderInfo.Resul
 import com.munchies.order.application.port.inbound.command.UpdateDeliveryOrderCommand
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.port.OrderEventStore
+import org.slf4j.LoggerFactory
 
 /**
  * Use case implementation for updating the information of a delivery order.
@@ -36,9 +37,14 @@ class UpdateDeliveryOrderInfoUseCase(private val eventStore: OrderEventStore) :
         is DeliveryOrder.UpdateResult.Failure.InvalidDate -> InvalidDate
         is DeliveryOrder.UpdateResult.Success -> {
           eventStore.append(order.id, version, result.events)
+          logger.info("Order {} delivery details updated", order.id.value)
           Success
         }
       }
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(UpdateDeliveryOrderInfoUseCase::class.java)
   }
 }

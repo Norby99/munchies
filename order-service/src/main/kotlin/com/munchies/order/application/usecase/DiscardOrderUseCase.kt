@@ -7,6 +7,7 @@ import com.munchies.order.application.port.inbound.DiscardOrder.Result.Failure.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.port.OrderEventStore
+import org.slf4j.LoggerFactory
 
 /**
  * Use case implementation for discarding an order.
@@ -22,11 +23,19 @@ class DiscardOrderUseCase(private val eventStore: OrderEventStore) : DiscardOrde
     val (order, version) = eventStore.loadOrder(command.orderId) ?: return OrderNotFound
 
     return when (val result = order.cancel()) {
-      is Order.CancelResult.Failure.InvalidTransition -> OrderNotCancellable
+      is Order.CancelResult.Failure.InvalidTransition -> {
+        logger.warn("Order {} cannot be cancelled in status {}", order.id.value, order.status)
+        OrderNotCancellable
+      }
       is Order.CancelResult.Success -> {
         eventStore.append(order.id, version, result.events)
+        logger.info("Order {} cancelled", order.id.value)
         Success
       }
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(DiscardOrderUseCase::class.java)
   }
 }
