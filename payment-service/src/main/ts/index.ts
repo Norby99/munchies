@@ -14,6 +14,10 @@ import {
   metricsHandler,
   metricsMiddleware,
 } from "@main/infrastructure/adapter/inbound/web/config/metrics";
+import {
+  httpLogger,
+  logger,
+} from "@main/infrastructure/adapter/outbound/logging/logger";
 
 export function parseBodyToString(body: unknown): string {
   if (typeof body === "string") {
@@ -35,6 +39,7 @@ export function createApp(
   app.use(express.raw({ type: "application/json", limit: "1mb" }));
   app.use(express.json());
   app.use(metricsMiddleware());
+  app.use(httpLogger);
 
   app.get("/health", (_req: Request, res: Response) => {
     res.status(200).json({ status: "UP" });
@@ -70,11 +75,11 @@ async function main(): Promise<void> {
   if (process.env.MONGODB_URI) {
     try {
       await connectDB();
-      console.log("Connected to MongoDB");
+      logger.info("Connected to MongoDB");
     } catch (error) {
-      console.warn(
-        "MongoDB connection failed, falling back to in-memory mode:",
-        error
+      logger.warn(
+        { err: error },
+        "MongoDB connection failed, falling back to in-memory mode"
       );
     }
   }
@@ -82,11 +87,11 @@ async function main(): Promise<void> {
   const app = createApp();
   const PORT = process.env.PORT ?? PaymentServiceConfig.SERVICE_PORT ?? 8080;
   const server = app.listen(PORT, () => {
-    console.log(`Payment service online on port ${PORT}`);
+    logger.info({ port: PORT }, "Payment service online");
   });
 
   const shutdown = async () => {
-    console.log("Shutting down payment service...");
+    logger.info("Shutting down payment service");
     server.close(async () => {
       try {
         await disconnectDB();

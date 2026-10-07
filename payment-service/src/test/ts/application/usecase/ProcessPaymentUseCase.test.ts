@@ -12,12 +12,14 @@ import {
 import { UUIDEntityId } from "munchies-commons/kotlin/commons-modules";
 import { OrderServiceClient } from "@main/domain/port/order-service-client";
 import { PaymentNotificationPublisher } from "@main/domain/port/payment-notification-publisher";
+import { Logger } from "@main/domain/port/logger";
 
 describe("ProcessPaymentUseCase", () => {
   let repository: InMemoryPaymentRepository;
   let gateway: FakePaymentGateway;
   let orderServiceClient: OrderServiceClient;
   let publisher: PaymentNotificationPublisher;
+  let logger: Logger;
   let useCase: ProcessPaymentUseCase;
 
   beforeEach(() => {
@@ -29,11 +31,13 @@ describe("ProcessPaymentUseCase", () => {
     publisher = {
       publishPaymentSuccess: vi.fn().mockResolvedValue(undefined),
     };
+    logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
     useCase = new ProcessPaymentUseCase(
       repository,
       gateway,
       orderServiceClient,
-      publisher
+      publisher,
+      logger
     );
   });
 
@@ -58,6 +62,14 @@ describe("ProcessPaymentUseCase", () => {
 
       const saved = await repository.findById(result.payment.id);
       expect(saved).toEqual(result.payment);
+
+      expect(logger.info).toHaveBeenCalledExactlyOnceWith("Payment completed", {
+        paymentId: result.payment.id.value,
+        orderId: "order-123",
+        amount: 150,
+        currency: "EUR",
+        method: "CARD",
+      });
     }
   });
 
@@ -115,7 +127,8 @@ describe("ProcessPaymentUseCase", () => {
       repository,
       failingGateway,
       orderServiceClient,
-      publisher
+      publisher,
+      logger
     );
 
     const request = new ProcessPaymentRequest(
@@ -188,6 +201,10 @@ describe("ProcessPaymentUseCase", () => {
 
     expect(result.type).toBe("SUCCESS");
     expect(publisher.publishPaymentSuccess).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledExactlyOnceWith(
+      "Failed to notify order-service that the order was paid",
+      { orderId: "order-unreachable", reason: "order-service unreachable" }
+    );
   });
 
   it("still succeeds when order-service client throws", async () => {

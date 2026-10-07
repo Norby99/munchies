@@ -22,7 +22,8 @@ describe("PaymentController", () => {
       new InMemoryPaymentRepository(),
       new FakePaymentGateway(),
       { markOrderAsPaid: vi.fn().mockResolvedValue({ success: true }) },
-      { publishPaymentSuccess: vi.fn().mockResolvedValue(undefined) }
+      { publishPaymentSuccess: vi.fn().mockResolvedValue(undefined) },
+      { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     );
 
   it("returns the payment response when the use case succeeds", async () => {
