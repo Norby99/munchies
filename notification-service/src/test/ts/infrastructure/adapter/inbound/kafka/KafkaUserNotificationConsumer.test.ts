@@ -3,6 +3,7 @@ import { Kafka } from "kafkajs";
 import { KafkaUserEmailConfirmationNotificationConsumer } from "@main/infrastructure/adapter/inbound/kafka/KafkaUserNotificationConsumer";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { UserEmailConfirmationNotification } from "@main/domain/external-modules";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /** Build a fake Kafka instance backed by a controllable fake consumer. */
 function buildFakeKafka() {
@@ -126,7 +127,7 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
   it("run() eachMessage handler logs an error when message parsing fails", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
     const controller = new NotificationController();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
       fakeKafka,
@@ -142,8 +143,8 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
     await runCall.eachMessage({ message: { value: Buffer.from("invalid-json") } });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to parse UserEmailConfirmationNotification message"),
-      expect.anything()
+      expect.anything(),
+      expect.stringContaining("Failed to parse UserEmailConfirmationNotification message")
     );
   });
 });

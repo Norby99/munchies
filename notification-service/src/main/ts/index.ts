@@ -12,6 +12,7 @@ import { KafkaPaymentSuccessNotificationConsumer } from "./infrastructure/adapte
 import { KafkaOrderStatusChangedNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaOrderStatusChangedNotificationConsumer";
 import { NotificationController } from "./infrastructure/adapter/inbound/web/controller/controller";
 import { createManagementApp } from "./infrastructure/adapter/inbound/web/config/managementApp";
+import { logger } from "./infrastructure/adapter/outbound/logging/logger";
 
 interface NotificationConsumer {
   connect(): Promise<void>;
@@ -33,7 +34,7 @@ async function startConsumer(
     await consumer.connect();
     await consumer.run();
   } catch (err) {
-    console.error(`[notification-service] Failed to start consumer for topic '${topic}'`, err);
+    logger.error({ err, topic }, "Failed to start consumer");
   }
 }
 
@@ -94,10 +95,10 @@ async function main() {
 
   const PORT = process.env.PORT ?? 8080;
   createManagementApp().listen(PORT, () => {
-    console.log(`Notification service management endpoints online on port ${PORT}`);
+    logger.info({ port: PORT }, "Management endpoints online");
   });
 }
 
 main().catch((err) => {
-  console.error("[notification-service] Fatal error during startup", err);
+  logger.error({ err }, "Fatal error during startup");
 });

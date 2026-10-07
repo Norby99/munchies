@@ -6,6 +6,7 @@ import {
   PaymentSuccessNotification,
 } from "@main/domain/external-modules";
 import { notificationsReceived } from "@main/infrastructure/adapter/inbound/web/config/metrics";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /**
  * Central entry point for every notification event the service currently
@@ -40,9 +41,7 @@ export class NotificationController extends NotificationAPI {
     event: _UserEmailConfirmationNotification
   ): void {
     notificationsReceived.inc({ type: "user_email_confirmation" });
-    console.log(
-      `[notification-service] Received UserEmailConfirmationNotification: ${event.toString()}`
-    );
+    logger.info({ event: event.toString() }, "Received UserEmailConfirmationNotification");
   }
 
   /**
@@ -51,9 +50,7 @@ export class NotificationController extends NotificationAPI {
    */
   public handlePaymentSuccess(event: PaymentSuccessNotification): void {
     notificationsReceived.inc({ type: "payment_success" });
-    console.log(
-      `[notification-service] Received PaymentSuccessNotification: ${event.toString()}`
-    );
+    logger.info({ event: event.toString() }, "Received PaymentSuccessNotification");
   }
 
   /**
@@ -61,8 +58,6 @@ export class NotificationController extends NotificationAPI {
    * an order transitions to a new status.
    */
   public handleOrderStatusChanged(event: OrderStatusChangedNotification): void {
-    console.log(
-      `[notification-service] Received OrderStatusChangedNotification: ${event.toString()}`
-    );
+    logger.info({ event: event.toString() }, "Received OrderStatusChangedNotification");
   }
 }
