@@ -9,6 +9,7 @@ import { PaymentMongoRepository } from "@main/infrastructure/adapter/outbound/mo
 import { FakePaymentGateway } from "@main/infrastructure/adapter/outbound/payment/FakePaymentGateway";
 import { OrderServiceHttpClient } from "@main/infrastructure/adapter/outbound/order/OrderServiceHttpClient";
 import { KafkaPaymentNotificationPublisher } from "@main/infrastructure/adapter/outbound/kafka/KafkaPaymentNotificationPublisher";
+import { PinoLogger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 export interface PaymentServices {
   processPayment: ProcessPayment;
@@ -34,7 +35,8 @@ export class PaymentBeans {
       paymentRepository,
       paymentGateway,
       orderServiceClient,
-      paymentNotificationPublisher
+      paymentNotificationPublisher,
+      new PinoLogger()
     );
 
     return {
@@ -59,7 +61,8 @@ export class PaymentBeans {
       paymentRepository,
       paymentGateway,
       orderServiceClient,
-      paymentNotificationPublisher
+      paymentNotificationPublisher,
+      new PinoLogger()
     );
 
     return {

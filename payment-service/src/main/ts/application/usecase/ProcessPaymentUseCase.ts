@@ -7,6 +7,7 @@ import { PaymentRepository } from "@main/domain/port/payment-repository";
 import { PaymentGateway } from "@main/domain/port/payment-gateway";
 import { OrderServiceClient } from "@main/domain/port/order-service-client";
 import { PaymentNotificationPublisher } from "@main/domain/port/payment-notification-publisher";
+import { Logger } from "@main/domain/port/logger";
 import {
   UUIDEntityId,
 } from "munchies-commons/kotlin/commons-modules";
@@ -39,6 +40,7 @@ export class ProcessPaymentUseCase implements ProcessPayment {
     private readonly paymentGateway: PaymentGateway,
     private readonly orderServiceClient: OrderServiceClient,
     private readonly paymentNotificationPublisher: PaymentNotificationPublisher,
+    private readonly logger: Logger,
     private readonly validator: ProcessPaymentRequestValidator = new ProcessPaymentRequestValidator(),
   ) {}
 
@@ -69,6 +71,11 @@ export class ProcessPaymentUseCase implements ProcessPayment {
       if (!gatewayResult.success) {
         const failedPayment = payment.fail();
         await this.paymentRepository.save(failedPayment);
+        this.logger.warn("Payment rejected by the payment gateway", {
+          paymentId: failedPayment.id.value,
+          orderId: orderId.value,
+          reason: gatewayResult.errorMessage,
+        });
         return {
           type: "PAYMENT_REJECTED",
           reason: gatewayResult.errorMessage ?? "Payment authorization failed",
@@ -77,6 +84,13 @@ export class ProcessPaymentUseCase implements ProcessPayment {
 
       const completedPayment = payment.complete();
       await this.paymentRepository.save(completedPayment);
+      this.logger.info("Payment completed", {
+        paymentId: completedPayment.id.value,
+        orderId: orderId.value,
+        amount,
+        currency: String(currency),
+        method: String(method),
+      });
 
       // Follow-up steps run only after the completed payment is durable.
       await this.markOrderAsPaid(completedPayment);
@@ -99,6 +113,10 @@ export class ProcessPaymentUseCase implements ProcessPayment {
         error instanceof Error
           ? error.message
           : "Unknown payment error occurred";
+      this.logger.error("Payment processing failed", {
+        orderId: request.orderId,
+        reason: errorMessage,
+      });
       return {
         type: "FAILURE",
         reason: errorMessage,
@@ -116,16 +134,16 @@ export class ProcessPaymentUseCase implements ProcessPayment {
         payment.orderId.value,
       );
       if (!result.success) {
-        console.error(
-          `Failed to notify order-service that order ${payment.orderId.value} was paid: ` +
-            result.errorMessage,
-        );
+        this.logger.error("Failed to notify order-service that the order was paid", {
+          orderId: payment.orderId.value,
+          reason: result.errorMessage,
+        });
       }
     } catch (error: unknown) {
-      console.error(
-        `Failed to notify order-service that order ${payment.orderId.value} was paid: ` +
-          errorMessageOf(error),
-      );
+      this.logger.error("Failed to notify order-service that the order was paid", {
+        orderId: payment.orderId.value,
+        reason: errorMessageOf(error),
+      });
     }
   }
 
@@ -137,10 +155,10 @@ export class ProcessPaymentUseCase implements ProcessPayment {
     try {
       await this.paymentNotificationPublisher.publishPaymentSuccess(payment);
     } catch (error: unknown) {
-      console.error(
-        `Failed to publish payment-success event for order ${payment.orderId.value}: ` +
-          errorMessageOf(error),
-      );
+      this.logger.error("Failed to publish the payment-success event", {
+        orderId: payment.orderId.value,
+        reason: errorMessageOf(error),
+      });
     }
   }
 }
