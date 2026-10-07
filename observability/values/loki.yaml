@@ -1,0 +1,66 @@
+# Trimmed override for the upstream `grafana-community/loki` chart: log storage for the Log
+# Aggregation side of the Observability pattern.
+#
+# Deliberately scoped down for a memory-constrained single-node minikube: Loki runs as a single
+# process (`Monolithic`) writing to a local volume, with no object storage, no gateway, no
+# caches and no self-monitoring. Only one StatefulSet comes out of this: `loki`.
+#
+# Always-on, like the rest of the stack: installed by `./gradlew deploy` (the
+# `deployObservability` task) and removed by `./gradlew undeploy`, see observability/README.md.
+
+deploymentMode: Monolithic
+
+loki:
+  auth_enabled: false # single tenant: no `X-Scope-OrgID` header required from Alloy or Grafana
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  limits_config:
+    retention_period: 72h # same horizon as the Prometheus retention in values/prometheus.yaml
+  compactor:
+    # Retention is only enforced when the compactor is told to delete expired chunks.
+    retention_enabled: true
+    delete_request_store: filesystem
+
+singleBinary:
+  replicas: 1
+  persistence:
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+
+# The chart validates that only one deployment mode has replicas, so the scalable targets it
+# enables by default are switched off explicitly.
+write:
+  replicas: 0
+read:
+  replicas: 0
+backend:
+  replicas: 0
+
+# Not needed at this scale: Alloy and Grafana talk to the `loki` Service directly on port 3100.
+gateway:
+  enabled: false
+lokiCanary:
+  enabled: false
+test:
+  enabled: false
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false

@@ -1,0 +1,82 @@
+# Trimmed override for the upstream `grafana/alloy` chart: the log collector for the Log
+# Aggregation side of the Observability pattern.
+#
+# Services only write their logs to stdout. Alloy discovers the pods, tails their logs through
+# the Kubernetes API and pushes them to Loki, so no service needs to know where Loki is and no
+# host directory has to be mounted.
+#
+# Always-on, like the rest of the stack: installed by `./gradlew deploy` (the
+# `deployObservability` task) and removed by `./gradlew undeploy`, see observability/README.md.
+
+controller:
+  # Tailing through the API server is not tied to the node a pod runs on, so a single replica
+  # collects the whole cluster. A DaemonSet would ship every line once per node.
+  type: deployment
+  replicas: 1
+
+alloy:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  configMap:
+    content: |
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+
+        // Only application namespaces: cluster components and this stack are left out.
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          regex         = "kube-system|kube-public|kube-node-lease|kubernetes-dashboard|observability"
+          action        = "drop"
+        }
+
+        // Same label names Prometheus uses, so logs and metrics are filtered the same way.
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label  = "app"
+        }
+      }
+
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.process.level.receiver]
+      }
+
+      // Services log one JSON object per line. The severity is promoted to a label so it can be
+      // filtered and counted without parsing; lines that are not JSON (MongoDB, Kafka) pass
+      // through untouched.
+      loki.process "level" {
+        stage.json {
+          expressions = { level = "level" }
+        }
+        stage.labels {
+          values = { level = "" }
+        }
+        forward_to = [loki.write.loki.receiver]
+      }
+
+      loki.write "loki" {
+        endpoint {
+          url = "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }

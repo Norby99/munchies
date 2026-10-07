@@ -18,7 +18,7 @@ persistence:
 service:
   type: ClusterIP # internal only; `kubectl port-forward svc/grafana 3000:80 -n observability` to view
 
-# Provisioned datasource — points at the Prometheus Service from observability/values/prometheus.yaml
+# Provisioned datasources — the first points at the Prometheus Service from observability/values/prometheus.yaml
 # (release name "prometheus", namespace "observability" — adjust both if you install under different names).
 datasources:
   datasources.yaml:
@@ -34,6 +34,12 @@ datasources:
           # Must match `server.global.scrape_interval` in values/prometheus.yaml: panels using
           # `$__rate_interval` derive their rate window from it.
           timeInterval: 15s
+      # Points at the Loki Service from observability/values/loki.yaml (release name "loki").
+      - name: Loki
+        uid: Loki
+        type: loki
+        access: proxy
+        url: http://loki.observability.svc.cluster.local:3100
 
 # Provisioned dashboards — inlined so this values file is fully self-contained (no external
 # dashboards.grafana.com fetch, no dependency on a file living on the target cluster's disk).
@@ -463,6 +469,149 @@ dashboards:
                   "expr": "sum by (pod) (nodejs_heap_size_used_bytes{namespace=\"$namespace\"})",
                   "legendFormat": "{{ pod }} (Node.js)",
                   "refId": "B"
+                }
+              ]
+            }
+          ]
+        }
+    logs:
+      json: |
+        {
+          "title": "Munchies — Logs",
+          "uid": "munchies-logs",
+          "schemaVersion": 39,
+          "version": 1,
+          "editable": true,
+          "timezone": "utc",
+          "time": {
+            "from": "now-30m",
+            "to": "now"
+          },
+          "refresh": "10s",
+          "templating": {
+            "list": [
+              {
+                "name": "namespace",
+                "type": "textbox",
+                "label": "Namespace (regex)",
+                "current": {
+                  "text": ".+-service",
+                  "value": ".+-service"
+                },
+                "query": ".+-service"
+              },
+              {
+                "name": "search",
+                "type": "textbox",
+                "label": "Contains",
+                "current": {
+                  "text": "",
+                  "value": ""
+                },
+                "query": ""
+              }
+            ]
+          },
+          "panels": [
+            {
+              "id": 1,
+              "title": "Log lines by service",
+              "description": "Lines per second written by each service matching the namespace filter.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 7,
+                "w": 12,
+                "x": 0,
+                "y": 0
+              },
+              "datasource": {
+                "type": "loki",
+                "uid": "Loki"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "loki",
+                    "uid": "Loki"
+                  },
+                  "expr": "sum by (namespace) (rate({namespace=~\"$namespace\"}[$__auto]))",
+                  "legendFormat": "{{ namespace }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "title": "Warnings and errors by service",
+              "description": "Lines per second logged at WARN or ERROR level.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 7,
+                "w": 12,
+                "x": 12,
+                "y": 0
+              },
+              "datasource": {
+                "type": "loki",
+                "uid": "Loki"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "short"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "loki",
+                    "uid": "Loki"
+                  },
+                  "expr": "sum by (namespace, level) (rate({namespace=~\"$namespace\", level=~\"WARN|ERROR\"}[$__auto]))",
+                  "legendFormat": "{{ namespace }} {{ level }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "title": "Logs",
+              "description": "Log lines of the selected services, newest first. Use the Contains box to search, e.g. for a request or trace id.",
+              "type": "logs",
+              "gridPos": {
+                "h": 18,
+                "w": 24,
+                "x": 0,
+                "y": 7
+              },
+              "datasource": {
+                "type": "loki",
+                "uid": "Loki"
+              },
+              "options": {
+                "showTime": true,
+                "wrapLogMessage": true,
+                "prettifyLogMessage": false,
+                "enableLogDetails": true,
+                "sortOrder": "Descending",
+                "dedupStrategy": "none"
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "loki",
+                    "uid": "Loki"
+                  },
+                  "expr": "{namespace=~\"$namespace\"} |= `$search`",
+                  "refId": "A"
                 }
               ]
             }
