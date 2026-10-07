@@ -1,8 +1,8 @@
 # Trimmed override for the upstream `grafana-community/grafana` chart (the canonical repo
 # as of 2026 — the old grafana.github.io/helm-charts repo is deprecated/migrating).
 #
-# Deliberately temporary and opt-in, like `loadtest/` and Prometheus above — not part of
-# `k8s/` or `./gradlew deploy`. Bring it up right before a benchmark run, tear it down after.
+# Always-on, like Prometheus: installed by `./gradlew deploy` (the `deployObservability` task)
+# and removed by `./gradlew undeploy`, see observability/README.md.
 
 resources:
   requests:
@@ -30,8 +30,12 @@ datasources:
         access: proxy
         url: http://prometheus-server.observability.svc.cluster.local
         isDefault: true
+        jsonData:
+          # Must match `server.global.scrape_interval` in values/prometheus.yaml: panels using
+          # `$__rate_interval` derive their rate window from it.
+          timeInterval: 15s
 
-# Provisioned dashboard — inlined so this values file is fully self-contained (no external
+# Provisioned dashboards — inlined so this values file is fully self-contained (no external
 # dashboards.grafana.com fetch, no dependency on a file living on the target cluster's disk).
 dashboardProviders:
   dashboardproviders.yaml:
@@ -127,6 +131,337 @@ dashboards:
                   "datasource": { "type": "prometheus", "uid": "Prometheus" },
                   "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", resource=\"cpu\"}) by (pod)",
                   "legendFormat": "{{ pod }} requested",
+                  "refId": "B"
+                }
+              ]
+            }
+          ]
+        }
+    services:
+      json: |
+        {
+          "title": "Munchies — Services",
+          "uid": "munchies-services",
+          "schemaVersion": 39,
+          "version": 1,
+          "editable": true,
+          "timezone": "utc",
+          "time": {
+            "from": "now-30m",
+            "to": "now"
+          },
+          "refresh": "10s",
+          "templating": {
+            "list": [
+              {
+                "name": "namespace",
+                "type": "textbox",
+                "label": "Namespace",
+                "current": {
+                  "text": "gateway-service",
+                  "value": "gateway-service"
+                },
+                "query": "gateway-service"
+              }
+            ]
+          },
+          "panels": [
+            {
+              "id": 1,
+              "title": "Request rate by service",
+              "description": "Handled HTTP requests per second, excluding health checks and metric scrapes.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (namespace) (rate(http_server_requests_seconds_count{uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval]))",
+                  "legendFormat": "{{ namespace }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "title": "Error ratio by service",
+              "description": "Share of requests answered with a 5xx status.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "percentunit",
+                  "max": 1
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (namespace) (rate(http_server_requests_seconds_count{uri!~\"/health|/metrics|/prometheus\", status=~\"5..\"}[$__rate_interval])) / sum by (namespace) (rate(http_server_requests_seconds_count{uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval]))",
+                  "legendFormat": "{{ namespace }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "title": "Latency p95 by service",
+              "description": "95th percentile of request duration, aggregated across replicas.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "s"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "histogram_quantile(0.95, sum by (namespace, le) (rate(http_server_requests_seconds_bucket{uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval])))",
+                  "legendFormat": "{{ namespace }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "title": "Latency p50 / p95 / p99 ($namespace)",
+              "description": "Request duration percentiles of the selected service.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "s"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_requests_seconds_bucket{namespace=\"$namespace\", uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval])))",
+                  "legendFormat": "p50",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{namespace=\"$namespace\", uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval])))",
+                  "legendFormat": "p95",
+                  "refId": "B"
+                },
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{namespace=\"$namespace\", uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval])))",
+                  "legendFormat": "p99",
+                  "refId": "C"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "title": "Request rate by route ($namespace)",
+              "description": "Traffic of the selected service, split by HTTP method and route template.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 16
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (method, uri) (rate(http_server_requests_seconds_count{namespace=\"$namespace\", uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval]))",
+                  "legendFormat": "{{ method }} {{ uri }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "title": "Requests by status ($namespace)",
+              "description": "Traffic of the selected service, split by response status code.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 16
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (status) (rate(http_server_requests_seconds_count{namespace=\"$namespace\", uri!~\"/health|/metrics|/prometheus\"}[$__rate_interval]))",
+                  "legendFormat": "{{ status }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 7,
+              "title": "Notifications consumed",
+              "description": "Events notification-service has consumed from Kafka, by notification type.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 24
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "ops"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (type) (rate(notifications_received_total[$__rate_interval]))",
+                  "legendFormat": "{{ type }}",
+                  "refId": "A"
+                }
+              ]
+            },
+            {
+              "id": 8,
+              "title": "Heap used by pod ($namespace)",
+              "description": "JVM heap for the Micronaut services, V8 heap for the Express ones.",
+              "type": "timeseries",
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 24
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "min": 0,
+                  "unit": "bytes"
+                },
+                "overrides": []
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (pod) (jvm_memory_used_bytes{namespace=\"$namespace\", area=\"heap\"})",
+                  "legendFormat": "{{ pod }} (JVM)",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "Prometheus"
+                  },
+                  "expr": "sum by (pod) (nodejs_heap_size_used_bytes{namespace=\"$namespace\"})",
+                  "legendFormat": "{{ pod }} (Node.js)",
                   "refId": "B"
                 }
               ]

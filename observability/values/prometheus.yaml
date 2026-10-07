@@ -6,9 +6,12 @@
 # exactly what we want here). Only two Deployments come out of this: `prometheus-server`
 # and `prometheus-kube-state-metrics`.
 #
-# This is a deliberately temporary, opt-in addition for benchmarking — like `loadtest/`, it
-# is NOT part of `k8s/` or `./gradlew deploy`. Bring it up right before a benchmark run,
-# tear it down after (see observability/README.md).
+# Always-on: installed by `./gradlew deploy` (the `deployObservability` task) and removed by
+# `./gradlew undeploy`, see observability/README.md.
+#
+# Application metrics need no scrape config of our own either: the chart's built-in
+# `kubernetes-pods` job scrapes every pod annotated with `prometheus.io/scrape: "true"`, which
+# is what helm/munchies-service and the manifests under k8s/ set on the service pods.
 
 alertmanager:
   enabled: false
@@ -36,12 +39,19 @@ kube-state-metrics:
       memory: 128Mi
 
 server:
+  global:
+    # The chart default is 1m, too coarse for a load test lasting a few minutes and too wide
+    # for the `rate(...[1m])` windows used by the dashboards, which need at least two samples.
+    scrape_interval: 15s
+    evaluation_interval: 15s
   # Actual per-container CPU/memory usage (not just requests/limits) comes from the
   # `kubernetes-nodes-cadvisor` scrape job, enabled by default by this chart — the same
   # cAdvisor data metrics-server itself reads to drive the HPA, now retained as history.
   persistentVolume:
-    enabled: false # emptyDir: this is a short-lived session, data doesn't need to survive a pod restart
-  retention: 2h # more than enough for one benchmark run
+    enabled: true # the stack is always-on: history must survive a pod restart or a redeploy
+    size: 2Gi
+  retention: 3d
+  retentionSize: 1500MB # stays below the volume size, whichever limit is reached first
   resources:
     requests:
       cpu: 100m
