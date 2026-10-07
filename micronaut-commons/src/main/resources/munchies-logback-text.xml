@@ -1,0 +1,19 @@
+<!--
+  Human-readable log format, the default for local runs.
+
+  Shared by every Micronaut service through its own logback.xml:
+    <include resource="munchies-logback-${LOG_FORMAT:-text}.xml" />
+  The LOG_FORMAT environment variable selects this file or munchies-logback-json.xml; the
+  including file then only declares the logger levels specific to that service.
+-->
+<included>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+</included>

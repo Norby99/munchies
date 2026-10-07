@@ -1,6 +1,15 @@
 micronaut:
   server:
     port: 8080
+    netty:
+      # One log line per handled request, through the HTTP_ACCESS_LOGGER logger. Probes and
+      # metric scrapes are left out: they would be most of the volume and carry no information.
+      access-logger:
+        enabled: true
+        log-format: common
+        exclusions:
+          - /health
+          - /prometheus
   application:
     name: user-service
   metrics:
