@@ -10,6 +10,7 @@ import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
+import org.slf4j.LoggerFactory
 
 /**
  * Use case implementation for placing an order.
@@ -67,6 +68,14 @@ class PlaceOrderUseCase(
       )
     }
 
+    if (creationResult is OrderCreationResult.Failure) {
+      logger.warn(
+        "Order rejected for restaurant {}: {}",
+        restaurantId.value,
+        creationResult::class.simpleName,
+      )
+    }
+
     return when (creationResult) {
       is OrderCreationResult.Failure.EmptyItems -> PlaceOrder.Result.Failure.EmptyItems
       is OrderCreationResult.Failure.InvalidItemQuantity ->
@@ -77,8 +86,18 @@ class PlaceOrderUseCase(
           "Order creation events must start with OrderPlaced"
         }
         eventStore.append(id, expectedVersion = 0, events = creationResult.events)
+        logger.info(
+          "Order {} placed for restaurant {} with {} item(s)",
+          id.value,
+          restaurantId.value,
+          items.size,
+        )
         PlaceOrder.Result.Success(order.toDto())
       }
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(PlaceOrderUseCase::class.java)
   }
 }
