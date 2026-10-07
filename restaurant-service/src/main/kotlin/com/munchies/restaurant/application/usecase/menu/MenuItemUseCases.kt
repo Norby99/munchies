@@ -13,6 +13,9 @@ import com.munchies.restaurant.domain.valueobject.menu.MenuItemDescription
 import com.munchies.restaurant.domain.valueobject.menu.MenuItemName
 import jakarta.inject.Singleton
 import java.math.BigDecimal
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(MenuItemUseCases::class.java)
 
 @Singleton
 data class MenuItemUseCases(val repository: MenuRepository) {
@@ -60,6 +63,7 @@ class CreateMenuItemUseCase(private val menuRepository: MenuRepository) :
         command.variations.map { it.toDomain() },
       )
       menuRepository.update(menu)
+      logger.info("Item {} added to menu {}", item.id.value, menu.id.value)
       CreateMenuItemResult.Success(item.id.value)
     }.getOrElse { CreateMenuItemResult.InvalidItem(it.message.orEmpty()) }
   }
@@ -142,6 +146,7 @@ class DeleteMenuItemUseCase(
     return runCatching {
       category.removeItem(MenuItemId(command.itemId))
       menuRepository.update(menu)
+      logger.info("Item {} removed from menu {}", command.itemId, menu.id.value)
       RemoveMenuItemResult.Success
     }.getOrElse { RemoveMenuItemResult.InvalidItem(it.message.orEmpty()) }
   }
