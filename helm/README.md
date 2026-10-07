@@ -55,7 +55,7 @@ same as for the raw-manifest services, only when you pass `-PwipeData=true`.
 | --- | --- |
 | `munchies-service/Chart.yaml` | chart metadata |
 | `munchies-service/values.yaml` | every knob, documented, with safe defaults |
-| `munchies-service/templates/deployment.yaml` | Deployment (image, env, resources, readiness probe) |
+| `munchies-service/templates/deployment.yaml` | Deployment (image, env, resources, readiness probe, Prometheus scrape annotations when `metrics.enabled`) |
 | `munchies-service/templates/service.yaml` | Service (ClusterIP/NodePort, port mapping) |
 | `munchies-service/templates/hpa.yaml` | HorizontalPodAutoscaler, only rendered if `autoscaling.enabled` |
 | `munchies-service/templates/mongodb.yaml` | PVC + StatefulSet + Service for the service's own Mongo, only rendered if `mongodb.enabled` |

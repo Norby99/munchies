@@ -18,6 +18,9 @@ env:
     # container's default db, which is why the two names differ.
     value: "mongodb://order-mongodb.order-service.svc.cluster.local:27017/orders"
 
+metrics:
+  path: /prometheus
+
 autoscaling:
   enabled: true
 
