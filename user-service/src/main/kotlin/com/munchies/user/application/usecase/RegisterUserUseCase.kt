@@ -8,6 +8,7 @@ import com.munchies.user.domain.port.Mailer
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserCredentialsRepository
 import com.munchies.user.domain.port.UserRepository
+import org.slf4j.LoggerFactory
 
 /**
  * Use case for registering a new user in the system.
@@ -49,7 +50,10 @@ class RegisterUserUseCase(
    */
   override fun execute(user: User, credentials: UserCredentials): RegisterUserResult {
     return findUser(user)
-      ?.let { RegisterUserResult.UserIsAlreadyRegistered }
+      ?.let {
+        logger.warn("Registration rejected: user {} is already registered", it.id.value)
+        RegisterUserResult.UserIsAlreadyRegistered
+      }
       ?: try {
         userRepository.save(user)
         credentialsRepository.save(credentials.copy(id = user.id))
@@ -68,9 +72,14 @@ class RegisterUserUseCase(
             "with OTK: $emailVerificationOTK",
         )
 
+        logger.info("User {} registered with role {}", user.id.value, user.profile.role)
         RegisterUserResult.Success(user)
       } catch (e: kotlin.Error) {
         RegisterUserResult.Failure(e.localizedMessage)
       }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(RegisterUserUseCase::class.java)
   }
 }

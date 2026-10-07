@@ -7,6 +7,7 @@ import com.munchies.user.application.port.inbound.VerifyUserEmail.Companion.Veri
 import com.munchies.user.domain.model.UserId
 import com.munchies.user.domain.port.PasswordHasher
 import com.munchies.user.domain.port.UserRepository
+import org.slf4j.LoggerFactory
 
 /**
  * Verifies a user's email address by comparing the provided one-time key with the expected value.
@@ -21,11 +22,17 @@ class VerifyUserEmailUseCase(
   override fun execute(id: String, otk: String): VerifyUserEmailResult {
     val user = userRepository.findById(UserId(id)) ?: return InvalidRequest
     if (hasher.hash(user.id.value, user.profile.email.address) != otk) {
+      logger.warn("Email verification rejected for user {}: wrong one-time key", user.id.value)
       return InvalidRequest
     }
     userRepository.update(
       user.updateEmailAsVerified(),
     )
+    logger.info("User {} verified their email", user.id.value)
     return ConfirmedEmail
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(VerifyUserEmailUseCase::class.java)
   }
 }
