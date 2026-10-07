@@ -10,6 +10,10 @@ import {
   connectDB,
   disconnectDB,
 } from "@main/infrastructure/adapter/outbound/mongo/config/db";
+import {
+  metricsHandler,
+  metricsMiddleware,
+} from "@main/infrastructure/adapter/inbound/web/config/metrics";
 
 export function parseBodyToString(body: unknown): string {
   if (typeof body === "string") {
@@ -30,10 +34,12 @@ export function createApp(
   const app = express();
   app.use(express.raw({ type: "application/json", limit: "1mb" }));
   app.use(express.json());
+  app.use(metricsMiddleware());
 
   app.get("/health", (_req: Request, res: Response) => {
     res.status(200).json({ status: "UP" });
   });
+  app.get("/metrics", metricsHandler);
 
   app.post("/payments", async (req: Request, res: Response) => {
     try {
