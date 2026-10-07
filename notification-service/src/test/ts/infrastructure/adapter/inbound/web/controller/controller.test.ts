@@ -6,6 +6,7 @@ import {
   UserEmailConfirmationNotification,
 } from "@main/domain/external-modules";
 import { Currency } from "munchies-payment-service-shared/kotlin/payment-modules";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 describe("NotificationController", () => {
   afterEach(() => {
@@ -13,20 +14,20 @@ describe("NotificationController", () => {
   });
 
   it("logs a user email-confirmation event instead of sending a notification", () => {
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const logSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
     const controller = new NotificationController();
     const event = new UserEmailConfirmationNotification("user-1", "otk-123");
 
     controller.handleUserEmailConfirmation(event);
 
     expect(logSpy).toHaveBeenCalledTimes(1);
-    const [loggedMessage] = logSpy.mock.calls[0];
+    const loggedMessage = JSON.stringify(logSpy.mock.calls[0]);
     expect(loggedMessage).toContain("UserEmailConfirmationNotification");
     expect(loggedMessage).toContain("user-1");
   });
 
   it("logs a payment-success event instead of sending a notification", () => {
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const logSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
     const controller = new NotificationController();
     const event = new PaymentSuccessNotification(
       "payment-1",
@@ -38,13 +39,13 @@ describe("NotificationController", () => {
     controller.handlePaymentSuccess(event);
 
     expect(logSpy).toHaveBeenCalledTimes(1);
-    const [loggedMessage] = logSpy.mock.calls[0];
+    const loggedMessage = JSON.stringify(logSpy.mock.calls[0]);
     expect(loggedMessage).toContain("PaymentSuccessNotification");
     expect(loggedMessage).toContain("payment-1");
   });
 
   it("logs an order status-change event instead of sending a notification", () => {
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const logSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
     const controller = new NotificationController();
     const event = new OrderStatusChangedNotification(
       "order-1",
@@ -56,7 +57,7 @@ describe("NotificationController", () => {
     controller.handleOrderStatusChanged(event);
 
     expect(logSpy).toHaveBeenCalledTimes(1);
-    const [loggedMessage] = logSpy.mock.calls[0];
+    const loggedMessage = JSON.stringify(logSpy.mock.calls[0]);
     expect(loggedMessage).toContain("OrderStatusChangedNotification");
     expect(loggedMessage).toContain("order-1");
   });

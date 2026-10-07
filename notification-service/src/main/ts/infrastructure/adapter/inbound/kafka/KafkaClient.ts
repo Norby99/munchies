@@ -1,4 +1,5 @@
 import { Kafka, logLevel } from "kafkajs";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 const MAX_CREATE_TOPIC_ATTEMPTS = 5;
 const CREATE_TOPIC_RETRY_DELAY_MS = 2000;
@@ -31,9 +32,9 @@ async function createTopicWithRetry(
       return;
     } catch (err) {
       if (attempt === MAX_CREATE_TOPIC_ATTEMPTS) throw err;
-      console.warn(
-        `[notification-service] createTopics(${topic}) failed on attempt ${attempt}/${MAX_CREATE_TOPIC_ATTEMPTS}, retrying...`,
-        err
+      logger.warn(
+        { err, topic, attempt, maxAttempts: MAX_CREATE_TOPIC_ATTEMPTS },
+        "Topic creation failed, retrying"
       );
       await delay(CREATE_TOPIC_RETRY_DELAY_MS);
     }

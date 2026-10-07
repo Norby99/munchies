@@ -4,6 +4,7 @@ import { KafkaPaymentSuccessNotificationConsumer } from "@main/infrastructure/ad
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { PaymentSuccessNotification, paymentSuccessNotificationFromJson } from "@main/domain/external-modules";
 import { Currency } from "munchies-payment-service-shared/kotlin/payment-modules";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /** Build a fake Kafka instance backed by a controllable fake consumer. */
 function buildFakeKafka() {
@@ -133,7 +134,7 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
   it("run() eachMessage handler logs an error when message parsing fails", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
     const controller = new NotificationController();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(
       fakeKafka,
@@ -149,8 +150,8 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
     await runCall.eachMessage({ message: { value: Buffer.from("invalid-json") } });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to parse PaymentSuccessNotification message"),
-      expect.anything()
+      expect.anything(),
+      expect.stringContaining("Failed to parse PaymentSuccessNotification message")
     );
   });
 });

@@ -6,6 +6,7 @@ import {
   OrderStatusChangedNotification,
   orderStatusChangedNotificationFromJson,
 } from "@main/domain/external-modules";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /** Build a fake Kafka instance backed by a controllable fake consumer. */
 function buildFakeKafka() {
@@ -140,7 +141,7 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
   it("run() eachMessage handler logs an error when message parsing fails", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
     const controller = new NotificationController();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(
       fakeKafka,
@@ -156,8 +157,8 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
     await runCall.eachMessage({ message: { value: Buffer.from("invalid-json") } });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to parse OrderStatusChangedNotification message"),
-      expect.anything()
+      expect.anything(),
+      expect.stringContaining("Failed to parse OrderStatusChangedNotification message")
     );
   });
 });

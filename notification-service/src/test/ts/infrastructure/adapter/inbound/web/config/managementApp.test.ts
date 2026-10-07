@@ -53,7 +53,6 @@ describe("createManagementApp", () => {
   });
 
   it("counts every handled notification by type", async () => {
-    vi.spyOn(console, "log").mockImplementation(() => {});
     server = await startServer();
 
     new NotificationController().handleUserEmailConfirmation(

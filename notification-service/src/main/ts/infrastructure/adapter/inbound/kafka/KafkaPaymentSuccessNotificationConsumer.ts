@@ -5,6 +5,7 @@ import {
 } from "@main/domain/external-modules";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { Kafka, Consumer } from "kafkajs";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /**
  * Kafka consumer for the payment-success topic. Parses incoming messages
@@ -44,7 +45,7 @@ export class KafkaPaymentSuccessNotificationConsumer extends PaymentSuccessNotif
             );
             this.update(event);
           } catch (err) {
-            console.error("Failed to parse PaymentSuccessNotification message", err);
+            logger.error({ err }, "Failed to parse PaymentSuccessNotification message");
           }
         }
       },
