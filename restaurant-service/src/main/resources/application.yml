@@ -3,11 +3,28 @@ micronaut:
     port: 8080
   application:
     name: restaurant-service
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+        descriptions: true
+        step: PT1M
+    binders:
+      web:
+        server:
+          # Publish latency as histogram buckets so percentiles can be computed in Prometheus
+          # (histogram_quantile) and aggregated across replicas.
+          histogram: true
   serde:
     serialization:
       inclusion: ALWAYS
 
 endpoints:
   health:
+    enabled: true
+    sensitive: false
+  # Scraped by Prometheus (see observability/); exposes the Micrometer registry.
+  prometheus:
     enabled: true
     sensitive: false

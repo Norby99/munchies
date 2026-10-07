@@ -14,6 +14,10 @@ dependencies {
   ksp("io.micronaut:micronaut-http-validation")
 
   implementation("io.micronaut:micronaut-management")
+  // Application metrics (Observability pattern): Micrometer instruments the HTTP server, JVM and
+  // Mongo/Kafka clients; the Prometheus registry exposes them on the `/prometheus` endpoint.
+  implementation("io.micronaut.micrometer:micronaut-micrometer-core")
+  implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
   implementation(project(":micronaut-commons"))
 
   testImplementation("org.junit.jupiter:junit-jupiter-params")
