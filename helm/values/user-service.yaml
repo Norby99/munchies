@@ -10,6 +10,9 @@ service:
 env:
   - name: MICRONAUT_ENVIRONMENTS
     value: "k8s,prod"
+  # Structured logs on stdout, shipped to Loki by Alloy (see observability/).
+  - name: LOG_FORMAT
+    value: "json"
   - name: MONGODB_URI
     value: "mongodb://user-mongodb.user-service.svc.cluster.local:27017/user-service"
   - name: KAFKA_BOOTSTRAP_SERVERS

@@ -1,0 +1,26 @@
+<!--
+  Structured log format: one JSON object per line on stdout, for log aggregation. Selected with
+  LOG_FORMAT=json, which the Kubernetes deployment sets so that Alloy can ship the logs to Loki
+  (see observability/README.md).
+
+  Shared by every Micronaut service through its own logback.xml:
+    <include resource="munchies-logback-${LOG_FORMAT:-text}.xml" />
+-->
+<included>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <!-- Emit the rendered message only, instead of the template plus its arguments. -->
+            <withFormattedMessage>true</withFormattedMessage>
+            <withMessage>false</withMessage>
+            <withArguments>false</withArguments>
+            <!-- Fields carrying no information for these services. -->
+            <withSequenceNumber>false</withSequenceNumber>
+            <withNanoseconds>false</withNanoseconds>
+            <withContext>false</withContext>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+</included>
