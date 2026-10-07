@@ -1,12 +1,14 @@
-# Observability (Prometheus + Grafana)
+# Observability (Prometheus + Loki + Grafana)
 
-A lightweight Prometheus + Grafana stack implementing the Application Metrics side of the
-Observability pattern. It records and graphs two things:
+A lightweight stack implementing the Application Metrics and Log Aggregation sides of the
+Observability pattern. It records three things and shows them in one Grafana:
 
 - **How the services behave**: request rate, error ratio and latency of every instrumented
   service, measured from inside the application.
 - **How the services scale under load**: ready replicas, HPA current vs desired replicas, and
   per-pod CPU usage against the CPU request.
+- **What the services log**: the structured logs of every service, collected from the pods
+  and searchable in one place.
 
 The stack is **always-on**: `./gradlew deploy` installs it (the `deployObservability` task)
 and `./gradlew undeploy` removes it. Deploying a single service with `-Pservice=<name>`
@@ -18,9 +20,12 @@ series and dashboards.
 | Path | Purpose |
 | --- | --- |
 | `values/prometheus.yaml` | Helm values for the `prometheus-community/prometheus` chart |
-| `values/grafana.yaml` | Helm values for the `grafana-community/grafana` chart, including the provisioned datasource and the inlined dashboards |
+| `values/loki.yaml` | Helm values for the `grafana-community/loki` chart |
+| `values/alloy.yaml` | Helm values for the `grafana/alloy` chart, including the inlined collection pipeline |
+| `values/grafana.yaml` | Helm values for the `grafana-community/grafana` chart, including the provisioned datasources and the inlined dashboards |
 | `dashboards/scaling.json` | Standalone copy of the **Munchies — Scaling** dashboard, for reference or manual import |
 | `dashboards/services.json` | Standalone copy of the **Munchies — Services** dashboard, for reference or manual import |
+| `dashboards/logs.json` | Standalone copy of the **Munchies — Logs** dashboard, for reference or manual import |
 
 ## Components
 
@@ -35,8 +40,13 @@ series and dashboards.
   - Per-container CPU usage comes from the chart's default **`kubernetes-nodes-cadvisor`**
     scrape job, the same cAdvisor data `metrics-server` uses to drive the HPA, retained here
     as history.
-- **`grafana-community/grafana`**: trimmed resources, no persistence. The Prometheus
-  datasource and both dashboards are fully provisioned from `values/grafana.yaml`, so no
+- **`grafana-community/loki`**: log storage, run as a single process (`Monolithic` mode)
+  writing to a 2Gi volume with a 3 day retention. No object storage, gateway or caches.
+- **`grafana/alloy`**: the log collector, a single-replica Deployment. It discovers the pods
+  of the application namespaces, tails their logs through the Kubernetes API and pushes them
+  to Loki, so no host directory is mounted.
+- **`grafana-community/grafana`**: trimmed resources, no persistence. The Prometheus and Loki
+  datasources and all dashboards are fully provisioned from `values/grafana.yaml`, so no
   manual setup is needed.
 
 ## Application metrics
@@ -62,9 +72,42 @@ traffic, as it only consumes Kafka events, so it reports a counter instead.
 Every service runs in a namespace named after itself, which is why the dashboards group and
 filter by the `namespace` label.
 
-Approximate footprint: `prometheus-server` (256Mi/512Mi request/limit) +
-`kube-state-metrics` (64Mi/128Mi) + `grafana` (96Mi/256Mi), about **420 MiB requested** in
-total.
+## Logs
+
+Services only write to stdout, one JSON object per line. Nothing in a service knows where
+Loki is: Alloy picks the lines up from the pods and labels them with `namespace`, `pod`,
+`container` and `app`, the same names Prometheus uses, plus `level`, taken from the JSON.
+
+| Service | Library | Notes |
+| --- | --- | --- |
+| `user-service`, `order-service`, `restaurant-service` | Logback `JsonEncoder` | selected with `LOG_FORMAT=json`, set by `helm/values`; plain text otherwise, for local runs |
+| `gateway-service`, `payment-service`, `notification-service` | `pino` | always JSON; verbosity set with `LOG_LEVEL` (default `info`) |
+
+- **Shared Logback setup**: the appender lives in `micronaut-commons`
+  (`munchies-logback-text.xml`, `munchies-logback-json.xml`) and each service's `logback.xml`
+  includes one of them, keeping only its own logger levels.
+- **Request logs**: every service that serves HTTP logs one line per handled request, through
+  Micronaut's access logger or `pino-http`. `/health`, `/metrics` and `/prometheus` are
+  excluded.
+- **Level**: both stacks write the severity as an upper-case name (`INFO`, `WARN`, `ERROR`),
+  so `{level="ERROR"}` selects errors from any service.
+- **What is not logged**: request and response bodies, headers, cookies and query strings.
+  They carry credentials and tokens, which must not reach a shared log store.
+
+Lines that are not JSON, such as those of the MongoDB and Kafka pods, are stored as they are,
+without a `level` label.
+
+## Footprint
+
+| Component | Memory request / limit |
+| --- | --- |
+| `prometheus-server` | 256Mi / 512Mi |
+| `kube-state-metrics` | 64Mi / 128Mi |
+| `loki` | 192Mi / 384Mi |
+| `alloy` | 128Mi / 256Mi |
+| `grafana` | 96Mi / 256Mi |
+
+About **740 MiB requested** in total.
 
 ## Prerequisite
 
@@ -83,23 +126,34 @@ which is equivalent to:
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-# NB: grafana.github.io/helm-charts is deprecated/migrating, use the new repo:
+# NB: the Grafana and Loki charts moved to the community repo; Alloy is still published
+# in the original one.
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 
 helm upgrade --install prometheus prometheus-community/prometheus \
   -n observability --create-namespace \
   -f observability/values/prometheus.yaml
 
+helm upgrade --install loki grafana-community/loki \
+  -n observability \
+  -f observability/values/loki.yaml
+
+helm upgrade --install alloy grafana/alloy \
+  -n observability \
+  -f observability/values/alloy.yaml
+
 helm upgrade --install grafana grafana-community/grafana \
   -n observability \
   -f observability/values/grafana.yaml
 ```
 
-Release names (`prometheus`, `grafana`) and namespace (`observability`) matter: the Grafana
-datasource URL in `values/grafana.yaml` is
-`http://prometheus-server.observability.svc.cluster.local`. Installing under different
-names requires editing that URL to match.
+Release names (`prometheus`, `loki`, `grafana`) and namespace (`observability`) matter: the
+datasource URLs in `values/grafana.yaml` and the push URL in `values/alloy.yaml` are built
+from them (`http://prometheus-server.observability.svc.cluster.local`,
+`http://loki.observability.svc.cluster.local:3100`). Installing under different names
+requires editing those URLs to match.
 
 ## View it
 
@@ -114,9 +168,18 @@ and can be retrieved with:
 kubectl -n observability get secret grafana -o jsonpath='{.data.admin-password}' | base64 -d
 ```
 
-The dashboards are under the **Munchies** folder in the left nav: **Services** and
-**Scaling**. Both have a `namespace` textbox variable (defaults to `gateway-service`); change
-it to another service's namespace, e.g. `order-service`, to inspect that service.
+The dashboards are under the **Munchies** folder in the left nav: **Services**, **Scaling**
+and **Logs**. The first two have a `namespace` textbox variable (defaults to
+`gateway-service`); change it to another service's namespace, e.g. `order-service`, to
+inspect that service. **Logs** takes a regular expression instead (defaults to `.+-service`,
+every service) and a **Contains** box to search the lines.
+
+For ad-hoc log queries use **Explore** with the Loki datasource, for example:
+
+```logql
+{namespace="order-service"} | json
+{namespace=~".+-service", level="ERROR"}
+```
 
 To run ad-hoc PromQL directly against Prometheus:
 
@@ -135,7 +198,7 @@ once it finishes (e.g. for `docs/reports/spe/05-benchmark.md`).
 `./gradlew undeploy` removes the stack together with the services. On its own:
 
 ```bash
-./gradlew undeployObservability                  # uninstall the two releases
+./gradlew undeployObservability                  # uninstall the four releases
 ./gradlew undeployObservability -PwipeData=true  # also delete the namespace
 ```
 
@@ -164,3 +227,11 @@ and scrapes do not dilute the traffic figures.
 | Requests by status | the request rate by `status`, for `$namespace` | response codes of the selected service |
 | Notifications consumed | `rate(notifications_received_total)` by `type` | events `notification-service` consumed from Kafka |
 | Heap used by pod | `jvm_memory_used_bytes{area="heap"}` and `nodejs_heap_size_used_bytes` | memory pressure per pod of the selected service |
+
+### Munchies — Logs
+
+| Panel | Built on | Shows |
+| --- | --- | --- |
+| Log lines by service | `rate({namespace=~"$namespace"})` by `namespace` | how much each service is logging |
+| Warnings and errors by service | the same rate restricted to `level=~"WARN\|ERROR"` | when and where problems are being reported |
+| Logs | `{namespace=~"$namespace"} \|= "$search"` | the log lines themselves, newest first |
