@@ -12,7 +12,8 @@ val targetsAllServices = !project.hasProperty("service")
 
 tasks.register("deploy") {
   group = "munchies"
-  description = "Deploys all services to Minikube. Usage: ./gradlew deploy"
+  description = "Deploys all services to Minikube. " +
+    "Usage: ./gradlew deploy [-PskipBuild=true] [-Pexclude=<service>,<service>]"
   dependsOn("deployServices")
   if (targetsAllServices) dependsOn("deployObservability")
 }
