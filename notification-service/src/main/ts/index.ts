@@ -11,6 +11,7 @@ import { KafkaUserEmailConfirmationNotificationConsumer } from "./infrastructure
 import { KafkaPaymentSuccessNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaPaymentSuccessNotificationConsumer";
 import { KafkaOrderStatusChangedNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaOrderStatusChangedNotificationConsumer";
 import { NotificationController } from "./infrastructure/adapter/inbound/web/controller/controller";
+import { createManagementApp } from "./infrastructure/adapter/inbound/web/config/managementApp";
 
 interface NotificationConsumer {
   connect(): Promise<void>;
@@ -78,6 +79,23 @@ async function main() {
         )
     ),
   ]);
+
+  const paymentSuccessGroupId =
+    PaymentSuccessNotificationInfo.PAYMENT_SUCCESS_GROUP_ID;
+  const paymentSuccessKafka = await getKafka(paymentSuccessTopic);
+  const paymentSuccessConsumer = new KafkaPaymentSuccessNotificationConsumer(
+    paymentSuccessKafka,
+    paymentSuccessTopic,
+    paymentSuccessGroupId,
+    controller
+  );
+  await paymentSuccessConsumer.connect();
+  paymentSuccessConsumer.run();
+
+  const PORT = process.env.PORT ?? 8080;
+  createManagementApp().listen(PORT, () => {
+    console.log(`Notification service management endpoints online on port ${PORT}`);
+  });
 }
 
 main().catch((err) => {
