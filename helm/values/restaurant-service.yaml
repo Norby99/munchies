@@ -15,6 +15,9 @@ env:
   - name: MONGODB_URI
     value: "mongodb://restaurant-mongodb.restaurant-service.svc.cluster.local:27017/restaurant-service"
 
+metrics:
+  path: /prometheus
+
 autoscaling:
   enabled: true
 

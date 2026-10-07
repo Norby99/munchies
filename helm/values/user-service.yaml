@@ -21,6 +21,9 @@ env:
   - name: PAYMENT_SERVICE_URL
     value: "http://payment-service.payment-service.svc.cluster.local:8080"
 
+metrics:
+  path: /prometheus
+
 autoscaling:
   enabled: true
 
