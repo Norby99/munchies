@@ -31,6 +31,9 @@ spec:
               value: "k8s,prod"
             - name: MONGODB_URI
               value: "mongodb://notification-mongodb:27017/notification-service"
+            # Without it the service cannot reach the broker and exits right after starting.
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
           resources:
             requests:
               memory: "128Mi"
