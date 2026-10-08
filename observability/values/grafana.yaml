@@ -1,5 +1,4 @@
-# Trimmed override for the upstream `grafana-community/grafana` chart (the canonical repo
-# as of 2026 — the old grafana.github.io/helm-charts repo is deprecated/migrating).
+# Trimmed override for the upstream `grafana-community/grafana` chart
 #
 # Always-on, like Prometheus: installed by `./gradlew deploy` (the `deployObservability` task)
 # and removed by `./gradlew undeploy`, see observability/README.md.
@@ -7,10 +6,39 @@
 resources:
   requests:
     cpu: 50m
-    memory: 96Mi
+    memory: 192Mi
   limits:
-    cpu: 200m
-    memory: 256Mi
+    cpu: "1"
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: grafana
+  initialDelaySeconds: 240
+  timeoutSeconds: 30
+  failureThreshold: 10
+
+# Keeps the Go runtime below the container limit to lighten the deploy
+env:
+  GOMEMLIMIT: 400MiB
+
+# Some switching off to lighten the deploy
+grafana.ini:
+  unified_alerting:
+    enabled: false
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+    check_for_plugin_updates: false
+  news:
+    news_feed_enabled: false
+  plugins:
+    preinstall_disabled: true
+    disable_plugins: >-
+      grafana-pyroscope-app,grafana-exploretraces-app,grafana-advisor-app,
+      grafana-pyroscope-datasource,grafana-postgresql-datasource,elasticsearch,influxdb,
+      mssql,mysql,opentsdb,stackdriver,jaeger,zipkin
 
 persistence:
   enabled: false # ephemeral: dashboards/datasource are provisioned from values on every start, nothing to persist
