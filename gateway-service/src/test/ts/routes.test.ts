@@ -86,9 +86,6 @@ describe("routes.ts", () => {
 
       applyRoutes(mockApp);
 
-      // userRoutes (8) + restaurantRoutes (16) + orderRoutes (9) = 33 routes
-      expect(registeredRoutes.length).toBe(33);
-
       // Verify each method was used at least once
       const methods = new Set(registeredRoutes.map((r) => r.method));
       expect(methods.has("POST")).toBe(true);

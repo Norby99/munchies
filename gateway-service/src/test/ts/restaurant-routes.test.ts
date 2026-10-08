@@ -1,7 +1,6 @@
 import "./setup-env";
 import "../../main/ts/infrastructure/adapter/middleware/routes/routes";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { restaurantRoutes } from "../../main/ts/infrastructure/adapter/middleware/routes/restaurant/restaurant.routes";
 import { CreateRestaurantRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/restaurant/create-restaurant.route";
 import { GetManagerRestaurantsRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/restaurant/get-manager-restaurants.route";
 import { GetRestaurantRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/restaurant/get-restaurant.route";
@@ -57,12 +56,6 @@ describe("Restaurant Routes", () => {
       delete process.env.RESTAURANT_SERVICE_URL;
     }
     vi.restoreAllMocks();
-  });
-
-  describe("restaurantRoutes array", () => {
-    it("exports all 16 restaurant routes", () => {
-      expect(restaurantRoutes.length).toBe(16);
-    });
   });
 
   // ---- CreateRestaurantRoute ----

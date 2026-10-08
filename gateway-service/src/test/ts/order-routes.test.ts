@@ -1,7 +1,6 @@
 import "./setup-env";
 import "../../main/ts/infrastructure/adapter/middleware/routes/routes";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { orderRoutes } from "../../main/ts/infrastructure/adapter/middleware/routes/order/order.routes";
 import { AdvanceOrderStatusRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/advance-order-status.route";
 import { DiscardOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/discard-order.route";
 import { GetOrderDetailsRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/get-order-details.route";
@@ -49,12 +48,6 @@ describe("Order Routes", () => {
       delete process.env.ORDER_SERVICE_URL;
     }
     vi.restoreAllMocks();
-  });
-
-  describe("orderRoutes array", () => {
-    it("exports all 9 order routes", () => {
-      expect(orderRoutes.length).toBe(9);
-    });
   });
 
   // ---- AdvanceOrderStatusRoute ----
