@@ -94,7 +94,8 @@ Loki is: Alloy picks the lines up from the pods and labels them with `namespace`
 - **What is not logged**: request and response bodies, headers, cookies and query strings.
   They carry credentials and tokens, which must not reach a shared log store.
 
-Lines that are not JSON, such as those of the MongoDB and Kafka pods, are stored as they are,
+The MongoDB pods of the services are not collected: Alloy drops every container named
+`mongodb`. Lines that are not JSON, such as those of the Kafka pod, are stored as they are,
 without a `level` label.
 
 ## Footprint
@@ -105,9 +106,9 @@ without a `level` label.
 | `kube-state-metrics` | 64Mi / 128Mi |
 | `loki` | 192Mi / 384Mi |
 | `alloy` | 128Mi / 256Mi |
-| `grafana` | 96Mi / 256Mi |
+| `grafana` | 192Mi / 512Mi |
 
-About **740 MiB requested** in total.
+About **830 MiB requested** in total.
 
 ## Prerequisite
 
