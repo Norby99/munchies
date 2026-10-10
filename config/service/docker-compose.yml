@@ -150,3 +150,17 @@ services:
       timeout: 5s
       retries: 12
       start_period: 15s
+
+  suggestion-service:
+    <<: *service-common
+    container_name: munchies-suggestion-service
+    build:
+      context: suggestion-service/build/docker/main
+    image: munchies-suggestion-service:latest
+    ports: [ "8088:8080" ]
+    depends_on:
+      <<: *kafka-dependency
+    environment:
+      <<: [ *service-env ]
+      GATEWAY_SERVICE_URL: http://gateway-service:8080
+    healthcheck: *micronaut-healthcheck
