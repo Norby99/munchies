@@ -78,6 +78,44 @@ pull step and post-deploy health checks, and is meant for deploying to a host:
 The individual Docker Compose files for each infrastructure dependency are also available under `config/`
 (`config/mongodb`, `config/kafka`, `config/service`) if you need to start a single dependency in isolation.
 
+### Deploying to Minikube
+
+The system can also be deployed to a local Kubernetes cluster (see [`helm/`](helm/README.md) and
+[`observability/`](observability/README.md)):
+
+```bash
+minikube start
+./gradlew deploy    # Build every image, deploy Kafka, the services and the observability stack
+./gradlew undeploy  # Remove everything
+```
+
+#### Light deploy
+
+`./gradlew deploy` builds the images while the cluster is running, and starts a second Gradle process for each of
+them: not for every machine, so here's a light version of the deploy.
+
+1. Build the images of the services to deploy, with Minikube stopped:
+
+   ```bash
+   minikube stop
+   ./gradlew :gateway-service:dockerBuild :user-service:dockerBuild :restaurant-service:dockerBuild
+   ```
+
+2. Start the cluster and deploy without building, leaving out the services that are not needed:
+
+   ```bash
+   minikube start
+   ./gradlew deploy -PskipBuild=true \
+     -Pexclude=order-service,payment-service,notification-service,table-reservation-service
+   ```
+
+To connect the gateway to the fronted you need to forward this port:
+
+```bash
+kubectl -n gateway-service port-forward svc/gateway-service 8086:8080
+cd frontend-service && npm run dev
+```
+
 ### Building and testing
 
 The JVM services are built with Gradle (via the wrapper, no local Gradle install required):
