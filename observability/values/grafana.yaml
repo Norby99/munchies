@@ -60,7 +60,6 @@ datasources:
           # Must match `server.global.scrape_interval` in values/prometheus.yaml: panels using
           # `$__rate_interval` derive their rate window from it.
           timeInterval: 15s
-      # Points at the Loki Service from observability/values/loki.yaml (release name "loki").
       - name: Loki
         uid: Loki
         type: loki
@@ -76,7 +75,6 @@ datasources:
               datasourceUid: Tempo
               url: "$${__value.raw}"
               urlDisplayLabel: View trace
-      # Points at the Tempo Service from observability/values/tempo.yaml (release name "tempo").
       - name: Tempo
         uid: Tempo
         type: tempo
