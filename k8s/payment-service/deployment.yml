@@ -35,6 +35,8 @@ spec:
               value: "mongodb://payment-mongodb:27017/payment-service"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://tempo.observability.svc.cluster.local:4318"
           resources:
             requests:
               memory: "128Mi"
