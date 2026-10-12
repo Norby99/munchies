@@ -1,5 +1,8 @@
-import express, { Express, Request, Response, NextFunction } from "express";
 import "dotenv/config";
+// Must stay ahead of every other import: it patches http, express, kafkajs and pino as they
+// are loaded (see tracing.ts). Only dotenv comes first, so the OTLP endpoint can be set in .env.
+import "@main/infrastructure/adapter/outbound/tracing/tracing";
+import express, { Express, Request, Response, NextFunction } from "express";
 import { ErrorResponse } from "munchies-commons/kotlin/commons-modules";
 import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import {
