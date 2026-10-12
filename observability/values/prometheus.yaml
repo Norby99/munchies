@@ -1,18 +1,9 @@
 # Trimmed override for the upstream `prometheus-community/prometheus` chart.
 #
-# Deliberately scoped down for a memory-constrained single-node minikube: no Alertmanager,
-# no node-exporter, no Pushgateway, no Prometheus Operator/CRDs (this chart predates the
-# operator pattern — it ships a classic ConfigMap-based scrape config instead, which is
-# exactly what we want here). Only two Deployments come out of this: `prometheus-server`
-# and `prometheus-kube-state-metrics`.
-#
 # Always-on: installed by `./gradlew deploy` (the `deployObservability` task) and removed by
 # `./gradlew undeploy`, see observability/README.md.
-#
-# Application metrics need no scrape config of our own either: the chart's built-in
-# `kubernetes-pods` job scrapes every pod annotated with `prometheus.io/scrape: "true"`, which
-# is what helm/munchies-service and the manifests under k8s/ set on the service pods.
 
+# Disabled to lighten the deploy
 alertmanager:
   enabled: false
 
@@ -24,10 +15,7 @@ prometheus-pushgateway:
 
 # kube-state-metrics exports Deployment/HPA object state as metrics — this is what gives us
 # `kube_horizontalpodautoscaler_status_current_replicas` / `..._desired_replicas` and
-# `kube_deployment_status_replicas_ready` time series for the scaling graphs. Its Service
-# already ships a `prometheus.io/scrape: "true"` annotation, so the chart's built-in
-# `kubernetes-service-endpoints` scrape job picks it up automatically — no scrape config of
-# our own needed.
+# `kube_deployment_status_replicas_ready` time series for the scaling graphs.
 kube-state-metrics:
   enabled: true
   resources:
@@ -40,13 +28,9 @@ kube-state-metrics:
 
 server:
   global:
-    # The chart default is 1m, too coarse for a load test lasting a few minutes and too wide
-    # for the `rate(...[1m])` windows used by the dashboards, which need at least two samples.
+    # Decreasing the interval default (1m) for load testing.
     scrape_interval: 15s
     evaluation_interval: 15s
-  # Actual per-container CPU/memory usage (not just requests/limits) comes from the
-  # `kubernetes-nodes-cadvisor` scrape job, enabled by default by this chart — the same
-  # cAdvisor data metrics-server itself reads to drive the HPA, now retained as history.
   persistentVolume:
     enabled: true # the stack is always-on: history must survive a pod restart or a redeploy
     size: 2Gi
