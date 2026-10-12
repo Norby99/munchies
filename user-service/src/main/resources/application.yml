@@ -33,6 +33,27 @@ micronaut:
         url: ${PAYMENT_SERVICE_URL:http://localhost:8083}
       gateway-service:
         url: ${GATEWAY_SERVICE_URL:http://localhost:8086}
+# Distributed tracing (see observability/). The service continues the trace carried by the
+# `traceparent` header of an incoming request and puts it on the Kafka messages it sends.
+otel:
+  traces:
+    # Spans are created either way, so log lines always carry a trace id; they are only sent
+    # somewhere when the deployment sets OTEL_TRACES_EXPORTER=otlp together with
+    # OTEL_EXPORTER_OTLP_ENDPOINT. Local runs and tests therefore need no collector.
+    exporter: ${OTEL_TRACES_EXPORTER:none}
+  # Metrics go through Micrometer and logs through stdout, not through OpenTelemetry.
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+  exporter:
+    otlp:
+      protocol: http/protobuf
+  # Probes and metric scrapes would be most of the traces and carry no information.
+  exclusions:
+    - /health
+    - /prometheus
+
 mongodb:
   uri: mongodb://localhost:27017/user-service
 
