@@ -1,3 +1,5 @@
+// Must stay first: it patches http, express and pino as they are loaded (see tracing.ts).
+import "./infrastructure/adapter/middleware/tracing";
 import express from "express";
 import expressListEndpoints from "express-list-endpoints";
 import cookieParser from "cookie-parser";
