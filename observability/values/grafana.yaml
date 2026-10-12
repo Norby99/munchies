@@ -46,8 +46,6 @@ persistence:
 service:
   type: ClusterIP # internal only; `kubectl port-forward svc/grafana 3000:80 -n observability` to view
 
-# Provisioned datasources — the first points at the Prometheus Service from observability/values/prometheus.yaml
-# (release name "prometheus", namespace "observability" — adjust both if you install under different names).
 datasources:
   datasources.yaml:
     apiVersion: 1
@@ -68,6 +66,30 @@ datasources:
         type: loki
         access: proxy
         url: http://loki.observability.svc.cluster.local:3100
+        jsonData:
+          # Every log line written while serving a request carries its trace id (top level for
+          # the Express services, under "mdc" for the Micronaut ones). This turns it into a
+          # link that opens the trace in Tempo. `$$` escapes Grafana's own variable expansion.
+          derivedFields:
+            - name: Trace
+              matcherRegex: '"trace_id":"(\w+)"'
+              datasourceUid: Tempo
+              url: "$${__value.raw}"
+              urlDisplayLabel: View trace
+      # Points at the Tempo Service from observability/values/tempo.yaml (release name "tempo").
+      - name: Tempo
+        uid: Tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.observability.svc.cluster.local:3200
+        jsonData:
+          # The opposite link: from a span to the log lines of its trace, in every service.
+          tracesToLogsV2:
+            datasourceUid: Loki
+            customQuery: true
+            query: '{namespace=~".+"} |= "$${__trace.traceId}"'
+            spanStartTimeShift: "-5m"
+            spanEndTimeShift: "5m"
 
 # Provisioned dashboards — inlined so this values file is fully self-contained (no external
 # dashboards.grafana.com fetch, no dependency on a file living on the target cluster's disk).
