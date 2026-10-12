@@ -1,3 +1,5 @@
+// Must stay first: it patches kafkajs and pino as they are loaded (see tracing.ts).
+import "@main/infrastructure/adapter/outbound/tracing/tracing";
 import "@main/domain/external-modules";
 import { Kafka } from "kafkajs";
 import getKafka from "./infrastructure/adapter/inbound/kafka/KafkaClient";
