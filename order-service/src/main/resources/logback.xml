@@ -1,14 +1,7 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- TRACE → DEBUG → INFO → WARN → ERROR -->
-    <root level="info">
-        <appender-ref ref="STDOUT" />
-    </root>
+    <!-- Appender and root level come from micronaut-commons; LOG_FORMAT=json switches to
+         structured output for log aggregation (see observability/README.md). -->
+    <include resource="munchies-logback-${LOG_FORMAT:-text}.xml" />
 
     <logger name="org.apache.kafka" level="warn" />
     <logger name="io.micronaut.configuration.kafka" level="warn" />

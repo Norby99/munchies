@@ -2,42 +2,58 @@ package com.munchies.order.infrastructure.adapter.inbound.web.config
 
 import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.usecase.*
-import com.munchies.order.domain.port.OrderRepository
+import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
+import com.munchies.order.domain.port.OrderViewRepository
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
+/**
+ * Wiring of the order use cases.
+ *
+ * Following CQRS, command use cases depend only on the [OrderEventStore] (command side) and
+ * query use cases only on the [OrderViewRepository] (query side). The projector, the bridge
+ * between the two, is wired in [OrderProjectionBeans].
+ */
 @Factory
 class OrderBeans {
 
-  @Singleton
-  fun advanceOrderStatus(repo: OrderRepository): AdvanceOrderStatus =
-    AdvanceOrderStatusUseCase(repo)
+  // ---------- Command side ----------
 
   @Singleton
-  fun discardOrder(repo: OrderRepository): DiscardOrder = DiscardOrderUseCase(repo)
+  fun advanceOrderStatus(
+    eventStore: OrderEventStore,
+    notificationPublisher: OrderNotificationPublisher,
+  ): AdvanceOrderStatus = AdvanceOrderStatusUseCase(eventStore, notificationPublisher)
 
   @Singleton
-  fun getOrderDetails(repo: OrderRepository): GetOrderDetails = GetOrderDetailsUseCase(repo)
+  fun discardOrder(eventStore: OrderEventStore): DiscardOrder = DiscardOrderUseCase(eventStore)
 
   @Singleton
-  fun getOrders(repo: OrderRepository): GetOrders = GetOrdersUseCase(repo)
+  fun payOrder(eventStore: OrderEventStore): PayOrder = PayOrderUseCase(eventStore)
 
   @Singleton
-  fun payOrder(repo: OrderRepository): PayOrder = PayOrderUseCase(repo)
+  fun placeOrder(eventStore: OrderEventStore): PlaceOrder = PlaceOrderUseCase(eventStore)
 
   @Singleton
-  fun placeOrder(repo: OrderRepository): PlaceOrder = PlaceOrderUseCase(repo)
+  fun updateDeliveryOrderInfo(eventStore: OrderEventStore): UpdateDeliveryOrderInfo =
+    UpdateDeliveryOrderInfoUseCase(eventStore)
 
   @Singleton
-  fun updateDeliveryOrderInfo(repo: OrderRepository): UpdateDeliveryOrderInfo =
-    UpdateDeliveryOrderInfoUseCase(repo)
+  fun updateOrderItems(eventStore: OrderEventStore): UpdateOrderItems =
+    UpdateOrderItemsUseCase(eventStore)
 
   @Singleton
-  fun updateOrderItems(repo: OrderRepository): UpdateOrderItems = UpdateOrderItemsUseCase(repo)
+  fun updateTakeawayOrderInfo(eventStore: OrderEventStore): UpdateTakeawayOrderInfo =
+    UpdateTakeawayOrderInfoUseCase(eventStore)
+
+  // ---------- Query side ----------
 
   @Singleton
-  fun updateTakeawayOrderInfo(repo: OrderRepository): UpdateTakeawayOrderInfo =
-    UpdateTakeawayOrderInfoUseCase(repo)
+  fun getOrderDetails(views: OrderViewRepository): GetOrderDetails = GetOrderDetailsUseCase(views)
+
+  @Singleton
+  fun getOrders(views: OrderViewRepository): GetOrders = GetOrdersUseCase(views)
 
   @Singleton
   fun getOrderServices(

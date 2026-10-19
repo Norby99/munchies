@@ -1,10 +1,18 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
+import com.mongodb.client.MongoCollection
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
+import com.munchies.order.domain.factory.OrderFactory
+import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderViewRepository
+import com.munchies.order.fixtures.asHistory
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
+import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderEventDocument
+import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderViewDocument
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
@@ -13,6 +21,9 @@ import io.micronaut.serde.ObjectMapper
 import io.micronaut.serde.annotation.SerdeImport
 import io.micronaut.test.support.TestPropertyProvider
 import jakarta.inject.Inject
+import jakarta.inject.Named
+import org.bson.Document
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.mongodb.MongoDBContainer
 
@@ -50,6 +61,39 @@ abstract class BaseOrderController : TestPropertyProvider {
 
   @Inject
   lateinit var embeddedServer: EmbeddedServer
+
+  @Inject
+  lateinit var eventStore: OrderEventStore
+
+  @Inject
+  lateinit var orderViews: OrderViewRepository
+
+  @Inject
+  @field:Named(OrderEventDocument.COLLECTION)
+  lateinit var eventCollection: MongoCollection<Document>
+
+  @Inject
+  @field:Named(OrderViewDocument.COLLECTION)
+  lateinit var viewCollection: MongoCollection<Document>
+
+  /**
+   * Test-side access to the command side: seeds an order by appending an event stream that
+   * reproduces it (which also feeds the read model projection), and reads the current state
+   * of an order by replaying its stream.
+   */
+  val orderRepository: OrderStreams by lazy { OrderStreams() }
+
+  inner class OrderStreams {
+    fun save(order: Order) = eventStore.append(order.id, 0, order.asHistory())
+
+    fun findById(id: OrderId): Order? = OrderFactory.fromHistory(eventStore.load(id))
+  }
+
+  @AfterEach
+  fun cleanupMongo() {
+    eventCollection.deleteMany(Document())
+    viewCollection.deleteMany(Document())
+  }
 
   val httpCalls: HttpCalls by lazy { HttpCalls(baseUrl(), client) }
 

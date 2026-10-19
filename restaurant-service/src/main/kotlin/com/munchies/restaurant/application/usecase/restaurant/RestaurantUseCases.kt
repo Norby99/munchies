@@ -11,6 +11,9 @@ import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(RestaurantUseCases::class.java)
 
 @Singleton
 data class RestaurantUseCases(val repository: RestaurantRepository) {
@@ -112,6 +115,11 @@ class CreateRestaurantUseCase(
       )
 
       repository.save(restaurant)
+      logger.info(
+        "Restaurant {} created by manager {}",
+        restaurant.id.value,
+        managerId.value,
+      )
 
       CreateRestaurantResult.Success(restaurantId = restaurant.id.value)
     }.getOrElse { CreateRestaurantResult.InvalidRestaurant(it.message.orEmpty()) }
@@ -161,6 +169,7 @@ class UpdateRestaurantUseCase(
           )
           restaurant.updateDetails(newDetails)
           repository.update(restaurant)
+          logger.info("Restaurant {} details updated", restaurant.id.value)
           UpdateRestaurantResult.Success(restaurantId = restaurant.id.value)
         }
       }
@@ -190,9 +199,16 @@ class DeleteRestaurantUseCase(
       val restaurant = repository.findById(RestaurantId.of(command.restaurantId))
       when {
         restaurant == null -> DeleteRestaurantResult.NotFound
-        restaurant.managerId.value != command.managerId -> DeleteRestaurantResult.Unauthorized
+        restaurant.managerId.value != command.managerId -> {
+          logger.warn(
+            "Refused to delete restaurant {}: requested by a user who is not its manager",
+            restaurant.id.value,
+          )
+          DeleteRestaurantResult.Unauthorized
+        }
         else -> {
           repository.delete(restaurant)
+          logger.info("Restaurant {} deleted", restaurant.id.value)
           DeleteRestaurantResult.Success(restaurantId = restaurant.id.value)
         }
       }

@@ -1,13 +1,55 @@
 micronaut:
   server:
     port: 8080
+    netty:
+      # One log line per handled request, through the HTTP_ACCESS_LOGGER logger. Probes and
+      # metric scrapes are left out: they would be most of the volume and carry no information.
+      access-logger:
+        enabled: true
+        log-format: common
+        exclusions:
+          - /health
+          - /prometheus
   application:
     name: restaurant-service
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+        descriptions: true
+        step: PT1M
+    binders:
+      web:
+        server:
+          # Publish latency as histogram buckets so percentiles can be computed in Prometheus
+          # (histogram_quantile) and aggregated across replicas.
+          histogram: true
   serde:
     serialization:
       inclusion: ALWAYS
 
+otel:
+  traces:
+    exporter: ${OTEL_TRACES_EXPORTER:none}
+  # Metrics go through Micrometer and logs through stdout, not through OpenTelemetry.
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+  exporter:
+    otlp:
+      protocol: http/protobuf
+  # Probes and metric scrapes would be most of the traces and carry no information.
+  exclusions:
+    - /health
+    - /prometheus
+
 endpoints:
   health:
+    enabled: true
+    sensitive: false
+  # Scraped by Prometheus (see observability/); exposes the Micrometer registry.
+  prometheus:
     enabled: true
     sensitive: false

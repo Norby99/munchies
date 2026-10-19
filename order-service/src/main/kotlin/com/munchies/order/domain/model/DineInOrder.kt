@@ -20,26 +20,18 @@ data class DineInOrder(
   val tableInfo: TableInfo,
 ) : Order(id, restaurantId, customerId, status, items, payed) {
 
-  override fun nextStatus(): AdvanceStatusResult {
-    val next = when (status) {
-      OrderStatus.PENDING -> OrderStatus.PREPARING
-      OrderStatus.PREPARING -> OrderStatus.READY
-      OrderStatus.READY -> OrderStatus.COMPLETED
-      else -> return AdvanceStatusResult.Failure.InvalidTransition
-    }
-    return AdvanceStatusResult.Success(copy(status = next))
-  }
-
-  override fun pay(): PayResult {
-    if (payed) {
-      return PayResult.Failure.AlreadyPaid
-    }
-    return PayResult.Success(copy(payed = true))
+  override fun successorOf(status: OrderStatus): OrderStatus? = when (status) {
+    OrderStatus.PENDING -> OrderStatus.PREPARING
+    OrderStatus.PREPARING -> OrderStatus.READY
+    OrderStatus.READY -> OrderStatus.COMPLETED
+    else -> null
   }
 
   override fun copyWithStatus(status: OrderStatus) = copy(status = status)
 
   override fun copyWithItems(items: List<OrderItem>) = copy(items = items)
+
+  override fun copyWithPayed(payed: Boolean) = copy(payed = payed)
 }
 
 /**
@@ -51,4 +43,4 @@ data class DineInOrder(
 data class TableInfo(
   val tableNumber: Int,
   val numberOfGuests: Int,
-)
+) : OrderDetails

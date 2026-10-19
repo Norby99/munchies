@@ -28,6 +28,7 @@ function convertRouteToExpress(path: string): string {
 
 import { RequestHandler } from "express";
 import { requireAuth, requireRole } from "../auth";
+import { logger } from "../logger";
 function createRoute(
   app: Express,
   path: string,
@@ -50,7 +51,8 @@ function createRoute(
 
 function logRequests(path: string, method: string): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    console.log("[ " + method.toUpperCase() + " | " + path + " ] => ", req.body);
+    // The body is not logged: it may carry credentials.
+    logger.debug({ method: method.toUpperCase(), route: path }, "Route matched");
     next();
   };
 }

@@ -54,3 +54,12 @@ export {
   PaymentSuccessNotificationSubject,
   paymentSuccessNotificationFromJson,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
+
+// Order notifications, published by order-service when an order's status changes.
+export {
+  OrderStatusChangedNotification,
+  OrderStatusChangedNotificationInfo,
+  OrderStatusChangedNotificationObserver,
+  OrderStatusChangedNotificationSubject,
+  orderStatusChangedNotificationFromJson,
+} from "munchies-order-service-shared/kotlin/order-modules";

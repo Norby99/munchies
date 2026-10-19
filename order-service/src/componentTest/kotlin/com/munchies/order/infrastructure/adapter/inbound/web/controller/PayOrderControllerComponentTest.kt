@@ -3,30 +3,15 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class PayOrderControllerComponentTest : BaseOrderController() {
-
-  @Inject
-  lateinit var orderRepository: MongoOrderRepository
-
-  @Inject
-  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
-
-  @AfterEach
-  fun cleanupMongo() {
-    mongoCrudOrderRepository.deleteAll()
-  }
 
   // ==========================================
   // TEST: POST orders/{id}/pay

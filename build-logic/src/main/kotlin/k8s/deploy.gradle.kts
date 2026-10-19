@@ -14,4 +14,12 @@ tasks.register<DeployServicesTask>("deployServices") {
     ),
   )
   rootDir.set(rootProject.rootDir)
+  excluded.set(
+    (project.findProperty("exclude") as? String)
+      ?.split(",")
+      ?.map { it.trim() }
+      ?.filter { it.isNotEmpty() }
+      ?: emptyList(),
+  )
+  skipBuild.set((project.findProperty("skipBuild") as? String)?.toBoolean() ?: false)
 }

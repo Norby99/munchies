@@ -111,3 +111,21 @@ export declare const UpdateDeliveryOrderInfoAPI: typeof com.munchies.order.infra
 export type UpdateTakeawayOrderInfoAPI =
     com.munchies.order.infrastructure.adapter.inbound.JsUpdateTakeawayOrderInfoAPI;
 export declare const UpdateTakeawayOrderInfoAPI: typeof com.munchies.order.infrastructure.adapter.inbound.JsUpdateTakeawayOrderInfoAPI;
+
+// Notification
+
+export declare const OrderStatusChangedNotificationInfo: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationInfo;
+
+export type OrderStatusChangedNotification =
+    com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotification;
+export declare const OrderStatusChangedNotification: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotification;
+
+export declare const orderStatusChangedNotificationFromJson: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.orderStatusChangedNotificationFromJson;
+
+export type OrderStatusChangedNotificationObserver =
+    com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationObserver;
+export declare const OrderStatusChangedNotificationObserver: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationObserver;
+
+export type OrderStatusChangedNotificationSubject =
+    com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationSubject;
+export declare const OrderStatusChangedNotificationSubject: typeof com.munchies.order.infrastructure.adapter.outbound.notification.orderstatuschanged.OrderStatusChangedNotificationSubject;

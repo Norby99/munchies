@@ -20,7 +20,7 @@ export class KafkaPaymentNotificationPublisher implements PaymentNotificationPub
 
   private async getProducer(): Promise<Producer> {
     if (!this.producer) {
-      const kafka = await getKafka(this.topic);
+      const kafka = getKafka(this.topic);
       const producer = kafka.producer();
       await producer.connect();
       this.producer = producer;

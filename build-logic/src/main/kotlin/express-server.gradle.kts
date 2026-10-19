@@ -111,7 +111,10 @@ tasks.register<NodeTask>("run") {
   script = file(project.projectDir.resolve("dist/main/ts/index.js").path)
 }
 
-tasks.named("clean") {
+// Typed as Delete on purpose: on an untyped `tasks.named("clean")` the calls below resolve to
+// `Project.delete`, which wipes the directories as soon as the task is configured (any build that
+// misses the configuration cache) rather than when `clean` actually runs.
+tasks.named<Delete>("clean") {
   delete(project.projectDir.resolve("dist"))
   delete(project.projectDir.resolve("node_modules"))
   delete(project.projectDir.resolve("build"))

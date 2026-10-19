@@ -5,6 +5,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -21,9 +22,23 @@ abstract class DeployServicesTask @Inject constructor(
   @get:InputDirectory
   val rootDir: DirectoryProperty = objects.directoryProperty()
 
+  /**
+   * When set, the Docker images are not rebuilt: the ones already present locally are loaded into
+   * Minikube as they are. Building compiles the services while the cluster is running, which does
+   * not fit in memory on small machines; this lets the images be built beforehand, with the
+   * cluster stopped.
+   */
+  @get:Input
+  val skipBuild: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+  /** Services to leave out of this deployment, e.g. the ones not needed for a demo. */
+  @get:Input
+  val excluded: ListProperty<String> = objects.listProperty(String::class.java)
+
   @TaskAction
   fun deploy() {
-    services.get().forEach { srv ->
+    val skipped = excluded.get().toSet()
+    services.get().filterNot { it in skipped }.forEach { srv ->
       println("===========================================")
       println("Processing: $srv")
       println("===========================================")
@@ -33,6 +48,8 @@ abstract class DeployServicesTask @Inject constructor(
       when {
         !srvDir.exists() ->
           println("Skipping Docker image build for $srv...")
+        skipBuild.get() ->
+          println("Skipping Docker image build for $srv (skipBuild): using the existing image...")
         root.resolve("$srv/service/build.gradle.kts").exists() -> {
           println("Building Docker image for $srv (using :$srv:service)...")
           execOps.exec { commandLine("./gradlew", ":$srv:service:dockerBuild") }

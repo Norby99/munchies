@@ -67,7 +67,6 @@ export class AuthTokenDecoder extends TokenDecoder {
           return new DecodedTokenFailure("Not all claims are present");
         }
       }
-      console.log("decoded token: ", decoded);
       return new DecodedTokenSuccess(
         decoded[ID_CLAIM]!!?.toString(),
         parseAuthRoleString(decoded[ROLE_CLAIM]!!.toString())

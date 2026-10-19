@@ -18,7 +18,12 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9092"]
+      # Checking TCP connectivity alone is not enough: the port accepts
+      # connections before the KRaft controller has finished electing itself
+      # and the broker can actually serve metadata/admin requests. Querying
+      # the broker API instead makes the healthcheck wait for real readiness,
+      # so dependent services stop racing topic creation against startup.
+      test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 5s
       retries: 10
