@@ -11,6 +11,8 @@ k6-based load test used to verify that services scale horizontally under Kuberne
 | `k6-script.configmap.yml` | the k6 script (`test.js`), mounted into the Job |
 | `k6-job.yml` | the k6 runner Job — target URL and load profile are set via `env` here |
 | `run.sh` | applies the Job and prints replica count + HPA CPU% every 10s next to the k6 output |
+| `show.sh` | CLI summary tool to list and view load test metrics, timelines, and scaling graphs |
+| `error-rate-analysis.md` | In-depth technical explanation of zero-error reliability under load |
 
 The HPA itself lives with the service it scales, in `helm/values/gateway-service.yaml`
 (`autoscaling:` block) — see `helm/README.md`. `gateway-service`, `user-service`,
@@ -169,10 +171,15 @@ Expected: replicas climb during the 3-minute sustain phase, then step back down 
 after the load stops (`scaleDown.stabilizationWindowSeconds` in the chart's `hpa.yaml`
 template, set via `autoscaling.behavior` in `values.yaml`).
 
-`run.sh` takes the watched namespace as `$1` (default `gateway-service`):
+`run.sh` takes the watched namespace as `$1` (default `gateway-service`), with optional `--fast` and `--jwt` flags:
 
 ```bash
 ./loadtest/run.sh restaurant-service
+./loadtest/run.sh --fast                 # quick ~70s verification test against /health
+./loadtest/run.sh --jwt                  # test realistic cryptographic JWT verification endpoint
+./loadtest/run.sh --fast --jwt           # quick ~70s cryptographic test
+./loadtest/show.sh                       # view latest test report & scaling timeline
+./loadtest/show.sh --list                # list all recorded test runs
 ```
 
 ---
