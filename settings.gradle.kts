@@ -57,3 +57,6 @@ include(":gateway-shared")
 
 include(":order-service")
 include(":order-shared")
+
+include(":suggestion-service")
+include(":suggestion-shared")
