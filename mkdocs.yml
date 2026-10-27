@@ -76,6 +76,8 @@ nav:
       - Overview: ds/index.md
   - SAAP:
       - Overview: saap/index.md
+      - Implementation:
+          - Hexagonal Architecture: saap/02-Implementation/hexagonal-architecture.md
   - ASMD:
       - Overview: asmd/index.md
   - Other Munchies Docs:
