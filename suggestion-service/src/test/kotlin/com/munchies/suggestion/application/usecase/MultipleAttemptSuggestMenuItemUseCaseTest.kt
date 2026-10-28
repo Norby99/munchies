@@ -19,9 +19,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 class MultipleAttemptSuggestMenuItemUseCaseTest {
-  @Test
-  fun execute() {
-  }
 
   @Test
   fun getEngine() {

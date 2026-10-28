@@ -65,12 +65,19 @@ class SuggestionControllerTest {
 
     val request = SuggestItemRequest(dto)
 
+    val responseDTO = SuggestionResponseDTO(
+      rationale = "",
+      confidence = SuggestionConfidenceDTO("HIGH"),
+      suggestedMenuItems = listOf(),
+    )
+
     val suggestMenuItem = mock<SuggestMenuItem> {
-      on { execute(dto.toDomain()) } doReturn MalformedSuggestion
+      on { execute(any()) } doReturn SuggestionSuccess(responseDTO.toDomain())
     }
     val controller = getController(suggestMenuItem = suggestMenuItem)
 
-    shouldThrow<EngineTimeoutException> { controller.suggestMenuItem(request) }
+    val res = controller.suggestMenuItem(request)
+    res.status shouldBe HttpStatus.OK
 
     Mockito.verify(suggestMenuItem).execute(any())
   }
@@ -178,6 +185,7 @@ class SuggestionControllerTest {
     val res = controller.suggestMenuItem(request)
     res.status shouldBe HttpStatus.OK
     res.body() shouldNotBe null
+    res.body().result shouldBe responseDTO
     res.body().response shouldBe responseDTO
   }
 }

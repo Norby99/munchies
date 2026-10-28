@@ -13,6 +13,3 @@ data class MenuItemDTO(
   val description: String,
   val price: Double,
 )
-
-
-//TODO() validator?
