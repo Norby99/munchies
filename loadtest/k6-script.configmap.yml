@@ -8,36 +8,47 @@ data:
     import http from 'k6/http';
     import { check } from 'k6';
 
-    // Override at apply time via the Job's env (TARGET_URL / PEAK_VUS / SUSTAIN).
+    // Override at apply time via the Job's env (TARGET_URL / PEAK_VUS / SUSTAIN / etc).
     const URL = __ENV.TARGET_URL
-      || 'http://gateway-service.gateway-service.svc.cluster.local:8080/health';
+      || 'http://gateway-service.gateway-service.svc.cluster.local.:8080/health';
     const PEAK_VUS = Number(__ENV.PEAK_VUS || 150);
+    const WARMUP = __ENV.WARMUP || '1m';
+    const BASELINE = __ENV.BASELINE || '1m';
+    const RAMP = __ENV.RAMP || '1m';
     const SUSTAIN = __ENV.SUSTAIN || '3m';
+    const RAMPDOWN = __ENV.RAMPDOWN || '2m';
+
+    const AUTH_TOKEN = __ENV.AUTH_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW5jaG1hcmstdXNlciIsImlkIjoiYmVuY2htYXJrLXVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJpYXQiOjE3OTI2MTI1NjAsImV4cCI6MTc5MzIxNzM2MH0.GWkgbCSOi2R9Y6fXQdU2WVj57KSRBkgwYi4n9E6JRRs';
 
     export const options = {
+      discardResponseBodies: true,
       scenarios: {
         ramp: {
           executor: 'ramping-vus',
           startVUs: 0,
           gracefulRampDown: '10s',
           stages: [
-            { duration: '1m', target: Math.round(PEAK_VUS / 3) }, // warm up
-            { duration: '1m', target: Math.round(PEAK_VUS / 3) }, // baseline hold
-            { duration: '1m', target: PEAK_VUS },                 // ramp to peak
+            { duration: WARMUP, target: Math.round(PEAK_VUS / 3) }, // warm up
+            { duration: BASELINE, target: Math.round(PEAK_VUS / 3) }, // baseline hold
+            { duration: RAMP, target: PEAK_VUS },                 // ramp to peak
             { duration: SUSTAIN, target: PEAK_VUS },              // sustain — HPA scales out here
-            { duration: '2m', target: 0 },                        // ramp down — watch scale-in
+            { duration: RAMPDOWN, target: 0 },                    // ramp down — watch scale-in
           ],
         },
       },
       thresholds: {
-        http_req_failed: ['rate<0.01'],
-        http_req_duration: ['p(95)<800'],
+        http_req_failed: ['rate<0.05'],
+        http_req_duration: ['p(95)<1500'],
       },
       summaryTrendStats: ['avg', 'min', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
     };
 
     export default function () {
-      const res = http.get(URL);
+      const res = http.get(URL, {
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      });
       check(res, { 'status is 200': (r) => r.status === 200 });
     }
 

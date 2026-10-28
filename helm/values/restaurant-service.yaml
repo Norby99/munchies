@@ -10,10 +10,19 @@ service:
 env:
   - name: MICRONAUT_ENVIRONMENTS
     value: "k8s,prod"
+  - name: LOG_FORMAT
+    value: "json"
+  - name: OTEL_TRACES_EXPORTER
+    value: "otlp"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://tempo.observability.svc.cluster.local:4318"
   - name: KAFKA_BOOTSTRAP_SERVERS
     value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
   - name: MONGODB_URI
     value: "mongodb://restaurant-mongodb.restaurant-service.svc.cluster.local:27017/restaurant-service"
+
+metrics:
+  path: /prometheus
 
 autoscaling:
   enabled: true

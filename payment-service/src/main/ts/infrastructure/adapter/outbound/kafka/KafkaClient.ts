@@ -1,37 +1,27 @@
 import { Kafka, logLevel } from "kafkajs";
 
 /**
- * Builds a connected Kafka client and ensures the given topic exists.
+ * Builds the Kafka client used by payment-service's producers.
  *
- * Mirrors the helper used by notification-service so both sides of the
- * payment-success event agree on how the topic is provisioned.
+ * Topic provisioning is deliberately not done here: payment-service only publishes, and
+ * notification-service (the only Kafka consumer in the system) is responsible for making sure
+ * every topic it subscribes to exists, with retries and leader election awaited. Producers
+ * across services (order-service, user-service and payment-service) behave the same way: they
+ * just publish on the topic named in the event's `-shared` module.
+ *
+ * @param clientId The Kafka client id, used by the broker for logging and quotas.
+ * @throws Error if `KAFKA_BOOTSTRAP_SERVERS` is not set.
  */
-async function getKafka(topic: string): Promise<Kafka> {
+function getKafka(clientId: string): Kafka {
   const uri = process.env.KAFKA_BOOTSTRAP_SERVERS;
 
   if (!uri) throw new Error("Kafka is not online");
 
-  const kafka = new Kafka({
-    clientId: topic,
+  return new Kafka({
+    clientId,
     brokers: [uri],
     logLevel: logLevel.INFO,
   });
-
-  const admin = kafka.admin();
-
-  await admin.connect();
-
-  await admin.createTopics({
-    topics: [
-      {
-        topic: topic,
-      },
-    ],
-  });
-
-  await admin.disconnect();
-
-  return kafka;
 }
 
 export default getKafka;

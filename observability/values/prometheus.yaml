@@ -1,15 +1,9 @@
 # Trimmed override for the upstream `prometheus-community/prometheus` chart.
 #
-# Deliberately scoped down for a memory-constrained single-node minikube: no Alertmanager,
-# no node-exporter, no Pushgateway, no Prometheus Operator/CRDs (this chart predates the
-# operator pattern — it ships a classic ConfigMap-based scrape config instead, which is
-# exactly what we want here). Only two Deployments come out of this: `prometheus-server`
-# and `prometheus-kube-state-metrics`.
-#
-# This is a deliberately temporary, opt-in addition for benchmarking — like `loadtest/`, it
-# is NOT part of `k8s/` or `./gradlew deploy`. Bring it up right before a benchmark run,
-# tear it down after (see observability/README.md).
+# Always-on: installed by `./gradlew deploy` (the `deployObservability` task) and removed by
+# `./gradlew undeploy`, see observability/README.md.
 
+# Disabled to lighten the deploy
 alertmanager:
   enabled: false
 
@@ -21,10 +15,7 @@ prometheus-pushgateway:
 
 # kube-state-metrics exports Deployment/HPA object state as metrics — this is what gives us
 # `kube_horizontalpodautoscaler_status_current_replicas` / `..._desired_replicas` and
-# `kube_deployment_status_replicas_ready` time series for the scaling graphs. Its Service
-# already ships a `prometheus.io/scrape: "true"` annotation, so the chart's built-in
-# `kubernetes-service-endpoints` scrape job picks it up automatically — no scrape config of
-# our own needed.
+# `kube_deployment_status_replicas_ready` time series for the scaling graphs.
 kube-state-metrics:
   enabled: true
   resources:
@@ -36,12 +27,15 @@ kube-state-metrics:
       memory: 128Mi
 
 server:
-  # Actual per-container CPU/memory usage (not just requests/limits) comes from the
-  # `kubernetes-nodes-cadvisor` scrape job, enabled by default by this chart — the same
-  # cAdvisor data metrics-server itself reads to drive the HPA, now retained as history.
+  global:
+    # Decreasing the interval default (1m) for load testing.
+    scrape_interval: 15s
+    evaluation_interval: 15s
   persistentVolume:
-    enabled: false # emptyDir: this is a short-lived session, data doesn't need to survive a pod restart
-  retention: 2h # more than enough for one benchmark run
+    enabled: true # the stack is always-on: history must survive a pod restart or a redeploy
+    size: 2Gi
+  retention: 3d
+  retentionSize: 1500MB # stays below the volume size, whichever limit is reached first
   resources:
     requests:
       cpu: 100m

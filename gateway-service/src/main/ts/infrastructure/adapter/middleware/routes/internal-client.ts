@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosStatic } from "axios";
+import { logger } from "../logger";
 
 export const axiosClient = axios.create({
   transformRequest: [(data) => data],
@@ -11,13 +12,14 @@ export const axiosClient = axios.create({
   
 });
 
+// Payloads are not logged: they may carry credentials or personal data.
 axiosClient.interceptors.request.use((config) => {
-  console.info("OUT:", typeof config.data, config.data);
+  logger.debug({ method: config.method, url: config.url }, "Upstream request");
   return config;
 });
 
 axiosClient.interceptors.response.use((response) => {
-  console.info("IN:", typeof response.data, response.data);
+  logger.debug({ status: response.status, url: response.config?.url }, "Upstream response");
   return response;
 });
 
@@ -58,8 +60,6 @@ export async function request<
 ): Promise<Response | ErrorResponse> {
   return axiosMethodChooser(axiosClient, uri, httpMethod, body)
     .then((value) => {
-      console.log("received data: ", value.data);
-      
       if (value.status >= 400) {
         return errorFromJson(value.data);
       }
@@ -67,11 +67,7 @@ export async function request<
       return responseFromJson(value.data);
     })
     .catch((err) => {
-      console.error("-----Error-----");
-      console.error("when " + httpMethod.name + " to " + uri);
-      console.error("with: " + body);
-      console.error("result err: ", err);
-      console.error("-----End Error-----");
+      logger.error({ err, method: httpMethod.name, uri }, "Upstream request failed");
       return new ErrorResponse("Internal Axios Request: \n" + String(err), 500);
       
     });

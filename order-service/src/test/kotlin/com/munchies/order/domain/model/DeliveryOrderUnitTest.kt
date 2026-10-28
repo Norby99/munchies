@@ -2,6 +2,7 @@ package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.AdvanceStatusResult
 import com.munchies.order.fixtures.Address2
+import com.munchies.order.fixtures.after
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.futureTime
 import com.munchies.order.fixtures.pastTime
@@ -17,7 +18,7 @@ class DeliveryOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.PREPARING
+    order.after(result.events).status shouldBeEqual OrderStatus.PREPARING
   }
 
   @Test
@@ -26,7 +27,7 @@ class DeliveryOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.READY
+    order.after(result.events).status shouldBeEqual OrderStatus.READY
   }
 
   @Test
@@ -35,7 +36,7 @@ class DeliveryOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.ON_THE_WAY
+    order.after(result.events).status shouldBeEqual OrderStatus.ON_THE_WAY
   }
 
   @Test
@@ -44,7 +45,7 @@ class DeliveryOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.COMPLETED
+    order.after(result.events).status shouldBeEqual OrderStatus.COMPLETED
   }
 
   @Test
@@ -82,9 +83,9 @@ class DeliveryOrderUnitTest {
     )
 
     result.shouldBeInstanceOf<DeliveryOrder.UpdateResult.Success>()
-    result.order.deliveryInfo.deliveryAddress shouldBeEqual Address2.deliveryAddress
-    result.order.deliveryInfo.bellName shouldBeEqual Address2.bellName
-    result.order.deliveryInfo.customerPhone shouldBeEqual Address2.customerPhone
-    result.order.deliveryInfo.estimatedDeliveryTime shouldBeEqual futureTime
+    order.after(result.events).deliveryInfo.deliveryAddress shouldBeEqual Address2.deliveryAddress
+    order.after(result.events).deliveryInfo.bellName shouldBeEqual Address2.bellName
+    order.after(result.events).deliveryInfo.customerPhone shouldBeEqual Address2.customerPhone
+    order.after(result.events).deliveryInfo.estimatedDeliveryTime shouldBeEqual futureTime
   }
 }

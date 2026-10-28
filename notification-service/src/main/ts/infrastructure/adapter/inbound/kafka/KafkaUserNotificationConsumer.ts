@@ -5,6 +5,7 @@ import {
 } from "@main/domain/external-modules";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { Kafka, Consumer } from "kafkajs";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /**
  * Kafka consumer for the user email-confirmation topic. Parses incoming
@@ -26,7 +27,7 @@ export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailCo
   }
 
   async connect() {
-    this.consumer.connect();
+    await this.consumer.connect();
     await this.consumer.subscribe({ topic: this.topic, fromBeginning: true });
   }
 
@@ -44,10 +45,7 @@ export class KafkaUserEmailConfirmationNotificationConsumer extends _UserEmailCo
             );
             this.update(event);
           } catch (err) {
-            console.error(
-              "Failed to parse UserEmailConfirmationNotification message",
-              err
-            );
+            logger.error({ err }, "Failed to parse UserEmailConfirmationNotification message");
           }
         }
       },

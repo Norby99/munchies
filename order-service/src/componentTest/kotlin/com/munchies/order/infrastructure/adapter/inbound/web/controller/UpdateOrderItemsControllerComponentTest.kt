@@ -13,8 +13,6 @@ import com.munchies.order.fixtures.createUpdateOrderItemsRequest
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateOrderItemsResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.updateOrderItemsResponseFromJson
 import io.kotest.matchers.equals.shouldNotBeEqual
@@ -24,24 +22,11 @@ import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
-
-  @Inject
-  lateinit var orderRepository: MongoOrderRepository
-
-  @Inject
-  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
-
-  @AfterEach
-  fun cleanupMongo() {
-    mongoCrudOrderRepository.deleteAll()
-  }
 
   // ==========================================
   // TEST: PATCH orders/{id}/items

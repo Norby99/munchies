@@ -8,6 +8,9 @@ import com.munchies.restaurant.domain.repository.RestaurantRepository
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.menu.MenuName
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(MenuUseCases::class.java)
 
 @Singleton
 data class MenuUseCases(
@@ -91,6 +94,7 @@ class CreateMenuUseCase(
         validity = command.validity.toDomain(),
       )
       menuRepository.save(menu)
+      logger.info("Menu {} created for restaurant {}", menu.id.value, restaurant.id.value)
       CreateMenuResult.Success(menu)
     }.getOrElse { CreateMenuResult.InvalidMenu(it.message.orEmpty()) }
   }
@@ -167,6 +171,7 @@ class DeleteMenuUseCase(
 
     return runCatching {
       menuRepository.delete(menu)
+      logger.info("Menu {} deleted from restaurant {}", menu.id.value, command.restaurantId)
       DeleteMenuResult.Success(menu.id.value)
     }.getOrElse { DeleteMenuResult.InvalidMenu(it.message.orEmpty()) }
   }

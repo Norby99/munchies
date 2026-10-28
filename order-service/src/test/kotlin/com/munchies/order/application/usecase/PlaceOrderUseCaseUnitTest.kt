@@ -4,7 +4,8 @@ import com.munchies.order.application.port.inbound.PlaceOrder
 import com.munchies.order.domain.factory.OrderCreationResult
 import com.munchies.order.domain.factory.OrderFactory
 import com.munchies.order.domain.model.*
-import com.munchies.order.domain.port.OrderRepository
+import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.fixtures.asHistory
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createDineInOrder
 import com.munchies.order.fixtures.createTakeawayOrder
@@ -20,8 +21,8 @@ import org.junit.jupiter.api.Test
 
 class PlaceOrderUseCaseUnitTest {
 
-  private val repository = mockk<OrderRepository>()
-  private val useCase = PlaceOrderUseCase(repository)
+  private val eventStore = mockk<OrderEventStore>()
+  private val useCase = PlaceOrderUseCase(eventStore)
 
   @BeforeEach
   fun setUp() {
@@ -37,12 +38,12 @@ class PlaceOrderUseCaseUnitTest {
   // ---------- DELIVERY ----------
 
   @Test
-  fun `execute creates and saves a delivery order on success`() {
+  fun `execute creates and appends a delivery order on success`() {
     val command = deliveryCommand()
     val order = createDeliveryOrder()
     every { OrderFactory.createDelivery(any(), any(), any(), any(), any()) } returns
-      OrderCreationResult.Success(order)
-    every { repository.save(order) } just Runs
+      OrderCreationResult.Success(order.asHistory())
+    every { eventStore.append(any(), 0, any()) } just Runs
 
     val result = useCase.execute(command)
 
@@ -63,18 +64,19 @@ class PlaceOrderUseCaseUnitTest {
     }
     verify(exactly = 0) { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) }
     verify(exactly = 0) { OrderFactory.createDineIn(any(), any(), any(), any(), any()) }
-    verify(exactly = 1) { repository.save(order) }
+    verify(exactly = 1) { eventStore.append(any(), 0, any()) }
+    verify(exactly = 1) { OrderFactory.fromHistory(any()) }
   }
 
   // ---------- TAKEAWAY ----------
 
   @Test
-  fun `execute creates and saves a takeaway order on success`() {
+  fun `execute creates and appends a takeaway order on success`() {
     val command = takeawayCommand()
     val order = createTakeawayOrder()
     every { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) } returns
-      OrderCreationResult.Success(order)
-    every { repository.save(order) } just Runs
+      OrderCreationResult.Success(order.asHistory())
+    every { eventStore.append(any(), 0, any()) } just Runs
 
     val result = useCase.execute(command)
 
@@ -93,18 +95,19 @@ class PlaceOrderUseCaseUnitTest {
     }
     verify(exactly = 0) { OrderFactory.createDelivery(any(), any(), any(), any(), any()) }
     verify(exactly = 0) { OrderFactory.createDineIn(any(), any(), any(), any(), any()) }
-    verify(exactly = 1) { repository.save(order) }
+    verify(exactly = 1) { eventStore.append(any(), 0, any()) }
+    verify(exactly = 1) { OrderFactory.fromHistory(any()) }
   }
 
   // ---------- DINE IN ----------
 
   @Test
-  fun `execute creates and saves a dine-in order on success`() {
+  fun `execute creates and appends a dine-in order on success`() {
     val command = dineInCommand()
     val order = createDineInOrder()
     every { OrderFactory.createDineIn(any(), any(), any(), any(), any()) } returns
-      OrderCreationResult.Success(order)
-    every { repository.save(order) } just Runs
+      OrderCreationResult.Success(order.asHistory())
+    every { eventStore.append(any(), 0, any()) } just Runs
 
     val result = useCase.execute(command)
 
@@ -123,13 +126,14 @@ class PlaceOrderUseCaseUnitTest {
     }
     verify(exactly = 0) { OrderFactory.createDelivery(any(), any(), any(), any(), any()) }
     verify(exactly = 0) { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) }
-    verify(exactly = 1) { repository.save(order) }
+    verify(exactly = 1) { eventStore.append(any(), 0, any()) }
+    verify(exactly = 1) { OrderFactory.fromHistory(any()) }
   }
 
   // ---------- FAILURE MAPPING ----------
 
   @Test
-  fun `execute maps EmptyItems failure and does not save`() {
+  fun `execute maps EmptyItems failure and does not append`() {
     every { OrderFactory.createDelivery(any(), any(), any(), any(), any()) } returns
       OrderCreationResult.Failure.EmptyItems
 
@@ -137,11 +141,11 @@ class PlaceOrderUseCaseUnitTest {
 
     result shouldBe PlaceOrder.Result.Failure.EmptyItems
     verify(exactly = 1) { OrderFactory.createDelivery(any(), any(), any(), any(), any()) }
-    verify(exactly = 0) { repository.save(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
-  fun `execute maps InvalidItemQuantity failure and does not save`() {
+  fun `execute maps InvalidItemQuantity failure and does not append`() {
     every { OrderFactory.createDelivery(any(), any(), any(), any(), any()) } returns
       OrderCreationResult.Failure.InvalidItemQuantity
 
@@ -149,11 +153,11 @@ class PlaceOrderUseCaseUnitTest {
 
     result shouldBe PlaceOrder.Result.Failure.InvalidItemQuantity
     verify(exactly = 1) { OrderFactory.createDelivery(any(), any(), any(), any(), any()) }
-    verify(exactly = 0) { repository.save(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 
   @Test
-  fun `execute maps InvalidDate failure and does not save`() {
+  fun `execute maps InvalidDate failure and does not append`() {
     every { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) } returns
       OrderCreationResult.Failure.InvalidDate
 
@@ -161,6 +165,6 @@ class PlaceOrderUseCaseUnitTest {
 
     result shouldBe PlaceOrder.Result.Failure.InvalidDate
     verify(exactly = 1) { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) }
-    verify(exactly = 0) { repository.save(any()) }
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
   }
 }

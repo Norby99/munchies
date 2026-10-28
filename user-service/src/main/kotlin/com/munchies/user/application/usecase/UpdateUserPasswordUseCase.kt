@@ -5,6 +5,7 @@ import com.munchies.user.application.port.inbound.UpdateUserPassword.Companion.U
 import com.munchies.user.domain.model.User
 import com.munchies.user.domain.model.UserCredentials
 import com.munchies.user.domain.port.*
+import org.slf4j.LoggerFactory
 
 /**
  * Updates a user's password after validating identity, lockout state, and the current password.
@@ -56,6 +57,7 @@ class UpdateUserPasswordUseCase(
           loginAttempts = credentials.loginAttempts + 1,
         )
         credentialsRepository.update(updatedCredentials)
+        logger.warn("Password change refused for user {}: wrong password", credentials.id.value)
         UpdateUserPasswordResult.WrongCredentials
       }
       (providedId != credentials.id.value) -> {
@@ -63,6 +65,7 @@ class UpdateUserPasswordUseCase(
       }
       else -> {
         updatePassword(credentials, newPassword)
+        logger.info("User {} changed their password", credentials.id.value)
         UpdateUserPasswordResult.Success
       }
     }
@@ -86,5 +89,9 @@ class UpdateUserPasswordUseCase(
 
       else -> validateAndUpdatePassword(id, credentials, oldPassword, newPassword)
     }
+  }
+
+  private companion object {
+    val logger = LoggerFactory.getLogger(UpdateUserPasswordUseCase::class.java)
   }
 }

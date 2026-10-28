@@ -1,40 +1,29 @@
 package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
+import com.munchies.order.domain.model.OrderId
+import com.munchies.order.domain.model.event.OrderPlaced
 import com.munchies.order.fixtures.createDeliveryInfo
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createInvalidItemsNegativeCount
 import com.munchies.order.fixtures.createPlaceOrderRequest
 import com.munchies.order.fixtures.pastTime
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.PlaceOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.placeOrderResponseFromJson
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class PlaceOrderControllerComponentTest : BaseOrderController() {
-
-  @Inject
-  lateinit var orderRepository: MongoOrderRepository
-
-  @Inject
-  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
-
-  @AfterEach
-  fun cleanupMongo() {
-    mongoCrudOrderRepository.deleteAll()
-  }
 
   // ==========================================
   // TEST: POST /orders
@@ -54,6 +43,11 @@ class PlaceOrderControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.OK
     result.code shouldBe HttpStatus.OK.code
+
+    // The order stream starts with OrderPlaced and the read model already serves the new order.
+    val placedId = OrderId(result.result.orderId)
+    eventStore.load(placedId).single().shouldBeInstanceOf<OrderPlaced>()
+    orderViews.findById(placedId)?.toDto() shouldBe result.result
   }
 
   @Test

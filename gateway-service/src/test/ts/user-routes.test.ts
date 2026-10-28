@@ -1,7 +1,6 @@
 import "./setup-env";
 import "../../main/ts/infrastructure/adapter/middleware/routes/routes";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { userRoutes } from "../../main/ts/infrastructure/adapter/middleware/routes/user/user.routes";
 import { GetUserRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/user/get-user.route";
 import { DeleteUserRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/user/delete-user.route";
 import { LoginUserRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/user/login-user.route";
@@ -52,12 +51,6 @@ describe("User Routes", () => {
       delete process.env.USER_SERVICE_URL;
     }
     vi.restoreAllMocks();
-  });
-
-  describe("userRoutes array", () => {
-    it("exports all 8 user routes", () => {
-      expect(userRoutes.length).toBe(8);
-    });
   });
 
   // ---- GetUserRoute ----

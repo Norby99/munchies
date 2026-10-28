@@ -14,6 +14,11 @@ spec:
     metadata:
       labels:
         app: payment-service
+      annotations:
+        # Picked up by the `kubernetes-pods` scrape job of the Prometheus chart (see observability/).
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: payment-service
@@ -30,6 +35,8 @@ spec:
               value: "mongodb://payment-mongodb:27017/payment-service"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://tempo.observability.svc.cluster.local:4318"
           resources:
             requests:
               memory: "128Mi"

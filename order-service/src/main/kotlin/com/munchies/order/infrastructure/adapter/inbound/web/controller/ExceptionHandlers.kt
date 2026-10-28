@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.commons.domain.port.ValidationException
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
+import com.munchies.order.domain.port.ConcurrentOrderModificationException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
@@ -74,6 +75,27 @@ class UnexpectedExceptionHandler :
         ErrorResponse(
           result = exception.message ?: "Unexpected result",
           code = HttpStatus.INTERNAL_SERVER_ERROR.code,
+        ),
+      )
+  }
+}
+
+/**
+ * Maps an optimistic-concurrency conflict on an order event stream to `409 Conflict`: the
+ * request was decided against a stale state of the order and can be retried by the client.
+ */
+@Singleton
+class ConcurrentOrderModificationExceptionHandler :
+  ExceptionHandler<ConcurrentOrderModificationException, HttpResponse<ErrorResponse>> {
+  override fun handle(
+    request: HttpRequest<*>,
+    exception: ConcurrentOrderModificationException,
+  ): HttpResponse<ErrorResponse> {
+    return HttpResponse.status<ErrorResponse>(HttpStatus.CONFLICT)
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Order was modified concurrently",
+          code = HttpStatus.CONFLICT.code,
         ),
       )
   }

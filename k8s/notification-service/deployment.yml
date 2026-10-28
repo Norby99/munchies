@@ -14,6 +14,11 @@ spec:
     metadata:
       labels:
         app: notification-service
+      annotations:
+        # Picked up by the `kubernetes-pods` scrape job of the Prometheus chart (see observability/).
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: notification-service
@@ -26,6 +31,10 @@ spec:
               value: "k8s,prod"
             - name: MONGODB_URI
               value: "mongodb://notification-mongodb:27017/notification-service"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://tempo.observability.svc.cluster.local:4318"
           resources:
             requests:
               memory: "128Mi"

@@ -30,6 +30,14 @@ readinessProbe:
   initialDelaySeconds: 10
   periodSeconds: 5
 
+# Application metrics: when enabled, the pod is annotated so that Prometheus scrapes it. The
+# default path is the Express services' one (prom-client); Micronaut services override it with
+# `/prometheus`, the endpoint of the Micrometer Prometheus registry.
+metrics:
+  enabled: true
+  path: /metrics
+  port: 8080
+
 resources:
   requests:
     memory: "128Mi"

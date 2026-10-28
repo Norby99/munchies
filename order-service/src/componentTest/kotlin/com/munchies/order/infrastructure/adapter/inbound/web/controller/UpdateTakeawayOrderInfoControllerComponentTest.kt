@@ -10,8 +10,6 @@ import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.pastTime
 import com.munchies.order.fixtures.secondaryCustomerId
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.UpdateTakeawayOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.updateTakeawayOrderResponseFromJson
 import io.kotest.matchers.equals.shouldBeEqual
@@ -21,24 +19,11 @@ import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class UpdateTakeawayOrderInfoControllerComponentTest : BaseOrderController() {
-
-  @Inject
-  lateinit var orderRepository: MongoOrderRepository
-
-  @Inject
-  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
-
-  @AfterEach
-  fun cleanupMongo() {
-    mongoCrudOrderRepository.deleteAll()
-  }
 
   @Test
   fun `PATCH update takeaway order info should return 200 OK on success`() {

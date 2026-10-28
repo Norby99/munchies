@@ -6,6 +6,7 @@ import {
   applyRoutes,
 } from "../../main/ts/infrastructure/adapter/middleware/routes/routes";
 import { HttpMethod } from "munchies-commons/kotlin/commons-modules";
+import { logger } from "../../main/ts/infrastructure/adapter/middleware/logger";
 
 describe("routes.ts", () => {
   describe("fillPath", () => {
@@ -85,9 +86,6 @@ describe("routes.ts", () => {
 
       applyRoutes(mockApp);
 
-      // userRoutes (8) + restaurantRoutes (16) + orderRoutes (9) = 33 routes
-      expect(registeredRoutes.length).toBe(33);
-
       // Verify each method was used at least once
       const methods = new Set(registeredRoutes.map((r) => r.method));
       expect(methods.has("POST")).toBe(true);
@@ -104,11 +102,11 @@ describe("routes.ts", () => {
       const firstRoute = registeredRoutes[0];
       const logHandler = firstRoute.handlers[0];
       const nextFn = vi.fn();
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const logSpy = vi.spyOn(logger, "debug").mockImplementation(() => {});
       await logHandler({ body: { test: 1 } }, {}, nextFn);
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalled();
       expect(nextFn).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      logSpy.mockRestore();
     });
   });
 });

@@ -2,8 +2,11 @@ import { Post, Route, Tags } from "tsoa";
 import { NotificationAPI } from "munchies-notification-service-shared/kotlin/notification-modules";
 import {
   _UserEmailConfirmationNotification,
+  OrderStatusChangedNotification,
   PaymentSuccessNotification,
 } from "@main/domain/external-modules";
+import { notificationsReceived } from "@main/infrastructure/adapter/inbound/web/config/metrics";
+import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 /**
  * Central entry point for every notification event the service currently
@@ -37,9 +40,8 @@ export class NotificationController extends NotificationAPI {
   public handleUserEmailConfirmation(
     event: _UserEmailConfirmationNotification
   ): void {
-    console.log(
-      `[notification-service] Received UserEmailConfirmationNotification: ${event.toString()}`
-    );
+    notificationsReceived.inc({ type: "user_email_confirmation" });
+    logger.info({ event: event.toString() }, "Received UserEmailConfirmationNotification");
   }
 
   /**
@@ -47,8 +49,15 @@ export class NotificationController extends NotificationAPI {
    * payment completes successfully.
    */
   public handlePaymentSuccess(event: PaymentSuccessNotification): void {
-    console.log(
-      `[notification-service] Received PaymentSuccessNotification: ${event.toString()}`
-    );
+    notificationsReceived.inc({ type: "payment_success" });
+    logger.info({ event: event.toString() }, "Received PaymentSuccessNotification");
+  }
+
+  /**
+   * Handles an order status-change event, published by order-service whenever
+   * an order transitions to a new status.
+   */
+  public handleOrderStatusChanged(event: OrderStatusChangedNotification): void {
+    logger.info({ event: event.toString() }, "Received OrderStatusChangedNotification");
   }
 }

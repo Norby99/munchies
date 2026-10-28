@@ -2,6 +2,7 @@ package com.munchies.order.domain.model
 
 import com.munchies.order.domain.model.Order.AdvanceStatusResult
 import com.munchies.order.fixtures.Address2
+import com.munchies.order.fixtures.after
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.futureTime
 import com.munchies.order.fixtures.pastTime
@@ -16,7 +17,7 @@ class TakeawayOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.PREPARING
+    order.after(result.events).status shouldBeEqual OrderStatus.PREPARING
   }
 
   @Test
@@ -25,7 +26,7 @@ class TakeawayOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.READY
+    order.after(result.events).status shouldBeEqual OrderStatus.READY
   }
 
   @Test
@@ -34,7 +35,7 @@ class TakeawayOrderUnitTest {
     val result = order.nextStatus()
 
     result.shouldBeInstanceOf<AdvanceStatusResult.Success>()
-    result.order.status shouldBeEqual OrderStatus.COMPLETED
+    order.after(result.events).status shouldBeEqual OrderStatus.COMPLETED
   }
 
   @Test
@@ -62,7 +63,7 @@ class TakeawayOrderUnitTest {
     val result = order.updateInfo(futureTime, Address2.bellName)
 
     result.shouldBeInstanceOf<TakeawayOrder.UpdateResult.Success>()
-    result.order.takeawayInfo.pickupTime shouldBeEqual futureTime
-    result.order.takeawayInfo.customerName shouldBeEqual Address2.bellName
+    order.after(result.events).takeawayInfo.pickupTime shouldBeEqual futureTime
+    order.after(result.events).takeawayInfo.customerName shouldBeEqual Address2.bellName
   }
 }

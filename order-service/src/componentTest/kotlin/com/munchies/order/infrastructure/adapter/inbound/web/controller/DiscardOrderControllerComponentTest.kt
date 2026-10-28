@@ -5,41 +5,25 @@ import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.secondaryOrderId
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoCrudOrderRepository
-import com.munchies.order.infrastructure.adapter.outbound.mongo.repository.MongoOrderRepository
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
 import com.munchies.order.infrastructure.adapter.outbound.response.discardOrderResponseFromJson
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @MicronautTest(environments = ["prod"], transactional = false)
 class DiscardOrderControllerComponentTest : BaseOrderController() {
 
-  @Inject
-  lateinit var orderRepository: MongoOrderRepository
-
-  @Inject
-  lateinit var mongoCrudOrderRepository: MongoCrudOrderRepository
-
-  @AfterEach
-  fun cleanupMongo() {
-    mongoCrudOrderRepository.deleteAll()
-  }
-
   // ==========================================
   // TEST: POST orders/{id}/discard
   // ==========================================
 
   @Test
-  fun `DELETE discard order should return 200 OK on success`() {
+  fun `DELETE discard order should return 200 OK and cancel the order on success`() {
     val id = defaultOrderId.value
     orderRepository.save(createDeliveryOrder())
 
@@ -52,7 +36,10 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     response.status shouldBe HttpStatus.OK
     result.code shouldBe HttpStatus.OK.code
 
-    orderRepository.findById(defaultOrderId).shouldBeNull()
+    // Event sourcing: nothing is deleted, the order stream ends with OrderCancelled and both the
+    // command side and the read model show the order as CANCELLED.
+    orderRepository.findById(defaultOrderId)?.status shouldBe OrderStatus.CANCELLED
+    orderViews.findById(defaultOrderId)?.status shouldBe OrderStatus.CANCELLED
   }
 
   @Test
