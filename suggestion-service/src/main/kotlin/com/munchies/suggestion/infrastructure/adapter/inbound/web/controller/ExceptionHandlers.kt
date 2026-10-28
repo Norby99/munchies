@@ -19,11 +19,11 @@ class EngineTimeoutExceptionHandler :
     request: HttpRequest<*>,
     exception: EngineTimeoutException,
   ): HttpResponse<ErrorResponse> {
-    return HttpResponse.status<ErrorResponse>(HttpStatus.UNAUTHORIZED)
+    return HttpResponse.status<ErrorResponse>(HttpStatus.INTERNAL_SERVER_ERROR)
       .body(
         ErrorResponse(
-          result = exception.message ?: "Unauthorized",
-          code = HttpStatus.UNAUTHORIZED.code,
+          result = exception.message ?: "Engine timed out",
+          code = HttpStatus.INTERNAL_SERVER_ERROR.code,
         ),
       )
   }
@@ -36,11 +36,11 @@ class MalformedResponseExceptionHandler :
     request: HttpRequest<*>,
     exception: MalformedResponseException,
   ): HttpResponse<ErrorResponse> {
-    return HttpResponse.status<ErrorResponse>(HttpStatus.NOT_FOUND)
+    return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
       .body(
         ErrorResponse(
-          result = exception.message ?: "Resource not found",
-          code = HttpStatus.NOT_FOUND.code,
+          result = exception.message ?: "Malformed response",
+          code = HttpStatus.UNPROCESSABLE_ENTITY.code,
         ),
       )
   }

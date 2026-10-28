@@ -3,7 +3,6 @@ package com.munchies.suggestion.infrastructure.adapter.inbound.web.config
 import kotlin.js.JsExport
 import kotlinx.serialization.SerialName
 
-
 @JsExport
 @SerialName("SuggestionServiceConfig")
 object SuggestionServiceConfig {
