@@ -77,6 +77,7 @@ nav:
   - SAAP:
       - Overview: saap/index.md
       - Implementation:
+          - Microservices Patterns: saap/02-Implementation/microservices-patterns.md
           - Hexagonal Architecture: saap/02-Implementation/hexagonal-architecture.md
   - ASMD:
       - Overview: asmd/index.md
