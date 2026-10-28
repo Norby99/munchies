@@ -1,0 +1,236 @@
+### kubectl describe hpa -n gateway-service
+Name:                                                  gateway-service
+Namespace:                                             gateway-service
+Labels:                                                app.kubernetes.io/managed-by=Helm
+Annotations:                                           meta.helm.sh/release-name: gateway-service
+                                                       meta.helm.sh/release-namespace: gateway-service
+CreationTimestamp:                                     Fri, 09 Oct 2026 19:01:42 +0200
+Reference:                                             Deployment/gateway-service
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  602% (602m) / 60%
+Min replicas:                                          1
+Max replicas:                                          8
+Behavior:
+  Scale Up:
+    Stabilization Window: 0 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods  Value: 4  Period: 30 seconds
+  Scale Down:
+    Stabilization Window: 30 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods  Value: 1  Period: 30 seconds
+Deployment pods:    8 current / 8 desired
+Conditions:
+  Type            Status  Reason            Message
+  ----            ------  ------            -------
+  AbleToScale     True    ReadyForNewScale  recommended size matches current size
+  ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooManyReplicas   the desired replica count is more than the maximum replica count
+Events:
+  Type     Reason                        Age                  From                       Message
+  ----     ------                        ----                 ----                       -------
+  Normal   SuccessfulRescale             50m (x2 over 59m)    horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             49m (x2 over 58m)    horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             44m (x2 over 54m)    horizontal-pod-autoscaler  New size: 3; reason: All metrics below target
+  Normal   SuccessfulRescale             43m (x2 over 53m)    horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+  Normal   SuccessfulRescale             37m                  horizontal-pod-autoscaler  New size: 7; reason: All metrics below target
+  Normal   SuccessfulRescale             36m                  horizontal-pod-autoscaler  New size: 6; reason: All metrics below target
+  Normal   SuccessfulRescale             34m (x3 over 54m)    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+  Normal   SuccessfulRescale             33m (x4 over 36m)    horizontal-pod-autoscaler  (combined from similar events): New size: 1; reason: All metrics below target
+  Warning  FailedGetResourceMetric       10m (x9 over 42m)    horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  10m (x9 over 42m)    horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  8m57s (x8 over 72m)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       8m42s (x9 over 72m)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             3m11s (x2 over 41m)  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             2m40s (x2 over 40m)  horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target
+
+### kubectl get events -n gateway-service --sort-by=.lastTimestamp
+LAST SEEN   TYPE      REASON                         OBJECT                                    MESSAGE
+59m         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-gmshc       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-gmshc to minikube
+59m         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-gmshc
+59m         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-drqdb       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-drqdb to minikube
+59m         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-drqdb
+59m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-drqdb       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+59m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-gmshc       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+59m         Normal    Created                        pod/gateway-service-6d7fd6dc7-drqdb       Container created
+59m         Normal    Created                        pod/gateway-service-6d7fd6dc7-gmshc       Container created
+59m         Normal    Started                        pod/gateway-service-6d7fd6dc7-drqdb       Container started
+59m         Normal    Started                        pod/gateway-service-6d7fd6dc7-gmshc       Container started
+58m         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-kdglt
+58m         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-kdglt       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-kdglt to minikube
+58m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-kdglt       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+58m         Normal    Created                        pod/gateway-service-6d7fd6dc7-kdglt       Container created
+58m         Normal    Started                        pod/gateway-service-6d7fd6dc7-kdglt       Container started
+54m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-drqdb
+54m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-drqdb       Stopping container gateway-service
+54m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-kdglt
+54m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-kdglt       Stopping container gateway-service
+54m         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-kdglt       Readiness probe failed: Get "http://10.244.0.94:8080/health": dial tcp 10.244.0.94:8080: connect: connection refused
+53m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-gmshc       Stopping container gateway-service
+53m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-gmshc
+50m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 3; reason: cpu resource utilization (percentage of request) above target
+50m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-6d7fd6dc7 from 1 to 3
+50m         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-g52kl       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-g52kl to minikube
+50m         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-bng2w
+50m         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-g52kl
+50m         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-bng2w       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-bng2w to minikube
+50m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-bng2w       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+50m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-g52kl       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+50m         Normal    Created                        pod/gateway-service-6d7fd6dc7-bng2w       Container created
+50m         Normal    Created                        pod/gateway-service-6d7fd6dc7-g52kl       Container created
+50m         Normal    Started                        pod/gateway-service-6d7fd6dc7-g52kl       Container started
+50m         Normal    Started                        pod/gateway-service-6d7fd6dc7-bng2w       Container started
+49m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-6d7fd6dc7 from 3 to 4
+49m         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-nbn65
+49m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 4; reason: cpu resource utilization (percentage of request) above target
+49m         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-nbn65       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-nbn65 to minikube
+49m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-nbn65       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+49m         Normal    Created                        pod/gateway-service-6d7fd6dc7-nbn65       Container created
+49m         Normal    Started                        pod/gateway-service-6d7fd6dc7-nbn65       Container started
+44m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-nbn65       Stopping container gateway-service
+44m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-6d7fd6dc7 from 4 to 3
+44m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-nbn65
+44m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 3; reason: All metrics below target
+44m         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-nbn65       Readiness probe failed: Get "http://10.244.0.99:8080/health": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+43m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-6d7fd6dc7 from 3 to 2
+43m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-g52kl
+43m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-g52kl       Stopping container gateway-service
+43m         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-g52kl       Readiness probe failed: Get "http://10.244.0.98:8080/health": dial tcp 10.244.0.98:8080: connect: connection refused
+43m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-bng2w       Stopping container gateway-service
+43m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 1; reason: All metrics below target
+43m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-6d7fd6dc7 from 2 to 1
+43m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-bng2w
+43m         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-bng2w       Readiness probe failed: Get "http://10.244.0.97:8080/health": dial tcp 10.244.0.97:8080: connect: connection refused
+43m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-f4c7fc44b from 0 to 1
+43m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-p455r
+43m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-p455r       Successfully assigned gateway-service/gateway-service-f4c7fc44b-p455r to minikube
+43m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-p455r       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+43m         Normal    Started                        pod/gateway-service-f4c7fc44b-p455r       Container started
+43m         Normal    Created                        pod/gateway-service-f4c7fc44b-p455r       Container created
+42m         Normal    SuccessfulDelete               replicaset/gateway-service-6d7fd6dc7      Deleted pod: gateway-service-6d7fd6dc7-47bbt
+42m         Normal    Killing                        pod/gateway-service-6d7fd6dc7-47bbt       Stopping container gateway-service
+42m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-6d7fd6dc7 from 1 to 0
+42m         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-47bbt       Readiness probe failed: Get "http://10.244.0.68:8080/health": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+41m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-8l2pk
+41m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-hdrx9       Successfully assigned gateway-service/gateway-service-f4c7fc44b-hdrx9 to minikube
+41m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-hdrx9
+41m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-w2xx7
+41m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-8gp98
+41m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-f4c7fc44b from 1 to 5
+41m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-8l2pk       Successfully assigned gateway-service/gateway-service-f4c7fc44b-8l2pk to minikube
+41m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-8gp98       Successfully assigned gateway-service/gateway-service-f4c7fc44b-8gp98 to minikube
+41m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-w2xx7       Successfully assigned gateway-service/gateway-service-f4c7fc44b-w2xx7 to minikube
+41m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-hdrx9       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+41m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-8gp98       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+41m         Normal    Created                        pod/gateway-service-f4c7fc44b-8gp98       Container created
+41m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-w2xx7       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+41m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-8l2pk       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+41m         Normal    Created                        pod/gateway-service-f4c7fc44b-hdrx9       Container created
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-8gp98       Container started
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-hdrx9       Container started
+40m         Normal    Created                        pod/gateway-service-f4c7fc44b-w2xx7       Container created
+40m         Normal    Created                        pod/gateway-service-f4c7fc44b-8l2pk       Container created
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-w2xx7       Container started
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-8l2pk       Container started
+40m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-5zz9j       Successfully assigned gateway-service/gateway-service-f4c7fc44b-5zz9j to minikube
+40m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-5zz9j
+40m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-tvbp4       Successfully assigned gateway-service/gateway-service-f4c7fc44b-tvbp4 to minikube
+40m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-q9dk6
+40m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-f4c7fc44b from 5 to 8
+40m         Normal    Scheduled                      pod/gateway-service-f4c7fc44b-q9dk6       Successfully assigned gateway-service/gateway-service-f4c7fc44b-q9dk6 to minikube
+40m         Normal    SuccessfulCreate               replicaset/gateway-service-f4c7fc44b      Created pod: gateway-service-f4c7fc44b-tvbp4
+40m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-q9dk6       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+40m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-5zz9j       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+40m         Normal    Pulled                         pod/gateway-service-f4c7fc44b-tvbp4       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+40m         Normal    Created                        pod/gateway-service-f4c7fc44b-q9dk6       Container created
+40m         Normal    Created                        pod/gateway-service-f4c7fc44b-tvbp4       Container created
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-q9dk6       Container started
+40m         Normal    Created                        pod/gateway-service-f4c7fc44b-5zz9j       Container created
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-5zz9j       Container started
+40m         Normal    Started                        pod/gateway-service-f4c7fc44b-tvbp4       Container started
+37m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 7; reason: All metrics below target
+37m         Normal    Killing                        pod/gateway-service-f4c7fc44b-5zz9j       Stopping container gateway-service
+37m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-5zz9j
+36m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 6; reason: All metrics below target
+36m         Normal    Killing                        pod/gateway-service-f4c7fc44b-hdrx9       Stopping container gateway-service
+36m         Warning   Unhealthy                      pod/gateway-service-f4c7fc44b-hdrx9       Readiness probe failed: Get "http://10.244.0.103:8080/health": dial tcp 10.244.0.103:8080: connect: connection refused
+36m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-hdrx9
+36m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-q9dk6
+36m         Normal    Killing                        pod/gateway-service-f4c7fc44b-q9dk6       Stopping container gateway-service
+35m         Normal    Killing                        pod/gateway-service-f4c7fc44b-w2xx7       Stopping container gateway-service
+35m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-w2xx7
+35m         Warning   Unhealthy                      pod/gateway-service-f4c7fc44b-w2xx7       Readiness probe failed: Get "http://10.244.0.105:8080/health": dial tcp 10.244.0.105:8080: connect: connection refused
+35m         Normal    Killing                        pod/gateway-service-f4c7fc44b-p455r       Stopping container gateway-service
+35m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-p455r
+34m         Normal    Killing                        pod/gateway-service-f4c7fc44b-8l2pk       Stopping container gateway-service
+34m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-8l2pk
+34m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 2; reason: All metrics below target
+33m         Normal    ScalingReplicaSet              deployment/gateway-service                (combined from similar events): Scaled down replica set gateway-service-f4c7fc44b from 2 to 1
+33m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-tvbp4
+33m         Normal    Killing                        pod/gateway-service-f4c7fc44b-tvbp4       Stopping container gateway-service
+33m         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   (combined from similar events): New size: 1; reason: All metrics below target
+33m         Warning   Unhealthy                      pod/gateway-service-f4c7fc44b-tvbp4       Readiness probe failed: Get "http://10.244.0.108:8080/health": dial tcp 10.244.0.108:8080: connect: connection refused
+11m         Normal    Scheduled                      pod/gateway-service-86bbf665b6-w8zpx      Successfully assigned gateway-service/gateway-service-86bbf665b6-w8zpx to minikube
+11m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-86bbf665b6 from 0 to 1
+11m         Normal    SuccessfulCreate               replicaset/gateway-service-86bbf665b6     Created pod: gateway-service-86bbf665b6-w8zpx
+11m         Normal    Pulled                         pod/gateway-service-86bbf665b6-w8zpx      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+11m         Normal    Created                        pod/gateway-service-86bbf665b6-w8zpx      Container created
+11m         Normal    Started                        pod/gateway-service-86bbf665b6-w8zpx      Container started
+11m         Normal    SuccessfulDelete               replicaset/gateway-service-f4c7fc44b      Deleted pod: gateway-service-f4c7fc44b-8gp98
+11m         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-f4c7fc44b from 1 to 0
+11m         Normal    Killing                        pod/gateway-service-f4c7fc44b-8gp98       Stopping container gateway-service
+11m         Warning   Unhealthy                      pod/gateway-service-f4c7fc44b-8gp98       Readiness probe failed: Get "http://10.244.0.102:8080/health": dial tcp 10.244.0.102:8080: connect: connection refused
+10m         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/gateway-service   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+10m         Warning   FailedGetResourceMetric        horizontalpodautoscaler/gateway-service   failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+9m13s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-8jpph      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-8jpph to minikube
+9m13s       Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-59dc6b7fb9 from 0 to 1
+9m13s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-8jpph
+9m10s       Normal    Pulled                         pod/gateway-service-59dc6b7fb9-8jpph      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+9m9s        Normal    Started                        pod/gateway-service-59dc6b7fb9-8jpph      Container started
+9m9s        Normal    Created                        pod/gateway-service-59dc6b7fb9-8jpph      Container created
+9m1s        Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-86bbf665b6 from 1 to 0
+9m          Normal    Killing                        pod/gateway-service-86bbf665b6-w8zpx      Stopping container gateway-service
+9m          Normal    SuccessfulDelete               replicaset/gateway-service-86bbf665b6     Deleted pod: gateway-service-86bbf665b6-w8zpx
+8m57s       Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/gateway-service   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+8m42s       Warning   FailedGetResourceMetric        horizontalpodautoscaler/gateway-service   failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+3m11s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-lslbn
+3m11s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-xtk57
+3m11s       Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-59dc6b7fb9 from 1 to 5
+3m11s       Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 5; reason: cpu resource utilization (percentage of request) above target
+3m11s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-6w8mp
+3m11s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-vjcz5      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-vjcz5 to minikube
+3m11s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-6w8mp      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-6w8mp to minikube
+3m11s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-vjcz5
+3m11s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-xtk57      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-xtk57 to minikube
+3m10s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-lslbn      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-lslbn to minikube
+3m5s        Normal    Pulled                         pod/gateway-service-59dc6b7fb9-xtk57      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+3m4s        Normal    Pulled                         pod/gateway-service-59dc6b7fb9-vjcz5      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+3m4s        Normal    Pulled                         pod/gateway-service-59dc6b7fb9-lslbn      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+3m3s        Normal    Pulled                         pod/gateway-service-59dc6b7fb9-6w8mp      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+3m2s        Normal    Created                        pod/gateway-service-59dc6b7fb9-xtk57      Container created
+3m1s        Normal    Started                        pod/gateway-service-59dc6b7fb9-xtk57      Container started
+3m1s        Normal    Created                        pod/gateway-service-59dc6b7fb9-vjcz5      Container created
+3m1s        Normal    Created                        pod/gateway-service-59dc6b7fb9-lslbn      Container created
+3m1s        Normal    Created                        pod/gateway-service-59dc6b7fb9-6w8mp      Container created
+3m          Normal    Started                        pod/gateway-service-59dc6b7fb9-vjcz5      Container started
+3m          Normal    Started                        pod/gateway-service-59dc6b7fb9-lslbn      Container started
+2m59s       Normal    Started                        pod/gateway-service-59dc6b7fb9-6w8mp      Container started
+2m40s       Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 8; reason: cpu resource utilization (percentage of request) above target
+2m40s       Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-59dc6b7fb9 from 5 to 8
+2m39s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-878vv      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-878vv to minikube
+2m39s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-4cc4c      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-4cc4c to minikube
+2m39s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-fdmsz
+2m39s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-4cc4c
+2m39s       Normal    Scheduled                      pod/gateway-service-59dc6b7fb9-fdmsz      Successfully assigned gateway-service/gateway-service-59dc6b7fb9-fdmsz to minikube
+2m39s       Normal    SuccessfulCreate               replicaset/gateway-service-59dc6b7fb9     Created pod: gateway-service-59dc6b7fb9-878vv
+2m35s       Normal    Pulled                         pod/gateway-service-59dc6b7fb9-4cc4c      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+2m34s       Normal    Pulled                         pod/gateway-service-59dc6b7fb9-878vv      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+2m34s       Normal    Pulled                         pod/gateway-service-59dc6b7fb9-fdmsz      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+2m33s       Normal    Created                        pod/gateway-service-59dc6b7fb9-4cc4c      Container created
+2m32s       Normal    Started                        pod/gateway-service-59dc6b7fb9-4cc4c      Container started
+2m32s       Normal    Created                        pod/gateway-service-59dc6b7fb9-fdmsz      Container created
+2m32s       Normal    Created                        pod/gateway-service-59dc6b7fb9-878vv      Container created
+2m31s       Normal    Started                        pod/gateway-service-59dc6b7fb9-fdmsz      Container started
+2m31s       Normal    Started                        pod/gateway-service-59dc6b7fb9-878vv      Container started

@@ -5,7 +5,8 @@ import utils.k8s.UndeployObservabilityTask
 
 tasks.register<DeployObservabilityTask>("deployObservability") {
   group = "munchies"
-  description = "Installs the observability stack (Prometheus, Loki, Alloy, Grafana) into Minikube."
+  description = "Installs the observability stack (Prometheus, Loki, Alloy, Tempo, Grafana)" +
+    "into Minikube."
   valuesDir.set(rootProject.layout.projectDirectory.dir("observability/values"))
 }
 

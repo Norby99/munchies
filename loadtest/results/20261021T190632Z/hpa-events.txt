@@ -1,0 +1,106 @@
+### kubectl describe hpa -n gateway-service
+Name:                                                  gateway-service
+Namespace:                                             gateway-service
+Labels:                                                app.kubernetes.io/managed-by=Helm
+Annotations:                                           meta.helm.sh/release-name: gateway-service
+                                                       meta.helm.sh/release-namespace: gateway-service
+CreationTimestamp:                                     Fri, 09 Oct 2026 19:01:42 +0200
+Reference:                                             Deployment/gateway-service
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  199% (199m) / 60%
+Min replicas:                                          1
+Max replicas:                                          4
+Behavior:
+  Scale Up:
+    Stabilization Window: 0 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods  Value: 2  Period: 30 seconds
+  Scale Down:
+    Stabilization Window: 30 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods  Value: 1  Period: 30 seconds
+Deployment pods:    4 current / 4 desired
+Conditions:
+  Type            Status  Reason            Message
+  ----            ------  ------            -------
+  AbleToScale     True    ReadyForNewScale  recommended size matches current size
+  ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooManyReplicas   the desired replica count is more than the maximum replica count
+Events:
+  Type     Reason                        Age                 From                       Message
+  ----     ------                        ----                ----                       -------
+  Warning  FailedComputeMetricsReplicas  12d (x12 over 12d)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       12d (x21 over 12d)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       12d (x5 over 12d)   horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  12d (x5 over 12d)   horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedGetResourceMetric       15m                 horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Warning  FailedComputeMetricsReplicas  15m                 horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Warning  FailedGetResourceMetric       14m (x4 over 15m)   horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  14m (x4 over 15m)   horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             2m17s               horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             92s                 horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+
+### kubectl get events -n gateway-service --sort-by=.lastTimestamp
+LAST SEEN   TYPE      REASON                         OBJECT                                    MESSAGE
+12d         Normal    Scheduled                      pod/gateway-service-586cc9d787-m2pbh      Successfully assigned gateway-service/gateway-service-586cc9d787-m2pbh to minikube
+12d         Normal    Scheduled                      pod/gateway-service-55f4c7679-xsdkz       Successfully assigned gateway-service/gateway-service-55f4c7679-xsdkz to minikube
+12d         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-47bbt       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-47bbt to minikube
+12d         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-586cc9d787 from 0 to 1
+12d         Normal    SuccessfulCreate               replicaset/gateway-service-586cc9d787     Created pod: gateway-service-586cc9d787-m2pbh
+12d         Warning   Failed                         pod/gateway-service-586cc9d787-m2pbh      Error: ErrImageNeverPull
+12d         Warning   ErrImageNeverPull              pod/gateway-service-586cc9d787-m2pbh      Container image "gateway-service:latest" is not present with pull policy of Never
+12d         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/gateway-service   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+12d         Normal    SuccessfulCreate               replicaset/gateway-service-55f4c7679      Created pod: gateway-service-55f4c7679-xsdkz
+12d         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-55f4c7679 from 0 to 1
+12d         Normal    Pulled                         pod/gateway-service-55f4c7679-xsdkz       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+12d         Normal    Created                        pod/gateway-service-55f4c7679-xsdkz       Container created
+12d         Normal    Pulled                         pod/gateway-service-586cc9d787-m2pbh      Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+12d         Normal    Started                        pod/gateway-service-55f4c7679-xsdkz       Container started
+12d         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-586cc9d787 from 1 to 0
+12d         Normal    SuccessfulDelete               replicaset/gateway-service-586cc9d787     Deleted pod: gateway-service-586cc9d787-m2pbh
+12d         Normal    Created                        pod/gateway-service-586cc9d787-m2pbh      Container created
+12d         Normal    Started                        pod/gateway-service-586cc9d787-m2pbh      Container started
+12d         Normal    Killing                        pod/gateway-service-586cc9d787-m2pbh      Stopping container gateway-service
+12d         Warning   FailedGetResourceMetric        horizontalpodautoscaler/gateway-service   failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+12d         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-47bbt
+12d         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-6d7fd6dc7 from 0 to 1
+12d         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-47bbt       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+12d         Normal    Created                        pod/gateway-service-6d7fd6dc7-47bbt       Container created
+12d         Normal    Started                        pod/gateway-service-6d7fd6dc7-47bbt       Container started
+12d         Normal    SuccessfulDelete               replicaset/gateway-service-55f4c7679      Deleted pod: gateway-service-55f4c7679-xsdkz
+12d         Normal    Killing                        pod/gateway-service-55f4c7679-xsdkz       Stopping container gateway-service
+12d         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled down replica set gateway-service-55f4c7679 from 1 to 0
+12d         Warning   Unhealthy                      pod/gateway-service-55f4c7679-xsdkz       Readiness probe failed: Get "http://10.244.0.24:8080/health": dial tcp 10.244.0.24:8080: connect: connection refused
+12d         Warning   FailedGetResourceMetric        horizontalpodautoscaler/gateway-service   failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+12d         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/gateway-service   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+12d         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-47bbt       Readiness probe failed: Get "http://10.244.0.50:8080/health": dial tcp 10.244.0.50:8080: connect: connection refused
+17m         Normal    SandboxChanged                 pod/gateway-service-6d7fd6dc7-47bbt       Pod sandbox changed, it will be killed and re-created.
+16m         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-47bbt       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+16m         Normal    Created                        pod/gateway-service-6d7fd6dc7-47bbt       Container created
+16m         Normal    Started                        pod/gateway-service-6d7fd6dc7-47bbt       Container started
+16m         Warning   Unhealthy                      pod/gateway-service-6d7fd6dc7-47bbt       Readiness probe failed: Get "http://10.244.0.68:8080/health": dial tcp 10.244.0.68:8080: connect: connection refused
+15m         Warning   FailedGetResourceMetric        horizontalpodautoscaler/gateway-service   failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+15m         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/gateway-service   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+14m         Warning   FailedGetResourceMetric        horizontalpodautoscaler/gateway-service   failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+14m         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/gateway-service   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+2m17s       Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-drqdb       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-drqdb to minikube
+2m17s       Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-gmshc
+2m17s       Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-drqdb
+2m17s       Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-6d7fd6dc7 from 1 to 3
+2m17s       Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 3; reason: cpu resource utilization (percentage of request) above target
+2m17s       Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-gmshc       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-gmshc to minikube
+2m13s       Normal    Pulled                         pod/gateway-service-6d7fd6dc7-gmshc       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+2m13s       Normal    Pulled                         pod/gateway-service-6d7fd6dc7-drqdb       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+2m12s       Normal    Created                        pod/gateway-service-6d7fd6dc7-drqdb       Container created
+2m11s       Normal    Created                        pod/gateway-service-6d7fd6dc7-gmshc       Container created
+2m11s       Normal    Started                        pod/gateway-service-6d7fd6dc7-drqdb       Container started
+2m10s       Normal    Started                        pod/gateway-service-6d7fd6dc7-gmshc       Container started
+92s         Normal    SuccessfulCreate               replicaset/gateway-service-6d7fd6dc7      Created pod: gateway-service-6d7fd6dc7-kdglt
+92s         Normal    Scheduled                      pod/gateway-service-6d7fd6dc7-kdglt       Successfully assigned gateway-service/gateway-service-6d7fd6dc7-kdglt to minikube
+92s         Normal    SuccessfulRescale              horizontalpodautoscaler/gateway-service   New size: 4; reason: cpu resource utilization (percentage of request) above target
+92s         Normal    ScalingReplicaSet              deployment/gateway-service                Scaled up replica set gateway-service-6d7fd6dc7 from 3 to 4
+89s         Normal    Pulled                         pod/gateway-service-6d7fd6dc7-kdglt       Container image "gateway-service:latest" already present on machine and can be accessed by the pod
+88s         Normal    Created                        pod/gateway-service-6d7fd6dc7-kdglt       Container created
+87s         Normal    Started                        pod/gateway-service-6d7fd6dc7-kdglt       Container started

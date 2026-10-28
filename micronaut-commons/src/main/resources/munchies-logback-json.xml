@@ -20,7 +20,13 @@
         </encoder>
     </appender>
 
-    <root level="info">
+    <!-- Adds the trace and span ids of the request being served to every line (under "mdc"),
+         which is what links a log line in Loki to its trace in Tempo. -->
+    <appender name="TRACED" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
         <appender-ref ref="STDOUT" />
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="TRACED" />
     </root>
 </included>

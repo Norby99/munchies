@@ -1,7 +1,8 @@
-# Observability (Prometheus + Loki + Grafana)
+# Observability (Prometheus + Loki + Tempo + Grafana)
 
-A lightweight stack implementing the Application Metrics and Log Aggregation sides of the
-Observability pattern. It records three things and shows them in one Grafana:
+A lightweight stack implementing the Application Metrics, Log Aggregation and Distributed
+Tracing sides of the Observability pattern. It records four things and shows them in one
+Grafana:
 
 - **How the services behave**: request rate, error ratio and latency of every instrumented
   service, measured from inside the application.
@@ -9,6 +10,8 @@ Observability pattern. It records three things and shows them in one Grafana:
   per-pod CPU usage against the CPU request.
 - **What the services log**: the structured logs of every service, collected from the pods
   and searchable in one place.
+- **How a request travels**: one trace per request, following it through every service it
+  touches, over HTTP and over Kafka.
 
 The stack is **always-on**: `./gradlew deploy` installs it (the `deployObservability` task)
 and `./gradlew undeploy` removes it. Deploying a single service with `-Pservice=<name>`
@@ -22,6 +25,7 @@ series and dashboards.
 | `values/prometheus.yaml` | Helm values for the `prometheus-community/prometheus` chart |
 | `values/loki.yaml` | Helm values for the `grafana-community/loki` chart |
 | `values/alloy.yaml` | Helm values for the `grafana/alloy` chart, including the inlined collection pipeline |
+| `values/tempo.yaml` | Helm values for the `grafana-community/tempo` chart |
 | `values/grafana.yaml` | Helm values for the `grafana-community/grafana` chart, including the provisioned datasources and the inlined dashboards |
 | `dashboards/scaling.json` | Standalone copy of the **Munchies — Scaling** dashboard, for reference or manual import |
 | `dashboards/services.json` | Standalone copy of the **Munchies — Services** dashboard, for reference or manual import |
@@ -45,8 +49,10 @@ series and dashboards.
 - **`grafana/alloy`**: the log collector, a single-replica Deployment. It discovers the pods
   of the application namespaces, tails their logs through the Kubernetes API and pushes them
   to Loki, so no host directory is mounted.
-- **`grafana-community/grafana`**: trimmed resources, no persistence. The Prometheus and Loki
-  datasources and all dashboards are fully provisioned from `values/grafana.yaml`, so no
+- **`grafana-community/tempo`**: trace storage, run as a single process on local disk with a
+  24 hour retention and no persistent volume, so traces are lost when the pod is recreated.
+- **`grafana-community/grafana`**: trimmed resources, no persistence. The Prometheus, Loki
+  and Tempo datasources and all dashboards are fully provisioned from `values/grafana.yaml`, so no
   manual setup is needed.
 
 ## Application metrics
@@ -98,6 +104,38 @@ The MongoDB pods of the services are not collected: Alloy drops every container 
 `mongodb`. Lines that are not JSON, such as those of the Kafka pod, are stored as they are,
 without a `level` label.
 
+## Traces
+
+A trace starts at `gateway-service`, where a request enters the system. The gateway gives it
+a trace id and sends that id along with every call it makes, in the W3C `traceparent` header.
+Each service that receives it continues the same trace and passes it on, over HTTP and in the
+headers of the Kafka messages bound for `notification-service`. Every service sends its own
+part of the trace (its *spans*) to Tempo over OTLP/HTTP, and Tempo assembles them by trace id.
+
+This is the one place where a service knows about the stack: it is given the address of
+Tempo. Without that address tracing stays off, so local runs and tests need no collector.
+
+| Service | Library | Traced | Turned on by |
+| --- | --- | --- | --- |
+| `gateway-service` | OpenTelemetry SDK for Node.js | incoming requests, calls to the other services | `OTEL_EXPORTER_OTLP_ENDPOINT` |
+| `payment-service` | OpenTelemetry SDK for Node.js | incoming requests, the call to `order-service`, Kafka messages sent | `OTEL_EXPORTER_OTLP_ENDPOINT` |
+| `notification-service` | OpenTelemetry SDK for Node.js | Kafka messages consumed | `OTEL_EXPORTER_OTLP_ENDPOINT` |
+| `user-service`, `order-service`, `restaurant-service` | Micronaut Tracing (OpenTelemetry) | incoming requests, Kafka messages sent | `OTEL_TRACES_EXPORTER=otlp` and `OTEL_EXPORTER_OTLP_ENDPOINT` |
+
+The variables are set in `helm/values` and in the manifests under `k8s/`.
+
+- **Only traces go through OpenTelemetry.** Metrics stay on Micrometer and `prom-client`, logs
+  on stdout, as described above.
+- **Logs carry the trace id.** Every line written while a request is being served includes
+  its `trace_id` and `span_id`: at the top level for the Express services, under `mdc` for
+  the Micronaut ones. In Grafana a log line therefore has a **View trace** link to Tempo, and
+  a span has a link back to the log lines of its trace in every service.
+- **What is not traced**: `/health`, `/metrics` and `/prometheus`, for the same reason they
+  are not logged. Database calls are not traced either, to keep traces short.
+- **Sampling**: every request is traced. The gateway decides and the other services follow
+  its decision, so setting `OTEL_TRACES_SAMPLER=parentbased_traceidratio` and
+  `OTEL_TRACES_SAMPLER_ARG=0.1` on the gateway alone would keep one trace in ten.
+
 ## Footprint
 
 | Component | Memory request / limit |
@@ -106,9 +144,10 @@ without a `level` label.
 | `kube-state-metrics` | 64Mi / 128Mi |
 | `loki` | 192Mi / 384Mi |
 | `alloy` | 128Mi / 256Mi |
+| `tempo` | 128Mi / 384Mi |
 | `grafana` | 192Mi / 512Mi |
 
-About **830 MiB requested** in total.
+About **960 MiB requested** in total.
 
 ## Prerequisite
 
@@ -127,7 +166,7 @@ which is equivalent to:
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-# NB: the Grafana and Loki charts moved to the community repo; Alloy is still published
+# NB: the Grafana, Loki and Tempo charts moved to the community repo; Alloy is still published
 # in the original one.
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
 helm repo add grafana https://grafana.github.io/helm-charts
@@ -145,15 +184,21 @@ helm upgrade --install alloy grafana/alloy \
   -n observability \
   -f observability/values/alloy.yaml
 
+helm upgrade --install tempo grafana-community/tempo \
+  -n observability \
+  -f observability/values/tempo.yaml
+
 helm upgrade --install grafana grafana-community/grafana \
   -n observability \
   -f observability/values/grafana.yaml
 ```
 
-Release names (`prometheus`, `loki`, `grafana`) and namespace (`observability`) matter: the
-datasource URLs in `values/grafana.yaml` and the push URL in `values/alloy.yaml` are built
-from them (`http://prometheus-server.observability.svc.cluster.local`,
-`http://loki.observability.svc.cluster.local:3100`). Installing under different names
+Release names (`prometheus`, `loki`, `tempo`, `grafana`) and namespace (`observability`)
+matter: the datasource URLs in `values/grafana.yaml`, the push URL in `values/alloy.yaml` and
+the `OTEL_EXPORTER_OTLP_ENDPOINT` of every service are built from them
+(`http://prometheus-server.observability.svc.cluster.local`,
+`http://loki.observability.svc.cluster.local:3100`,
+`http://tempo.observability.svc.cluster.local:4318`). Installing under different names
 requires editing those URLs to match.
 
 ## View it
@@ -182,6 +227,12 @@ For ad-hoc log queries use **Explore** with the Loki datasource, for example:
 {namespace=~".+-service", level="ERROR"}
 ```
 
+To look at traces use **Explore** with the Tempo datasource: the **Search** tab lists recent
+traces and filters them by service name, and a trace id copied from a log line can be pasted
+as the query. From a log line in the Loki datasource, the **View trace** link opens its trace
+directly. A request that makes a good example is a payment, which crosses `payment-service`,
+`order-service` and `notification-service`.
+
 To run ad-hoc PromQL directly against Prometheus:
 
 ```bash
@@ -192,14 +243,14 @@ kubectl -n observability port-forward svc/prometheus-server 9090:80
 
 Run `./loadtest/run.sh` as usual; the two are independent and no changes are needed there.
 Watch the **Munchies** dashboards live during the run, and export or screenshot the panels
-once it finishes (e.g. for `docs/reports/spe/05-benchmark.md`).
+once it finishes.
 
 ## Tear down
 
 `./gradlew undeploy` removes the stack together with the services. On its own:
 
 ```bash
-./gradlew undeployObservability                  # uninstall the four releases
+./gradlew undeployObservability                  # uninstall the five releases
 ./gradlew undeployObservability -PwipeData=true  # also delete the namespace
 ```
 

@@ -29,6 +29,22 @@ micronaut:
     serialization:
       inclusion: ALWAYS
 
+otel:
+  traces:
+    exporter: ${OTEL_TRACES_EXPORTER:none}
+  # Metrics go through Micrometer and logs through stdout, not through OpenTelemetry.
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+  exporter:
+    otlp:
+      protocol: http/protobuf
+  # Probes and metric scrapes would be most of the traces and carry no information.
+  exclusions:
+    - /health
+    - /prometheus
+
 endpoints:
   health:
     enabled: true

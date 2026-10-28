@@ -1,9 +1,4 @@
-# Trimmed override for the upstream `grafana/alloy` chart: the log collector for the Log
-# Aggregation side of the Observability pattern.
-#
-# Services only write their logs to stdout. Alloy discovers the pods, tails their logs through
-# the Kubernetes API and pushes them to Loki, so no service needs to know where Loki is and no
-# host directory has to be mounted.
+# Trimmed override for the upstream `grafana/alloy` chart.
 #
 # Always-on, like the rest of the stack: installed by `./gradlew deploy` (the
 # `deployObservability` task) and removed by `./gradlew undeploy`, see observability/README.md.
