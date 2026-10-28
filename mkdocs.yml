@@ -76,6 +76,12 @@ nav:
       - Overview: ds/index.md
   - SAAP:
       - Overview: saap/index.md
+      - Implementation:
+          - Microservices Patterns: saap/02-Implementation/microservices-patterns.md
+          - Hexagonal Architecture: saap/02-Implementation/hexagonal-architecture.md
+          - Testing: saap/02-Implementation/testing.md
+      - Deployment:
+          - Docker Compose: saap/03-Deployment/docker-compose.md
   - ASMD:
       - Overview: asmd/index.md
   - Other Munchies Docs:
