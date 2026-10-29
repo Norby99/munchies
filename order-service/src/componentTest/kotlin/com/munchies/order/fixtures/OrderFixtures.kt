@@ -6,9 +6,8 @@ import com.munchies.order.infrastructure.adapter.dto.OrderType
 
 // ---------- Time helpers ----------
 
-private val fixedNow: Long = System.currentTimeMillis()
-val pastTime: Long get() = fixedNow - 60_000
-val futureTime: Long get() = fixedNow + 60_000
+val pastTime: Long get() = System.currentTimeMillis() - 60_000
+val futureTime: Long get() = System.currentTimeMillis() + 60_000
 
 // ---------- IDs ----------
 
