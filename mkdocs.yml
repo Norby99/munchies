@@ -74,6 +74,35 @@ nav:
       - Overview: asw/index.md
   - DS:
       - Overview: ds/index.md
+      - Concept:
+          - ds/01-concept/concept.md
+      - Requirements:
+          - ds/02-requirements/requirements.md
+      - Design:
+          - ds/03-design/architecture.md
+          - ds/03-design/availability.md
+          - ds/03-design/behaviour.md
+          - ds/03-design/data-and-consistency-issues.md
+          - ds/03-design/design.md
+          - ds/03-design/fault-tolerance.md
+          - ds/03-design/infrastructure.md
+          - ds/03-design/interaction.md
+          - ds/03-design/modelling.md
+          - ds/03-design/security.md
+      - Implementation:
+          - ds/04-implementation/implementation.md
+          - ds/04-implementation/technological-details.md
+      - Validation:
+          - ds/05-validation/acceptance-test.md
+          - ds/05-validation/automatic-testing.md
+      - Release:
+          - ds/06-release/release.md
+      - Deployment:
+          - ds/07-deployment/deployment.md
+      - User guide:
+          - ds/08-user-guide/user-guide.md
+      - Self evaluation:
+          - ds/09-self-evaluation/self-evaluation.md
   - SAAP:
       - Overview: saap/index.md
       - Implementation:
