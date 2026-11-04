@@ -47,7 +47,6 @@ flowchart TB
         rmongo[("munchies-restaurant-mongo")]
         omongo[("munchies-order-mongo")]
         pmongo[("munchies-payment-mongo")]
-        nmongo[("munchies-notification-mongo")]
     end
 
     subgraph kafka_file["config/kafka/docker-compose.yml"]
@@ -63,7 +62,6 @@ flowchart TB
     restaurant --> rmongo
     order --> omongo
     payment --> pmongo
-    notification --> nmongo
     user -.->|user_email_confirmation_topic| kafka
     order -.->|order_status_changed_topic| kafka
     payment -.->|payment_success_topic| kafka
@@ -84,7 +82,7 @@ container listens on port `8080` internally; only the port needed for local acce
 | `munchies-restaurant-service`   | `8087`    | Kafka, `munchies-restaurant-mongo`                    |
 | `munchies-order-service`        | `8081`    | Kafka, `munchies-order-mongo`                         |
 | `munchies-payment-service`      | `8083`    | Kafka, `munchies-payment-mongo`, `order-service`      |
-| `munchies-notification-service` | none      | Kafka, `munchies-notification-mongo`                  |
+| `munchies-notification-service` | none      | Kafka                                                 |
 
 `notification-service` publishes no port, since it exposes no API and only receives messages from Kafka.
 
@@ -97,8 +95,8 @@ The common parts of the definitions are written once as YAML anchors and merged 
 
 ### `config/mongodb` — one database per service
 
-One `mongo:7.0` container per service (`munchies-<name>-mongo`), each with its own named volume
-(`mongo_<name>_data`). Each service receives only the URI of its own database (e.g.
+One `mongo:7.0` container per service with persistent state (`munchies-<name>-mongo`), each with its own named
+volume (`mongo_<name>_data`). Each service receives only the URI of its own database (e.g.
 `MONGODB_URI=mongodb://munchies-order-mongo:27017/order-service`), so no service can reach another service's data.
 Each database is also published on a distinct host port (`27018`–`27024`) to inspect it locally.
 
