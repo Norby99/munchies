@@ -22,7 +22,8 @@ the design are listed at the end.
 
 | Link                                 | Protocol                     | Why                                                                  |
 |--------------------------------------|------------------------------|----------------------------------------------------------------------|
-| Browser to gateway                   | HTTP (HTTPS _planned_)       | Natively supported by browsers, and by cookies                       |
+| Browser to web server                | HTTP (HTTPS _planned_)       | Natively supported by browsers, and by cookies                       |
+| Web server to gateway                | HTTP                         | The browser only talks to one origin, so no CORS is needed           |
 | Gateway to services                  | HTTP                         | Synchronous request/response, with one contract for all stacks       |
 | `payment-service` to `order-service` | HTTP                         | Same as above: the payment needs an immediate outcome                |
 | Producers and consumers to Kafka     | Kafka binary protocol on TCP | Durable and asynchronous delivery to `notification-service`          |

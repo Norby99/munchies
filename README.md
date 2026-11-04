@@ -109,11 +109,22 @@ them: not for every machine, so here's a light version of the deploy.
      -Pexclude=order-service,payment-service,notification-service,table-reservation-service
    ```
 
-To connect the gateway to the fronted you need to forward this port:
+To open the application, forward the port of the frontend and go to `http://localhost:5173`:
 
 ```bash
-kubectl -n gateway-service port-forward svc/gateway-service 8086:8080
-cd frontend-service && npm run dev
+kubectl -n frontend-service port-forward svc/frontend-service 5173:8080
+```
+
+For a light deploy, add `:frontend-service:dockerBuild` to the images built in step 1.
+
+### Working on the frontend
+
+`frontend-service` runs in a container like the other services: nginx serves the built application and forwards API
+calls to the gateway, reachable at the address in `GATEWAY_URL`. To work on it with hot reload, on top of a running
+system, use the Vite dev server, which proxies API calls to `localhost:8086`:
+
+```bash
+cd frontend-service && npm install && npm run dev
 ```
 
 ### Building and testing

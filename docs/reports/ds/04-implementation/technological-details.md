@@ -15,6 +15,7 @@
 | Backend       | TypeScript, on Node.js           | 5, 24      | `gateway`, `payment` and `notification` services |
 | Backend       | Express.js                       | 4          | HTTP server                                      |
 | Frontend      | Vue.js, Pinia, Vue Router, Vite  | 3, 2, 4, 6 | Single-page application                          |
+| Frontend      | nginx                            | 1.28       | Serving the application, and proxying API calls  |
 | Shared code   | Kotlin Multiplatform             | 1.9        | API contracts and messages                       |
 | Database      | MongoDB                          | 7          | Persistent state of each service                 |
 | Messaging     | Apache Kafka, in KRaft mode      | 4          | Events towards `notification-service`            |
@@ -82,6 +83,17 @@ broker is ready, since a consumer cannot subscribe to a topic that does not exis
 The gateway reads bodies with `express.raw`, leaving them as bytes, because each route parses them through the shared
 contract rather than as generic JSON. Each request to a service goes through one Axios client, with a timeout of 10
 seconds.
+
+## nginx
+
+The frontend is a set of static files once built, so it needs no application server: its image compiles the Vue
+application in a first stage, then copies the result into an nginx image, which holds no Node.js. nginx also forwards
+`/users`, `/restaurants`, `/restaurant` and `/orders` to the gateway, so that the browser only sees one origin, which
+keeps the session cookie same-site. Any other path falls back to `index.html`, since client-side routes have no
+matching file.
+
+The address of the gateway comes from `GATEWAY_URL`, and it is resolved on each request. Otherwise nginx would refuse to
+start until the gateway exists, which would tie the frontend to the order in which services are deployed.
 
 ## Observability
 

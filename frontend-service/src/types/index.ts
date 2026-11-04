@@ -8,6 +8,7 @@ export interface User {
   username: string
   email: string
   role: Role
+  isEmailVerified: boolean
 }
 
 export interface Restaurant {
@@ -92,12 +93,21 @@ export type Validity =
 
 export type ValidityType = Validity['type']
 
+// Wire shape of a validity rule, from restaurant-shared's ValidityDto.kt: flat and string-only.
+export interface ValidityDto {
+  type: 'PERIOD' | 'YEARLY' | 'WEEKLY' | 'HOURS' | 'FROM' | 'UNTIL' | 'ALWAYS'
+  value: Record<string, string>
+}
+
 export interface Menu {
   id: string
   name: string
   categories: Category[]
   validity: Validity[]
 }
+
+// A menu as sent on the wire, before its validity is decoded (see utils/validity.ts).
+export type MenuDto = Omit<Menu, 'validity'> & { validity: ValidityDto[] }
 
 export interface MenuSummary {
   id: string

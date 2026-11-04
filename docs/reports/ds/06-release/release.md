@@ -29,8 +29,8 @@ Keeping them in one repository lets a change to a contract and to its clients la
 | `architecture-rules` | Test library | Architecture checks, reused by the tests of the Kotlin services |
 | `e2e-test`           | Test suite   | End-to-end tests of the whole system                            |
 
-`frontend-service` is not part of the Gradle build, and it depends on no other module: it only reaches the gateway at
-runtime. The same goes for `scheduler-service`, which only holds its offline analysis.
+`frontend-service` depends on no other module: it only reaches the gateway at runtime, and Gradle only builds its image.
+`scheduler-service` is not part of the build, as it only holds its offline analysis.
 
 ### Dependency graph
 
