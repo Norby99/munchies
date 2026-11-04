@@ -322,7 +322,7 @@ class MicronautOrderController(
    * - `200 OK` when items are updated successfully
    * - `404 Not Found` when order does not exist
    * - `401 Unauthorized` for unauthorized access
-   * - `400 Bad Request` for empty items
+   * - `400 Bad Request` for empty items, or when the order is no longer `PENDING`
    *
    * @param request Request containing order identifier and new items.
    * @return An HTTP response representing the update result.
@@ -330,12 +330,12 @@ class MicronautOrderController(
   @Patch(OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH)
   @Operation(
     summary = "Update order items",
-    description = "Updates the items in an order.",
+    description = "Updates the items in an order, as long as it is still pending.",
   )
   @ApiResponse(responseCode = "200", description = "Order items updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "401", description = "Unauthorized")
-  @ApiResponse(responseCode = "400", description = "Empty items")
+  @ApiResponse(responseCode = "400", description = "Empty items or order no longer pending")
   override fun updateOrderItems(
     @Body request: UpdateOrderItemsRequest,
   ): HttpResponse<UpdateOrderItemsResponse> {
@@ -350,6 +350,9 @@ class MicronautOrderController(
       is UpdateOrderItems.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
       is UpdateOrderItems.Result.Failure.Unauthorized -> throw UnauthorizedException("Unauthorized")
       is UpdateOrderItems.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
+      is UpdateOrderItems.Result.Failure.OrderNotModifiable -> throw ValidationException(
+        "Order cannot be modified",
+      )
     }
   }
 

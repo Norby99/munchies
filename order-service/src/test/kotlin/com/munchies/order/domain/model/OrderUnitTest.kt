@@ -101,6 +101,24 @@ class OrderUnitTest {
     result.error shouldBeEqual Order.ItemsValidationError.InvalidItemQuantity
   }
 
+  @Test
+  fun `order should update items only when in pending status`() {
+    OrderStatus.entries.filter { it != OrderStatus.PENDING }.forEach { status ->
+      val result = createDeliveryOrder(status).updateItems(createNewItems())
+
+      result shouldBeEqual UpdateResult.Failure.NotModifiable
+    }
+  }
+
+  @Test
+  fun `order should report not modifiable before validating items`() {
+    val order = createDeliveryOrder(OrderStatus.PREPARING)
+
+    val result = order.updateItems(createEmptyItems())
+
+    result shouldBeEqual UpdateResult.Failure.NotModifiable
+  }
+
   // ---------- Event sourcing: process never mutates, apply never fails ----------
 
   @Test

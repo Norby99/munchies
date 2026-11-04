@@ -24,6 +24,8 @@ interface UpdateOrderItems {
    *  - `OrderNotFound`: No order exists with the provided identifier.
    *  - `Unauthorized`: The user does not have permission to update the order items.
    *  - `EmptyItems`: The provided list of items is empty, which is not allowed for an order.
+   *  - `OrderNotModifiable`: The order has left the `PENDING` status, so its items can no longer
+   *  change.
    */
   sealed interface Result {
     data object Success : Result
@@ -31,6 +33,7 @@ interface UpdateOrderItems {
       data object OrderNotFound : Failure
       data object Unauthorized : Failure
       data object EmptyItems : Failure
+      data object OrderNotModifiable : Failure
     }
   }
 }

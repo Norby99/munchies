@@ -72,12 +72,15 @@ sealed class Order(
   }
 
   /**
-   * Replaces the items in the order after validating them.
+   * Replaces the items in the order after validating them. Items can only change while the
+   * order is [OrderStatus.PENDING]: once it has left that status, the restaurant may already be
+   * working on it.
    *
    * @param newItems The new list of [OrderItem] for the order.
    * @return An [UpdateResult] carrying an [OrderItemsUpdated] event on success.
    */
   fun updateItems(newItems: List<OrderItem>): UpdateResult {
+    if (status != OrderStatus.PENDING) return UpdateResult.Failure.NotModifiable
     val validationError = validateItems(newItems)
     if (validationError != null) return UpdateResult.Failure.InvalidItems(validationError)
     return UpdateResult.Success(listOf(OrderItemsUpdated(id, newItems)))
@@ -202,6 +205,7 @@ sealed class Order(
     data class Success(val events: List<OrderEvent>) : UpdateResult
     sealed interface Failure : UpdateResult {
       data class InvalidItems(val error: ItemsValidationError) : Failure
+      data object NotModifiable : Failure
     }
   }
 
