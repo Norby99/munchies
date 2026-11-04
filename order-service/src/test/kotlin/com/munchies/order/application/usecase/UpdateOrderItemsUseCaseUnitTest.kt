@@ -74,6 +74,18 @@ class UpdateOrderItemsUseCaseUnitTest {
   }
 
   @Test
+  fun `execute should return OrderNotModifiable when order has left the pending status`() {
+    val command = createUpdateOrderItemsCommand()
+    every { eventStore.load(command.orderId) } returns
+      createSampleOrder(OrderStatus.PREPARING).asHistory()
+
+    val result = useCase.execute(command)
+
+    result shouldBeEqual UpdateOrderItems.Result.Failure.OrderNotModifiable
+    verify(exactly = 0) { eventStore.append(any(), any(), any()) }
+  }
+
+  @Test
   fun `execute should append OrderItemsUpdated and return Success when command is valid`() {
     val newItems = createNewItems()
     val command = createUpdateOrderItemsCommand(items = newItems)

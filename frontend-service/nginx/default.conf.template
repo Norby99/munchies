@@ -1,0 +1,30 @@
+# Rendered at startup by the nginx entrypoint, which only replaces the variables defined in the
+# environment: GATEWAY_URL and NGINX_LOCAL_RESOLVERS here, while nginx's own ones are left alone.
+server {
+  listen 8080;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+
+  location = /health {
+    access_log off;
+    default_type application/json;
+    return 200 '{"status":"UP"}';
+  }
+
+  # Same paths proxied by the Vite dev server. The address goes through a variable so that it is
+  # resolved on each request: otherwise nginx would refuse to start until the gateway exists.
+  location ~ ^/(users|restaurants|restaurant|orders)(/|$) {
+    set $gateway ${GATEWAY_URL};
+    proxy_pass $gateway;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # Client-side routes have no matching file, and are resolved by Vue Router.
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}

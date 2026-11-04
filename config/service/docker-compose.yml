@@ -87,11 +87,8 @@ services:
     #? no need for port mapping (no API exposed)
     depends_on:
       <<: *kafka-dependency
-      munchies-notification-mongo:
-        condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
-      MONGODB_URI: mongodb://munchies-notification-mongo:27017/notification-service
 
   #  table-reservation-service:
   #    <<: *service-common
@@ -123,6 +120,25 @@ services:
       <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-restaurant-mongo:27017/restaurant-service
     healthcheck: *micronaut-healthcheck
+
+  frontend-service:
+    <<: *service-common
+    container_name: munchies-frontend-service
+    build:
+      context: frontend-service
+    image: munchies-frontend-service:latest
+    ports: [ "5173:8080" ]
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    environment:
+      GATEWAY_URL: http://gateway-service:8080
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://127.0.0.1:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
   gateway-service:
     <<: *service-common
