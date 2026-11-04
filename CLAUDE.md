@@ -160,7 +160,7 @@ New services, and new code in existing ones, should follow this structure.
 
 ## Database
 
-- Every microservice has its own database.
+- Every microservice with persistent state has its own database.
 
 ## Agents & Special Tasks
 

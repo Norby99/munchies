@@ -87,11 +87,8 @@ services:
     #? no need for port mapping (no API exposed)
     depends_on:
       <<: *kafka-dependency
-      munchies-notification-mongo:
-        condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
-      MONGODB_URI: mongodb://munchies-notification-mongo:27017/notification-service
 
   #  table-reservation-service:
   #    <<: *service-common
