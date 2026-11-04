@@ -102,7 +102,7 @@ Each database is also published on a distinct host port (`27018`–`27024`) to i
 
 ### `config/kafka` — the message broker
 
-A single `apache/kafka:4.3.1` broker in KRaft mode (broker and controller in the same process, no ZooKeeper). The
+A single `apache/kafka:4.1.2` broker in KRaft mode (broker and controller in the same process, no ZooKeeper). The
 services reach it at `munchies-kafka:9092` on the Compose network. Topics are created automatically on first use.
 
 ## Service discovery and configuration
