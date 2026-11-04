@@ -30,6 +30,10 @@ class UpdateOrderItemsUseCase(
 
     val items = command.items.map { OrderItem(it.menuItemId, it.quantity) }
     return when (val result = order.updateItems(items)) {
+      is Order.UpdateResult.Failure.NotModifiable -> {
+        logger.warn("Order {} items cannot be updated in status {}", order.id.value, order.status)
+        OrderNotModifiable
+      }
       is Order.UpdateResult.Failure.InvalidItems -> when (result.error) {
         ItemsValidationError.EmptyItems -> EmptyItems
         ItemsValidationError.InvalidItemQuantity -> EmptyItems
