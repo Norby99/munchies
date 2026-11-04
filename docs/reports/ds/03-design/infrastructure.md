@@ -21,16 +21,17 @@
 
 ## Infrastructural components
 
-| Component            | How many                                                                                         | Purpose                                                    |
-|----------------------|--------------------------------------------------------------------------------------------------|------------------------------------------------------------|
-| Web client           | One per user                                                                                     | Runs in the user's browser                                 |
-| API gateway          | 1 to 4 replicas                                                                                  | Single entry point                                         |
-| Application services | 1 to 4 replicas for user, restaurant and order services; 1 for payment and notification services | Business logic                                             |
-| Databases            | One per service with persistent state                                                            | Isolated persistence                                       |
-| Message broker       | 1 node                                                                                           | Delivers events to `notification-service`                  |
-| Load balancing       | One virtual address per service                                                                  | Spreads requests across replicas, provided by the platform |
-| Service registry     | Provided by the platform                                                                         | Keeps track of the running replicas                        |
-| Monitoring stack     | One of each: metrics store, log store, trace store, log collector, dashboards                    | Observability (`NFR15`, `NFR16`)                           |
+| Component            | How many                                                                                         | Purpose                                                      |
+|----------------------|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| Web client           | One per user                                                                                     | Runs in the user's browser                                   |
+| Web server           | 1 replica                                                                                        | Serves the client, and forwards its API calls to the gateway |
+| API gateway          | 1 to 4 replicas                                                                                  | Single entry point                                           |
+| Application services | 1 to 4 replicas for user, restaurant and order services; 1 for payment and notification services | Business logic                                               |
+| Databases            | One per service with persistent state                                                            | Isolated persistence                                         |
+| Message broker       | 1 node                                                                                           | Delivers events to `notification-service`                    |
+| Load balancing       | One virtual address per service                                                                  | Spreads requests across replicas, provided by the platform   |
+| Service registry     | Provided by the platform                                                                         | Keeps track of the running replicas                          |
+| Monitoring stack     | One of each: metrics store, log store, trace store, log collector, dashboards                    | Observability (`NFR15`, `NFR16`)                             |
 
 No cache, CDN, or dedicated firewall is used: see [Availability](availability.md) for the first, and
 [Security](security.md) for the last.
@@ -42,6 +43,9 @@ flowchart TB
     browser["Browser<br/>(user's device)"]
 
     subgraph cluster["Cluster"]
+        subgraph fens["Namespace: frontend-service"]
+            fe["frontend-service<br/>1 replica"]
+        end
         subgraph gwns["Namespace: gateway-service"]
             gw["gateway-service<br/>1-4 replicas"]
         end
@@ -72,7 +76,8 @@ flowchart TB
         end
     end
 
-    browser -->|HTTP| gw
+    browser -->|HTTP| fe
+    fe --> gw
     gw --> user
     gw --> rest
     gw --> order

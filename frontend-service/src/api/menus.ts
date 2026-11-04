@@ -7,8 +7,7 @@
 
 import { http, unwrap } from '@/api/client'
 import { decodeValidity, encodeValidity } from '@/utils/validity'
-import type { Category, Menu, MenuSummary, MenuItem, Validity, Variation } from '@/types'
-import type { MenuDto } from 'munchies-wire-types/kotlin/restaurant-wire-types'
+import type { Category, Menu, MenuDto, MenuSummary, MenuItem, Validity, Variation } from '@/types'
 
 const base = (restaurantId: string) => `/restaurant/${restaurantId}/menus`
 

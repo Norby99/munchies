@@ -1,0 +1,25 @@
+# Stateless nginx serving the built Vue application, and forwarding API calls to the gateway.
+serviceName: frontend-service
+namespace: frontend-service
+
+image:
+  repository: frontend-service
+
+env:
+  - name: GATEWAY_URL
+    value: "http://gateway-service.gateway-service.svc.cluster.local:8080"
+
+readinessProbe:
+  initialDelaySeconds: 2
+
+# nginx exposes no Prometheus endpoint.
+metrics:
+  enabled: false
+
+resources:
+  requests:
+    memory: "32Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
