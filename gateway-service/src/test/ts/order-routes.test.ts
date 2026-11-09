@@ -148,21 +148,72 @@ describe("Order Routes", () => {
       expect(res).toBe(dummySuccess);
     });
 
-    it("handles forward with query params and respond", async () => {
+    it("is exposed on the collection root, not on the order-details path", () => {
+      const list = new GetOrdersRoute();
+      const details = new GetOrderDetailsRoute();
+      expect(list.path).toBe("/orders/");
+      expect(list.method.name).toBe("GET");
+      expect(details.path).toBe("/orders/{id}");
+      expect(list.path).not.toBe(details.path);
+    });
+
+    it("calls order-service on the collection root, with filters as query parameters", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      const spy = vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+      const route = new GetOrdersRoute();
+
+      await route.getOrders(null, null, null);
+      expect(spy.mock.calls[0][0]).toBe("http://order-service/orders/");
+
+      await route.getOrders("rest-1", "cust-1", "PENDING");
+      expect(spy.mock.calls[1][0]).toBe(
+        "http://order-service/orders/?restaurantId=rest-1&customerId=cust-1&status=PENDING",
+      );
+    });
+
+    it("forces the customer filter to the caller's own id for customers", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+      const route = new GetOrdersRoute();
+      const spy = vi.spyOn(route, "getOrders");
+
+      await route.forward({
+        query: { restaurantId: "rest-1", customerId: "someone-else", status: "PENDING" },
+        user: { id: "cust-1", role: AuthRole.CUSTOMER },
+      } as any);
+      expect(spy).toHaveBeenCalledWith("rest-1", "cust-1", "PENDING");
+
+      await route.forward({ query: {}, user: { id: "cust-1", role: AuthRole.CUSTOMER } } as any);
+      expect(spy).toHaveBeenLastCalledWith(null, "cust-1", null);
+    });
+
+    it("keeps the query filters for managers", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+      const route = new GetOrdersRoute();
+      const spy = vi.spyOn(route, "getOrders");
+
+      await route.forward({
+        query: { restaurantId: "rest-1", customerId: "cust-1", status: "PENDING" },
+        user: { id: "manager-1", role: AuthRole.MANAGER },
+      } as any);
+      expect(spy).toHaveBeenCalledWith("rest-1", "cust-1", "PENDING");
+
+      await route.forward({ query: {}, user: { id: "manager-1", role: AuthRole.MANAGER } } as any);
+      expect(spy).toHaveBeenLastCalledWith(null, null, null);
+    });
+
+    it("responds with the order-service result", async () => {
       process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new GetOrdersRoute();
 
-      const resWithParams = await route.forward({
-        query: { restaurantId: "rest-1", customerId: "cust-1", status: "PENDING" },
-      } as any);
-      expect(resWithParams).toBe(dummySuccess);
-
-      const resNoParams = await route.forward({ query: {} } as any);
-      expect(resNoParams).toBe(dummySuccess);
-
       const res = mockResponse();
-      await route.respond({ query: {} } as any, res, () => {});
+      await route.respond(
+        { query: {}, user: { id: "cust-1", role: AuthRole.CUSTOMER } } as any,
+        res,
+        () => {},
+      );
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });
@@ -172,19 +223,54 @@ describe("Order Routes", () => {
     it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
       delete process.env.ORDER_SERVICE_URL;
       const route = new PayOrderRoute();
-      const res = await route.payOrder({ toJson: () => "{}" } as any);
+      const res = await route.payOrder("order-1");
       expect(res).toBeInstanceOf(ErrorResponse);
       expect((res as ErrorResponse).code).toBe(500);
     });
 
-    it("handles payOrder with ORDER_SERVICE_URL", async () => {
+    it("calls PATCH /orders/{id}/pay on order-service with the id filled in once", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      const spy = vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+      const route = new PayOrderRoute();
+
+      const res = await route.payOrder("order-1");
+
+      expect(res).toBe(dummySuccess);
+      expect(route.path).toBe("/orders/{id}/pay");
+      expect(spy.mock.calls[0][0]).toBe("http://order-service/orders/order-1/pay");
+      expect((spy.mock.calls[0][1] as any).name).toBe("PATCH");
+    });
+
+    // Regression: forward used to call parseRequest, which JsPayOrderAPI never supports, so
+    // every payment answered 500 regardless of the request.
+    it("forwards the order id taken from the path, without parsing a body", async () => {
+      process.env.ORDER_SERVICE_URL = "http://order-service";
+      const spy = vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
+      const route = new PayOrderRoute();
+
+      const res = await route.forward({
+        params: { id: "order-1" },
+        body: Buffer.from(""),
+        user: { id: "cust-1", role: AuthRole.CUSTOMER },
+      } as any);
+
+      expect(res).toBe(dummySuccess);
+      expect(spy.mock.calls[0][0]).toBe("http://order-service/orders/order-1/pay");
+    });
+
+    it("responds with the order-service result", async () => {
       process.env.ORDER_SERVICE_URL = "http://order-service";
       vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
       const route = new PayOrderRoute();
-      const res = await route.payOrder({ toJson: () => "{}" } as any);
-      expect(res).toBe(dummySuccess);
-    });
 
+      const res = mockResponse();
+      await route.respond(
+        { params: { id: "order-1" }, user: { id: "cust-1", role: AuthRole.CUSTOMER } } as any,
+        res,
+        () => {},
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
   });
 
   // ---- PlaceOrderRoute ----

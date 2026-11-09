@@ -16,8 +16,6 @@ import {AuthedRequest} from "../../auth";
 import {request} from "../internal-client";
 import {SimpleRoute} from "../simple-route";
 import {fillPath} from "@main/infrastructure/adapter/middleware/routes/routes";
-import {com} from "munchies-order-service-shared";
-import OrderServiceConfig = com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig;
 
 export class PayOrderRoute
     extends PayOrderAPI<PayOrderResponse | ErrorResponse>
@@ -45,7 +43,8 @@ export class PayOrderRoute
             );
 
         const response = request<PayOrderResponse>(
-            fillPath(uri + this.path, OrderServiceConfig.PAY_ORDER_PATH.replace("{id}", id)),
+            // this.path is already the full "/orders/{id}/pay" template: only the id is filled in.
+            fillPath(uri + this.path, id),
             this.method,
             "",
             this.parseResponse,
@@ -63,8 +62,9 @@ export class PayOrderRoute
     } = {
         forward: async (req: AuthedRequest) => {
             try {
-                const payReq = this.parseRequest(String(req.body));
-                return this.payOrder(payReq);
+                // The order id comes from the path. The request has no body: JsPayOrderAPI's
+                // parseRequest is intentionally unsupported and always throws.
+                return this.payOrder(req.params.id);
             } catch (err: any) {
                 return new ErrorResponse(
                     "PayOrder forward: \n" + String(err),
