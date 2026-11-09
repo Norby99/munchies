@@ -1,5 +1,6 @@
 // Must stay first: it patches http, express and pino as they are loaded (see tracing.ts).
 import "./infrastructure/adapter/middleware/tracing";
+import type { Server } from "node:http";
 import express from "express";
 import expressListEndpoints from "express-list-endpoints";
 import cookieParser from "cookie-parser";
@@ -54,11 +55,50 @@ async function main(): Promise<void> {
   applyRoutes(app);
 
   const PORT = process.env.PORT ?? 8080;
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     logger.info({ port: PORT }, "Gateway server online");
 
     expressListEndpoints(app).forEach(({ methods, path }) => {
       logger.debug({ methods, path }, "Route registered");
+    });
+  });
+
+  // Kubernetes balances per connection, not per request: a keep-alive connection stays on the
+  // pod it was opened to, so replicas added by the autoscaler get no share of the traffic from
+  // clients that are already connected. Closing each connection after a fixed number of
+  // requests (with `Connection: close` on the last response) makes clients reconnect, and the
+  // new connection goes to any ready pod. A low value rebalances within seconds under load;
+  // the cost is one TCP handshake per that many requests, negligible inside the cluster.
+  server.maxRequestsPerSocket = MAX_REQUESTS_PER_SOCKET;
+
+  handleShutdown(server);
+}
+
+const MAX_REQUESTS_PER_SOCKET = 20;
+// Upper bound on draining: with the chart's 10 s preStop sleep it stays below Kubernetes'
+// default 30 s grace period, after which the pod is killed.
+const SHUTDOWN_TIMEOUT_MS = 15_000;
+
+/**
+ * Graceful shutdown on SIGTERM, sent by Kubernetes when a pod is removed (for example when the
+ * autoscaler scales in). By then the chart's preStop sleep has given the cluster time to take
+ * the pod out of the Service, so no new connections arrive. Closing the server stops accepting
+ * connections, closes idle keep-alive ones and lets in-flight requests finish before the process
+ * exits; without this, Node's default SIGTERM behaviour exits at once and resets them.
+ */
+function handleShutdown(server: Server): void {
+  process.once("SIGTERM", () => {
+    logger.info("SIGTERM received, closing the server");
+    const forceExit = setTimeout(() => {
+      logger.warn("Shutdown timed out, closing the remaining connections");
+      server.closeAllConnections();
+      process.exit(0);
+    }, SHUTDOWN_TIMEOUT_MS);
+    forceExit.unref();
+
+    server.close(() => {
+      logger.info("Server closed");
+      process.exit(0);
     });
   });
 }
