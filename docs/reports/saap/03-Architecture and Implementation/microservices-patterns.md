@@ -13,17 +13,17 @@ This section lists the microservices patterns applied in the project, following 
 _Microservices Patterns_. The internal structure of each service is described separately in
 [Hexagonal Architecture](hexagonal-architecture.md).
 
-| Pattern                    | Technology                                | Where                                    |
-|----------------------------|-------------------------------------------|------------------------------------------|
-| API Gateway                | Express.js, JWT in an HTTP-only cookie    | `gateway-service`                        |
-| Event-Driven Architecture  | Apache Kafka (`kafkajs`, Micronaut Kafka) | `notification-service` and its producers |
-| Observability              | Prometheus, Loki, Alloy, Grafana          | every service, `observability/`          |
-| Database per Service       | MongoDB, one instance per service         | every service                            |
-| Event Sourcing             | MongoDB append-only collection            | `order-service`                          |
-| CQRS                       | Projector + read-model collection         | `order-service`                          |
-| Service Discovery          | Kubernetes Services and DNS               | Helm chart, `k8s/`                       |
-| Externalized Configuration | Environment variables, Helm values        | every service                            |
-| Service per Container      | Docker, Kubernetes, Helm, HPA             | every service                            |
+| Pattern                    | Technology                                             | Where                                    |
+|----------------------------|--------------------------------------------------------|------------------------------------------|
+| API Gateway                | Express.js, JWT in an HTTP-only cookie                 | `gateway-service`                        |
+| Event-Driven Architecture  | Apache Kafka (`kafkajs`, Micronaut Kafka)              | `notification-service` and its producers |
+| Observability              | Prometheus, Loki, Alloy, Tempo, Grafana, OpenTelemetry | every service, `observability/`          |
+| Database per Service       | MongoDB, one instance per service                      | every service                            |
+| Event Sourcing             | MongoDB append-only collection                         | `order-service`                          |
+| CQRS                       | Projector + read-model collection                      | `order-service`                          |
+| Service Discovery          | Kubernetes Services and DNS                            | Helm chart, `k8s/`                       |
+| Externalized Configuration | Environment variables, Helm values                     | every service                            |
+| Service per Container      | Docker, Kubernetes, Helm, HPA                          | every service                            |
 
 ## Patterns
 
@@ -145,11 +145,11 @@ the actual channels (email, SMS, WebSocket push to the frontend) are not impleme
 `handle*`
 methods.
 
-### 3. Observability — Health checks, Prometheus, Loki, Grafana
+### 3. Observability — Health checks, Prometheus, Loki, Tempo, Grafana
 
-Observability covers three of the observability patterns: **health check API**, **application metrics** and **log
-aggregation**. The monitoring stack lives in `observability/` and is installed together with the services by
-`./gradlew deploy`.
+Observability covers four of the observability patterns: **health check API**, **application metrics**, **log
+aggregation** and **distributed tracing**. The monitoring stack lives in `observability/` and is installed together
+with the services by `./gradlew deploy`.
 
 **Health check API.** Every service exposes `/health`, which the Helm chart and the manifests under `k8s/` use as the
 Kubernetes `readinessProbe`: a
@@ -176,11 +176,46 @@ per-pod CPU data.
 application namespaces, tails their logs through the Kubernetes API and pushes them to Loki, labelled with `namespace`,
 `pod`, `container`, `app` and `level`.
 
-**Dashboards.** Grafana is provisioned with the Prometheus and Loki datasources and three dashboards: _Services_ (rate,
-errors, latency), _Scaling_ (ready replicas, HPA desired vs current replicas, CPU against requests) and _Logs_. Together
-with the `loadtest/` k6 job, they turn a load test into time series to check scaling behaviour.
+**Distributed tracing.** Each request that enters the system gets a trace id, and every service it reaches records its
+part of the work as spans of that same trace. The trace context travels in the W3C `traceparent` header: on HTTP calls,
+and in the headers of the Kafka messages sent to `notification-service`. A payment, for example, appears as a single
+trace covering `payment-service`, its call to `order-service` and the consumption of the event by
+`notification-service`.
 
-Distributed tracing, exception tracking and audit logging are not implemented.
+```mermaid
+flowchart LR
+    C[Client] --> G[gateway-service]
+    G -->|HTTP + traceparent| U[user-service] & R[restaurant-service] & O[order-service]
+    P[payment-service] -->|HTTP + traceparent| O
+    U & O & P -->|Kafka message + traceparent header| N[notification-service]
+```
+
+Spans are produced with OpenTelemetry and exported over OTLP (protobuf over HTTP) directly to Grafana Tempo, without an
+intermediate collector. No service creates spans by hand: the instrumentation libraries wrap the HTTP server and client,
+Express and the Kafka client, so the business code is unchanged.
+
+| Services                                                     | Instrumentation                                                                                                                              | Enabled by                                                    |
+|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| `gateway-service`, `payment-service`, `notification-service` | OpenTelemetry Node SDK with the HTTP, Express, KafkaJS and Pino instrumentations, in a `tracing.ts` module imported first by the entry point | `OTEL_EXPORTER_OTLP_ENDPOINT`                                 |
+| `user-service`, `order-service`, `restaurant-service`        | Micronaut Tracing (`micronaut-tracing-opentelemetry-http` and `-kafka`), added by the `micronaut-server` convention plugin                   | `OTEL_TRACES_EXPORTER=otlp` and `OTEL_EXPORTER_OTLP_ENDPOINT` |
+
+Both variables are set only in the Helm values and manifests, so local runs and tests need no trace backend. `/health`,
+`/metrics` and `/prometheus` are excluded, since probes and scrapes would make up most of the traces.
+
+Traces are tied to logs: every log line written while serving a request carries its `trace_id` and `span_id`, added by
+the Pino instrumentation in the Express services and by the OpenTelemetry Logback appender of `micronaut-commons` in
+the Micronaut ones. Logs and spans still travel separately (stdout, Alloy and Loki for logs; OTLP to Tempo for spans);
+the shared trace id is what lets Grafana link the two. `order-service` component tests check that an incoming
+`traceparent` is continued, that the lines logged by a use case belong to that trace, and, against a real Kafka broker,
+that a published message carries it.
+
+**Dashboards.** Grafana is provisioned with the Prometheus, Loki and Tempo datasources and three dashboards: _Services_
+(rate, errors, latency), _Scaling_ (ready replicas, HPA desired vs current replicas, CPU against requests) and _Logs_.
+Together with the `loadtest/` k6 job, they turn a load test into time series to check scaling behaviour. The Loki and
+Tempo datasources are linked in both directions: a log line offers a _View trace_ link that opens its trace, and each
+span of a trace links to the log lines of that trace in every service.
+
+Exception tracking and audit logging are not implemented.
 
 ### 4. Database per Service — MongoDB
 
@@ -241,6 +276,10 @@ No dedicated service registry is used: discovery is delegated to the platform.
 
 In Docker Compose the same variables point to the Compose service names (`http://order-service:8080`), resolved by the
 Docker network DNS. The code is identical in the two cases.
+
+The mechanism, how it maps onto the registry, registration and discovery parts of the pattern, and why it was
+preferred to a dedicated registry are described under Service discovery in
+[Deployment on Kubernetes](../03-Deployment/kubernetes.md#service-discovery).
 
 ### 8. Externalized Configuration — Helm values
 
