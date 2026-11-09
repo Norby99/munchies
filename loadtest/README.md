@@ -133,11 +133,14 @@ helm upgrade --install restaurant-service ./helm/munchies-service \
 
 Each service ships its own HPA (`autoscaling:` in `helm/values/<svc>.yaml`, for gateway,
 user, order, restaurant), installed automatically with the rest of the release. Point the
-load test at the service you want to scale via `TARGET_URL` in `k6-job.yml`.
+load test at the service you want to scale with `TARGET_URL` and `WATCH_NS` (see [Tuning the load](#tuning-the-load)).
 
 ---
 
 ## Running the scaling test
+
+`run.sh` takes no arguments; it is configured through environment variables (see
+[Tuning the load](#tuning-the-load)).
 
 ### 1. Manual scaling (no HPA)
 
@@ -148,10 +151,10 @@ Shows that the Service load-balances across replicas.
 minikube kubectl -- delete hpa gateway-service -n gateway-service --ignore-not-found
 
 minikube kubectl -- scale deploy/gateway-service -n gateway-service --replicas=1
-./loadtest/run.sh                       # note req/s and p95 from the k6 summary
+SCALE_IN_TIMEOUT=0 ./loadtest/run.sh    # note the req/s served at the peak and the dropped iterations
 
 minikube kubectl -- scale deploy/gateway-service -n gateway-service --replicas=3
-./loadtest/run.sh                       # same load → expect ~2-3x req/s, lower p95
+SCALE_IN_TIMEOUT=0 ./loadtest/run.sh    # same load: more served, fewer dropped
 ```
 
 ### 2. HPA (autoscaling)
@@ -163,24 +166,37 @@ helm upgrade --install gateway-service ./helm/munchies-service \
 minikube kubectl -- get hpa -n gateway-service          # TARGETS shows a %, not <unknown>
 
 ./loadtest/run.sh                        # prints "ready=N cpu%=X" every 10s
+./loadtest/show.sh                       # view latest test report & scaling timeline
+./loadtest/show.sh --list                # list all recorded test runs
 # optional, second terminal:
 minikube kubectl -- get hpa,pods -n gateway-service -w
 ```
 
-Expected: replicas climb during the 3-minute sustain phase, then step back down ~30s
-after the load stops (`scaleDown.stabilizationWindowSeconds` in the chart's `hpa.yaml`
-template, set via `autoscaling.behavior` in `values.yaml`).
+This is the run the [Scaling Benchmark](../docs/reports/saap/03-Deployment/scaling-benchmark.md) is based on, about
+14 minutes plus the scale-in wait. It targets `/auth/verify` with an open-model profile: k6 starts requests at a set
+rate (`ramping-arrival-rate`), whatever the response time, so a slow service gets queued requests instead of fewer of
+them. `PEAK_RATE` sets the peak (default 1000 req/s; the benchmark's overload run uses 2000):
 
-`run.sh` takes the watched namespace as `$1` (default `gateway-service`), with optional `--fast` and `--jwt` flags:
+| Phase | Load | Duration | Purpose |
+| --- | --- | --- | --- |
+| Start | 0 to 20 req/s | 30s | |
+| Baseline | 20 req/s | 90s | the minimum replicas (2 for `gateway-service`), below the HPA target |
+| Ramp | 20 req/s to `PEAK_RATE` | 1m | scale-up starts |
+| Peak | `PEAK_RATE` | 4m | scale-up to the ceiling, then a steady state there |
+| Drop | `PEAK_RATE` to 20 req/s | 30s | load falls |
+| Low hold | 20 req/s | 6m | the service scales back in while requests are still served, so any request lost to scale-in is counted |
+| End | 20 to 0 req/s | 30s | |
 
-```bash
-./loadtest/run.sh restaurant-service
-./loadtest/run.sh --fast                 # quick ~70s verification test against /health
-./loadtest/run.sh --jwt                  # test realistic cryptographic JWT verification endpoint
-./loadtest/run.sh --fast --jwt           # quick ~70s cryptographic test
-./loadtest/show.sh                       # view latest test report & scaling timeline
-./loadtest/show.sh --list                # list all recorded test runs
-```
+k6 keeps up to 400 requests in flight. When all of them are waiting on the service, it cannot start the next request
+on time and counts it as a _dropped iteration_ instead: a run with dropped iterations offered less load than the
+profile asked for, and the summary prints how many.
+
+After k6 ends, `run.sh` keeps sampling until the service is back to its minimum replicas (at most 10 minutes,
+`SCALE_IN_TIMEOUT`).
+
+For `/auth/verify`, the k6 script asks the gateway's `/auth/token` for a fresh token before the load starts, so runs
+never fail on an expired one. k6's thresholds are the project's SLOs (p95 below 800 ms, error rate below 1%), so a
+run that misses them is reported as failed.
 
 ---
 
@@ -196,6 +212,7 @@ report, don't commit raw run dumps):
 | `summary.json` | k6's full summary object (all metrics, all percentiles), extracted from `k6.log` |
 | `scaling.csv` | `timestamp,ready_replicas,cpu_percent`, sampled every 10s for the whole run |
 | `hpa-events.txt` | `kubectl describe hpa` + `kubectl get events --sort-by=.lastTimestamp`, captured once at the end |
+| `environment.txt` | node CPU and memory, HPA spec and pod resources, captured before the load starts |
 
 The Job's own filesystem disappears with the pod, so getting `summary.json` out doesn't use
 `kubectl cp` — the k6 script's `handleSummary()` prints the JSON as a single line prefixed
@@ -207,32 +224,36 @@ Terminal output during and after the run:
   latency avg/p95/p99/max, error rate. Same numbers as `summary.json`, human-readable.
 - **watcher line** every 10s: `[HH:MM:SS] gateway-service ready=N cpu%=X`
   — `ready` = current ready replicas, `cpu%` = HPA's averaged CPU utilisation.
-- **live progress line**, e.g. `running (4m13.0s), 150/150 VUs, 662259 complete and 0 interrupted iterations`
-  = elapsed time, active VUs / target, cumulative completed iterations (≈ requests), and
-  interrupted iterations (should stay 0).
+- **live progress line**, e.g. `running (4m13.0s), 225/400 VUs, 162259 complete and 0 interrupted iterations`
+  = elapsed time, busy VUs (requests in flight) / VUs allocated, cumulative completed iterations
+  (≈ requests), and interrupted iterations (should stay 0).
 
 Interpreting it:
-- throughput roughly flat while `ready` climbs → bottleneck is elsewhere
-  (k6 pod CPU, the single node's cores, or the Service), not the app.
-- `cpu%` pegged well above 60 and `ready` marching to `maxReplicas` (4) → HPA working.
+- throughput roughly flat while `ready` climbs → the new replicas are not getting the load: k6's
+  keep-alive connections opened before the scale-up stay on the old pods (the Service balances
+  per connection), or the bottleneck is elsewhere (k6 pod CPU, the single node's cores). The
+  gateway closes each connection after 20 requests, so for it this should clear within seconds;
+  if it does not, check that the pods run the current image (`minikube image ls`).
+- `cpu%` pegged well above 60 and `ready` marching to `maxReplicas` (8 for `gateway-service`, 4 for the others) → HPA working.
 - `scaling.csv` plotted over time is the evidence to paste into the Benchmark report
-  (replicas ramping up during the sustain phase, back down ~30s after load stops).
+  (replicas ramping up during the peak, back down during the low hold).
 
 ---
 
 ## Tuning the load
 
-Edit `env` in `k6-job.yml` before running:
+Set these when calling `run.sh`, e.g. `PEAK_RATE=2000 ./loadtest/run.sh`; it writes them into the Job's `env`:
 
 | Var | Default | Meaning |
 | --- | --- | --- |
-| `TARGET_URL` | gateway `/health` (in-cluster FQDN) | endpoint to hammer |
-| `PEAK_VUS` | `150` | peak concurrent virtual users |
-| `SUSTAIN` | `3m` | how long to hold peak load |
+| `PEAK_RATE` | `1000` | peak requests per second |
+| `TARGET_URL` | gateway `/auth/verify` (in-cluster FQDN) | endpoint to load |
+| `WATCH_NS` | `gateway-service` | namespace whose replicas and HPA are sampled |
+| `SCALE_IN_TIMEOUT` | `600` | most seconds to wait for scale-in after k6 ends; `0` to stop when k6 does |
 
-`/health` is cheap — if `cpu%` won't cross 60, raise `PEAK_VUS` to 300–400.
-For a gentler HPA ramp, raise `resources.requests.cpu` (and `limits.cpu`) in
-`helm/values/gateway-service.yaml` — the HPA percentage is measured against the request.
+The shape of the load (durations and the baseline rate) is the `STAGES` list at the top of the script in
+`k6-script.configmap.yml`; edit it for a different profile. For a gentler HPA ramp, raise `resources.requests.cpu`
+(and `limits.cpu`) in `helm/values/gateway-service.yaml` — the HPA percentage is measured against the request.
 
 Pin the k6 image (`grafana/k6:latest` → e.g. `grafana/k6:0.55.0`) for reproducible numbers.
 

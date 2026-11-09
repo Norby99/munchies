@@ -1,64 +1,35 @@
 #!/usr/bin/env bash
-# Runs the k6 load Job, prints replica count + HPA CPU% every 10s next to it, and saves
-# everything under loadtest/results/<timestamp>/ so it can be dropped into the report:
-#   k6.log         - raw k6 stdout (human-readable summary + progress)
-#   summary.json   - k6's full summary object, extracted from k6.log
-#   scaling.csv    - timestamp,ready_replicas,cpu_percent sampled every 10s
-#   hpa-events.txt - `kubectl describe hpa` + recent namespace events, captured at the end
+# Runs the k6 load Job, prints replica count + HPA CPU% every 10s next to it, keeps sampling after
+# k6 ends until the service is back to its minimum replicas, and saves everything under
+# loadtest/results/<timestamp>/ so it can be dropped into the report:
+#   environment.txt - node capacity, HPA spec and pod resources, captured before the load starts
+#   k6.log          - raw k6 stdout (human-readable summary + progress)
+#   summary.json    - k6's full summary object, extracted from k6.log
+#   scaling.csv     - timestamp,ready_replicas,cpu_percent sampled every 10s
+#   hpa-events.txt  - `kubectl describe hpa` + recent namespace events, captured at the end
 #
 # Usage:
-#   ./loadtest/run.sh                       # defaults from k6-job.yml (gateway /health)
-#   ./loadtest/run.sh restaurant-service    # watches & targets restaurant-service
-#   ./loadtest/run.sh --fast                # runs shortened stages (~70s) for quick verification
-#   ./loadtest/run.sh restaurant-service --fast
+#   ./loadtest/run.sh                    # the benchmark: gateway-service /auth/verify, peak 1000 req/s
+#   PEAK_RATE=2000 ./loadtest/run.sh     # a higher peak
 #
 # Environment overrides:
+#   PEAK_RATE  - peak requests per second (default: 1000); the profile itself is in the k6 script
+#   TARGET_URL - endpoint to load (default: gateway-service /auth/verify)
+#   WATCH_NS   - namespace whose Deployment and HPA are sampled (default: gateway-service)
+#   SCALE_IN_TIMEOUT - most seconds to wait for scale-in after k6 ends (default: 600)
 #   KUBECTL    - kubectl command (default: "minikube kubectl --")
-#   TARGET_URL - target URL to hammer
-#   PEAK_VUS   - peak concurrent virtual users (default: 150, fast: 50)
-#   SUSTAIN    - sustain stage duration (default: 3m, fast: 30s)
-#   WARMUP     - warm up duration (default: 1m, fast: 10s)
-#   BASELINE   - baseline hold duration (default: 1m, fast: 10s)
-#   RAMP       - ramp up duration (default: 1m, fast: 10s)
-#   RAMPDOWN   - ramp down duration (default: 2m, fast: 10s)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KUBECTL=${KUBECTL:-"minikube kubectl --"}
+WATCH_NS=${WATCH_NS:-gateway-service}
+TARGET_URL=${TARGET_URL:-"http://gateway-service.gateway-service.svc.cluster.local.:8080/auth/verify"}
+PEAK_RATE=${PEAK_RATE:-1000}
+SCALE_IN_TIMEOUT=${SCALE_IN_TIMEOUT:-600}
 
-# Parse arguments
-FAST_MODE=false
-AUTH_MODE=false
-WATCH_NS="gateway-service"
-
-for arg in "$@"; do
-  case "$arg" in
-    --fast)
-      FAST_MODE=true
-      ;;
-    --auth|--jwt)
-      AUTH_MODE=true
-      ;;
-    --help|-h)
-      echo "Usage: $0 [NAMESPACE] [--fast] [--jwt]"
-      echo "  NAMESPACE: target namespace to watch (default: gateway-service)"
-      echo "  --fast:    run shortened stages (~70s) for quick verification"
-      echo "  --jwt:     target /auth/verify for cryptographic JWT verification benchmark"
-      exit 0
-      ;;
-    *)
-      if [[ "$arg" != -* ]]; then
-        WATCH_NS="$arg"
-      fi
-      ;;
-  esac
-done
-
-if [[ "${FAST:-false}" == "true" || "${FAST:-false}" == "1" ]]; then
-  FAST_MODE=true
-fi
-if [[ "${JWT:-false}" == "true" || "${JWT:-false}" == "1" || "${AUTH:-false}" == "true" || "${AUTH:-false}" == "1" ]]; then
-  AUTH_MODE=true
+if [ "$#" -gt 0 ]; then
+  sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'
+  exit 0
 fi
 
 # Pre-flight check: ensure Kubernetes cluster is reachable
@@ -68,39 +39,41 @@ if ! $KUBECTL get ns >/dev/null 2>&1; then
   exit 1
 fi
 
-# Configure target URL and stages
-if [ "$AUTH_MODE" = true ]; then
-  DEFAULT_TARGET="http://${WATCH_NS}.${WATCH_NS}.svc.cluster.local.:8080/auth/verify"
-else
-  DEFAULT_TARGET="http://${WATCH_NS}.${WATCH_NS}.svc.cluster.local.:8080/health"
-fi
-TARGET_URL=${TARGET_URL:-"$DEFAULT_TARGET"}
-# Ensure trailing dot on cluster.local to prevent host search-domain interception
-if [[ "$TARGET_URL" =~ \.svc\.cluster\.local:[0-9]+ ]] || [[ "$TARGET_URL" =~ \.svc\.cluster\.local$ ]] || [[ "$TARGET_URL" =~ \.svc\.cluster\.local/ ]]; then
-  TARGET_URL=$(echo "$TARGET_URL" | sed 's/\.svc\.cluster\.local\([:/]\|$\)/.svc.cluster.local.\1/')
-fi
-
-if [ "$FAST_MODE" = true ]; then
-  echo ">> Fast mode active: shortened durations for rapid testing"
-  PEAK_VUS=${PEAK_VUS:-50}
-  WARMUP=${WARMUP:-10s}
-  BASELINE=${BASELINE:-10s}
-  RAMP=${RAMP:-10s}
-  SUSTAIN=${SUSTAIN:-30s}
-  RAMPDOWN=${RAMPDOWN:-10s}
-else
-  PEAK_VUS=${PEAK_VUS:-150}
-  WARMUP=${WARMUP:-1m}
-  BASELINE=${BASELINE:-1m}
-  RAMP=${RAMP:-1m}
-  SUSTAIN=${SUSTAIN:-3m}
-  RAMPDOWN=${RAMPDOWN:-2m}
-fi
-
 RESULTS_DIR="$HERE/results/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$RESULTS_DIR"
 echo ">> Results will be saved to $RESULTS_DIR"
-echo ">> Target: $TARGET_URL (Peak VUs: $PEAK_VUS, Sustain: $SUSTAIN, Watching: $WATCH_NS)"
+echo ">> Target: $TARGET_URL (peak $PEAK_RATE req/s, watching: $WATCH_NS)"
+
+# Record what the run ran on, so the report never has to say "not recorded".
+{
+  echo "### run"
+  echo "started (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "target: $TARGET_URL"
+  echo "peak rate: $PEAK_RATE req/s"
+  echo
+  echo "### node capacity and allocatable resources"
+  $KUBECTL get nodes -o custom-columns='NODE:.metadata.name,CPU:.status.capacity.cpu,MEMORY:.status.capacity.memory,ALLOCATABLE_CPU:.status.allocatable.cpu,ALLOCATABLE_MEMORY:.status.allocatable.memory' 2>&1
+  echo
+  # With the Docker driver the node reports the host's capacity; the cluster's real limits are
+  # those of the Minikube container.
+  if command -v docker >/dev/null 2>&1 && docker inspect minikube >/dev/null 2>&1; then
+    echo "### Minikube container limits (Docker driver)"
+    docker inspect minikube --format '{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}}' \
+      | awk -v host="$(nproc)" '{
+          if ($1 > 0) printf "cpus: %g\n", $1 / 1e9; else printf "cpus: not limited (all %s host CPUs)\n", host
+          if ($2 > 0) printf "memory: %d MiB\n", $2 / 1048576; else print "memory: not limited"
+        }'
+    echo
+  fi
+  echo "### HPA spec ($WATCH_NS)"
+  $KUBECTL -n "$WATCH_NS" get hpa -o yaml 2>&1 | sed -n '/^  spec:/,/^  status:/p'
+  echo
+  echo "### pod resources ($WATCH_NS)"
+  $KUBECTL -n "$WATCH_NS" get deploy -o jsonpath='{range .items[*]}{.metadata.name}: {.spec.template.spec.containers[0].resources}{"\n"}{end}' 2>&1
+  echo
+  echo "### ready replicas at start"
+  $KUBECTL -n "$WATCH_NS" get deploy 2>&1
+} > "$RESULTS_DIR/environment.txt"
 
 # Apply namespace and script ConfigMap
 $KUBECTL apply -f "$HERE/namespace.yml"
@@ -115,12 +88,7 @@ done
 
 # Render and apply k6-job with runtime env configurations
 sed -e "/name: TARGET_URL/{n;s|value:.*|value: \"$TARGET_URL\"|}" \
-    -e "/name: PEAK_VUS/{n;s|value:.*|value: \"$PEAK_VUS\"|}" \
-    -e "/name: SUSTAIN/{n;s|value:.*|value: \"$SUSTAIN\"|}" \
-    -e "/name: WARMUP/{n;s|value:.*|value: \"$WARMUP\"|}" \
-    -e "/name: BASELINE/{n;s|value:.*|value: \"$BASELINE\"|}" \
-    -e "/name: RAMP\$/{n;s|value:.*|value: \"$RAMP\"|}" \
-    -e "/name: RAMPDOWN/{n;s|value:.*|value: \"$RAMPDOWN\"|}" \
+    -e "/name: PEAK_RATE/{n;s|value:.*|value: \"$PEAK_RATE\"|}" \
     "$HERE/k6-job.yml" | $KUBECTL apply -f -
 
 # Background watcher: human-readable to stdout, structured to scaling.csv
@@ -142,6 +110,28 @@ trap 'kill "$WATCHER" 2>/dev/null || true' EXIT
 echo ">> Waiting for k6 pod to start..."
 $KUBECTL -n loadtest wait --for=condition=ready pod -l app=k6-load --timeout=90s || true
 $KUBECTL -n loadtest logs -f job/k6-load 2>&1 | tee "$RESULTS_DIR/k6.log" || true
+
+# Keep sampling until the service is back to its minimum replicas, so scale-in is captured even
+# when it finishes after k6 does.
+if [ "$SCALE_IN_TIMEOUT" -gt 0 ]; then
+  MIN_REPLICAS=$($KUBECTL -n "$WATCH_NS" get hpa -o jsonpath='{.items[0].spec.minReplicas}' 2>/dev/null || echo 1)
+  echo ">> k6 finished; sampling until $WATCH_NS is back to ${MIN_REPLICAS:-1} replica(s) (at most ${SCALE_IN_TIMEOUT}s)..."
+  waited=0
+  while [ "$waited" -lt "$SCALE_IN_TIMEOUT" ]; do
+    reps=$($KUBECTL -n "$WATCH_NS" get deploy -o jsonpath='{.items[0].status.readyReplicas}' 2>/dev/null || echo '')
+    if [ "${reps:-0}" -le "${MIN_REPLICAS:-1}" ]; then
+      echo ">> $WATCH_NS is back to $reps replica(s) after ${waited}s"
+      break
+    fi
+    sleep 10
+    waited=$((waited + 10))
+  done
+  if [ "$waited" -ge "$SCALE_IN_TIMEOUT" ]; then
+    echo "!! $WATCH_NS still has ${reps:-?} replicas after ${SCALE_IN_TIMEOUT}s; scale-in not complete" >&2
+  fi
+  # One last sample, so the end state is in scaling.csv.
+  sleep 10
+fi
 
 # Stop the background watcher cleanly
 kill "$WATCHER" 2>/dev/null || true
