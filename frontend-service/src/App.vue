@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// The auth screens (login/register/verify) render without AppShell — no
+// Routes flagged `bare` (login/register/verify) render without AppShell — no
 // header, no nav, no offline banner — everything else gets the full shell.
 
 import { useRoute } from 'vue-router'
@@ -10,7 +10,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <AppShell v-if="!route.meta.public">
+  <AppShell v-if="!route.meta.bare">
     <router-view />
   </AppShell>
   <main v-else class="app-auth-main">

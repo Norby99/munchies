@@ -77,10 +77,18 @@ export const useSessionStore = defineStore('session', () => {
     await authApi.verifyEmail(otk)
   }
 
-  // No logout endpoint exists — this clears client state and the session
-  // belief only, it cannot revoke the cookie server-side.
-  function logout(): void {
-    clear()
+  // The gateway clears the httpOnly cookie. Without this call the cookie would survive, and the
+  // next page load would silently sign the same user back in through hydrate(). Client state is
+  // cleared even if the request fails (e.g. offline or already expired), so the UI never keeps
+  // showing a signed-in user after an explicit logout.
+  async function logout(): Promise<void> {
+    try {
+      await authApi.logout()
+    } catch {
+      // Ignored: an expired session is already logged out server-side.
+    } finally {
+      clear()
+    }
   }
 
   async function patchProfile(input: { username: string; email: string }): Promise<void> {

@@ -1,6 +1,7 @@
-// Register / login / verify — the three unauthenticated (or self-authenticating)
-// user endpoints. Paths and payload shapes are taken from user-shared's Kotlin
-// DTOs (UserServiceConfig, RegisterUserRequest, LoginUserRequest, VerifyEmailRequest)
+// Session-related user endpoints: register, login, verify email, logout. Paths and payload
+// shapes are taken from the Kotlin DTOs in user-shared (UserServiceConfig, RegisterUserRequest,
+// LoginUserRequest, VerifyEmailRequest) and gateway-shared (GatewayServiceConfig,
+// LogoutUserRequest).
 
 import { http, unwrap } from '@/api/client'
 import type { Role, User } from '@/types'
@@ -43,6 +44,14 @@ export async function register(input: RegisterInput): Promise<User> {
   )
 }
 
+// POST and authenticated (JsEmailVerificationAPI): the gateway injects the user id from the
+// session cookie, but VerifyEmailRequest declares `id` without a default, so it must be present.
 export async function verifyEmail(otk: string): Promise<string> {
-  return unwrap(http.request({ method: 'get', url: BASE + 'verify-email/', data: { otk } }))
+  return unwrap(http.post(BASE + 'verify-email/', { id: '', otk }))
+}
+
+// Handled by the gateway itself (JsLogoutUserAPI): it clears the httpOnly session cookie, which
+// the client cannot do on its own. `userId` is injected server-side from that same cookie.
+export async function logout(): Promise<string> {
+  return unwrap(http.post(BASE + 'logout/', { userId: '' }))
 }
