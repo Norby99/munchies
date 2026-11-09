@@ -34,6 +34,12 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.shutdown.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ .Values.shutdown.preStopSleepSeconds }}
+          {{- end }}
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
