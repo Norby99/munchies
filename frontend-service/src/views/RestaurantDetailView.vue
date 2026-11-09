@@ -4,12 +4,11 @@
 // its availability up front, so every menu is fetched in full, not just the
 // active one (see MenuTabs).
 //
-// Checkout intentionally has no destination here: the seven screens this
-// handoff designs stop at the order draft (see README overview) — placing an
-// order needs per-type delivery/takeaway/dine-in details that no screen in
-// this pass defines, matching the prototype's own no-op Checkout handler.
+// Checkout continues on its own route (CheckoutView), which collects the
+// per-type delivery/takeaway details and places the order.
 
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import MenuItemRow from '@/components/MenuItemRow.vue'
 import MenuTabs from '@/components/MenuTabs.vue'
@@ -25,6 +24,8 @@ import { describe, isValid } from '@/utils/validity'
 import type { Menu } from '@/types'
 
 const props = defineProps<{ restaurantId: string }>()
+
+const router = useRouter()
 
 const restaurants = useRestaurantsStore()
 const menus = useMenusStore()
@@ -78,7 +79,7 @@ function addToCart(itemId: string): void {
 }
 
 function checkout(): void {
-  // No-op by design — see the top-of-file note.
+  router.push({ name: 'checkout', params: { restaurantId: props.restaurantId } })
 }
 </script>
 

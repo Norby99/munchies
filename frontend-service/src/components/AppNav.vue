@@ -14,9 +14,9 @@ const router = useRouter()
 const navItems = useNavItems()
 const { isMobile } = useBreakpoints()
 
-function logout(): void {
-  session.logout()
-  router.push({ name: 'login' })
+async function logout(): Promise<void> {
+  await session.logout()
+  await router.push({ name: 'login' })
 }
 </script>
 
@@ -41,7 +41,6 @@ function logout(): void {
     <button
       class="btn btn-ghost app-nav__logout"
       type="button"
-      title="No logout endpoint exists — clears client state only"
       @click="logout"
     >
       Log out

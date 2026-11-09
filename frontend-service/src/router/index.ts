@@ -1,6 +1,10 @@
-// Route table + the global auth guard. Auth screens render without the app
-// shell (see App.vue); everything else requires an active session, and
-// `/manager/*` additionally requires role === MANAGER (the backend enforces
+// Route table + the global auth guard. Two independent route flags:
+// - `public`: reachable without a session (login, register); a signed-in user is sent home.
+// - `bare`: rendered without the app shell (see App.vue). The verify screen is bare but NOT
+//   public: the gateway requires the session cookie to verify an email, and registration
+//   has just created that session.
+// Every non-public route requires an active session, and `/manager/*` additionally requires
+// role === MANAGER (the backend enforces
 // this regardless — the guard just avoids offering entry points a customer
 // role would be rejected from).
 
@@ -13,6 +17,7 @@ import type { Role } from '@/types'
 declare module 'vue-router' {
   interface RouteMeta {
     public?: boolean
+    bare?: boolean
     role?: Role
   }
 }
@@ -26,19 +31,19 @@ const routes = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
-    meta: { public: true },
+    meta: { public: true, bare: true },
   },
   {
     path: '/register',
     name: 'register',
     component: () => import('@/views/RegisterView.vue'),
-    meta: { public: true },
+    meta: { public: true, bare: true },
   },
   {
     path: '/verify',
     name: 'verify',
     component: () => import('@/views/VerifyEmailView.vue'),
-    meta: { public: true },
+    meta: { bare: true },
   },
   {
     path: '/manager/restaurants',
@@ -57,6 +62,20 @@ const routes = [
     path: '/r/:restaurantId',
     name: 'restaurant-detail',
     component: () => import('@/views/RestaurantDetailView.vue'),
+    props: true,
+  },
+  {
+    path: '/r/:restaurantId/checkout',
+    name: 'checkout',
+    component: () => import('@/views/CheckoutView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+    props: true,
+  },
+  {
+    path: '/orders/:orderId',
+    name: 'order-detail',
+    component: () => import('@/views/OrderDetailView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
     props: true,
   },
   {

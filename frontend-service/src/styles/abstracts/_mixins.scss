@@ -1,0 +1,27 @@
+@use 'sass:map';
+@use 'variables' as *;
+
+// Mobile-first media query: styles inside apply from the named breakpoint upwards.
+@mixin respond-to($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error "Unknown breakpoint `#{$name}`. Expected one of: #{map.keys($breakpoints)}.";
+  }
+  @media (min-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+// Spacing lookup, so that components use the shared scale instead of magic numbers.
+@function space($step) {
+  @if not map.has-key($space, $step) {
+    @error "Unknown spacing step `#{$step}`.";
+  }
+  @return map.get($space, $step);
+}
+
+// Small uppercase label used for kickers and table headers.
+@mixin eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

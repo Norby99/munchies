@@ -130,6 +130,8 @@ export interface Order {
   status: OrderStatus
   items: OrderLineItem[]
   orderType: OrderType
+  // Spelled `payed` on the wire (OrderDto in order-shared).
+  payed: boolean
 
   estimatedDeliveryTime?: string
   deliveryAddress?: string
