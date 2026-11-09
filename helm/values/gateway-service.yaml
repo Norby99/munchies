@@ -27,3 +27,14 @@ readinessProbe:
 
 autoscaling:
   enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  behavior:
+    scaleUpPodsValue: 4
+
+shutdown:
+  preStopSleepSeconds: 10
+
+resources:
+  limits:
+    cpu: "1"
