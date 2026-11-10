@@ -4,7 +4,9 @@ import com.munchies.commons.AggregateRoot
 import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
 import com.munchies.restaurant.domain.valueobject.restaurant.Address
+import com.munchies.restaurant.domain.valueobject.restaurant.CapacityPolicy
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
+import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import java.time.LocalDateTime
@@ -20,6 +22,8 @@ class Restaurant private constructor(
   override val id: RestaurantId,
   val managerId: UserId,
   var details: RestaurantDetails,
+  var capacityPolicy: CapacityPolicy?,
+  var location: GeoPoint?,
   val createdAt: LocalDateTime,
   var updatedAt: LocalDateTime,
 ) : AggregateRoot<RestaurantId>(id) {
@@ -28,6 +32,16 @@ class Restaurant private constructor(
   val address get(): Address = details.address
   val phone get(): Phone = details.phone
   val email get(): Email = details.email
+
+  fun updateCapacityPolicy(newPolicy: CapacityPolicy) {
+    this.capacityPolicy = newPolicy
+    this.updatedAt = LocalDateTime.now()
+  }
+
+  fun updateLocation(newLocation: GeoPoint) {
+    this.location = newLocation
+    this.updatedAt = LocalDateTime.now()
+  }
 
   fun updateDetails(newDetails: RestaurantDetails) {
     this.details = newDetails
@@ -61,6 +75,8 @@ class Restaurant private constructor(
         id = RestaurantId(),
         details = details,
         managerId = managerId,
+        capacityPolicy = null,
+        location = null,
         createdAt = now,
         updatedAt = now,
       )
@@ -83,11 +99,15 @@ class Restaurant private constructor(
       details: RestaurantDetails,
       createdAt: LocalDateTime,
       updatedAt: LocalDateTime,
+      capacityPolicy: CapacityPolicy? = null,
+      location: GeoPoint? = null,
     ): Restaurant {
       return Restaurant(
         id = id,
         managerId = managerId,
         details = details,
+        capacityPolicy = capacityPolicy,
+        location = location,
         createdAt = createdAt,
         updatedAt = updatedAt,
       )

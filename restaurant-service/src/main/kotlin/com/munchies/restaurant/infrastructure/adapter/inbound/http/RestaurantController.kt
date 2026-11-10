@@ -3,10 +3,16 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http
 import com.munchies.restaurant.application.RestaurantService
 import com.munchies.restaurant.application.usecase.restaurant.CreateRestaurantResult
 import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.GetCapacityPolicyCommand
+import com.munchies.restaurant.application.usecase.restaurant.GetCapacityPolicyResult
 import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantCommand
+import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantLocationCommand
+import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantLocationResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.UpdateCapacityPolicyResult
+import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantLocationResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantResult
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.ConflictException
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.exception.NotFoundException
@@ -18,8 +24,14 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Cr
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.CreateRestaurantResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetCapacityPolicyResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.web.config.RestaurantServiceConfig
@@ -99,6 +111,67 @@ class RestaurantController(private val restaurantService: RestaurantService) {
       DeleteRestaurantResult.Unauthorized -> throw UnauthorizedException(
         "Unauthorized to delete restaurant",
       )
+    }
+  }
+
+  @Get("/{restaurantId}/capacity-policy")
+  suspend fun getCapacityPolicy(
+    @PathVariable restaurantId: String,
+  ): HttpResponse<GetCapacityPolicyResponse> {
+    val command = GetCapacityPolicyCommand(restaurantId)
+    return when (val result = restaurantService.getCapacityPolicy(command)) {
+      is GetCapacityPolicyResult.Success -> HttpResponse.ok(result.toResponse())
+      is GetCapacityPolicyResult.InvalidRestaurant -> throw ValidationException(result.error)
+      GetCapacityPolicyResult.RestaurantNotFound -> throw NotFoundException("Restaurant not found")
+      GetCapacityPolicyResult.NotConfigured ->
+        throw NotFoundException("Capacity policy not configured")
+    }
+  }
+
+  @Put("/{restaurantId}/capacity-policy")
+  suspend fun updateCapacityPolicy(
+    @PathVariable restaurantId: String,
+    @Body request: UpdateCapacityPolicyRequest,
+  ): HttpResponse<UpdateCapacityPolicyResponse> {
+    val command = request.toCommand(restaurantId)
+    return when (val result = restaurantService.updateCapacityPolicy(command)) {
+      is UpdateCapacityPolicyResult.Success -> HttpResponse.ok(result.toResponse())
+      is UpdateCapacityPolicyResult.InvalidRestaurant -> throw ValidationException(result.error)
+      is UpdateCapacityPolicyResult.InvalidPolicy -> throw ValidationException(result.error)
+      UpdateCapacityPolicyResult.NotFound -> throw NotFoundException("Restaurant not found")
+      UpdateCapacityPolicyResult.Unauthorized ->
+        throw UnauthorizedException("Unauthorized to update capacity policy")
+    }
+  }
+
+  @Get("/{restaurantId}/location")
+  suspend fun getRestaurantLocation(
+    @PathVariable restaurantId: String,
+  ): HttpResponse<GetRestaurantLocationResponse> {
+    val command = GetRestaurantLocationCommand(restaurantId)
+    return when (val result = restaurantService.getRestaurantLocation(command)) {
+      is GetRestaurantLocationResult.Success -> HttpResponse.ok(result.toResponse())
+      is GetRestaurantLocationResult.InvalidRestaurant -> throw ValidationException(result.error)
+      GetRestaurantLocationResult.RestaurantNotFound ->
+        throw NotFoundException("Restaurant not found")
+      GetRestaurantLocationResult.NotConfigured ->
+        throw NotFoundException("Restaurant location not configured")
+    }
+  }
+
+  @Put("/{restaurantId}/location")
+  suspend fun updateRestaurantLocation(
+    @PathVariable restaurantId: String,
+    @Body request: UpdateRestaurantLocationRequest,
+  ): HttpResponse<UpdateRestaurantLocationResponse> {
+    val command = request.toCommand(restaurantId)
+    return when (val result = restaurantService.updateRestaurantLocation(command)) {
+      is UpdateRestaurantLocationResult.Success -> HttpResponse.ok(result.toResponse())
+      is UpdateRestaurantLocationResult.InvalidRestaurant -> throw ValidationException(result.error)
+      is UpdateRestaurantLocationResult.InvalidLocation -> throw ValidationException(result.error)
+      UpdateRestaurantLocationResult.NotFound -> throw NotFoundException("Restaurant not found")
+      UpdateRestaurantLocationResult.Unauthorized ->
+        throw UnauthorizedException("Unauthorized to update restaurant location")
     }
   }
 }
