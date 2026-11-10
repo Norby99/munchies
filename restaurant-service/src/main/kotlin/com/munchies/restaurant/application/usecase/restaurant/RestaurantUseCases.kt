@@ -22,6 +22,10 @@ data class RestaurantUseCases(val repository: RestaurantRepository) {
   val delete = DeleteRestaurantUseCase(repository)
   val getDetails = GetRestaurantUseCase(repository)
   val getManagerRestaurants = GetManagerRestaurantsUseCase(repository)
+  val getCapacityPolicy = GetCapacityPolicyUseCase(repository)
+  val updateCapacityPolicy = UpdateCapacityPolicyUseCase(repository)
+  val getRestaurantLocation = GetRestaurantLocationUseCase(repository)
+  val updateRestaurantLocation = UpdateRestaurantLocationUseCase(repository)
 }
 
 // --- Get Restaurant ---
