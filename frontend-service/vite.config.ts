@@ -26,6 +26,7 @@ export default defineConfig({
       '/restaurants': 'http://localhost:8086',
       '/restaurant': 'http://localhost:8086',
       '/orders': 'http://localhost:8086',
+      '/payments': 'http://localhost:8086',
     },
   },
 })

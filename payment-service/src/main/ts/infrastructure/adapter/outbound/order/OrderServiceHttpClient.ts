@@ -30,7 +30,10 @@ export class OrderServiceHttpClient implements OrderServiceClient {
     ).replace("{id}", orderId);
 
     try {
+      // The JSON Content-Type is required: for a string body axios defaults to
+      // application/x-www-form-urlencoded, which Micronaut rejects with 415.
       const response = await axios.patch(baseUrl + path, "", {
+        headers: { "Content-Type": "application/json" },
         validateStatus: () => true,
       });
 

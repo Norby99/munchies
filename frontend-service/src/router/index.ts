@@ -22,6 +22,9 @@ declare module 'vue-router' {
   }
 }
 
+// Client-side paths must never start with an API prefix proxied to the gateway (/users,
+// /restaurants, /restaurant, /orders, /payments: see vite.config.ts and nginx/default.conf.template),
+// otherwise reloading such a page would be proxied to the gateway and show its JSON.
 const routes = [
   {
     path: '/',
@@ -52,6 +55,12 @@ const routes = [
     meta: { role: 'MANAGER' as Role },
   },
   {
+    path: '/manager/orders',
+    name: 'manager-orders',
+    component: () => import('@/views/ManagerOrdersView.vue'),
+    meta: { role: 'MANAGER' as Role },
+  },
+  {
     path: '/manager/restaurants/:restaurantId/menus',
     name: 'menu-builder',
     component: () => import('@/views/MenuBuilderView.vue'),
@@ -72,7 +81,13 @@ const routes = [
     props: true,
   },
   {
-    path: '/orders/:orderId',
+    path: '/my-orders',
+    name: 'my-orders',
+    component: () => import('@/views/MyOrdersView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+  },
+  {
+    path: '/my-orders/:orderId',
     name: 'order-detail',
     component: () => import('@/views/OrderDetailView.vue'),
     meta: { role: 'CUSTOMER' as Role },
@@ -95,7 +110,7 @@ export function homeFor(role: Role | null): RouteLocationRaw {
 
   const cart = useCartStore()
   if (cart.restaurantId) return { name: 'restaurant-detail', params: { restaurantId: cart.restaurantId } }
-  return { name: 'account' }
+  return { name: 'my-orders' }
 }
 
 let hydrationAttempted = false
