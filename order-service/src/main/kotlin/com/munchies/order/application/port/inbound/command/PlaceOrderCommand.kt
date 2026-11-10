@@ -1,7 +1,7 @@
 package com.munchies.order.application.port.inbound.command
 
 import com.munchies.order.domain.model.CustomerId
-import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.domain.model.RequestedItem
 import com.munchies.order.domain.model.RestaurantId
 
 /**
@@ -14,13 +14,13 @@ import com.munchies.order.domain.model.RestaurantId
 sealed interface PlaceOrderCommand {
   val restaurantId: RestaurantId
   val customerId: CustomerId
-  val items: List<OrderItem>
+  val items: List<RequestedItem>
 
   /** Represents a delivery order with specific fields for delivery details. */
   data class Delivery(
     override val restaurantId: RestaurantId,
     override val customerId: CustomerId,
-    override val items: List<OrderItem>,
+    override val items: List<RequestedItem>,
     val estimatedDeliveryTime: Long,
     val deliveryAddress: String,
     val bellName: String,
@@ -31,7 +31,7 @@ sealed interface PlaceOrderCommand {
   data class Takeaway(
     override val restaurantId: RestaurantId,
     override val customerId: CustomerId,
-    override val items: List<OrderItem>,
+    override val items: List<RequestedItem>,
     val pickupTime: Long,
     val customerName: String,
   ) : PlaceOrderCommand
@@ -40,7 +40,7 @@ sealed interface PlaceOrderCommand {
   data class DineIn(
     override val restaurantId: RestaurantId,
     override val customerId: CustomerId,
-    override val items: List<OrderItem>,
+    override val items: List<RequestedItem>,
     val tableNumber: Int,
     val numberOfGuests: Int,
   ) : PlaceOrderCommand

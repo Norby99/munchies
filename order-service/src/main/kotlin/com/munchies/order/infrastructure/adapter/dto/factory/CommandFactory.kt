@@ -5,7 +5,7 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.infrastructure.adapter.dto.OrderType.*
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toRequestedItem
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
 /**
@@ -23,7 +23,7 @@ object CommandFactory {
     DELIVERY -> PlaceOrderCommand.Delivery(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
-      items = items.map { it.toDomain() },
+      items = items.map { it.toRequestedItem() },
       estimatedDeliveryTime = estimatedDeliveryTime?.toLongOrNull()
         ?: throw IllegalArgumentException(
           "Estimated delivery time is required for delivery orders",
@@ -38,7 +38,7 @@ object CommandFactory {
     TAKEAWAY -> PlaceOrderCommand.Takeaway(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
-      items = items.map { it.toDomain() },
+      items = items.map { it.toRequestedItem() },
       pickupTime = pickupTime?.toLongOrNull()
         ?: throw IllegalArgumentException("Pickup time is required for takeaway orders"),
       customerName = customerName
@@ -47,7 +47,7 @@ object CommandFactory {
     DINE_IN -> PlaceOrderCommand.DineIn(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
-      items = items.map { it.toDomain() },
+      items = items.map { it.toRequestedItem() },
       tableNumber = tableNumber
         ?: throw IllegalArgumentException("Table number is required for dine-in orders"),
       numberOfGuests = numberOfGuests
@@ -67,7 +67,7 @@ object CommandFactory {
   fun UpdateOrderItemsRequest.toCommand(): UpdateOrderItemsCommand = UpdateOrderItemsCommand(
     orderId = OrderId(orderId),
     customerId = CustomerId(customerId),
-    items = items.map { it.toDomain() },
+    items = items.map { it.toRequestedItem() },
   )
 
   /**

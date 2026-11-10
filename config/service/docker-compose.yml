@@ -36,9 +36,13 @@ services:
       <<: *kafka-dependency
       munchies-order-mongo:
         condition: service_healthy
+      # Placing or changing an order prices its items against the restaurant's menus.
+      restaurant-service:
+        condition: service_healthy
     environment:
       <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-order-mongo:27017/order-service
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8080
     healthcheck: *micronaut-healthcheck
 
   user-service:

@@ -15,8 +15,8 @@ export function multiplyDecimalString(decimalString: string, quantity: number): 
   return (Number(decimalString) * quantity).toFixed(2)
 }
 
-// Integer minor units (cents) of a decimal string, as payment-service expects
-// (PaymentDetails.amount is an Int). Rounded, since the decimal string is at most 2 digits.
-export function toCents(decimalString: string): number {
-  return Math.round(Number(decimalString) * 100)
+// Orders carry integer euro cents (OrderDto.totalCents, OrderItemDto.unitPriceCents), set by
+// order-service from the menu prices.
+export function formatCents(cents: number): string {
+  return formatter.format(cents / 100)
 }
