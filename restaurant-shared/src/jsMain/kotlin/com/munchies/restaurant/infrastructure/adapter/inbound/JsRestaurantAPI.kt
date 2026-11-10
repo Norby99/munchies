@@ -88,3 +88,71 @@ abstract class JsDeleteRestaurantAPI<E : WebResponse<Any>> :
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
 }
+
+@JsExport
+abstract class JsGetCapacityPolicyAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, GetCapacityPolicyResponse>() {
+  abstract fun getCapacityPolicy(restaurantId: String): Promise<E>
+  override fun parseResponse(json: String): GetCapacityPolicyResponse =
+    getCapacityPolicyResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.CAPACITY_POLICY_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
+@JsExport
+abstract class JsUpdateCapacityPolicyAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateCapacityPolicyRequest, UpdateCapacityPolicyResponse>() {
+  abstract fun updateCapacityPolicy(
+    restaurantId: String,
+    request: UpdateCapacityPolicyRequest,
+  ): Promise<E>
+  override fun parseRequest(json: String): UpdateCapacityPolicyRequest =
+    updateCapacityPolicyRequestFromJson(json)
+  override fun parseResponse(json: String): UpdateCapacityPolicyResponse =
+    updateCapacityPolicyResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.CAPACITY_POLICY_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+}
+
+@JsExport
+abstract class JsGetRestaurantLocationAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, GetRestaurantLocationResponse>() {
+  abstract fun getRestaurantLocation(restaurantId: String): Promise<E>
+  override fun parseResponse(json: String): GetRestaurantLocationResponse =
+    getRestaurantLocationResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.RESTAURANT_LOCATION_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
+@JsExport
+abstract class JsUpdateRestaurantLocationAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateRestaurantLocationRequest, UpdateRestaurantLocationResponse>() {
+  abstract fun updateRestaurantLocation(
+    restaurantId: String,
+    request: UpdateRestaurantLocationRequest,
+  ): Promise<E>
+  override fun parseRequest(json: String): UpdateRestaurantLocationRequest =
+    updateRestaurantLocationRequestFromJson(json)
+  override fun parseResponse(json: String): UpdateRestaurantLocationResponse =
+    updateRestaurantLocationResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.RESTAURANT_LOCATION_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+}

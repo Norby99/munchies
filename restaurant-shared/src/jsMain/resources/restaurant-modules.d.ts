@@ -108,6 +108,74 @@ export declare const DeleteRestaurantResponse: typeof
 export declare const deleteRestaurantResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.deleteRestaurantResponseFromJson;
 
+export type GetCapacityPolicyAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsGetCapacityPolicyAPI;
+export declare const GetCapacityPolicyAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsGetCapacityPolicyAPI;
+
+export type GetCapacityPolicyResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetCapacityPolicyResponse;
+export declare const GetCapacityPolicyResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetCapacityPolicyResponse;
+
+export declare const getCapacityPolicyResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getCapacityPolicyResponseFromJson;
+
+export type UpdateCapacityPolicyAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateCapacityPolicyAPI;
+export declare const UpdateCapacityPolicyAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateCapacityPolicyAPI;
+
+export type UpdateCapacityPolicyRequest =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest;
+export declare const UpdateCapacityPolicyRequest: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest;
+
+export declare const updateCapacityPolicyRequestFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateCapacityPolicyRequestFromJson;
+
+export type UpdateCapacityPolicyResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse;
+export declare const UpdateCapacityPolicyResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse;
+
+export declare const updateCapacityPolicyResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateCapacityPolicyResponseFromJson;
+
+export type GetRestaurantLocationAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsGetRestaurantLocationAPI;
+export declare const GetRestaurantLocationAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsGetRestaurantLocationAPI;
+
+export type GetRestaurantLocationResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse;
+export declare const GetRestaurantLocationResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse;
+
+export declare const getRestaurantLocationResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getRestaurantLocationResponseFromJson;
+
+export type UpdateRestaurantLocationAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateRestaurantLocationAPI;
+export declare const UpdateRestaurantLocationAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateRestaurantLocationAPI;
+
+export type UpdateRestaurantLocationRequest =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest;
+export declare const UpdateRestaurantLocationRequest: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest;
+
+export declare const updateRestaurantLocationRequestFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantLocationRequestFromJson;
+
+export type UpdateRestaurantLocationResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationResponse;
+export declare const UpdateRestaurantLocationResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationResponse;
+
+export declare const updateRestaurantLocationResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantLocationResponseFromJson;
+
 // ---- Menu API ----
 
 export type CreateMenuAPI =
