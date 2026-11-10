@@ -20,6 +20,9 @@ env:
     value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
   - name: MONGODB_URI
     value: "mongodb://order-mongodb.order-service.svc.cluster.local:27017/orders"
+  # Menu prices of every placed or updated order are read from restaurant-service.
+  - name: RESTAURANT_SERVICE_URL
+    value: "http://restaurant-service.restaurant-service.svc.cluster.local:8080"
 
 metrics:
   path: /prometheus

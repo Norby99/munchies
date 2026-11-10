@@ -9,8 +9,15 @@ import kotlinx.serialization.Serializable
  *
  * @property menuItemId The unique identifier for the menu item.
  * @property quantity The number of units of the menu item in the order.
+ * @property unitPriceCents The price of one unit in euro cents, frozen when the item was ordered.
+ * Set by order-service from the restaurant's menu: in requests it is ignored (and may be
+ * omitted), so a client can never choose what it pays.
  */
 @JsExport
 @Serializable
 @SerialName("OrderItemDto")
-data class OrderItemDto(val menuItemId: String, val quantity: Int)
+data class OrderItemDto(
+  val menuItemId: String,
+  val quantity: Int,
+  val unitPriceCents: Int = 0,
+)

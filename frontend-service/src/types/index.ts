@@ -121,6 +121,9 @@ export type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'ON_THE_WAY' | 'CO
 export interface OrderLineItem {
   menuItemId: string
   quantity: number
+  // Price of one unit in euro cents, frozen by order-service from the menu when the item was
+  // ordered. Ignored in requests: the server always prices items itself.
+  unitPriceCents?: number
 }
 
 export interface Order {
@@ -132,6 +135,9 @@ export interface Order {
   orderType: OrderType
   // Spelled `payed` on the wire (OrderDto in order-shared).
   payed: boolean
+  // What the customer owes, in euro cents (sum of the line subtotals). payment-service charges
+  // exactly this amount.
+  totalCents: number
 
   estimatedDeliveryTime?: string
   deliveryAddress?: string

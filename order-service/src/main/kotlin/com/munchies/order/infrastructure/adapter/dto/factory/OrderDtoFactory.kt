@@ -35,6 +35,7 @@ object OrderDtoFactory {
         status = status.name,
         items = itemsDto,
         payed = payed,
+        totalCents = Math.toIntExact(total.cents),
         estimatedDeliveryTime = deliveryInfo.estimatedDeliveryTime.toString(),
         deliveryAddress = deliveryInfo.deliveryAddress,
         bellName = deliveryInfo.bellName,
@@ -48,6 +49,7 @@ object OrderDtoFactory {
         status = status.name,
         items = itemsDto,
         payed = payed,
+        totalCents = Math.toIntExact(total.cents),
         pickupTime = takeawayInfo.pickupTime.toString(),
         customerName = takeawayInfo.customerName,
       )
@@ -59,6 +61,7 @@ object OrderDtoFactory {
         status = status.name,
         items = itemsDto,
         payed = payed,
+        totalCents = Math.toIntExact(total.cents),
         tableNumber = tableInfo.tableNumber,
         numberOfGuests = tableInfo.numberOfGuests,
       )
@@ -84,6 +87,7 @@ object OrderDtoFactory {
       status = status.name,
       items = items.map { it.toDto() },
       payed = payed,
+      totalCents = Math.toIntExact(total.cents),
       estimatedDeliveryTime = delivery?.estimatedDeliveryTime?.toString(),
       deliveryAddress = delivery?.deliveryAddress,
       bellName = delivery?.bellName,

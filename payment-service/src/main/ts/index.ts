@@ -4,7 +4,10 @@ import "dotenv/config";
 import "@main/infrastructure/adapter/outbound/tracing/tracing";
 import express, { Express, Request, Response, NextFunction } from "express";
 import { ErrorResponse } from "munchies-commons/kotlin/commons-modules";
-import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import {
+  PaymentController,
+  PaymentError,
+} from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import {
   processPaymentRequestFromJson,
   PaymentServiceConfig,
@@ -58,7 +61,10 @@ export function createApp(
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : String(error);
-      const errorResponse = new ErrorResponse(message, 400);
+      // A PaymentError carries its own status; anything else is a body that does not decode as
+      // a payment request.
+      const status = error instanceof PaymentError ? error.status : 400;
+      const errorResponse = new ErrorResponse(message, status);
       res.status(errorResponse.code).type("json").send(errorResponse.toJson());
     }
   });

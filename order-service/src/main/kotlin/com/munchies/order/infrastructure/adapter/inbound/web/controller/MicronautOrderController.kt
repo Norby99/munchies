@@ -8,6 +8,7 @@ import com.munchies.order.application.port.inbound.command.GetOrderDetailsComman
 import com.munchies.order.application.port.inbound.command.GetOrdersCommand
 import com.munchies.order.application.port.inbound.command.PayOrderCommand
 import com.munchies.order.domain.model.CustomerId
+import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.RestaurantId
@@ -20,12 +21,15 @@ import com.munchies.order.infrastructure.adapter.inbound.request.*
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.ServiceUnavailableException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import com.munchies.order.infrastructure.adapter.outbound.response.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
+import io.micronaut.scheduling.TaskExecutors
+import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.SerdeImport
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -65,6 +69,10 @@ import jakarta.inject.Inject
 @SerdeImport(UnauthorizedException::class)
 @SerdeImport(UnexpectedException::class)
 @SerdeImport(ValidationException::class)
+@SerdeImport(ServiceUnavailableException::class)
+// Use cases block on MongoDB and on restaurant-service (menu prices): run them off the Netty
+// event loop, where Micronaut's blocking HTTP client refuses to run.
+@ExecuteOn(TaskExecutors.BLOCKING)
 @Controller(
   value = OrderServiceConfig.SERVICE_PATH,
 )
@@ -218,7 +226,9 @@ class MicronautOrderController(
     description = "Places a new order with the provided order type and details.",
   )
   @ApiResponse(responseCode = "200", description = "Order placed successfully")
-  @ApiResponse(responseCode = "400", description = "Invalid order data")
+  @ApiResponse(responseCode = "400", description = "Invalid order data or items not on the menu")
+  @ApiResponse(responseCode = "404", description = "Restaurant not found")
+  @ApiResponse(responseCode = "503", description = "Menu prices unavailable, retry later")
   override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<PlaceOrderResponse> {
     return when (val res = placeOrder.execute(request.toCommand())) {
       is PlaceOrder.Result.Success -> HttpResponse.ok(
@@ -231,6 +241,15 @@ class MicronautOrderController(
       is PlaceOrder.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
       is PlaceOrder.Result.Failure.InvalidItemQuantity -> throw ValidationException(
         "Invalid item quantity",
+      )
+      is PlaceOrder.Result.Failure.UnknownItems -> throw ValidationException(
+        unknownItemsMessage(res.menuItemIds),
+      )
+      is PlaceOrder.Result.Failure.RestaurantNotFound -> throw NotFoundException(
+        "Restaurant not found",
+      )
+      is PlaceOrder.Result.Failure.MenuUnavailable -> throw ServiceUnavailableException(
+        MENU_UNAVAILABLE,
       )
     }
   }
@@ -335,12 +354,16 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "200", description = "Order items updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "401", description = "Unauthorized")
-  @ApiResponse(responseCode = "400", description = "Empty items or order no longer pending")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Empty items, items not on the menu or order no longer pending",
+  )
+  @ApiResponse(responseCode = "503", description = "Menu prices unavailable, retry later")
   override fun updateOrderItems(
     @Body request: UpdateOrderItemsRequest,
   ): HttpResponse<UpdateOrderItemsResponse> {
     return when (
-      updateOrderItems.execute(request.toCommand())
+      val res = updateOrderItems.execute(request.toCommand())
     ) {
       is UpdateOrderItems.Result.Success -> HttpResponse.ok(
         UpdateOrderItemsResponse(
@@ -352,6 +375,12 @@ class MicronautOrderController(
       is UpdateOrderItems.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
       is UpdateOrderItems.Result.Failure.OrderNotModifiable -> throw ValidationException(
         "Order cannot be modified",
+      )
+      is UpdateOrderItems.Result.Failure.UnknownItems -> throw ValidationException(
+        unknownItemsMessage(res.menuItemIds),
+      )
+      is UpdateOrderItems.Result.Failure.MenuUnavailable -> throw ServiceUnavailableException(
+        MENU_UNAVAILABLE,
       )
     }
   }
@@ -446,5 +475,12 @@ class MicronautOrderController(
         "Invalid date",
       )
     }
+  }
+
+  private fun unknownItemsMessage(ids: Set<MenuItemId>): String =
+    "Items not on the restaurant's menu: " + ids.joinToString { it.value }
+
+  private companion object {
+    const val MENU_UNAVAILABLE = "Menu prices are temporarily unavailable, please retry"
   }
 }

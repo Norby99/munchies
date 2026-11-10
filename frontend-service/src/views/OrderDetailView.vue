@@ -10,8 +10,9 @@
 // Cancelling is allowed only while PENDING and unpaid (there are no refunds yet). The order is not
 // deleted (order-service is event-sourced): it stays visible with status CANCELLED.
 //
-// Paying goes through POST /payments/ (see api/payments.ts). The amount is the total computed from
-// the current menu prices, so payment is offered only when every line can still be priced.
+// Prices and total are the ones stored in the order by order-service (frozen when the items were
+// ordered), so they stay right even if the menu changes later. Menu data is only used for item
+// names. Paying goes through POST /payments/ (see api/payments.ts), which charges that total.
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -23,7 +24,7 @@ import * as ordersApi from '@/api/orders'
 import * as paymentsApi from '@/api/payments'
 import type { OnlinePaymentMethod } from '@/api/payments'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
-import { addDecimalStrings, formatEUR, multiplyDecimalString, toCents } from '@/utils/money'
+import { formatCents } from '@/utils/money'
 import { STATUS_CHAINS, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
 import type { LoadStatus, Order } from '@/types'
@@ -56,17 +57,13 @@ const lines = computed(() =>
       quantity: line.quantity,
       // An item removed from the menu after ordering can no longer be resolved.
       name: item?.name ?? 'Item no longer on the menu',
-      total: item ? multiplyDecimalString(item.price, line.quantity) : null,
+      total: line.unitPriceCents ? line.unitPriceCents * line.quantity : null,
     }
   }),
 )
-// Null when some line can no longer be priced (item removed from the menu).
-const total = computed(() => {
-  if (lines.value.some((line) => line.total === null)) return null
-  return lines.value.reduce((sum, line) => addDecimalStrings(sum, line.total ?? '0'), '0.00')
-})
-const totalLabel = computed(() => (total.value === null ? null : formatEUR(total.value)))
-const canPay = computed(() => !!order.value && !order.value.payed && total.value !== null)
+// Orders placed before items carried prices have a zero total: nothing to show or charge.
+const totalLabel = computed(() => (order.value?.totalCents ? formatCents(order.value.totalCents) : null))
+const canPay = computed(() => !!order.value && !order.value.payed && !!order.value.totalCents)
 
 async function fetchOrder(): Promise<void> {
   order.value = await ordersApi.getOrder(props.orderId)
@@ -91,7 +88,7 @@ async function load(): Promise<void> {
   try {
     if (order.value) await catalog.load(order.value.restaurantId)
   } catch {
-    // Lines fall back to "Item no longer on the menu" and the total is hidden.
+    // Lines fall back to "Item no longer on the menu"; prices and total come from the order.
   }
 }
 
@@ -119,14 +116,14 @@ async function confirmCancel(): Promise<void> {
 }
 
 async function pay(): Promise<void> {
-  if (!order.value || total.value === null) return
+  if (!canPay.value || !order.value) return
   paying.value = true
   paymentError.value = null
   paymentMessage.value = null
   try {
-    const result = await paymentsApi.payOrder(order.value.orderId, toCents(total.value), paymentMethod.value)
+    const result = await paymentsApi.payOrder(order.value.orderId, paymentMethod.value)
     if (result.status === 'COMPLETED') {
-      paymentMessage.value = `Payment of ${formatEUR((result.amount / 100).toFixed(2))} completed.`
+      paymentMessage.value = `Payment of ${formatCents(result.amount)} completed.`
     } else {
       paymentError.value = `The payment was not completed (status: ${result.status.toLowerCase()}).`
     }
@@ -204,7 +201,7 @@ watch(() => props.orderId, load)
               <li v-for="line in lines" :key="line.id" class="order-detail__line">
                 <span class="order-detail__num">{{ line.quantity }}&times;</span>
                 <span class="order-detail__name">{{ line.name }}</span>
-                <span v-if="line.total" class="order-detail__num">{{ formatEUR(line.total) }}</span>
+                <span v-if="line.total" class="order-detail__num">{{ formatCents(line.total) }}</span>
               </li>
             </ul>
             <div v-if="totalLabel" class="order-detail__total">
@@ -265,8 +262,8 @@ watch(() => props.orderId, load)
             </button>
           </form>
         </section>
-        <p v-else-if="order && !order.payed && total === null" class="text-muted order-detail__hint">
-          This order cannot be paid online: some items are no longer on the menu, so its total is unknown.
+        <p v-else-if="order && !order.payed && !order.totalCents" class="text-muted order-detail__hint">
+          This order cannot be paid online: it was placed before orders carried prices.
         </p>
         <p v-if="paymentMessage" role="status" class="order-detail__success">{{ paymentMessage }}</p>
         <p v-if="paymentError" role="alert" class="order-detail__error">{{ paymentError }}</p>

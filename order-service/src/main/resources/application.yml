@@ -12,6 +12,15 @@ micronaut:
           - /prometheus
   application:
     name: order-service
+  http:
+    services:
+      # Source of the menu prices of every placed or updated order (RestaurantServiceClient).
+      # Short timeouts: a customer is waiting on the order placement, and a slow
+      # restaurant-service answers 503 instead of holding the request.
+      restaurant-service:
+        url: ${RESTAURANT_SERVICE_URL:http://localhost:8087}
+        connect-timeout: 2s
+        read-timeout: 3s
   metrics:
     enabled: true
     export:

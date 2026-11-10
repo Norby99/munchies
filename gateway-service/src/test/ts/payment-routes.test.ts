@@ -8,25 +8,17 @@ import {
   PaymentEnvelope,
   ProcessPaymentRoute,
 } from "../../main/ts/infrastructure/adapter/middleware/routes/payment/process-payment.route";
+import { processPaymentResponseFromJson } from "munchies-payment-service-shared/kotlin/payment-modules";
 
 const PAYMENT_BODY = JSON.stringify({
   orderId: "order-1",
-  paymentDetails: { amount: 2350, method: "CARD", currency: "EUR" },
+  paymentDetails: { method: "CARD" },
 });
 
-// Stand-in for the order-details lookup the route performs before charging.
-function ordersReturning(result: { customerId: string; payed: boolean } | ErrorResponse) {
-  return {
-    getOrderDetails: vi.fn().mockResolvedValue(
-      result instanceof ErrorResponse ? result : { code: 200, result },
-    ),
-  } as any;
-}
-
-const paymentResponse = {
-  paymentId: "pay-1",
-  toJson: () => JSON.stringify({ paymentId: "pay-1", status: "COMPLETED", amount: 2350, currency: "EUR" }),
-} as any;
+// A real ProcessPaymentResponse: the route tells success from errors by this class.
+const paymentResponse = processPaymentResponseFromJson(
+  JSON.stringify({ paymentId: "pay-1", status: "COMPLETED", amount: 2350, currency: "EUR" }),
+);
 
 function mockResponse() {
   const res: any = {
@@ -81,35 +73,44 @@ describe("ProcessPaymentRoute", () => {
 
   it("returns 500 when PAYMENT_SERVICE_URL is missing", async () => {
     delete process.env.PAYMENT_SERVICE_URL;
-    const route = new ProcessPaymentRoute(ordersReturning({ customerId: "cust-1", payed: false }));
+    const route = new ProcessPaymentRoute();
     const res = await route.forward({ body: Buffer.from(PAYMENT_BODY), user: customer } as any);
     expect(res).toBeInstanceOf(ErrorResponse);
     expect(res.code).toBe(500);
   });
 
-  it("forwards the payment of the caller's unpaid order to payment-service", async () => {
+  it("forwards the payment to payment-service, stamped with the caller's id", async () => {
     process.env.PAYMENT_SERVICE_URL = "http://payment-service";
     const spy = vi.spyOn(internalClient, "request").mockResolvedValue(paymentResponse);
-    const orders = ordersReturning({ customerId: "cust-1", payed: false });
-    const route = new ProcessPaymentRoute(orders);
+    const route = new ProcessPaymentRoute();
 
     const res = await route.forward({ body: Buffer.from(PAYMENT_BODY), user: customer } as any);
 
-    expect(orders.getOrderDetails).toHaveBeenCalledWith("order-1");
     expect(res).toBeInstanceOf(PaymentEnvelope);
     expect(res.code).toBe(200);
     expect(spy.mock.calls[0][0]).toBe("http://payment-service/payments/");
     expect((spy.mock.calls[0][1] as any).name).toBe("POST");
-    expect(JSON.parse(spy.mock.calls[0][2] as string)).toMatchObject({
+    expect(JSON.parse(spy.mock.calls[0][2] as string)).toEqual({
       orderId: "order-1",
-      paymentDetails: { amount: 2350, method: "CARD", currency: "EUR" },
+      customerId: "cust-1",
+      paymentDetails: { method: "CARD" },
     });
+  });
+
+  it("overrides a customer id sent in the body with the one from the token", async () => {
+    process.env.PAYMENT_SERVICE_URL = "http://payment-service";
+    const spy = vi.spyOn(internalClient, "request").mockResolvedValue(paymentResponse);
+    const body = JSON.stringify({ ...JSON.parse(PAYMENT_BODY), customerId: "someone-else" });
+
+    await new ProcessPaymentRoute().forward({ body: Buffer.from(body), user: customer } as any);
+
+    expect(JSON.parse(spy.mock.calls[0][2] as string).customerId).toBe("cust-1");
   });
 
   it("wraps the payment-service response in the { result, code } envelope", async () => {
     process.env.PAYMENT_SERVICE_URL = "http://payment-service";
     vi.spyOn(internalClient, "request").mockResolvedValue(paymentResponse);
-    const route = new ProcessPaymentRoute(ordersReturning({ customerId: "cust-1", payed: false }));
+    const route = new ProcessPaymentRoute();
 
     const res = mockResponse();
     await route.respond({ body: Buffer.from(PAYMENT_BODY), user: customer } as any, res, () => {});
@@ -121,52 +122,38 @@ describe("ProcessPaymentRoute", () => {
     });
   });
 
-  it("refuses to pay another customer's order, without charging", async () => {
+  it("passes payment-service errors through (e.g. order already paid)", async () => {
     process.env.PAYMENT_SERVICE_URL = "http://payment-service";
-    const spy = vi.spyOn(internalClient, "request");
-    const route = new ProcessPaymentRoute(ordersReturning({ customerId: "someone-else", payed: false }));
-
-    const res = await route.forward({ body: Buffer.from(PAYMENT_BODY), user: customer } as any);
-
-    expect(res.code).toBe(403);
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it("refuses to pay an order twice, without charging", async () => {
-    process.env.PAYMENT_SERVICE_URL = "http://payment-service";
-    const spy = vi.spyOn(internalClient, "request");
-    const route = new ProcessPaymentRoute(ordersReturning({ customerId: "cust-1", payed: true }));
-
-    const res = await route.forward({ body: Buffer.from(PAYMENT_BODY), user: customer } as any);
-
-    expect(res.code).toBe(409);
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it("propagates the order lookup error (e.g. unknown order), without charging", async () => {
-    process.env.PAYMENT_SERVICE_URL = "http://payment-service";
-    const spy = vi.spyOn(internalClient, "request");
-    const route = new ProcessPaymentRoute(ordersReturning(new ErrorResponse("Order not found", 404)));
-
-    const res = await route.forward({ body: Buffer.from(PAYMENT_BODY), user: customer } as any);
-
-    expect(res.code).toBe(404);
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it("passes payment-service errors through (e.g. payment rejected)", async () => {
-    process.env.PAYMENT_SERVICE_URL = "http://payment-service";
-    vi.spyOn(internalClient, "request").mockResolvedValue(new ErrorResponse("Payment rejected", 400));
-    const route = new ProcessPaymentRoute(ordersReturning({ customerId: "cust-1", payed: false }));
+    vi.spyOn(internalClient, "request").mockResolvedValue(new ErrorResponse("Order already paid", 409));
+    const route = new ProcessPaymentRoute();
 
     const res = await route.forward({ body: Buffer.from(PAYMENT_BODY), user: customer } as any);
 
     expect(res).toBeInstanceOf(ErrorResponse);
-    expect(res.code).toBe(400);
+    expect(res.code).toBe(409);
+  });
+
+  it("passes errors parsed by payment-shared through, not as a successful envelope", async () => {
+    process.env.PAYMENT_SERVICE_URL = "http://payment-service";
+    // What the route's own parseError yields for a 403 from payment-service.
+    const refusal = new ProcessPaymentRoute().parseError(
+      JSON.stringify({ result: "You can only pay your own orders", code: 403 }),
+    );
+    vi.spyOn(internalClient, "request").mockResolvedValue(refusal);
+
+    const res = mockResponse();
+    await new ProcessPaymentRoute().respond(
+      { body: Buffer.from(PAYMENT_BODY), user: customer } as any,
+      res,
+      () => {},
+    );
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(JSON.parse(res.body)).toEqual({ result: "You can only pay your own orders", code: 403 });
   });
 
   it("answers 400 to a body that is not a payment request", async () => {
-    const route = new ProcessPaymentRoute(ordersReturning({ customerId: "cust-1", payed: false }));
+    const route = new ProcessPaymentRoute();
     const res = await route.forward({ body: Buffer.from("{not json"), user: customer } as any);
     expect(res.code).toBe(400);
   });

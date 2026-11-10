@@ -13,7 +13,6 @@ import {
 import { AuthedRequest } from "../../auth";
 import { request } from "../internal-client";
 import { SimpleRoute } from "../simple-route";
-import { GetOrderDetailsRoute } from "../order/get-order-details.route";
 
 /**
  * Successful payment, wrapped in the `{ result, code }` envelope every other gateway route
@@ -44,20 +43,16 @@ export class PaymentEnvelope extends WebResponse<ProcessPaymentResponse> {
 /**
  * `POST /payments/`: the customer-facing entry point of the payment workflow.
  *
- * The gateway checks the order before any money moves, because payment-service charges first and
- * only then marks the order as paid on order-service, without compensation:
- * - the order must belong to the caller (403 otherwise), so nobody pays, or probes, other
- *   customers' orders;
- * - the order must not be paid already (409), so a double click cannot charge twice.
- *
- * The amount is still the one sent by the client: orders carry no prices, so nothing verifies it
- * against the menu yet. This is a known limitation, documented in the frontend as well.
+ * Like every other authenticated route, the gateway only stamps the caller's id from the auth
+ * token onto the request (overriding any id in the body) and forwards it. All the business
+ * checks live in payment-service: the order must belong to that customer and be unpaid, and the
+ * amount charged is the order total priced by order-service from the restaurant's menus.
  */
 export class ProcessPaymentRoute
   extends ProcessPaymentAPI<PaymentEnvelope | ErrorResponse>
   implements SimpleRoute<PaymentEnvelope>
 {
-  constructor(private readonly orders: GetOrderDetailsRoute = new GetOrderDetailsRoute()) {
+  constructor() {
     super();
     const api: ProcessPaymentAPI = this;
     this.path = api.getPath();
@@ -82,22 +77,12 @@ export class ProcessPaymentRoute
       this.parseResponse,
       this.parseError,
     );
-    return response instanceof ErrorResponse ? response : new PaymentEnvelope(response);
-  }
-
-  /** Returns an error when the caller may not pay this order, or null when the payment can go on. */
-  async checkPayable(orderId: string, customerId: string): Promise<ErrorResponse | null> {
-    const details = await this.orders.getOrderDetails(orderId);
-    if (details instanceof ErrorResponse) return details;
-
-    const order = details.result;
-    if (order.customerId !== customerId) {
-      return new ErrorResponse("You can only pay your own orders", 403);
-    }
-    if (order.payed) {
-      return new ErrorResponse("Order already paid", 409);
-    }
-    return null;
+    // Checked on the success type, not with `instanceof ErrorResponse`: the error parsed by
+    // payment-shared is an ErrorResponse from the commons copy bundled in that package, a
+    // different class from the gateway's own, so that check would wrap errors as successes.
+    return response instanceof ProcessPaymentResponse
+      ? new PaymentEnvelope(response)
+      : (response as ErrorResponse);
   }
 
   private handler: {
@@ -106,9 +91,7 @@ export class ProcessPaymentRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const paymentRequest = this.parseRequest(String(req.body));
-        const refusal = await this.checkPayable(paymentRequest.orderId, req.user!!.id);
-        if (refusal) return refusal;
+        const paymentRequest = this.parseRequest(String(req.body)).addId(req.user!!.id);
         return this.processPayment(paymentRequest);
       } catch (err: any) {
         // A body that does not decode as ProcessPaymentRequest is the caller's fault.

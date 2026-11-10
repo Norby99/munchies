@@ -7,6 +7,7 @@ import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.domain.port.OrderViewRepository
+import com.munchies.order.fixtures.FakeRestaurantService
 import com.munchies.order.fixtures.asHistory
 import com.munchies.order.infrastructure.adapter.dto.*
 import com.munchies.order.infrastructure.adapter.inbound.request.*
@@ -44,12 +45,16 @@ abstract class BaseOrderController : TestPropertyProvider {
     private val mongo: MongoDBContainer by lazy {
       MongoDBContainer("mongo:7.0").apply { start() }
     }
+
+    /** restaurant-service, the source of the item prices, mocked at the HTTP boundary. */
+    val restaurantService: FakeRestaurantService by lazy { FakeRestaurantService() }
   }
 
   override fun getProperties(): MutableMap<String, String> = mutableMapOf(
     "mongodb.uri" to "${mongo.connectionString}/order-service",
     "mongodb.package-names[0]" to
       "com.munchies.order.infrastructure.adapter.outbound.mongo.document",
+    "micronaut.http.services.restaurant-service.url" to restaurantService.url,
   )
 
   @Inject
@@ -91,6 +96,7 @@ abstract class BaseOrderController : TestPropertyProvider {
 
   @AfterEach
   fun cleanupMongo() {
+    restaurantService.failing = false
     eventCollection.deleteMany(Document())
     viewCollection.deleteMany(Document())
   }
