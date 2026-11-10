@@ -61,13 +61,19 @@ service), not in a workaround in the frontend.
 | Global state        | Pinia, setup-store syntax (`defineStore('id', () => { ... })`)               |
 | HTTP client         | Axios, wrapped in a single API module, always sending cookies (no `fetch`)   |
 | API contracts       | Kotlin Multiplatform `-shared` packages (paths, methods, DTOs, JSON mapping) |
-| Styling             | SCSS first (own design system); Bootstrap optional, imported from its SCSS   |
+| UI components       | shadcn-vue (components copied into `src/components/ui/`, built on Reka UI)   |
+| Styling             | Tailwind CSS only (theme tokens as CSS variables); no SCSS, no Bootstrap     |
 | Unit/component test | Vitest + Vue Test Utils (Vitest is already used by `gateway-service`)        |
 | Packaging           | Docker image, see [Runtime and deployment](#runtime-and-deployment)          |
 
-Do not add a different framework (React, Angular, Nuxt), a second state library, or a full Vue component library
-(Vuetify, PrimeVue, Quasar, Element Plus, ...): those would hide the styling, responsive and accessibility work that
-the course evaluates. See [Styling](#styling) for the Bootstrap policy.
+Do not add a different framework (React, Angular, Nuxt), a second state library, or a packaged Vue component library
+(Vuetify, PrimeVue, Quasar, Element Plus, ...). UI components come from **shadcn-vue**, which is not a dependency
+but a set of components whose source is copied into the project, so they stay ours to read, style and fix. See
+[UI components (shadcn-vue)](#ui-components-shadcn-vue).
+
+Note: shadcn/ui (ui.shadcn.com) is React-only. This project uses its Vue port, **shadcn-vue**
+(www.shadcn-vue.com): use its docs, its CLI (`shadcn-vue`) and its `.vue` components, never React snippets
+(`.tsx`, `className`, `asChild`, `lucide-react`).
 
 ## Project layout
 
@@ -80,12 +86,14 @@ src/
   router/            route table, navigation guards (auth + role)
   views/             one component per route (page-level, may use stores and API)
   components/        reusable presentational components (props in, events out)
+    ui/              shadcn-vue components, added with the CLI (one folder per component)
+  lib/utils.ts       `cn()` helper used by shadcn-vue to merge Tailwind classes
   composables/       reusable stateful logic (useXxx functions)
   stores/            Pinia stores for state shared across views (session, cart, ...)
   api/               the only place that performs HTTP calls; one module per backend area
                      (user, restaurant, order, ...) plus a shared client
   types/             TypeScript types for API payloads and view models
-  styles/            SCSS design system (see "Styling")
+  assets/index.css   Tailwind entry point and theme tokens (see "Styling")
 ```
 
 Rules:
@@ -161,36 +169,45 @@ Like the other Express.js services (`gateway-service`, `payment-service`, `notif
 - Keep the Kotlin-generated classes inside the `api/` layer: views and stores receive plain, frontend-friendly
   view models, so the rest of the app does not depend on Kotlin/JS specifics.
 
+## UI components (shadcn-vue)
+
+Components come from shadcn-vue. The project skill `.claude/skills/shadcn-vue` (installed with
+`npx skills add unovue/shadcn-vue`, pinned in the root `skills-lock.json`) covers the CLI, composition rules, forms,
+theming and the MCP server: follow it whenever adding or changing UI.
+
+- **Run the CLI from `frontend-service/`**, where `components.json` lives (not from the repository root):
+  `npx shadcn-vue@latest add <component>`, `npx shadcn-vue@latest info --json`, `npx shadcn-vue@latest docs <component>`.
+  Since the monorepo root has no `components.json`, the project context the skill injects when invoked from the
+  root is empty: run `info` from `frontend-service/` instead.
+- **Use an existing component before writing a custom one**, and compose them (e.g. a form is `Field`/`FieldGroup`
+  with inputs; an option set is a `ToggleGroup`; a dialog always has a `DialogTitle`). Use the built-in variants
+  (`variant`, `size`) before adding custom classes.
+- **The copied components are project code**: they may be edited, but keep changes minimal and deliberate, and
+  re-check them with `npx shadcn-vue@latest add <component> --diff` before updating. Do not edit them only to
+  restyle a single use: style the use site, or add a variant.
+- **Accessibility comes from Reka UI** (focus management, keyboard handling, ARIA on dialogs, menus, tabs, ...):
+  do not replace those components with hand-written markup, and keep labels, titles and descriptions they require.
+- Feature components stay in `components/` and views in `views/`; they *use* `components/ui/`, which contains only
+  generic, shadcn-vue-generated building blocks.
+
 ## Styling
 
-SCSS is a course topic and a likely source of extra credit, so the styling must visibly show SCSS skills, not just
-consume a framework.
+Styling uses **Tailwind CSS only**, as required by shadcn-vue. SCSS and Bootstrap are not used.
 
-- **SCSS first.** The look of the app comes from an own SCSS design system under `src/styles/`, organized as in the
-  course slides:
-    - `abstracts/`: `_variables.scss` (colors, spacing scale, typography, radii, z-index, breakpoints),
-      `_mixins.scss` (e.g. `respond-to($breakpoint)`, `focus-ring`, `visually-hidden`), `_functions.scss`,
-      `_placeholders.scss` (`%card`, `%button-base` for `@extend`);
-    - `base/`: reset/normalize, typography, global element styles;
-    - `layout/`: header, footer, grid/containers;
-    - `themes/`: color themes (at least light; dark if time allows) via CSS custom properties fed from SCSS maps;
-    - `vendor/`: third-party styles (Bootstrap) and their overrides, kept separate from own code;
-    - `main.scss`: the single entry point imported in `main.ts`.
-- Use modern Sass modules (`@use` / `@forward`, not the deprecated `@import`), and expose the abstracts to every
-  SFC through Vite's `css.preprocessorOptions.scss.additionalData`, so components can use variables and mixins
-  without re-importing them.
-- Use SCSS features where they genuinely help: variables and maps, nesting (max ~3 levels), mixins with arguments,
-  `@extend` of placeholders, control directives (`@each` over a color or spacing map to generate utility classes),
-  and color functions. Component-specific styles go in `<style scoped lang="scss">` in the SFC.
-- **Bootstrap is optional**, as an accelerator for grid and basic layout only:
-    - import it from its SCSS sources (`bootstrap/scss/...`), selecting only the needed parts (functions,
-      variables, maps, mixins, grid, utilities, reboot) and customizing it by overriding its variables with the
-      project's own tokens before the import, never by editing or copy-pasting its CSS;
-    - do not use Bootstrap's JavaScript; interactive components (modals, dropdowns, tabs) are written as Vue
-      components styled with own SCSS, with proper ARIA and keyboard handling;
-    - do not stack ad-hoc Bootstrap utility classes in templates as the main styling method: the design must remain
-      recognizably the project's own.
-- Mobile-first: base styles for small screens, `respond-to` mixin for larger breakpoints.
+- **Theme tokens are CSS variables** (shadcn-vue theming: `--background`, `--foreground`, `--primary`,
+  `--muted-foreground`, `--radius`, ...) defined in the Tailwind entry stylesheet, with a light and a dark theme.
+  Change the look of the app by changing these tokens, not by overriding colors per component.
+- **Use semantic utility classes** (`bg-primary`, `text-muted-foreground`, `border-border`), never raw palette
+  values (`bg-blue-500`) or hard-coded colors; no manual `dark:` color overrides.
+- **Layout with Tailwind utilities**: `flex`/`grid` with `gap-*` (not `space-x-*`/`space-y-*`), `size-*` for equal
+  width and height, `cn()` for conditional classes instead of template string ternaries.
+- **Mobile-first**: base classes target small screens; larger screens use the responsive prefixes (`md:`, `lg:`).
+  If custom breakpoints are needed, define them once in the Tailwind theme.
+- Avoid `<style>` blocks in SFCs; when one is truly needed (e.g. a complex animation), keep it scoped and use the
+  theme variables.
+- The existing SCSS under `src/styles/` (abstracts, mixins, per-component `<style lang="scss">`) predates this
+  decision: migrate it to Tailwind when touching the related components, and remove the `sass` dependency and the
+  Vite `scss.additionalData` setting once nothing uses them.
 
 ## Course requirements
 
@@ -198,13 +215,15 @@ The frontend is graded as part of the "Applicazioni e Servizi Web" exam, which r
 
 - **User-Centered Design**: design starts from users (customer, restaurant staff), their goals and task flows;
   document personas, scenarios and the information architecture in the report.
-- **Responsive design**: mobile-first layouts that work on phone, tablet and desktop; breakpoints defined once as
-  SCSS variables/mixins.
+- **Responsive design**: mobile-first layouts that work on phone, tablet and desktop; breakpoints defined once in
+  the Tailwind theme.
 - **Accessibility as a requirement**: target WCAG 2.2 AA. Use semantic HTML first, ARIA roles/attributes only where
   semantics are missing, visible focus, full keyboard navigation, labels on every form control, sufficient color
   contrast, text alternatives for images, and announce asynchronous updates (errors, notifications) with live
   regions.
-- **SCSS done properly** (see [Styling](#styling)): variables, nesting, mixins and partials to keep styles DRY.
+- **CSS preprocessing/styling**: the course presents SCSS (and treats it as extra credit). This project deliberately
+  uses Tailwind CSS with shadcn-vue instead (see [Styling](#styling)); the report must justify that choice
+  (consistency and accessibility of a shared component base, theming through tokens) since SCSS will not be shown.
 - **TypeScript** across the codebase.
 - **Usability tests with real users** on the implemented UI; results and the changes they triggered go in the
   LaTeX report delivered with the repository.
