@@ -48,11 +48,15 @@ async function onSubmit(): Promise<void> {
           id="otk"
           class="verify-view__otk-input input"
           type="text"
-          inputmode="numeric"
           autocomplete="one-time-code"
-          placeholder="000000"
-          v-model="otk"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="otk-hint"
+          v-model.trim="otk"
         />
+        <p id="otk-hint" class="text-muted" style="font-size: 12px; margin: 6px 0 0">
+          Paste the key from the email: it is a long code of letters and digits.
+        </p>
       </div>
 
       <p v-if="error" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 0 0 12px">
@@ -81,8 +85,9 @@ async function onSubmit(): Promise<void> {
 
 <style scoped>
 .verify-view__otk-input {
-  font-size: 22px;
-  letter-spacing: 0.4em;
-  min-height: 52px;
+  /* The key is a 64-character hex hash (user-service), meant to be pasted, not typed. */
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  min-height: 44px;
 }
 </style>

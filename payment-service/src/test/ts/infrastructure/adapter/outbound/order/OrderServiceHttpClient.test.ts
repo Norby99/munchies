@@ -32,6 +32,20 @@ describe("OrderServiceHttpClient", () => {
     );
   });
 
+  // Regression: without it axios sends application/x-www-form-urlencoded and order-service
+  // answers 415, so the order was never marked as paid.
+  it("sends the request as JSON", async () => {
+    const patchMock = vi
+      .spyOn(axios, "patch")
+      .mockResolvedValue({ status: 200, data: "" });
+
+    await new OrderServiceHttpClient().markOrderAsPaid("order-123");
+
+    expect(patchMock.mock.calls[0][2]).toMatchObject({
+      headers: { "Content-Type": "application/json" },
+    });
+  });
+
   it("reports failure when order-service returns an error status", async () => {
     vi.spyOn(axios, "patch").mockResolvedValue({ status: 404, data: "" });
 

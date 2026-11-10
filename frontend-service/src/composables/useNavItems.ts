@@ -6,7 +6,6 @@ import { computed } from 'vue'
 import { useRoute, type RouteLocationRaw } from 'vue-router'
 
 import { useCartStore } from '@/stores/cart'
-import { useOrdersStore } from '@/stores/orders'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { useSessionStore } from '@/stores/session'
 
@@ -20,7 +19,6 @@ export function useNavItems() {
   const session = useSessionStore()
   const restaurants = useRestaurantsStore()
   const cart = useCartStore()
-  const orders = useOrdersStore()
   const route = useRoute()
 
   return computed<NavItem[]>(() => {
@@ -29,6 +27,12 @@ export function useNavItems() {
 
       return [
         { label: 'Restaurants', to: { name: 'manager-restaurants' } },
+        {
+          label: 'Orders',
+          to: activeRestaurantId
+            ? { name: 'manager-orders', query: { restaurant: activeRestaurantId } }
+            : { name: 'manager-orders' },
+        },
         {
           label: 'Menu builder',
           to: activeRestaurantId
@@ -49,10 +53,7 @@ export function useNavItems() {
       restaurantId
         ? { label: restaurantName ?? 'Restaurant', to: { name: 'restaurant-detail', params: { restaurantId } } }
         : { label: 'Restaurant', to: { name: 'account' }, disabled: true },
-      // Only the latest order: there is no order-history endpoint yet (see stores/orders.ts).
-      orders.recentIds[0]
-        ? { label: 'Last order', to: { name: 'order-detail', params: { orderId: orders.recentIds[0] } } }
-        : { label: 'Last order', to: { name: 'account' }, disabled: true },
+      { label: 'My orders', to: { name: 'my-orders' } },
       { label: 'Account', to: { name: 'account' } },
     ]
   })

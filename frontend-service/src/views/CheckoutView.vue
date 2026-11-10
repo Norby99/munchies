@@ -3,8 +3,7 @@
 // then POST /orders/place. Only DELIVERY and TAKEAWAY are offered: DINE_IN needs a table, and
 // table assignment belongs to table-reservation-service, which is not implemented yet.
 //
-// On success the cart is emptied, the order id is remembered locally (there is no order-history
-// endpoint, see stores/orders.ts) and the user lands on the order detail page.
+// On success the cart is emptied and the user lands on the order detail page.
 
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -15,7 +14,6 @@ import * as ordersApi from '@/api/orders'
 import { useOnline } from '@/composables/useOnline'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { useCartStore } from '@/stores/cart'
-import { useOrdersStore } from '@/stores/orders'
 import { useSessionStore } from '@/stores/session'
 import { fromDateTimeLocal, toDateTimeLocal } from '@/utils/time'
 import type { LoadStatus } from '@/types'
@@ -29,7 +27,6 @@ const DEFAULT_LEAD_MINUTES = 45
 
 const router = useRouter()
 const cart = useCartStore()
-const orders = useOrdersStore()
 const session = useSessionStore()
 const { isOnline } = useOnline()
 const catalog = useRestaurantCatalog()
@@ -122,7 +119,6 @@ async function submit(): Promise<void> {
             customerName: form.customerName.trim(),
           },
     )
-    orders.remember(order.orderId)
     cart.clear()
     await router.replace({ name: 'order-detail', params: { orderId: order.orderId } })
   } catch (err) {

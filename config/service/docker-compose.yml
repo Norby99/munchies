@@ -76,6 +76,8 @@ services:
     environment:
       <<: [ *kafka-env, *service-env ]
       USER_SERVICE_URL: http://user-service:8080
+      # Needed to mark the order as paid after a successful payment (OrderServiceHttpClient).
+      ORDER_SERVICE_URL: http://order-service:8080
       MONGODB_URI: mongodb://munchies-payment-mongo:27017/payment-service
 
   notification-service:
@@ -154,11 +156,15 @@ services:
         condition: service_healthy
       order-service:
         condition: service_healthy
+      # payment-service defines no healthcheck: waiting for it to start is the best available signal.
+      payment-service:
+        condition: service_started
     environment:
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
       ORDER_SERVICE_URL: http://order-service:8080
+      PAYMENT_SERVICE_URL: http://payment-service:8080
     healthcheck:
       # node:*-alpine base image ships busybox wget, not curl
       test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]

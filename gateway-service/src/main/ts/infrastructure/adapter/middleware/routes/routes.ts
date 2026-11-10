@@ -4,6 +4,7 @@ import { userRoutes } from "./user/user.routes";
 import { restaurantRoutes } from "./restaurant/restaurant.routes";
 import { orderRoutes } from "./order/order.routes";
 import { schedulerRoutes } from "./scheduler/scheduler.routes";
+import { paymentRoutes } from "./payment/payment.routes";
 import { Express, NextFunction, Request, Response } from "express";
 
 const routes: SimpleRoute<any>[] = [
@@ -11,6 +12,7 @@ const routes: SimpleRoute<any>[] = [
   ...restaurantRoutes,
   ...orderRoutes,
   ...schedulerRoutes,
+  ...paymentRoutes,
 ];
 
 

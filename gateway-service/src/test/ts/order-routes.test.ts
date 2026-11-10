@@ -5,7 +5,6 @@ import { AdvanceOrderStatusRoute } from "../../main/ts/infrastructure/adapter/mi
 import { DiscardOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/discard-order.route";
 import { GetOrderDetailsRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/get-order-details.route";
 import { GetOrdersRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/get-orders.route";
-import { PayOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/pay-order.route";
 import { PlaceOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/place-order.route";
 import { UpdateDeliveryOrderRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/update-delivery-order.route";
 import { UpdateOrderItemsRoute } from "../../main/ts/infrastructure/adapter/middleware/routes/order/update-order-items.route";
@@ -211,61 +210,6 @@ describe("Order Routes", () => {
       const res = mockResponse();
       await route.respond(
         { query: {}, user: { id: "cust-1", role: AuthRole.CUSTOMER } } as any,
-        res,
-        () => {},
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
-
-  // ---- PayOrderRoute ----
-  describe("PayOrderRoute", () => {
-    it("returns 500 when ORDER_SERVICE_URL is missing", async () => {
-      delete process.env.ORDER_SERVICE_URL;
-      const route = new PayOrderRoute();
-      const res = await route.payOrder("order-1");
-      expect(res).toBeInstanceOf(ErrorResponse);
-      expect((res as ErrorResponse).code).toBe(500);
-    });
-
-    it("calls PATCH /orders/{id}/pay on order-service with the id filled in once", async () => {
-      process.env.ORDER_SERVICE_URL = "http://order-service";
-      const spy = vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new PayOrderRoute();
-
-      const res = await route.payOrder("order-1");
-
-      expect(res).toBe(dummySuccess);
-      expect(route.path).toBe("/orders/{id}/pay");
-      expect(spy.mock.calls[0][0]).toBe("http://order-service/orders/order-1/pay");
-      expect((spy.mock.calls[0][1] as any).name).toBe("PATCH");
-    });
-
-    // Regression: forward used to call parseRequest, which JsPayOrderAPI never supports, so
-    // every payment answered 500 regardless of the request.
-    it("forwards the order id taken from the path, without parsing a body", async () => {
-      process.env.ORDER_SERVICE_URL = "http://order-service";
-      const spy = vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new PayOrderRoute();
-
-      const res = await route.forward({
-        params: { id: "order-1" },
-        body: Buffer.from(""),
-        user: { id: "cust-1", role: AuthRole.CUSTOMER },
-      } as any);
-
-      expect(res).toBe(dummySuccess);
-      expect(spy.mock.calls[0][0]).toBe("http://order-service/orders/order-1/pay");
-    });
-
-    it("responds with the order-service result", async () => {
-      process.env.ORDER_SERVICE_URL = "http://order-service";
-      vi.spyOn(internalClient, "request").mockResolvedValue(dummySuccess);
-      const route = new PayOrderRoute();
-
-      const res = mockResponse();
-      await route.respond(
-        { params: { id: "order-1" }, user: { id: "cust-1", role: AuthRole.CUSTOMER } } as any,
         res,
         () => {},
       );

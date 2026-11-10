@@ -7,48 +7,30 @@
 // Status updates are not pushed yet: until notification-service delivers them over the gateway
 // WebSocket, the user refreshes explicitly. No polling loop on purpose (see CLAUDE.md).
 //
-// Cancelling is allowed only while PENDING and deletes the order server-side (a later GET answers
-// 404), so after a cancel the order is forgotten locally and the user goes back to the menu.
+// Cancelling is allowed only while PENDING and unpaid (there are no refunds yet). The order is not
+// deleted (order-service is event-sourced): it stays visible with status CANCELLED.
+//
+// Paying goes through POST /payments/ (see api/payments.ts). The amount is the total computed from
+// the current menu prices, so payment is offered only when every line can still be priced.
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import NeedsBackendNote from '@/components/NeedsBackendNote.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
+import * as paymentsApi from '@/api/payments'
+import type { OnlinePaymentMethod } from '@/api/payments'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
-import { useOrdersStore } from '@/stores/orders'
-import { formatEUR, multiplyDecimalString, addDecimalStrings } from '@/utils/money'
+import { addDecimalStrings, formatEUR, multiplyDecimalString, toCents } from '@/utils/money'
+import { STATUS_CHAINS, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
-import type { LoadStatus, Order, OrderStatus, OrderType } from '@/types'
+import type { LoadStatus, Order } from '@/types'
 
 const props = defineProps<{ orderId: string }>()
 
-const STATUS_CHAINS: Record<OrderType, OrderStatus[]> = {
-  DELIVERY: ['PENDING', 'PREPARING', 'READY', 'ON_THE_WAY', 'COMPLETED'],
-  TAKEAWAY: ['PENDING', 'PREPARING', 'READY', 'COMPLETED'],
-  DINE_IN: ['PENDING', 'PREPARING', 'READY', 'COMPLETED'],
-}
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: 'Received',
-  PREPARING: 'Preparing',
-  READY: 'Ready',
-  ON_THE_WAY: 'On the way',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
-}
-
-const TYPE_LABELS: Record<OrderType, string> = {
-  DELIVERY: 'Delivery',
-  TAKEAWAY: 'Takeaway',
-  DINE_IN: 'Dine-in',
-}
-
 const router = useRouter()
-const orders = useOrdersStore()
 const catalog = useRestaurantCatalog()
 
 const order = ref<Order | null>(null)
@@ -57,10 +39,14 @@ const errorMessage = ref<string | null>(null)
 const refreshing = ref(false)
 const cancelOpen = ref(false)
 const cancelError = ref<string | null>(null)
+const paymentMethod = ref<OnlinePaymentMethod>('CARD')
+const paying = ref(false)
+const paymentError = ref<string | null>(null)
+const paymentMessage = ref<string | null>(null)
 
 const chain = computed(() => (order.value ? STATUS_CHAINS[order.value.orderType] : []))
 const currentStep = computed(() => (order.value ? chain.value.indexOf(order.value.status) : -1))
-const canCancel = computed(() => order.value?.status === 'PENDING')
+const canCancel = computed(() => order.value?.status === 'PENDING' && !order.value.payed)
 
 const lines = computed(() =>
   (order.value?.items ?? []).map((line) => {
@@ -74,10 +60,13 @@ const lines = computed(() =>
     }
   }),
 )
-const totalLabel = computed(() => {
+// Null when some line can no longer be priced (item removed from the menu).
+const total = computed(() => {
   if (lines.value.some((line) => line.total === null)) return null
-  return formatEUR(lines.value.reduce((sum, line) => addDecimalStrings(sum, line.total ?? '0'), '0.00'))
+  return lines.value.reduce((sum, line) => addDecimalStrings(sum, line.total ?? '0'), '0.00')
 })
+const totalLabel = computed(() => (total.value === null ? null : formatEUR(total.value)))
+const canPay = computed(() => !!order.value && !order.value.payed && total.value !== null)
 
 async function fetchOrder(): Promise<void> {
   order.value = await ordersApi.getOrder(props.orderId)
@@ -91,7 +80,6 @@ async function load(): Promise<void> {
     status.value = 'ready'
   } catch (err) {
     if (err instanceof ApiError && err.code === 404) {
-      orders.forget(props.orderId)
       status.value = 'empty'
       return
     }
@@ -120,15 +108,34 @@ async function refresh(): Promise<void> {
 
 async function confirmCancel(): Promise<void> {
   cancelError.value = null
-  const restaurantId = order.value?.restaurantId
   try {
     await ordersApi.cancelOrder(props.orderId)
-    orders.forget(props.orderId)
     cancelOpen.value = false
-    if (restaurantId) await router.replace({ name: 'restaurant-detail', params: { restaurantId } })
+    await fetchOrder()
   } catch (err) {
     cancelOpen.value = false
     cancelError.value = err instanceof ApiError ? err.message : 'The order could not be cancelled.'
+  }
+}
+
+async function pay(): Promise<void> {
+  if (!order.value || total.value === null) return
+  paying.value = true
+  paymentError.value = null
+  paymentMessage.value = null
+  try {
+    const result = await paymentsApi.payOrder(order.value.orderId, toCents(total.value), paymentMethod.value)
+    if (result.status === 'COMPLETED') {
+      paymentMessage.value = `Payment of ${formatEUR((result.amount / 100).toFixed(2))} completed.`
+    } else {
+      paymentError.value = `The payment was not completed (status: ${result.status.toLowerCase()}).`
+    }
+    // order-service is updated by payment-service: re-read the order to show the new state.
+    await fetchOrder()
+  } catch (err) {
+    paymentError.value = err instanceof ApiError ? err.message : 'The payment could not be processed.'
+  } finally {
+    paying.value = false
   }
 }
 
@@ -149,10 +156,10 @@ watch(() => props.orderId, load)
       :status="status"
       :error-message="errorMessage"
       empty-title="This order no longer exists"
-      empty-body="It was cancelled, or it belongs to another account."
-      empty-action-label="Go to my account"
+      empty-body="It does not exist, or it belongs to another account."
+      empty-action-label="Go to my orders"
       @retry="load"
-      @empty-action="router.push({ name: 'account' })"
+      @empty-action="router.push({ name: 'my-orders' })"
     >
       <template v-if="order">
         <header class="order-detail__header">
@@ -173,7 +180,10 @@ watch(() => props.orderId, load)
           <p class="order-detail__status" aria-live="polite">
             {{ STATUS_LABELS[order.status] }}
           </p>
-          <ol class="order-detail__steps">
+          <p v-if="order.status === 'CANCELLED'" class="text-muted order-detail__hint">
+            This order was cancelled before the restaurant started preparing it.
+          </p>
+          <ol v-else class="order-detail__steps">
             <li
               v-for="(step, index) in chain"
               :key="step"
@@ -234,8 +244,34 @@ watch(() => props.orderId, load)
           </section>
         </div>
 
+        <section v-if="canPay" aria-labelledby="order-pay-title" class="order-detail__section order-detail__pay">
+          <h3 id="order-pay-title" class="order-detail__section-title">Payment</h3>
+          <form @submit.prevent="pay">
+            <fieldset class="order-detail__methods">
+              <legend class="visually-hidden">Payment method</legend>
+              <label class="radio">
+                <input v-model="paymentMethod" type="radio" name="payment-method" value="CARD" />
+                <span class="dot" aria-hidden="true"></span>
+                Card
+              </label>
+              <label class="radio">
+                <input v-model="paymentMethod" type="radio" name="payment-method" value="MOBILE_PAYMENT" />
+                <span class="dot" aria-hidden="true"></span>
+                Mobile payment
+              </label>
+            </fieldset>
+            <button class="btn btn-primary order-detail__action" type="submit" :disabled="paying">
+              {{ paying ? 'Processing payment...' : `Pay ${totalLabel}` }}
+            </button>
+          </form>
+        </section>
+        <p v-else-if="order && !order.payed && total === null" class="text-muted order-detail__hint">
+          This order cannot be paid online: some items are no longer on the menu, so its total is unknown.
+        </p>
+        <p v-if="paymentMessage" role="status" class="order-detail__success">{{ paymentMessage }}</p>
+        <p v-if="paymentError" role="alert" class="order-detail__error">{{ paymentError }}</p>
+
         <div class="order-detail__actions">
-          <button class="btn btn-primary order-detail__action" type="button" disabled>Pay now</button>
           <button
             class="btn btn-secondary order-detail__action"
             type="button"
@@ -245,12 +281,12 @@ watch(() => props.orderId, load)
             Cancel order
           </button>
         </div>
-        <NeedsBackendNote>
-          Online payment is not available yet: the gateway's pay route does not work with the current
-          order-shared contract.
-        </NeedsBackendNote>
         <p v-if="!canCancel" class="text-muted order-detail__hint">
-          An order can be cancelled only before the restaurant starts preparing it.
+          {{
+            order.payed
+              ? 'A paid order cannot be cancelled online.'
+              : 'An order can be cancelled only before the restaurant starts preparing it.'
+          }}
         </p>
         <p v-if="cancelError" role="alert" class="order-detail__error">{{ cancelError }}</p>
 
@@ -458,10 +494,32 @@ $step-states: (
     margin: space(2) 0 0;
   }
 
-  &__error {
+  &__error,
+  &__success {
     font-size: 13px;
-    color: var(--color-accent-700);
     margin: space(2) 0 0;
   }
+
+  &__error {
+    color: var(--color-accent-700);
+  }
+
+  &__success {
+    font-weight: 600;
+  }
+
+  &__methods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(4);
+    border: 0;
+    padding: 0;
+    margin: 0 0 space(3);
+  }
+}
+
+// Kept in the DOM for screen readers, removed from the visual layout.
+.visually-hidden {
+  @include visually-hidden;
 }
 </style>
