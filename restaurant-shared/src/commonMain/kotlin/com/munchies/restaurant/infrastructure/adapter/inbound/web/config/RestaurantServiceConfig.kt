@@ -12,6 +12,8 @@ object RestaurantServiceConfig {
   const val GET_MANAGER_RESTAURANTS_PATH = MANAGER_RESTAURANTS_PREFIX + "{managerId}/"
   const val UPDATE_RESTAURANT_PATH = "{restaurantId}/"
   const val DELETE_RESTAURANT_PATH = "{restaurantId}/"
+  const val CAPACITY_POLICY_PATH = "{restaurantId}/capacity-policy/"
+  const val RESTAURANT_LOCATION_PATH = "{restaurantId}/location/"
 
   const val SERVICE_PORT = 8080
 }

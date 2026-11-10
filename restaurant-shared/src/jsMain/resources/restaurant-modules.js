@@ -44,6 +44,26 @@ module.exports = {
   DeleteRestaurantResponse: _httpRestaurant.DeleteRestaurantResponse,
   deleteRestaurantResponseFromJson: _httpRestaurant.deleteRestaurantResponseFromJson,
 
+  GetCapacityPolicyAPI: _inbound.JsGetCapacityPolicyAPI,
+  GetCapacityPolicyResponse: _httpRestaurant.GetCapacityPolicyResponse,
+  getCapacityPolicyResponseFromJson: _httpRestaurant.getCapacityPolicyResponseFromJson,
+
+  UpdateCapacityPolicyAPI: _inbound.JsUpdateCapacityPolicyAPI,
+  UpdateCapacityPolicyRequest: _httpRestaurant.UpdateCapacityPolicyRequest,
+  updateCapacityPolicyRequestFromJson: _httpRestaurant.updateCapacityPolicyRequestFromJson,
+  UpdateCapacityPolicyResponse: _httpRestaurant.UpdateCapacityPolicyResponse,
+  updateCapacityPolicyResponseFromJson: _httpRestaurant.updateCapacityPolicyResponseFromJson,
+
+  GetRestaurantLocationAPI: _inbound.JsGetRestaurantLocationAPI,
+  GetRestaurantLocationResponse: _httpRestaurant.GetRestaurantLocationResponse,
+  getRestaurantLocationResponseFromJson: _httpRestaurant.getRestaurantLocationResponseFromJson,
+
+  UpdateRestaurantLocationAPI: _inbound.JsUpdateRestaurantLocationAPI,
+  UpdateRestaurantLocationRequest: _httpRestaurant.UpdateRestaurantLocationRequest,
+  updateRestaurantLocationRequestFromJson: _httpRestaurant.updateRestaurantLocationRequestFromJson,
+  UpdateRestaurantLocationResponse: _httpRestaurant.UpdateRestaurantLocationResponse,
+  updateRestaurantLocationResponseFromJson: _httpRestaurant.updateRestaurantLocationResponseFromJson,
+
   // ---- Menu API ----
   CreateMenuAPI: _inbound.JsCreateMenuAPI,
   GetMenuAPI: _inbound.JsGetMenuAPI,
