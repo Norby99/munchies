@@ -23,7 +23,7 @@ declare module 'vue-router' {
 }
 
 // Client-side paths must never start with an API prefix proxied to the gateway (/users,
-// /restaurants, /restaurant, /orders, /payments: see vite.config.ts and nginx/default.conf.template),
+// /restaurants, /restaurant, /orders, /payments, /schedule: see vite.config.ts and nginx/default.conf.template),
 // otherwise reloading such a page would be proxied to the gateway and show its JSON.
 const routes = [
   {

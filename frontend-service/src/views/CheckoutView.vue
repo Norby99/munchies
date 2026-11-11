@@ -1,40 +1,61 @@
 <script setup lang="ts">
-// Customer checkout: pick how to receive the order, fill the per-type details, review the bag, then
-// POST /orders/place. Only DELIVERY and TAKEAWAY are offered: DINE_IN needs a table, and table
-// assignment belongs to table-reservation-service, which is not implemented yet.
+// Customer checkout: pick how to receive the order, the day and a time slot, fill the per-type
+// details, review the bag, then book it through scheduler-service (POST /schedule/{id}/orders),
+// which places the order in order-service once the kitchen (and, for delivery, a driver trip) can
+// take it. Only DELIVERY and TAKEAWAY are offered: DINE_IN needs a table, and table assignment
+// belongs to table-reservation-service, which is not implemented yet.
+//
+// Slots come from GET /schedule/{id}/availability for the chosen day and type. Delivery slots also
+// depend on where the customer is (a trip must be able to reach them), so the customer's position
+// is asked for before delivery slots are shown; a restaurant that has not set its location and
+// capacity policy offers no delivery at all.
 //
 // On success the cart is emptied and the user lands on the order page, where they can pay.
 
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeftIcon, BikeIcon, CircleAlertIcon, ShoppingBagIcon, StoreIcon } from '@lucide/vue'
+import {
+  ArrowLeftIcon,
+  BikeIcon,
+  CalendarXIcon,
+  CircleAlertIcon,
+  LocateFixedIcon,
+  ShoppingBagIcon,
+  StoreIcon,
+} from '@lucide/vue'
 
 import ChoiceCard from '@/components/ChoiceCard.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { RadioGroup } from '@/components/ui/radio-group'
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ApiError } from '@/api/client'
-import * as ordersApi from '@/api/orders'
+import * as scheduleApi from '@/api/schedule'
+import type { AvailableSlot, GeoPoint } from '@/api/schedule'
 import { useOnline } from '@/composables/useOnline'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { useCartStore } from '@/stores/cart'
 import { useSessionStore } from '@/stores/session'
-import { fromDateTimeLocal, toDateTimeLocal } from '@/utils/time'
+import { toDateInput } from '@/utils/time'
 import type { LoadStatus } from '@/types'
 
 const props = defineProps<{ restaurantId: string }>()
 
 type CheckoutType = 'DELIVERY' | 'TAKEAWAY'
 
-// Lead time suggested by default: an order cannot be ready the instant it is placed.
-const DEFAULT_LEAD_MINUTES = 45
+// Days offered at checkout. The restaurant may allow fewer (its maxAdvanceDays): those days then
+// simply come back with no slots.
+const DAYS_AHEAD = 7
+
+// Shared look of a selected day/slot toggle.
+const TOGGLE_ON = 'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
 
 const router = useRouter()
 const cart = useCartStore()
@@ -46,20 +67,48 @@ const status = ref<LoadStatus>('loading')
 const submitting = ref(false)
 const formError = ref<string | null>(null)
 
-const defaultTime = toDateTimeLocal(new Date(Date.now() + DEFAULT_LEAD_MINUTES * 60_000))
+const dayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric' })
+const days = Array.from({ length: DAYS_AHEAD }, (_, i) => {
+  const d = new Date()
+  d.setDate(d.getDate() + i)
+  return { value: toDateInput(d), label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : dayFormat.format(d) }
+})
+
 const form = reactive({
   orderType: 'DELIVERY' as CheckoutType,
-  time: defaultTime,
+  date: days[0].value,
+  // Epoch ms of the chosen slot start, as a string (ToggleGroup values are strings); '' = none.
+  slot: '',
   deliveryAddress: '',
   bellName: '',
   customerPhone: '',
   customerName: session.user?.username ?? '',
+  // Kept as strings: an empty field must stay empty, not become 0.
+  lat: '',
+  lng: '',
 })
 const fieldErrors = reactive<Partial<Record<keyof typeof form, string>>>({})
 
+const slots = ref<AvailableSlot[]>([])
+const slotsLoading = ref(false)
+const slotsError = ref<string | null>(null)
+// False when the restaurant does not offer the chosen order type (delivery not set up).
+const typeOffered = ref(true)
+const locating = ref(false)
+
 const lines = computed(() => cart.lines(catalog.mergedMenu.value))
 const totalLabel = computed(() => cart.totalLabel(catalog.mergedMenu.value))
-const timeLabel = computed(() => (form.orderType === 'DELIVERY' ? 'Delivery time' : 'Pickup time'))
+const slotLegend = computed(() => (form.orderType === 'DELIVERY' ? 'Delivery time' : 'Pickup time'))
+
+// The customer's position, once both coordinates are valid; required for delivery slots.
+const position = computed<GeoPoint | null>(() => {
+  if (form.lat.trim() === '' || form.lng.trim() === '') return null
+  const lat = Number(form.lat)
+  const lng = Number(form.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null
+  return { lat, lng }
+})
+const needsPosition = computed(() => form.orderType === 'DELIVERY' && position.value === null)
 
 async function load(): Promise<void> {
   status.value = 'loading'
@@ -77,16 +126,78 @@ async function load(): Promise<void> {
   }
 }
 
-onMounted(load)
+// Every call gets a sequence number, so a slow, stale answer never overwrites a newer one.
+let slotsRequest = 0
+
+async function fetchSlots(): Promise<void> {
+  const request = ++slotsRequest
+  slotsError.value = null
+  if (needsPosition.value) {
+    slots.value = []
+    typeOffered.value = true
+    slotsLoading.value = false
+    return
+  }
+  slotsLoading.value = true
+  try {
+    const availability = await scheduleApi.getAvailability(
+      props.restaurantId,
+      form.date,
+      form.orderType,
+      form.orderType === 'DELIVERY' ? (position.value ?? undefined) : undefined,
+    )
+    if (request !== slotsRequest) return
+    typeOffered.value = availability.slotMinutes > 0
+    slots.value = availability.ranges
+  } catch (err) {
+    if (request !== slotsRequest) return
+    slots.value = []
+    slotsError.value = err instanceof ApiError ? err.message : 'The available times could not be loaded.'
+  } finally {
+    if (request === slotsRequest) {
+      slotsLoading.value = false
+      if (!slots.value.some((s) => String(s.startEpochMs) === form.slot)) form.slot = ''
+    }
+  }
+}
+
+onMounted(async () => {
+  await load()
+  if (status.value === 'ready') await fetchSlots()
+})
+watch(
+  () => [form.orderType, form.date, position.value?.lat, position.value?.lng],
+  () => {
+    if (status.value === 'ready') fetchSlots()
+  },
+)
+
+function useCurrentPosition(): void {
+  delete fieldErrors.lat
+  if (!navigator.geolocation) {
+    fieldErrors.lat = 'This browser cannot share your position: enter the coordinates by hand.'
+    return
+  }
+  locating.value = true
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      form.lat = pos.coords.latitude.toFixed(6)
+      form.lng = pos.coords.longitude.toFixed(6)
+      locating.value = false
+    },
+    () => {
+      fieldErrors.lat = 'Your position could not be read: enter the coordinates by hand.'
+      locating.value = false
+    },
+    { timeout: 10_000 },
+  )
+}
 
 function validate(): boolean {
   for (const key of Object.keys(fieldErrors) as (keyof typeof form)[]) delete fieldErrors[key]
 
-  const when = fromDateTimeLocal(form.time)
-  if (when === null) fieldErrors.time = 'Choose a date and time.'
-  else if (when <= Date.now()) fieldErrors.time = 'The time must be in the future.'
-
   if (form.orderType === 'DELIVERY') {
+    if (!position.value) fieldErrors.lat = 'Share your position or enter valid coordinates.'
     if (!form.deliveryAddress.trim()) fieldErrors.deliveryAddress = 'Enter the delivery address.'
     if (!form.bellName.trim()) fieldErrors.bellName = 'Enter the name on the doorbell.'
     if (!/^\+?[0-9 ]{6,20}$/.test(form.customerPhone.trim())) {
@@ -95,6 +206,7 @@ function validate(): boolean {
   } else if (!form.customerName.trim()) {
     fieldErrors.customerName = 'Enter the name to give at pickup.'
   }
+  if (!form.slot) fieldErrors.slot = 'Choose a time.'
 
   return Object.keys(fieldErrors).length === 0
 }
@@ -107,33 +219,30 @@ async function submit(): Promise<void> {
   }
 
   const items = lines.value.map((line) => ({ menuItemId: line.itemId, quantity: line.quantity }))
-  const time = String(fromDateTimeLocal(form.time))
+  const slotStartEpochMs = Number(form.slot)
 
   submitting.value = true
   try {
-    const order = await ordersApi.placeOrder(
+    const booked = await scheduleApi.scheduleOrder(
+      props.restaurantId,
       form.orderType === 'DELIVERY'
         ? {
             orderType: 'DELIVERY',
-            restaurantId: props.restaurantId,
             items,
-            estimatedDeliveryTime: time,
+            slotStartEpochMs,
             deliveryAddress: form.deliveryAddress.trim(),
+            deliveryLocation: position.value!,
             bellName: form.bellName.trim(),
             customerPhone: form.customerPhone.trim(),
           }
-        : {
-            orderType: 'TAKEAWAY',
-            restaurantId: props.restaurantId,
-            items,
-            pickupTime: time,
-            customerName: form.customerName.trim(),
-          },
+        : { orderType: 'TAKEAWAY', items, slotStartEpochMs, customerName: form.customerName.trim() },
     )
     cart.clear()
-    await router.replace({ name: 'order-detail', params: { orderId: order.orderId } })
+    await router.replace({ name: 'order-detail', params: { orderId: booked.orderId } })
   } catch (err) {
     formError.value = err instanceof ApiError ? err.message : 'The order could not be placed.'
+    // The slot (or its last delivery trip) may have just been taken: show what is left.
+    if (err instanceof ApiError && err.code === 409) await fetchSlots()
   } finally {
     submitting.value = false
   }
@@ -164,7 +273,7 @@ function backToMenu(): void {
         <Card>
           <CardHeader>
             <CardTitle class="text-lg">How do you want it?</CardTitle>
-            <CardDescription>Dine-in will be available together with table reservations.</CardDescription>
+            <CardDescription>Pick a time the kitchen can still take. Dine-in will come with table reservations.</CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup>
@@ -176,19 +285,86 @@ function backToMenu(): void {
                 </RadioGroup>
               </FieldSet>
 
-              <Field :data-invalid="!!fieldErrors.time || undefined">
-                <FieldLabel for="checkout-time">{{ timeLabel }}</FieldLabel>
-                <Input
-                  id="checkout-time"
-                  v-model="form.time"
-                  class="h-10 sm:max-w-64"
-                  type="datetime-local"
-                  :min="toDateTimeLocal(new Date())"
-                  required
-                  :aria-invalid="!!fieldErrors.time || undefined"
-                />
-                <FieldError v-if="fieldErrors.time">{{ fieldErrors.time }}</FieldError>
+              <Field v-if="form.orderType === 'DELIVERY'" :data-invalid="!!fieldErrors.lat || undefined">
+                <FieldLabel for="checkout-lat">Your position</FieldLabel>
+                <FieldDescription>Needed to check that a driver can reach you at the time you pick.</FieldDescription>
+                <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <Input
+                    id="checkout-lat"
+                    v-model="form.lat"
+                    class="h-10"
+                    inputmode="decimal"
+                    placeholder="Latitude"
+                    aria-label="Latitude"
+                    :aria-invalid="!!fieldErrors.lat || undefined"
+                  />
+                  <Input
+                    id="checkout-lng"
+                    v-model="form.lng"
+                    class="h-10"
+                    inputmode="decimal"
+                    placeholder="Longitude"
+                    aria-label="Longitude"
+                    :aria-invalid="!!fieldErrors.lat || undefined"
+                  />
+                  <Button type="button" variant="outline" class="h-10" :disabled="locating" @click="useCurrentPosition">
+                    <Spinner v-if="locating" data-icon="inline-start" />
+                    <LocateFixedIcon v-else data-icon="inline-start" />
+                    Use my position
+                  </Button>
+                </div>
+                <FieldError v-if="fieldErrors.lat">{{ fieldErrors.lat }}</FieldError>
               </Field>
+
+              <FieldSet>
+                <FieldLegend variant="label">Day</FieldLegend>
+                <ToggleGroup v-model="form.date" type="single" variant="outline" :spacing="2" class="flex-wrap" aria-label="Day">
+                  <ToggleGroupItem v-for="day in days" :key="day.value" :value="day.value" :class="['h-9 px-3', TOGGLE_ON]">
+                    {{ day.label }}
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </FieldSet>
+
+              <FieldSet :data-invalid="!!fieldErrors.slot || undefined">
+                <FieldLegend variant="label">{{ slotLegend }}</FieldLegend>
+                <div v-if="slotsLoading" class="flex items-center gap-2 py-2 text-sm text-muted-foreground" role="status">
+                  <Spinner /> Looking for available times...
+                </div>
+                <p v-else-if="needsPosition" class="text-sm text-muted-foreground">
+                  Share your position above to see the delivery times.
+                </p>
+                <Alert v-else-if="slotsError" variant="destructive">
+                  <CircleAlertIcon />
+                  <AlertDescription>{{ slotsError }}</AlertDescription>
+                </Alert>
+                <Alert v-else-if="!typeOffered">
+                  <BikeIcon />
+                  <AlertTitle>This restaurant does not deliver yet</AlertTitle>
+                  <AlertDescription>You can still order for takeaway.</AlertDescription>
+                </Alert>
+                <p v-else-if="slots.length === 0" class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CalendarXIcon class="size-4" aria-hidden="true" /> No times left on this day: try another one.
+                </p>
+                <ToggleGroup
+                  v-else
+                  v-model="form.slot"
+                  type="single"
+                  variant="outline"
+                  :spacing="2"
+                  class="flex-wrap"
+                  :aria-label="slotLegend"
+                >
+                  <ToggleGroupItem
+                    v-for="slot in slots"
+                    :key="slot.startEpochMs"
+                    :value="String(slot.startEpochMs)"
+                    :class="['h-9 px-3 tabular-nums', TOGGLE_ON]"
+                  >
+                    {{ slot.start }}
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                <FieldError v-if="fieldErrors.slot">{{ fieldErrors.slot }}</FieldError>
+              </FieldSet>
 
               <template v-if="form.orderType === 'DELIVERY'">
                 <Field :data-invalid="!!fieldErrors.deliveryAddress || undefined">

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 // Manager: my restaurants, as cards with their menu count and quick links to orders and menus.
-// Creating and editing happen in a dialog. Menu counts are not part of RestaurantDto, so they are
+// Creating and editing happen in a dialog, and so do the scheduling settings (location and
+// capacity policy) that enable deliveries. Menu counts are not part of RestaurantDto, so they are
 // derived by fetching each restaurant's menu summaries through the menus store.
 
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
+  CalendarClockIcon,
   CircleAlertIcon,
   ClipboardListIcon,
   EllipsisVerticalIcon,
@@ -20,6 +22,7 @@ import {
 } from '@lucide/vue'
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import RestaurantSchedulingDialog from '@/components/RestaurantSchedulingDialog.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -62,6 +65,8 @@ const formError = ref<string | null>(null)
 const formSubmitting = ref(false)
 const deleteTarget = ref<Restaurant | null>(null)
 const deleteError = ref<string | null>(null)
+// Restaurant whose scheduling settings (location, capacity policy) are being edited.
+const schedulingTarget = ref<Restaurant | null>(null)
 
 async function load(): Promise<void> {
   await restaurants.fetchMine()
@@ -182,6 +187,7 @@ function cancelDelete(): void {
                   <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
                       <DropdownMenuItem @select="openEdit(restaurant)"><PencilIcon /> Edit details</DropdownMenuItem>
+                      <DropdownMenuItem @select="schedulingTarget = restaurant"><CalendarClockIcon /> Scheduling and delivery</DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
@@ -250,6 +256,8 @@ function cancelDelete(): void {
         </form>
       </DialogContent>
     </Dialog>
+
+    <RestaurantSchedulingDialog :restaurant="schedulingTarget" @close="schedulingTarget = null" />
 
     <ConfirmDialog
       :open="deleteTarget !== null"

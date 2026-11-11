@@ -12,7 +12,7 @@
 // present, and the internal gateway->restaurant-service axios client only
 // forwards a body on methods it's told to (see internal-client.ts).
 
-import { http, unwrap } from '@/api/client'
+import { ApiError, http, unwrap } from '@/api/client'
 import type { Restaurant } from '@/types'
 
 const BASE = '/restaurants/'
@@ -42,4 +42,51 @@ export async function updateRestaurant(restaurantId: string, input: RestaurantIn
 
 export async function deleteRestaurant(restaurantId: string): Promise<string> {
   return unwrap(http.delete(`${BASE}${restaurantId}/`))
+}
+
+// Scheduling settings read by scheduler-service. Both answer 404 while the restaurant has not set
+// them: that is "not configured" (null) for the UI, not an error. Deliveries are offered only once
+// both are set.
+
+export interface CapacityPolicy {
+  slotMinutes: number
+  maxCapacityUnits: number
+  /** Restaurant-local "HH:MM". */
+  opening: string
+  closing: string
+  prepLeadMinutes: number
+  maxAdvanceDays: number
+  maxTripsPerSlot: number
+  maxTripKmBudget: number
+  maxDetourKm: number
+}
+
+export interface GeoLocation {
+  lat: number
+  lng: number
+}
+
+async function orNullOn404<T>(call: Promise<T>): Promise<T | null> {
+  try {
+    return await call
+  } catch (err) {
+    if (err instanceof ApiError && err.code === 404) return null
+    throw err
+  }
+}
+
+export async function getCapacityPolicy(restaurantId: string): Promise<CapacityPolicy | null> {
+  return orNullOn404(unwrap(http.get(`${BASE}${restaurantId}/capacity-policy/`)))
+}
+
+export async function updateCapacityPolicy(restaurantId: string, policy: CapacityPolicy): Promise<CapacityPolicy> {
+  return unwrap(http.put(`${BASE}${restaurantId}/capacity-policy/`, { managerId: '', ...policy }))
+}
+
+export async function getLocation(restaurantId: string): Promise<GeoLocation | null> {
+  return orNullOn404(unwrap(http.get(`${BASE}${restaurantId}/location/`)))
+}
+
+export async function updateLocation(restaurantId: string, location: GeoLocation): Promise<GeoLocation> {
+  return unwrap(http.put(`${BASE}${restaurantId}/location/`, { managerId: '', ...location }))
 }

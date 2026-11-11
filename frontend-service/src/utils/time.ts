@@ -1,23 +1,14 @@
-// Conversions between <input type="datetime-local"> values (local wall-clock time, no zone,
-// "YYYY-MM-DDTHH:MM") and the epoch-milliseconds the order API expects.
+// Date helpers: local calendar dates for <input type="date"> and the scheduler, and display of the
+// epoch-millisecond strings the order API returns.
 
 function pad(value: number): string {
   return String(value).padStart(2, '0')
 }
 
-export function toDateTimeLocal(date: Date): string {
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
-  )
-}
-
-// Returns null for an empty or malformed value. `new Date(string)` parses a zone-less ISO
-// date-time as local time, which is exactly what datetime-local means.
-export function fromDateTimeLocal(value: string): number | null {
-  if (!value) return null
-  const ms = new Date(value).getTime()
-  return Number.isNaN(ms) ? null : ms
+// Local calendar date as "YYYY-MM-DD" (the value of <input type="date">, and the scheduler's
+// `date` query parameter).
+export function toDateInput(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 // Formats an epoch-ms string coming from the API for display; falls back to the raw value.
