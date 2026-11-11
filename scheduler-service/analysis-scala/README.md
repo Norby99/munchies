@@ -45,16 +45,30 @@ src/main/scala/
   kitchen/SpnDsl.scala               `cond ~ rate ~> eff ^ inh` builder for SPN.Trn, parallel to
                                       u06.modeling.PetriNet's `~~>`/`^^^` (see below) — ours
   kitchen/KitchenQueue.scala         the M/M/c/c kitchen-capacity model, as an SPN (see below) — ours
-  kitchen/KitchenStation.scala       generalizes KitchenQueue to batch arrivals and batch-service
-                                      stations (an oven tray, not one item per server) — ours
   kitchen/RateEstimation.scala       fits lambda/mu from historical order timestamps — ours
   kitchen/CapacityAdvisor.scala      ties it together: simulated + closed-form (Erlang B) blocking probability — ours
   kitchen/Statistics.scala           PRISM-style confidence bound (requiredRuns/epsilon) — ours, see below
-  kitchen/KitchenPipeline.scala      tandem prep+cook pipeline for one product/route, with a
-                                      per-span (not concurrency) admission quota — ours
+  kitchen/KitchenPipeline.scala      tandem prep+cook pipeline for one product/route: orders of
+                                      several items, an oven of independent places with Erlang
+                                      bakes, a per-span (not concurrency) admission quota — ours
+  kitchen/SpnSimulator.scala         Gillespie's direct method for an SPN, building only the
+                                      successor that fires (see below) — ours
   kitchen/ServiceSimulation.scala    runs a whole multi-span service, measures per-span delay — ours
+  kitchen/Planning.scala             the parameter objects the agents share: Slots, KitchenModel,
+                                      ProfiledKitchen, Goal, DecisionRule, Assessment — ours
   kitchen/CapacityAgent.scala        model-based, utility-based agent: searches admissionQuota
                                       for the largest value keeping delay under cap — ours
+  kitchen/AutonomousCapacityAgent.scala  CapacityAgent inside a perceive -> decide -> act loop:
+                                      refits its rates every period, applies (Auto) or only
+                                      recommends (Advise) the quota, falls back + alerts — ours
+  kitchen/Calibration.scala          how much slower than declared a service ran, from its
+                                      clearing time (deployment perception) — ours
+  kitchen/StaffingAdvisor.scala      staffing advice: makers needed for the quota to cover demand — ours
+  kitchen/SimulatedKitchen.scala     the agent's environment for demos: hidden, changing true
+                                      conditions; measures each period vs a static quota — ours
+  kitchen/PeakProfile.scala          proof of concept: per-slot demand and per-slot quotas — ours
+  kitchen/util/FastMSet.scala        map-backed MSet, same trait as the vendored one; the
+                                      simulation's markings use it (about 9x faster) — ours
   kitchen/JsApi.scala                the only file that imports scala.scalajs.js — @JSExportTopLevel("SchedulerAnalysis")
 ```
 
@@ -121,70 +135,54 @@ left-to-right), while `^` starts with `^` (a lower class) — so `cond ~ rate ~>
 inh` parses as `((cond ~ rate) ~> eff) ^ inh`, the exact left-to-right pipeline
 intended, for the same structural reason `~~>`/`^^^` already compose that way in u06.
 
-## KitchenStation: batch arrivals and batch-service stations
-
-`KitchenQueue` treats every order and every "server" as a single unit — realistic for
-a grill or a fry basket, not for an oven that bakes several items together in roughly
-the same time regardless of how full the tray is. `KitchenStation` generalizes it along
-both axes that `KitchenQueue` collapses to 1:
-
-- **Batch arrivals** — an order admits `s` items at once (`s` drawn from
-  `Config.orderSizeProbabilities`), not always exactly 1. An order that doesn't fully
-  fit the kitchen's remaining `Capacity` is lost entirely, never partially admitted.
-- **Batch service** — each station holds up to `stationCapacity` items, always
-  preferring a full load, and only accepting a partial load when there genuinely isn't
-  enough waiting to fill it. `KitchenQueue` is exactly `KitchenStation`'s
-  `stationCapacity = 1` case (`KitchenStationSpec` checks this against the same Erlang B
-  closed form `KitchenQueueSpec` cross-checks against).
-- **One, bounded, top-up** — if a station commits to a partial bake, a second
-  independent lane on the *same* physical station may open to take a *later* arrival
-  into the leftover room (capped at exactly what's left), but never a third lane: the
-  second lane only opens once the first has already committed to baking, and once
-  committed neither lane re-opens until it completes and goes idle again.
-
-Mechanically, this needed one structural trick the vendored SPN doesn't support
-directly: `Trn.inh` is a *presence* test (`u07.utils.MSet.disjoined` — "is this place
-non-empty"), not a magnitude test ("does it hold at least N"), so a transition can't
-say "load however many are waiting, capped at K" in one step (`eff` is a fixed
-multiset, it can't depend on the current marking). `KitchenStation` instead runs a small
-per-lane automaton that grabs one waiting item at a time, stopping only when a presence
-test actually applies (no `Waiting` left, or no `Room` left on that station) — at a
-rate (`LoadRatePerMinute`) many orders of magnitude faster than any realistic
-lambda/mu, so the whole load resolves in a negligible sliver of simulated time. That's
-the standard way to approximate a GSPN "immediate" transition on top of a framework
-that only has continuous-time, exponential ones. The real cost: each admitted item now
-costs an extra discrete simulation event, so `KitchenStationSpec`'s Erlang B cross-check
-uses a shorter horizon and fewer runs than `KitchenQueueSpec`'s — otherwise it takes
-minutes instead of seconds.
-
-The second lane's *start* transition reads (without consuming — present in both `cond`
-and `eff`, netting to no change) the first lane's current `Bake` size as a
-precondition. That read-arc, combined with the shared per-station `Room` counter, is
-what makes "only open once the sibling has committed, and only for whatever room it
-left" fall out of the structure, rather than needing a separate parameter for every
-possible fill level the sibling could be sitting at.
-
-Not yet done: wiring `KitchenStation` into `CapacityAdvisor`/`RateEstimation` (both still
-operate on `KitchenQueue`); `KitchenStation` currently stands alone, proven by its own
-`KitchenStationSpec`.
-
 ## KitchenPipeline, ServiceSimulation, CapacityAgent: tandem stages and a tuning agent
 
 A single product's full journey through the kitchen is two stages in series, not one:
-**prep** (serial, one item per worker -- a person flattening dough has no batching
-benefit) and **cook** (the same batch-station automaton as `KitchenStation`, reused here
-targeting pipeline-specific places instead of a hardcoded `Waiting`/`Capacity` pair).
+**prep** (serial, one item per worker) and **cook**, with a short **loading** step in
+between (a worker placing the item in the oven, holding that station's one loading slot).
+Orders arrive in batches: an order admits `s` items at once (`s` drawn from
+`Config.orderSizeProbabilities`), and an order that doesn't fit the slot's remaining quota
+is not admitted at all -- unless `Config.deferral` is set. Then, as `scheduler-service`
+does ("that slot is full, pick another"), the customer is offered the first later slot
+with room for the whole order: one slot later, accepted with `acceptOneSlotLater`
+probability (0.9 in the demos), else two slots later, accepted with `acceptTwoSlotsLater`
+(0.5), else the order is lost. Each outcome is its own transition, at the order size's
+arrival rate times the outcome's probability, with a rate of zero unless the order doesn't
+fit (a marking-dependent rate, since "fewer than s tokens" is not an inhibitor arc). A
+moved order takes its room in the later slot at once (`RoomNext`/`RoomAfter`), ahead of
+that slot's own orders, and waits in `PendingNext`/`PendingAfter` until the driver opens
+that slot (`advanceSlot`), when it is admitted and counts as the slot's own. Ledgers
+(`MovedOne`, `MovedTwo`, `Lost`) let each service report what was moved and lost; an
+`Open` token, removed at closing, stops orders from arriving while the kitchen drains.
+
+The cook stage is a station of independent places (`Config.cookStationCapacities`, e.g. 7
+for a pizza oven): an item goes in as soon as it's loaded and comes out after its own
+bake, so a station of capacity c is c parallel servers, not a tray baked as one batch. A
+bake is Erlang-distributed with `Config.bakePhases` phases (`Baking(station, phase)`), each
+exponential at `bakePhases * cookRatePerMinute`: the mean stays `1 / cookRatePerMinute`
+and the coefficient of variation is `1 / sqrt(bakePhases)`. This is the standard
+phase-type approximation of a near-deterministic duration within a CTMC: with a single
+exponential phase, 5% of 5-minute bakes would last over 15 minutes, which no real oven
+does. Items need no colouring for it, since every item in a phase completes it at the
+same rate independently of the others.
+
+An earlier version modelled the oven as batch lanes (fill a tray, bake it as one, with a
+second lane allowed to top up the leftover room), a way to express batch service without
+coloured tokens. It was removed: a deck oven doesn't batch, and the lanes left most of
+its places idle whenever a lane committed to a small batch, which made the whole model
+far too pessimistic for a pizzeria.
+
 Which stage comes first is fixed when the `Config` is built (`Route.PrepThenCook` for a
 pizza; `Route.CookThenPrep` for something griddled, then assembled) -- one net models
 one product/route, not a mix.
 
-Admission here is deliberately *not* a concurrency cap the way `KitchenStation.Capacity`
+Admission here is deliberately *not* a concurrency cap the way `KitchenQueue`'s capacity
 is. `Admission` is a per-time-span quota: consumed when an order is admitted, never
 refunded by a completion, and reset only by `resetAdmission` -- called by whatever drives
 the simulation across span boundaries on its own fixed clock, never by a transition
 inside the SPN. That split exists because a deterministic "every 15 minutes" event has
 no honest representation among exponential, memoryless transitions; rather than fake it
-(the way the loading automaton fakes an instantaneous decision), the one genuinely
+(the way the loading session fakes an instantaneous decision to stop), the one genuinely
 deterministic part of this model is kept out of the CTMC entirely and handled as
 ordinary control flow in `ServiceSimulation.simulateService`.
 
@@ -215,6 +213,96 @@ that delay is stochastically non-decreasing in `admissionQuota` for a fixed kitc
 `CapacityAgent`'s header for why a full scan was chosen over a binary search despite that
 monotonicity (each evaluation is a noisy Monte Carlo estimate, and binary-searching a
 noisy monotonic signal can take a wrong turn on one unlucky sample).
+
+`AutonomousCapacityAgent` closes the loop around it, so the agent covers all four
+capabilities of an autonomous system rather than only decision-making:
+
+- **Sensing/perception** -- before each period's service it perceives the *previous*
+  service's order log (a `StageSample` per order: arrival time plus prep, loading and bake
+  durations) and the *coming* service's staffing and `OvenReport` (the oven's state and,
+  outside its normal state, the fornaio's estimate of the bake time). It never sees the
+  service it decides for, so a change only the logs reveal reaches it one period late.
+  `RateEstimation.fitStagesAcross` refits arrivals, prep and loading from the last
+  `memoryPeriods` logs (2 in the demo); stage durations are pooled, and the arrival rate is
+  total gaps over total observed time, since each log has its own clock and flattening them
+  would multiply it by the number of logs. Each log is tagged with the oven state reported
+  for its service, and the bake rate comes from the last `memoryPeriods` logs with the oven
+  in the state now reported, else from the fornaio's estimate, else (with an alert) from
+  every recent log. After a repair, the agent goes straight back to the working oven's logs.
+  That is `Perception.StageLogs`, which only a simulated kitchen can feed: nobody times each
+  pizza at each stage. `Perception.ArrivalsOnly` is the deployment version: the agent fits
+  only the arrival rate (`RateEstimation.arrivalRateAcross`, reading nothing but arrival
+  times) and takes prep, loading and bake times from the kitchen profile the staff declare
+  (`Staffing.declaredTimes`). After each service, `Calibration` finds the factor by which the
+  kitchen ran slower than declared: the one at which the model, under the quota that was in
+  force and the demand the service's own log shows, reproduces the service's mean clearing
+  time (how long after each slot's end its last order was ready, measurable from READY
+  timestamps). From 5% slower up, the agent plans with the declared times stretched by that
+  factor and advises the manager to check them; a new declaration supersedes the factor.
+  Total times cannot tell which stage is slow, so the advice says only "slower than declared".
+- **Decision-making** -- `CapacityAgent.recommendCapacity` on the refitted model. With
+  `safetyMargin`, a quota is accepted only if each breach-probability estimate plus epsilon
+  stays within the tolerance: within tolerance with probability `confidence`. With
+  `sequentialTest`, each candidate is judged by Wald's sequential probability ratio test
+  (`SequentialTest`, as in PRISM/UPPAAL statistical model checking), weighing a breach
+  probability of `tolerance - 2 * epsilon` against one of `tolerance` with error `1 -
+  confidence` each way: it stops as soon as the evidence is decisive, so candidates far
+  from the tolerance take a few dozen services instead of up to `requiredRuns`, which
+  stays the cap.
+- **Actuation** -- in `Mode.Auto` it applies the quota through the environment's actuator,
+  only ever within the manager's `[minQuota, maxQuota]`; `Mode.Advise` only recommends. With
+  `staffingAdvice`, `StaffingAdvisor` also advises on the staff schedule: the quota that
+  would serve the whole demand in 4 slots of 5 (a quantile of the per-slot demand), and the
+  fewest pizza makers with which it meets the goal, or none, when the oven is what limits
+  the service.
+  The staff schedule is the manager's to change, so this is always advice.
+- **Adaptability** -- a missing worker or a reported oven fault moves the decision before
+  the service it affects; a change in demand, one service later. No feasible quota -> it
+  applies `minQuota` and raises an alert; a log too small to refit -> it keeps its previous
+  beliefs and raises an alert; an oven state with no log and no estimate -> it uses every
+  recent log and raises an alert.
+
+`SimulatedKitchen` plays the environment in `demo-node.js`: its true conditions change
+between periods and are never shown to the agent, and each period is also measured under
+the static initial quota, so the output compares acting on the agent's decisions with not
+having an agent at all. Besides mean delays, each period reports how many of its simulated
+services breached each cap, the frequency the risk tolerance is about. The pizzeria scenario
+(12 slots of 15 minutes, quotas 8 to 24 pizzas, 9 Fridays) judges candidate quotas on 600
+simulated services each (epsilon 0.05 at 90% confidence) with the safety margin, rejects a
+candidate as soon as its breaches already exceed what the margin allows, so only the
+accepted quota needs all of them, and measures each week over 100 services. The whole demo
+takes 14 minutes on our machine with the sequential test, run side by side with the
+comparison below (7 minutes) and `demo-peak.js` (3 minutes); with a fixed 600 services per
+accepted candidate it took an hour. By default it runs the deployment version (`Perception.ArrivalsOnly`
+with calibration and staffing advice); `node demo-node.js logs` runs the same weeks with
+`Perception.StageLogs`.
+
+`demo-peak.js` is a proof of concept of a Friday whose demand peaks around 20:00
+(`PeakProfile`): the agent fits one arrival rate per slot from past Fridays (smoothed with
+the neighbouring slots) and plans one quota on that profile, or one quota per slot (greedy
+ascent, then a check of the final plan on fresh runs, since a plan built from many tests
+near the limit is optimistic). `ServiceSimulation.simulateProfiledService` simulates it exactly, since each
+slot is simulated on its own from the marking at its start.
+
+`ServiceSimulation` runs on `SpnSimulator` rather than the vendored `SPN.toCTMC` +
+`CTMCSimulation.newSimulationTrace`. Both are Gillespie's direct method, but the vendored pair
+builds the successor marking of every enabled transition at every step, hashes each one into
+a `Set[Action]`, and does it twice (once for the absorbing-state test, once to draw), although
+only one successor is used. `SpnSimulator` evaluates each transition's enabling and rate,
+draws one, and builds that successor alone: on the pizzeria scenario, a simulated service got
+about 20x faster. It also keeps the transitions in a fixed order (by their places) instead of
+a `Set`'s, and sums the rates of transitions that reach the same marking, where the vendored
+`Set[Action]` would merge them into one; `SpnSimulatorSpec` checks it against the vendored
+simulator. The vendored code is unchanged and still runs `KitchenQueue`/`CapacityAdvisor`.
+
+Markings are `FastMSet`s (map-backed) rather than the vendored `MSet`, which rebuilds a token
+list on every `union`/`diff`; `KitchenPipeline.initialMarking` builds one and every later
+marking derives from it. The vendored code itself is unchanged.
+
+`KitchenPipeline.Place` hashes by content rather than by identity, and `SpnSimulator` orders
+transitions by their places, so a seed gives the same run in any process. With identity hash
+codes, the vendored simulator's `Set` order, and with it the run, depended on what the process
+had hashed before, e.g. the scenario alone versus after the other demos.
 
 ## Deviations from the vendored source
 
@@ -255,8 +343,10 @@ sbt fullLinkJS       # optimized/production build, same output shape under -full
 ```
 
 `fastLinkJS`/`fullLinkJS` emit a CommonJS module exporting `SchedulerAnalysis`
-(`adviseCapacity`, `fitRates`, `erlangBlockingProbability`) — see `demo-node.js` for a
-plain `require()` against it, or `npm run analyze:scala` in `../package.json`.
+(`adviseCapacity`, `fitRates`, `erlangBlockingProbability`, and `recommendCapacity`,
+`runAdaptationScenario`, `runPeakProfilePoC`, which each take one options object grouped
+like the Scala parameter objects; the shapes are in `index.d.ts`) — see `demo-node.js` for
+a plain `require()` against it, or `npm run analyze:scala` in `../package.json`.
 
 **Known gap in this environment:** `sbt test` runs scalatest specs inside a real Node
 process via `scalajs-env-nodejs`, which needs sbt's own JVM and a spawned Node process
