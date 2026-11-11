@@ -18,6 +18,7 @@ import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI
 import com.munchies.order.infrastructure.adapter.inbound.request.*
+import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderItemDtoSerdeMixin
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
@@ -48,7 +49,7 @@ import jakarta.inject.Inject
  * layers remain independent from transport concerns.
  */
 @SerdeImport(OrderDto::class)
-@SerdeImport(OrderItemDto::class)
+@SerdeImport(value = OrderItemDto::class, mixin = OrderItemDtoSerdeMixin::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)

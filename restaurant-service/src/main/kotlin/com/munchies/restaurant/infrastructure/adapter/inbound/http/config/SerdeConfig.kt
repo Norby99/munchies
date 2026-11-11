@@ -1,7 +1,9 @@
 package com.munchies.restaurant.infrastructure.adapter.inbound.http.config
 
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
+import com.munchies.restaurant.infrastructure.adapter.dto.CapacityPolicyDto
 import com.munchies.restaurant.infrastructure.adapter.dto.CategoryDto
+import com.munchies.restaurant.infrastructure.adapter.dto.GeoPointDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuItemDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuSummaryDto
@@ -32,9 +34,15 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Cr
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.CreateRestaurantResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetCapacityPolicyResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse
 import io.micronaut.serde.annotation.SerdeImport
@@ -77,5 +85,13 @@ import jakarta.inject.Singleton
 @SerdeImport(GetRestaurantResponse::class)
 @SerdeImport(GetManagerRestaurantsRequest::class)
 @SerdeImport(GetManagerRestaurantsResponse::class)
+@SerdeImport(CapacityPolicyDto::class)
+@SerdeImport(GeoPointDto::class)
+@SerdeImport(GetCapacityPolicyResponse::class)
+@SerdeImport(UpdateCapacityPolicyRequest::class)
+@SerdeImport(UpdateCapacityPolicyResponse::class)
+@SerdeImport(GetRestaurantLocationResponse::class)
+@SerdeImport(UpdateRestaurantLocationRequest::class)
+@SerdeImport(UpdateRestaurantLocationResponse::class)
 @Singleton
 class SerdeConfig

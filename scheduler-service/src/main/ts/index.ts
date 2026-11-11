@@ -13,6 +13,7 @@ import { DeliveryGate } from "./application/deliveryGate";
 import { GetBooking } from "./application/getBooking";
 import { HttpOrderClient } from "./infrastructure/outbound/httpOrderClient";
 import { HttpRestaurantPolicyClient } from "./infrastructure/outbound/httpRestaurantPolicyClient";
+import { RandomAdmissionQuotaAgent } from "./infrastructure/outbound/randomAdmissionQuotaAgent";
 import { buildApp } from "./infrastructure/http/server";
 
 function main(): void {
@@ -23,10 +24,13 @@ function main(): void {
   const trips = new InMemoryTripRepository();
   const orders = new HttpOrderClient(config.orderServiceUrl);
   const policyClient = new HttpRestaurantPolicyClient(config.restaurantServiceUrl);
-  const policies = new PolicyResolver(policyClient, config.defaultPolicy);
+  // TEMPORARY: a random admission quota until the CapacityAgent (analysis-scala) is wired in.
+  const agent = new RandomAdmissionQuotaAgent(config.admissionQuotaMin, config.admissionQuotaMax);
+  const policies = new PolicyResolver(policyClient, config.defaultPolicy, agent);
   const delivery = new DeliveryGate(
     policyClient,
     new HttpRestaurantLocation(config.restaurantServiceUrl),
+    agent,
   );
 
   const app = buildApp({
@@ -45,6 +49,7 @@ function main(): void {
     console.log(`  order-service      -> ${config.orderServiceUrl}`);
     console.log(`  restaurant-service -> ${config.restaurantServiceUrl}`);
     console.log(`  transition tick    -> every ${config.transitionTickMs}ms`);
+    console.log(`  admission quota    -> random in [${config.admissionQuotaMin}, ${config.admissionQuotaMax}] (temporary)`);
   });
 
   const shutdown = () => {

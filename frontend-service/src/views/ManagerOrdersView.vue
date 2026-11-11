@@ -1,7 +1,9 @@
 <script setup lang="ts">
-// Manager order board for one restaurant: incoming orders grouped by status (one column per step
-// of the lifecycle), each with a single "move to <next step>" action that calls
-// POST /orders/advance. Completed and cancelled orders are kept out of the board and listed on
+// Manager order board for one restaurant: the kitchen load of the day (from scheduler-service),
+// then incoming orders grouped by status (one column per step of the lifecycle), each with a single
+// "move to <next step>" action. Advancing goes through the scheduler (POST
+// /schedule/orders/{id}/advance), which forwards it to order-service and keeps its booking in step,
+// so its prep-time timer does not advance the same order a second time. Completed and cancelled orders are kept out of the board and listed on
 // demand.
 //
 // The selected restaurant lives in the URL query (?restaurant=<id>), so the board can be
@@ -23,6 +25,7 @@ import {
   UserRoundIcon,
 } from '@lucide/vue'
 
+import KitchenLoadPanel from '@/components/KitchenLoadPanel.vue'
 import OrderStatusBadge from '@/components/OrderStatusBadge.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
@@ -34,6 +37,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
+import * as scheduleApi from '@/api/schedule'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { expectedTime, isActive, nextStatus, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
@@ -54,6 +58,8 @@ const errorMessage = ref<string | null>(null)
 const refreshing = ref(false)
 const showCompleted = ref(false)
 const advancing = ref<string | null>(null)
+// Bumped on every refresh so the kitchen load panel re-reads too.
+const loadRefreshKey = ref(0)
 const cardErrors = ref<Record<string, string>>({})
 // Announced through an aria-live region after every successful advance.
 const announcement = ref('')
@@ -123,6 +129,7 @@ async function load(): Promise<void> {
 async function refresh(): Promise<void> {
   if (!restaurantId.value) return
   refreshing.value = true
+  loadRefreshKey.value++
   try {
     await fetchOrders(restaurantId.value)
   } catch {
@@ -138,7 +145,8 @@ async function advance(order: Order): Promise<void> {
   advancing.value = order.orderId
   delete cardErrors.value[order.orderId]
   try {
-    await ordersApi.advanceOrderStatus(order.orderId)
+    await scheduleApi.advanceScheduledOrder(order.orderId)
+    loadRefreshKey.value++
     // Re-read the order instead of assuming the transition: the server is the source of truth.
     const updated = await ordersApi.getOrder(order.orderId)
     orders.value = orders.value.map((o) => (o.orderId === updated.orderId ? updated : o))
@@ -208,6 +216,8 @@ watch(restaurantId, (next, previous) => {
       @retry="load"
       @empty-action="router.push({ name: 'manager-restaurants' })"
     >
+      <KitchenLoadPanel v-if="restaurantId" :restaurant-id="restaurantId" :refresh-key="loadRefreshKey" />
+
       <!-- Columns stack on phones, two per row on tablets, the full board on wide screens. -->
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <section

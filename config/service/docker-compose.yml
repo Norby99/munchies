@@ -146,6 +146,37 @@ services:
       retries: 12
       start_period: 5s
 
+  # Standalone Node build (no Kotlin-shared modules): its own Dockerfile, no gradle step.
+  # Bookings and trips are kept in memory, so a restart forgets them.
+  scheduler-service:
+    <<: *service-common
+    container_name: munchies-scheduler-service
+    build:
+      context: scheduler-service
+    image: munchies-scheduler-service:latest
+    ports: [ "8088:8080" ]
+    depends_on:
+      order-service:
+        condition: service_healthy
+      restaurant-service:
+        condition: service_healthy
+    environment:
+      # Slots and opening hours are computed in the container's local time: pin it to the
+      # restaurants' zone, or "11:00" would mean 11:00 UTC.
+      TZ: Europe/Rome
+      PORT: 8080
+      ORDER_SERVICE_URL: http://order-service:8080
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8080
+      # TEMPORARY: range of the random admission quota (see RandomAdmissionQuotaAgent).
+      ADMISSION_QUOTA_MIN: 5
+      ADMISSION_QUOTA_MAX: 20
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://127.0.0.1:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
   gateway-service:
     <<: *service-common
     container_name: munchies-gateway-service
@@ -163,12 +194,15 @@ services:
       # payment-service defines no healthcheck: waiting for it to start is the best available signal.
       payment-service:
         condition: service_started
+      scheduler-service:
+        condition: service_healthy
     environment:
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
       ORDER_SERVICE_URL: http://order-service:8080
       PAYMENT_SERVICE_URL: http://payment-service:8080
+      SCHEDULER_SERVICE_URL: http://scheduler-service:8080
     healthcheck:
       # node:*-alpine base image ships busybox wget, not curl
       test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]
