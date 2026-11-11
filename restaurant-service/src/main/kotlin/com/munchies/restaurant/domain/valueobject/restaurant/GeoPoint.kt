@@ -9,7 +9,19 @@ data class GeoPoint(
   val lng: Double,
 ) {
   init {
-    require(lat.isFinite() && lat in -90.0..90.0) { "lat must be a finite number in [-90, 90]" }
-    require(lng.isFinite() && lng in -180.0..180.0) { "lng must be a finite number in [-180, 180]" }
+    require(
+      lat.isFinite() && lat in -MAX_LAT..MAX_LAT,
+    ) { "lat must be a finite number in [-90, 90]" }
+    require(
+      lng.isFinite() && lng in -MAX_LNG..MAX_LNG,
+    ) { "lng must be a finite number in [-180, 180]" }
+  }
+
+  private companion object {
+    /** Largest absolute latitude, in degrees (the poles). */
+    const val MAX_LAT = 90.0
+
+    /** Largest absolute longitude, in degrees (the antimeridian). */
+    const val MAX_LNG = 180.0
   }
 }
