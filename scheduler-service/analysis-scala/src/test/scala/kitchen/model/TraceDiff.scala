@@ -3,10 +3,7 @@ package kitchen.model
 import u07.utils.MSet
 import u07.modeling.CTMCSimulation.*
 
-/** A visualization aid for `testOnly`-style demos (not a correctness check): prints a
- * Gillespie trace as a sequence of marking diffs -- which places gained or lost tokens
- * at each event -- instead of the full marking every time, which is what actually makes
- * a trace readable for a model with this many places. */
+/** Prints a trace as the tokens each event adds and removes. A visual aid, not a check. */
 object TraceDiff:
   def print[P](initial: MSet[P], trace: Trace[MSet[P]]): Unit =
     var last = initial

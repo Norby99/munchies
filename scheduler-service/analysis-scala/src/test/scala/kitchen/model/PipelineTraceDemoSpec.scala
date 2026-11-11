@@ -6,10 +6,7 @@ import u07.modeling.SPN
 import u07.modeling.CTMCSimulation.*
 import KitchenPipeline.*
 
-/** Not a correctness check -- a standing tool to watch a KitchenPipeline simulation's
- * transitions fire, conceptually, instead of reading the model's code. Edit the
- * config/rates/seed/horizon below and re-run with
- * `sbt "testOnly kitchen.PipelineTraceDemoSpec"` whenever you want to see a fresh trace. */
+/** Prints a pipeline trace, not a check. Run with `sbt "testOnly kitchen.PipelineTraceDemoSpec"`. */
 class PipelineTraceDemoSpec extends AnyFunSuite:
 
   test("watch a trace"):
@@ -19,10 +16,12 @@ class PipelineTraceDemoSpec extends AnyFunSuite:
     val ctmc = SPN.toCTMC(
       KitchenPipeline.spn(
         config,
-        lambdaPerMinute = 3,
-        prepRatePerMinute = 10,
-        loadingRatePerMinute = 20,
-        cookRatePerMinute = 0.5,
+        KitchenPipeline.Rates(
+          lambdaPerMinute = 3,
+          prepRatePerMinute = 10,
+          loadingRatePerMinute = 20,
+          cookRatePerMinute = 0.5,
+        ),
       ),
     )
     val initial = KitchenPipeline.initialMarking(config, admissionQuota = 10)

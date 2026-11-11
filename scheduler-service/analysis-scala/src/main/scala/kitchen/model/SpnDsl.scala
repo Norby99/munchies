@@ -3,14 +3,10 @@ package kitchen.model
 import u07.utils.MSet
 import u07.modeling.SPN
 
-/**
- * Builds SPN.Trn values via `cond ~ rate ~> eff ^^^ inh`, parallel to
- * u06.modeling.PetriNet's `~~>`/`^^^` but with a rate slot in between.
- */
+/** `cond ~ rate ~> eff ^^^ inh`, like the vendored Petri net DSL with a rate added. */
 object SpnDsl:
 
-  /** Anything that can stand on a side of `~`/`~>`: a single place, a tuple of places,
-   * or an already-built marking. */
+  /** A place, a tuple of places, or a marking. */
   trait AsMarking[X, P]:
     def apply(x: X): MSet[P]
 
@@ -22,16 +18,9 @@ object SpnDsl:
   trait LowPriorityAsMarking:
     given single[P]: AsMarking[P, P] = MSet(_)
 
-  /** `cond ~ rate`: not yet a full transition -- missing the effect. */
   case class PartialTrn[P](cond: MSet[P], rate: MSet[P] => Double)
 
-  // Two concrete overloads, not one generic `r: R` -- a generic rate parameter can't be
-  // inferred from an unannotated lambda (nothing pins its type before Scala elaborates
-  // it). Resolving `AsMarking[X, P]` on the *extension's own* clause, rather than inside
-  // each method, fixes `P` before either overload is considered, so ordinary overload
-  // resolution can push the concrete expected type `MSet[P] => Double` into a bare
-  // lambda -- the same mechanism that already lets `xs.map(x => ...)` infer `x`'s type
-  // against a known receiver.
+  // Two overloads rather than a generic rate, so that a bare lambda's type can be inferred.
   extension [X, P](self: X)(using c: AsMarking[X, P])
     def ~(rate: MSet[P] => Double): PartialTrn[P] = PartialTrn(c(self), rate)
     def ~(rate: Double): PartialTrn[P] = PartialTrn(c(self), _ => rate)

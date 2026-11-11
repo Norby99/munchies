@@ -34,9 +34,7 @@ class SpnDslSpec extends AnyFunSuite:
     trn.rate(MSet(A, A, A)) shouldBe 9.0
 
   test("a marking-dependent rate can be written as a bare lambda, no annotation needed"):
-    // Overload resolution on a concrete P (fixed by AsMarking on the extension's own
-    // clause, from A's type) pushes MSet[P] => Double as the expected type here --
-    // the same mechanism xs.map(x => ...) already relies on against a known receiver.
+    // The lambda's parameter type is inferred.
     val trn = A ~ (m => m(A) * 3.0) ~> B
     trn.rate(MSet(A, A)) shouldBe 6.0
 
