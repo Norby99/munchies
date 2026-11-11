@@ -25,14 +25,19 @@ class GetRestaurantLocationUseCase(
 
   override suspend operator fun invoke(
     command: GetRestaurantLocationCommand,
-  ): GetRestaurantLocationResult {
-    val restaurantId = runCatching { RestaurantId.of(command.restaurantId) }
-      .getOrElse { return GetRestaurantLocationResult.InvalidRestaurant(it.message.orEmpty()) }
+  ): GetRestaurantLocationResult = runCatching { RestaurantId.of(command.restaurantId) }.fold(
+    onSuccess = { locationOf(it) },
+    onFailure = { GetRestaurantLocationResult.InvalidRestaurant(it.message.orEmpty()) },
+  )
+
+  private suspend fun locationOf(restaurantId: RestaurantId): GetRestaurantLocationResult {
     val restaurant = repository.findById(restaurantId)
-      ?: return GetRestaurantLocationResult.RestaurantNotFound
-    val location = restaurant.location
-      ?: return GetRestaurantLocationResult.NotConfigured
-    return GetRestaurantLocationResult.Success(location)
+    val location = restaurant?.location
+    return when {
+      restaurant == null -> GetRestaurantLocationResult.RestaurantNotFound
+      location == null -> GetRestaurantLocationResult.NotConfigured
+      else -> GetRestaurantLocationResult.Success(location)
+    }
   }
 }
 
@@ -57,22 +62,42 @@ class UpdateRestaurantLocationUseCase(
   private val repository: RestaurantRepository,
 ) : UseCase<UpdateRestaurantLocationCommand, UpdateRestaurantLocationResult> {
 
+  // Inputs are validated in this order: restaurant id, caller, coordinates; the first invalid one
+  // decides the result, before the repository is touched.
   override suspend operator fun invoke(
     command: UpdateRestaurantLocationCommand,
   ): UpdateRestaurantLocationResult {
     val restaurantId = runCatching { RestaurantId.of(command.restaurantId) }
-      .getOrElse { return UpdateRestaurantLocationResult.InvalidRestaurant(it.message.orEmpty()) }
-    val managerId = runCatching { UserId.of(command.managerId) }
-      .getOrElse { return UpdateRestaurantLocationResult.Unauthorized }
+    val managerId = runCatching { UserId.of(command.managerId) }.getOrNull()
     val location = runCatching { GeoPoint(command.lat, command.lng) }
-      .getOrElse { return UpdateRestaurantLocationResult.InvalidLocation(it.message.orEmpty()) }
+    return when {
+      restaurantId.isFailure ->
+        UpdateRestaurantLocationResult.InvalidRestaurant(
+          restaurantId.exceptionOrNull()?.message.orEmpty(),
+        )
+      managerId == null -> UpdateRestaurantLocationResult.Unauthorized
+      location.isFailure ->
+        UpdateRestaurantLocationResult.InvalidLocation(
+          location.exceptionOrNull()?.message.orEmpty(),
+        )
+      else -> update(restaurantId.getOrThrow(), managerId, location.getOrThrow())
+    }
+  }
 
+  private suspend fun update(
+    restaurantId: RestaurantId,
+    managerId: UserId,
+    location: GeoPoint,
+  ): UpdateRestaurantLocationResult {
     val restaurant = repository.findById(restaurantId)
-      ?: return UpdateRestaurantLocationResult.NotFound
-    if (restaurant.managerId != managerId) return UpdateRestaurantLocationResult.Unauthorized
-
-    restaurant.updateLocation(location)
-    repository.update(restaurant)
-    return UpdateRestaurantLocationResult.Success(location)
+    return when {
+      restaurant == null -> UpdateRestaurantLocationResult.NotFound
+      restaurant.managerId != managerId -> UpdateRestaurantLocationResult.Unauthorized
+      else -> {
+        restaurant.updateLocation(location)
+        repository.update(restaurant)
+        UpdateRestaurantLocationResult.Success(location)
+      }
+    }
   }
 }
