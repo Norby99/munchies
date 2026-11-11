@@ -4,13 +4,19 @@
 // names are resolved with one GET per distinct restaurant, since orders only carry the id.
 
 import { computed, onMounted, ref } from 'vue'
+import { BikeIcon, ChevronRightIcon, ReceiptTextIcon, RotateCwIcon, StoreIcon } from '@lucide/vue'
 
+import OrderStatusBadge from '@/components/OrderStatusBadge.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
 import * as restaurantsApi from '@/api/restaurants'
 import { useRestaurantsStore } from '@/stores/restaurants'
-import { expectedTime, isActive, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
+import { formatCents } from '@/utils/money'
+import { expectedTime, isActive, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
 import type { LoadStatus, Order } from '@/types'
 
@@ -22,12 +28,18 @@ const status = ref<LoadStatus>('loading')
 const errorMessage = ref<string | null>(null)
 
 // Active orders soonest first (what the customer is waiting for); past orders most recent first.
-const activeOrders = computed(() =>
-  orders.value.filter(isActive).sort((a, b) => expectedTime(a) - expectedTime(b)),
-)
-const pastOrders = computed(() =>
-  orders.value.filter((o) => !isActive(o)).sort((a, b) => expectedTime(b) - expectedTime(a)),
-)
+const groups = computed(() => [
+  {
+    id: 'active',
+    title: 'In progress',
+    list: orders.value.filter(isActive).sort((a, b) => expectedTime(a) - expectedTime(b)),
+  },
+  {
+    id: 'past',
+    title: 'Past orders',
+    list: orders.value.filter((o) => !isActive(o)).sort((a, b) => expectedTime(b) - expectedTime(a)),
+  },
+])
 
 async function resolveRestaurantNames(list: Order[]): Promise<void> {
   const missing = [...new Set(list.map((o) => o.restaurantId))].filter((id) => !restaurantNames.value[id])
@@ -67,125 +79,63 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="my-orders">
-    <div class="my-orders__header">
-      <div>
-        <h6 class="my-orders__kicker">Customer</h6>
-        <h2 class="my-orders__title">My orders</h2>
-      </div>
-      <button v-if="status === 'ready'" class="btn btn-secondary" type="button" @click="load">Refresh</button>
-    </div>
+  <div class="mx-auto max-w-3xl">
+    <PageHeader eyebrow="Orders" title="My orders" description="Follow what you ordered and pay pending orders.">
+      <template #actions>
+        <Button v-if="status === 'ready'" variant="outline" @click="load">
+          <RotateCwIcon data-icon="inline-start" /> Refresh
+        </Button>
+      </template>
+    </PageHeader>
 
     <StateBlock
       :status="status"
       :error-message="errorMessage"
       empty-title="No orders yet"
-      empty-body="Orders you place will show up here, together with their status."
-      empty-action-label="Reload"
+      empty-body="Open a restaurant's link to browse its menu and place your first order."
+      :empty-icon="ReceiptTextIcon"
       @retry="load"
-      @empty-action="load"
     >
-      <section v-for="group in [
-          { id: 'active', title: 'In progress', list: activeOrders },
-          { id: 'past', title: 'Past orders', list: pastOrders },
-        ]"
-        :key="group.id"
-        class="my-orders__group"
-        :aria-labelledby="`my-orders-${group.id}`"
-      >
-        <template v-if="group.list.length">
-          <h3 :id="`my-orders-${group.id}`" class="my-orders__group-title">
-            {{ group.title }} <span class="my-orders__count">({{ group.list.length }})</span>
-          </h3>
-          <ul class="my-orders__list">
+      <template v-for="group in groups" :key="group.id">
+        <section v-if="group.list.length" class="mb-10" :aria-labelledby="`my-orders-${group.id}`">
+          <h2 :id="`my-orders-${group.id}`" class="mb-3 flex items-center gap-2 text-lg font-bold">
+            {{ group.title }}
+            <Badge variant="secondary" class="tabular-nums">{{ group.list.length }}</Badge>
+          </h2>
+          <ul class="flex flex-col gap-3">
             <li v-for="order in group.list" :key="order.orderId">
-              <router-link
-                class="my-orders__card"
+              <RouterLink
                 :to="{ name: 'order-detail', params: { orderId: order.orderId } }"
+                class="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-all outline-none hover:border-foreground/20 hover:shadow-sm focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <span class="my-orders__name">{{ restaurantName(order) }}</span>
-                <span class="tag" :class="{ 'tag-accent': isActive(order) }">{{ STATUS_LABELS[order.status] }}</span>
-                <span class="my-orders__meta text-muted">
-                  {{ TYPE_LABELS[order.orderType] }} &middot;
-                  {{ itemCount(order) }} {{ itemCount(order) === 1 ? 'item' : 'items' }} &middot;
-                  {{ formatEpoch(order.estimatedDeliveryTime ?? order.pickupTime) || 'no time set' }}
-                  <template v-if="!order.payed"> &middot; not paid</template>
+                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-accent-foreground">
+                  <BikeIcon v-if="order.orderType === 'DELIVERY'" class="size-5" aria-hidden="true" />
+                  <StoreIcon v-else class="size-5" aria-hidden="true" />
                 </span>
-              </router-link>
+                <span class="flex min-w-0 flex-1 flex-col gap-1">
+                  <span class="flex flex-wrap items-center gap-2">
+                    <span class="truncate font-semibold">{{ restaurantName(order) }}</span>
+                    <OrderStatusBadge :status="order.status" />
+                    <Badge v-if="!order.payed && order.status !== 'CANCELLED'" variant="outline" class="text-warning">To pay</Badge>
+                  </span>
+                  <span class="text-sm text-muted-foreground">
+                    {{ TYPE_LABELS[order.orderType] }} &middot; {{ itemCount(order) }}
+                    {{ itemCount(order) === 1 ? 'item' : 'items' }} &middot;
+                    {{ formatEpoch(order.estimatedDeliveryTime ?? order.pickupTime) || 'no time set' }}
+                  </span>
+                </span>
+                <span v-if="order.totalCents" class="hidden font-semibold tabular-nums sm:inline">
+                  {{ formatCents(order.totalCents) }}
+                </span>
+                <ChevronRightIcon
+                  class="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </RouterLink>
             </li>
           </ul>
-        </template>
-      </section>
+        </section>
+      </template>
     </StateBlock>
   </div>
 </template>
-
-<style scoped lang="scss">
-.my-orders {
-  max-width: 760px;
-
-  &__header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: space(3);
-    margin-bottom: space(5);
-  }
-
-  &__kicker {
-    color: $color-accent;
-  }
-
-  &__title {
-    margin: 0;
-  }
-
-  &__group {
-    margin-bottom: space(5);
-  }
-
-  &__group-title {
-    @include eyebrow;
-    font-size: 13px;
-    margin: 0 0 space(2);
-  }
-
-  &__count {
-    font-weight: 400;
-  }
-
-  &__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  // The whole card is the link, so the touch target is the full row.
-  &__card {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: space(1) space(3);
-    align-items: center;
-    padding: space(3) 0;
-    border-bottom: 1px solid $color-divider;
-    color: inherit;
-    text-decoration: none;
-    min-height: $touch-target;
-
-    &:hover .my-orders__name,
-    &:focus-visible .my-orders__name {
-      color: $color-accent;
-      text-decoration: underline;
-    }
-  }
-
-  &__name {
-    font-weight: 800;
-  }
-
-  &__meta {
-    grid-column: 1 / -1;
-    font-size: 13px;
-  }
-}
-</style>

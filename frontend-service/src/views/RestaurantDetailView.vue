@@ -1,27 +1,29 @@
 <script setup lang="ts">
-// Customer — restaurant detail (README screen 6). Reachable by direct link,
-// QR, or known id only — there is no browse/search endpoint. Every tab needs
-// its availability up front, so every menu is fetched in full, not just the
-// active one (see MenuTabs).
+// Customer restaurant page: header, menu picker, dishes grouped by category, and the cart.
+// Reachable by direct link (or QR) only: there is no browse/search endpoint for customers yet.
+// Every menu is fetched in full up front, since each tab shows its availability.
 //
-// Checkout continues on its own route (CheckoutView), which collects the
-// per-type delivery/takeaway details and places the order.
+// The cart sits in a sticky side panel from the lg breakpoint; on smaller screens a floating
+// "view bag" bar opens it in a bottom sheet. Checkout continues on its own route (CheckoutView).
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { ClockIcon, MapPinIcon, PhoneIcon, ShoppingBagIcon, SquareMenuIcon } from '@lucide/vue'
 
 import MenuItemRow from '@/components/MenuItemRow.vue'
 import MenuTabs from '@/components/MenuTabs.vue'
-import NeedsBackendNote from '@/components/NeedsBackendNote.vue'
 import OrderDraft from '@/components/OrderDraft.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useOnline } from '@/composables/useOnline'
 import * as restaurantsApi from '@/api/restaurants'
 import { useCartStore } from '@/stores/cart'
 import { useMenusStore } from '@/stores/menus'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { describe, isValid } from '@/utils/validity'
-import type { Menu } from '@/types'
+import type { LoadStatus, Menu, Restaurant } from '@/types'
 
 const props = defineProps<{ restaurantId: string }>()
 
@@ -32,23 +34,25 @@ const menus = useMenusStore()
 const cart = useCartStore()
 const { isOnline } = useOnline()
 
-const restaurantName = ref('')
-const restaurantMeta = ref('')
-const status = ref<'ready' | 'loading' | 'error'>('loading')
+const restaurant = ref<Restaurant | null>(null)
+const status = ref<LoadStatus>('loading')
 const loadedMenus = ref<Menu[]>([])
+const bagOpen = ref(false)
 
 const activeMenu = computed(() => loadedMenus.value.find((m) => m.id === menus.activeMenuId) ?? null)
 const menuOpen = computed(() => (activeMenu.value ? isValid(activeMenu.value.validity) : false))
 const orderingDisabled = computed(() => !menuOpen.value || !isOnline.value)
 const checkoutDisabled = computed(() => orderingDisabled.value || cart.isEmpty)
+const bagCount = computed(() =>
+  activeMenu.value ? cart.lines(activeMenu.value).reduce((sum, line) => sum + line.quantity, 0) : 0,
+)
+const bagTotal = computed(() => (activeMenu.value ? cart.totalLabel(activeMenu.value) : ''))
 
 async function load(): Promise<void> {
   status.value = 'loading'
   try {
-    const restaurant = await restaurantsApi.getRestaurant(props.restaurantId)
-    restaurantName.value = restaurant.name
-    restaurantMeta.value = `${restaurant.address} · ${restaurant.phone}`
-    restaurants.cacheOne(restaurant)
+    restaurant.value = await restaurantsApi.getRestaurant(props.restaurantId)
+    restaurants.cacheOne(restaurant.value)
     cart.setRestaurant(props.restaurantId)
 
     await menus.fetchSummaries(props.restaurantId)
@@ -61,7 +65,7 @@ async function load(): Promise<void> {
     const initial = firstOpen ?? loadedMenus.value[0]
     if (initial) menus.setActiveMenu(initial.id)
 
-    status.value = loadedMenus.value.length === 0 ? 'error' : 'ready'
+    status.value = loadedMenus.value.length === 0 ? 'empty' : 'ready'
   } catch {
     status.value = 'error'
   }
@@ -70,115 +74,114 @@ async function load(): Promise<void> {
 onMounted(load)
 watch(() => props.restaurantId, load)
 
-function selectMenu(menuId: string): void {
-  menus.setActiveMenu(menuId)
-}
-
-function addToCart(itemId: string): void {
-  cart.add(itemId)
-}
-
 function checkout(): void {
+  bagOpen.value = false
   router.push({ name: 'checkout', params: { restaurantId: props.restaurantId } })
 }
 </script>
 
 <template>
   <div>
-    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end">
-      <div style="margin-right: auto">
-        <h6 style="color: var(--color-accent)">Customer</h6>
-        <h2 style="margin: 0">{{ restaurantName }}</h2>
-        <p class="text-muted" style="font-size: 13px; margin: 4px 0 0">{{ restaurantMeta }}</p>
-      </div>
-    </div>
-
-    <NeedsBackendNote>
-      reachable by direct link, QR or known id only — there is no browse or search endpoint for
-      customers yet.
-    </NeedsBackendNote>
-
-    <div class="hr"></div>
+    <header v-if="restaurant" class="mb-8 flex flex-col gap-4 rounded-2xl bg-accent p-6 text-accent-foreground md:p-8">
+      <p class="text-xs font-semibold tracking-wider uppercase">Restaurant</p>
+      <h1 class="text-3xl font-extrabold text-foreground md:text-4xl">{{ restaurant.name }}</h1>
+      <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <li class="flex items-center gap-1.5"><MapPinIcon class="size-4" aria-hidden="true" />{{ restaurant.address }}</li>
+        <li class="flex items-center gap-1.5">
+          <PhoneIcon class="size-4" aria-hidden="true" />
+          <a :href="`tel:${restaurant.phone}`" class="underline-offset-4 hover:underline">{{ restaurant.phone }}</a>
+        </li>
+      </ul>
+    </header>
 
     <StateBlock
-      :status="status === 'loading' ? 'loading' : status === 'error' ? 'error' : loadedMenus.length === 0 ? 'empty' : 'ready'"
-      empty-title="This restaurant has no published menus"
-      empty-body="The list endpoint returned an empty array. Customers see this whenever a manager has not published anything yet."
+      :status="status"
+      empty-title="No menus yet"
+      empty-body="This restaurant has not published a menu yet. Check back soon."
+      :empty-icon="SquareMenuIcon"
       empty-action-label="Reload"
+      error-message="We could not load this restaurant. Check the link, or try again."
       @retry="load"
       @empty-action="load"
     >
-      <div class="restaurant-detail__grid">
+      <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div>
-          <MenuTabs :menus="loadedMenus" :active-id="menus.activeMenuId" @select="selectMenu" />
+          <MenuTabs :menus="loadedMenus" :active-id="menus.activeMenuId" @select="menus.setActiveMenu" />
 
-          <div v-if="activeMenu && !menuOpen" role="status" class="restaurant-detail__notice">
-            <strong style="font-size: 13px; display: block">Not available right now</strong>
-            <span style="font-size: 13px; color: var(--color-accent-800)">
-              {{ describe(activeMenu.validity) }}. You can still browse; ordering is disabled.
-            </span>
-          </div>
+          <Alert v-if="activeMenu && !menuOpen" role="status" class="mb-6">
+            <ClockIcon />
+            <AlertTitle>This menu is not available right now</AlertTitle>
+            <AlertDescription>{{ describe(activeMenu.validity) }}. You can browse it, but not order from it.</AlertDescription>
+          </Alert>
 
-          <section v-for="category in activeMenu?.categories ?? []" :key="category.id" style="margin-bottom: 28px">
-            <div class="restaurant-detail__category-header">
-              <h4 style="margin: 0">{{ category.name }}</h4>
-              <span class="text-muted" style="font-size: 12px">
-                {{
-                  category.variations.length
-                    ? `Category variations: ${category.variations.map((v) => v.name).join(', ')}`
-                    : 'No category variations'
-                }}
+          <section
+            v-for="category in activeMenu?.categories ?? []"
+            :key="category.id"
+            class="mb-10"
+            :aria-labelledby="`category-${category.id}`"
+          >
+            <div class="mb-4 flex items-baseline gap-3">
+              <h2 :id="`category-${category.id}`" class="text-xl font-bold">{{ category.name }}</h2>
+              <span class="text-sm text-muted-foreground">
+                {{ category.items.length }} {{ category.items.length === 1 ? 'dish' : 'dishes' }}
               </span>
             </div>
-            <MenuItemRow
-              v-for="item in category.items"
-              :key="item.id"
-              :item="item"
-              :disabled="orderingDisabled"
-              @add="addToCart(item.id)"
-            />
+            <p v-if="category.variations.length" class="-mt-2 mb-4 text-sm text-muted-foreground">
+              Options for every dish: {{ category.variations.map((v) => v.name).join(', ') }}
+            </p>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <MenuItemRow
+                v-for="item in category.items"
+                :key="item.id"
+                :item="item"
+                :quantity="cart.items[item.id] ?? 0"
+                :disabled="orderingDisabled"
+                @add="cart.add(item.id)"
+                @remove="cart.decrement(item.id)"
+              />
+            </div>
           </section>
         </div>
 
-        <OrderDraft v-if="activeMenu" :menu="activeMenu" :checkout-disabled="checkoutDisabled" @checkout="checkout" />
+        <Card v-if="activeMenu" class="sticky top-24 hidden lg:flex">
+          <CardHeader>
+            <CardTitle class="text-lg">Your bag</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderDraft :menu="activeMenu" :checkout-disabled="checkoutDisabled" @checkout="checkout" />
+          </CardContent>
+        </Card>
       </div>
+
+      <!-- Phones and tablets: a floating bar above the tab bar opens the bag in a bottom sheet. -->
+      <div
+        v-if="activeMenu && bagCount > 0"
+        class="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 md:bottom-6 lg:hidden"
+      >
+        <button
+          type="button"
+          class="mx-auto flex h-14 w-full max-w-md items-center gap-3 rounded-full bg-primary px-5 text-primary-foreground shadow-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          @click="bagOpen = true"
+        >
+          <span class="grid size-8 place-items-center rounded-full bg-primary-foreground/20 text-sm font-bold tabular-nums">
+            {{ bagCount }}
+          </span>
+          <span class="font-semibold">View bag</span>
+          <span class="ml-auto font-semibold tabular-nums">{{ bagTotal }}</span>
+          <ShoppingBagIcon class="size-5" aria-hidden="true" />
+        </button>
+      </div>
+      <Sheet v-model:open="bagOpen">
+        <SheetContent side="bottom" class="max-h-[85svh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Your bag</SheetTitle>
+            <SheetDescription>{{ restaurant?.name }}</SheetDescription>
+          </SheetHeader>
+          <div class="px-4 pb-6">
+            <OrderDraft v-if="activeMenu" :menu="activeMenu" :checkout-disabled="checkoutDisabled" @checkout="checkout" />
+          </div>
+        </SheetContent>
+      </Sheet>
     </StateBlock>
   </div>
 </template>
-
-<style scoped>
-.restaurant-detail__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
-}
-
-@media (min-width: 1150px) {
-  .restaurant-detail__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
-  }
-}
-
-@media (min-width: 1440px) {
-  .restaurant-detail__grid {
-    gap: 40px;
-  }
-}
-
-.restaurant-detail__notice {
-  border-left: 2px solid var(--color-accent);
-  background: var(--color-accent-100);
-  padding: 12px 14px;
-  margin-bottom: 20px;
-}
-
-.restaurant-detail__category-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  border-bottom: 2px solid var(--color-divider);
-  padding-bottom: 8px;
-  margin-bottom: 4px;
-}
-</style>

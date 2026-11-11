@@ -1,8 +1,6 @@
 <script setup lang="ts">
-// Customer order detail and tracking. Shows the status as a stepper following the order type's
-// chain (order-service domain: DeliveryOrder / TakeawayOrder / DineInOrder), the ordered lines
-// (names and prices joined from the restaurant's menus, since the order stores only ids and
-// quantities) and the per-type details.
+// Customer order detail and tracking: status stepper, ordered lines, per-type details, payment and
+// cancellation.
 //
 // Status updates are not pushed yet: until notification-service delivers them over the gateway
 // WebSocket, the user refreshes explicitly. No polling loop on purpose (see CLAUDE.md).
@@ -16,16 +14,36 @@
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  ArrowLeftIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  CreditCardIcon,
+  ReceiptTextIcon,
+  RotateCwIcon,
+  SmartphoneIcon,
+  XCircleIcon,
+} from '@lucide/vue'
 
+import ChoiceCard from '@/components/ChoiceCard.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import OrderProgress from '@/components/OrderProgress.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { FieldLegend, FieldSet } from '@/components/ui/field'
+import { RadioGroup } from '@/components/ui/radio-group'
+import { Separator } from '@/components/ui/separator'
+import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
 import * as paymentsApi from '@/api/payments'
 import type { OnlinePaymentMethod } from '@/api/payments'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { formatCents } from '@/utils/money'
-import { STATUS_CHAINS, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
+import { STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
 import type { LoadStatus, Order } from '@/types'
 
@@ -45,8 +63,6 @@ const paying = ref(false)
 const paymentError = ref<string | null>(null)
 const paymentMessage = ref<string | null>(null)
 
-const chain = computed(() => (order.value ? STATUS_CHAINS[order.value.orderType] : []))
-const currentStep = computed(() => (order.value ? chain.value.indexOf(order.value.status) : -1))
 const canCancel = computed(() => order.value?.status === 'PENDING' && !order.value.payed)
 
 const lines = computed(() =>
@@ -63,7 +79,32 @@ const lines = computed(() =>
 )
 // Orders placed before items carried prices have a zero total: nothing to show or charge.
 const totalLabel = computed(() => (order.value?.totalCents ? formatCents(order.value.totalCents) : null))
-const canPay = computed(() => !!order.value && !order.value.payed && !!order.value.totalCents)
+const canPay = computed(
+  () => !!order.value && !order.value.payed && !!order.value.totalCents && order.value.status !== 'CANCELLED',
+)
+
+const details = computed<{ label: string; value: string }[]>(() => {
+  const o = order.value
+  if (!o) return []
+  if (o.orderType === 'DELIVERY') {
+    return [
+      { label: 'Delivery time', value: formatEpoch(o.estimatedDeliveryTime) },
+      { label: 'Address', value: o.deliveryAddress ?? '' },
+      { label: 'Doorbell', value: o.bellName ?? '' },
+      { label: 'Phone', value: o.customerPhone ?? '' },
+    ]
+  }
+  if (o.orderType === 'TAKEAWAY') {
+    return [
+      { label: 'Pickup time', value: formatEpoch(o.pickupTime) },
+      { label: 'Name', value: o.customerName ?? '' },
+    ]
+  }
+  return [
+    { label: 'Table', value: String(o.tableNumber ?? '') },
+    { label: 'Guests', value: String(o.numberOfGuests ?? '') },
+  ]
+})
 
 async function fetchOrder(): Promise<void> {
   order.value = await ordersApi.getOrder(props.orderId)
@@ -136,387 +177,165 @@ async function pay(): Promise<void> {
   }
 }
 
-function stepState(index: number): 'done' | 'current' | 'todo' {
-  if (index < currentStep.value) return 'done'
-  return index === currentStep.value ? 'current' : 'todo'
-}
-
 onMounted(load)
 watch(() => props.orderId, load)
 </script>
 
 <template>
-  <div class="order-detail">
-    <h6 class="order-detail__kicker">Order</h6>
+  <div class="mx-auto max-w-4xl">
+    <Button variant="ghost" class="mb-4 -ml-2.5" @click="router.push({ name: 'my-orders' })">
+      <ArrowLeftIcon data-icon="inline-start" /> My orders
+    </Button>
 
     <StateBlock
       :status="status"
       :error-message="errorMessage"
-      empty-title="This order no longer exists"
+      empty-title="Order not found"
       empty-body="It does not exist, or it belongs to another account."
+      :empty-icon="ReceiptTextIcon"
       empty-action-label="Go to my orders"
       @retry="load"
       @empty-action="router.push({ name: 'my-orders' })"
     >
-      <template v-if="order">
-        <header class="order-detail__header">
-          <div>
-            <h2 class="order-detail__title">{{ catalog.restaurant.value?.name ?? 'Your order' }}</h2>
-            <p class="text-muted order-detail__meta">
-              {{ TYPE_LABELS[order.orderType] }} &middot; <span class="order-detail__id">#{{ order.orderId.slice(0, 8) }}</span>
+      <div v-if="order" class="flex flex-col gap-6">
+        <header class="flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-col gap-1">
+            <p class="text-xs font-semibold tracking-wider text-primary uppercase">
+              {{ TYPE_LABELS[order.orderType] }} order
+            </p>
+            <h1 class="text-2xl font-extrabold md:text-3xl">{{ catalog.restaurant.value?.name ?? 'Your order' }}</h1>
+            <p class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span class="tabular-nums">#{{ order.orderId.slice(0, 8) }}</span>
+              <Badge v-if="order.payed" variant="outline" class="text-success">Paid</Badge>
+              <Badge v-else-if="order.status !== 'CANCELLED'" variant="outline" class="text-warning">Not paid yet</Badge>
             </p>
           </div>
-          <button class="btn btn-secondary" type="button" :disabled="refreshing" @click="refresh">
-            {{ refreshing ? 'Refreshing...' : 'Refresh status' }}
-          </button>
+          <Button variant="outline" :disabled="refreshing" @click="refresh">
+            <Spinner v-if="refreshing" data-icon="inline-start" />
+            <RotateCwIcon v-else data-icon="inline-start" />
+            Refresh status
+          </Button>
         </header>
 
-        <section aria-labelledby="order-status-title" class="order-detail__section">
-          <h3 id="order-status-title" class="order-detail__section-title">Status</h3>
-          <!-- aria-live so that a refreshed status is announced to screen-reader users. -->
-          <p class="order-detail__status" aria-live="polite">
-            {{ STATUS_LABELS[order.status] }}
-          </p>
-          <p v-if="order.status === 'CANCELLED'" class="text-muted order-detail__hint">
-            This order was cancelled before the restaurant started preparing it.
-          </p>
-          <ol v-else class="order-detail__steps">
-            <li
-              v-for="(step, index) in chain"
-              :key="step"
-              class="order-detail__step"
-              :class="`order-detail__step--${stepState(index)}`"
-              :aria-current="stepState(index) === 'current' ? 'step' : undefined"
-            >
-              <span class="order-detail__dot" aria-hidden="true"></span>
-              <span>{{ STATUS_LABELS[step] }}</span>
-            </li>
-          </ol>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardDescription>Status</CardDescription>
+            <!-- aria-live so that a refreshed status is announced to screen-reader users. -->
+            <CardTitle class="text-2xl font-extrabold" aria-live="polite">{{ STATUS_LABELS[order.status] }}</CardTitle>
+          </CardHeader>
+          <CardContent class="pt-2">
+            <Alert v-if="order.status === 'CANCELLED'">
+              <XCircleIcon />
+              <AlertTitle>This order was cancelled</AlertTitle>
+              <AlertDescription>It was cancelled before the restaurant started preparing it.</AlertDescription>
+            </Alert>
+            <OrderProgress v-else :type="order.orderType" :status="order.status" />
+          </CardContent>
+        </Card>
 
-        <div class="order-detail__grid">
-          <section aria-labelledby="order-items-title" class="order-detail__section">
-            <h3 id="order-items-title" class="order-detail__section-title">Items</h3>
-            <ul class="order-detail__lines">
-              <li v-for="line in lines" :key="line.id" class="order-detail__line">
-                <span class="order-detail__num">{{ line.quantity }}&times;</span>
-                <span class="order-detail__name">{{ line.name }}</span>
-                <span v-if="line.total" class="order-detail__num">{{ formatCents(line.total) }}</span>
-              </li>
-            </ul>
-            <div v-if="totalLabel" class="order-detail__total">
-              <span>Total</span>
-              <strong>{{ totalLabel }}</strong>
-            </div>
-          </section>
+        <div class="grid gap-6 md:grid-cols-[3fr_2fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">Items</CardTitle>
+            </CardHeader>
+            <CardContent class="flex flex-col gap-4">
+              <ul class="flex flex-col gap-3">
+                <li v-for="line in lines" :key="line.id" class="flex gap-3 text-sm">
+                  <span class="font-semibold tabular-nums">{{ line.quantity }}&times;</span>
+                  <span class="min-w-0 flex-1">{{ line.name }}</span>
+                  <span v-if="line.total" class="tabular-nums">{{ formatCents(line.total) }}</span>
+                </li>
+              </ul>
+              <template v-if="totalLabel">
+                <Separator />
+                <div class="flex items-baseline justify-between">
+                  <span class="font-semibold">Total</span>
+                  <strong class="text-2xl tabular-nums">{{ totalLabel }}</strong>
+                </div>
+              </template>
+            </CardContent>
+          </Card>
 
-          <section aria-labelledby="order-info-title" class="order-detail__section">
-            <h3 id="order-info-title" class="order-detail__section-title">Details</h3>
-            <dl class="order-detail__info">
-              <template v-if="order.orderType === 'DELIVERY'">
-                <dt>Delivery time</dt>
-                <dd>{{ formatEpoch(order.estimatedDeliveryTime) }}</dd>
-                <dt>Address</dt>
-                <dd>{{ order.deliveryAddress }}</dd>
-                <dt>Doorbell</dt>
-                <dd>{{ order.bellName }}</dd>
-                <dt>Phone</dt>
-                <dd>{{ order.customerPhone }}</dd>
-              </template>
-              <template v-else-if="order.orderType === 'TAKEAWAY'">
-                <dt>Pickup time</dt>
-                <dd>{{ formatEpoch(order.pickupTime) }}</dd>
-                <dt>Name</dt>
-                <dd>{{ order.customerName }}</dd>
-              </template>
-              <template v-else>
-                <dt>Table</dt>
-                <dd>{{ order.tableNumber }}</dd>
-                <dt>Guests</dt>
-                <dd>{{ order.numberOfGuests }}</dd>
-              </template>
-              <dt>Payment</dt>
-              <dd>{{ order.payed ? 'Paid' : 'Not paid yet' }}</dd>
-            </dl>
-          </section>
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-3 text-sm">
+                <template v-for="row in details" :key="row.label">
+                  <dt class="text-muted-foreground">{{ row.label }}</dt>
+                  <dd class="font-medium break-words">{{ row.value }}</dd>
+                </template>
+              </dl>
+            </CardContent>
+          </Card>
         </div>
 
-        <section v-if="canPay" aria-labelledby="order-pay-title" class="order-detail__section order-detail__pay">
-          <h3 id="order-pay-title" class="order-detail__section-title">Payment</h3>
-          <form @submit.prevent="pay">
-            <fieldset class="order-detail__methods">
-              <legend class="visually-hidden">Payment method</legend>
-              <label class="radio">
-                <input v-model="paymentMethod" type="radio" name="payment-method" value="CARD" />
-                <span class="dot" aria-hidden="true"></span>
-                Card
-              </label>
-              <label class="radio">
-                <input v-model="paymentMethod" type="radio" name="payment-method" value="MOBILE_PAYMENT" />
-                <span class="dot" aria-hidden="true"></span>
-                Mobile payment
-              </label>
-            </fieldset>
-            <button class="btn btn-primary order-detail__action" type="submit" :disabled="paying">
-              {{ paying ? 'Processing payment...' : `Pay ${totalLabel}` }}
-            </button>
+        <Card v-if="canPay">
+          <form class="contents" @submit.prevent="pay">
+            <CardHeader>
+              <CardTitle class="text-lg">Pay for your order</CardTitle>
+              <CardDescription>The restaurant starts preparing it as soon as it is confirmed.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FieldSet>
+                <FieldLegend class="sr-only">Payment method</FieldLegend>
+                <RadioGroup v-model="paymentMethod" class="grid gap-3 sm:grid-cols-2">
+                  <ChoiceCard id="pay-card" value="CARD" title="Card" description="Credit or debit card" :icon="CreditCardIcon" />
+                  <ChoiceCard id="pay-mobile" value="MOBILE_PAYMENT" title="Mobile payment" description="Pay with your phone" :icon="SmartphoneIcon" />
+                </RadioGroup>
+              </FieldSet>
+            </CardContent>
+            <CardFooter class="justify-end">
+              <Button type="submit" size="lg" class="h-11 w-full sm:w-auto" :disabled="paying">
+                <Spinner v-if="paying" data-icon="inline-start" />
+                Pay {{ totalLabel }}
+              </Button>
+            </CardFooter>
           </form>
-        </section>
-        <p v-else-if="order && !order.payed && !order.totalCents" class="text-muted order-detail__hint">
+        </Card>
+        <p v-else-if="!order.payed && !order.totalCents && order.status !== 'CANCELLED'" class="text-sm text-muted-foreground">
           This order cannot be paid online: it was placed before orders carried prices.
         </p>
-        <p v-if="paymentMessage" role="status" class="order-detail__success">{{ paymentMessage }}</p>
-        <p v-if="paymentError" role="alert" class="order-detail__error">{{ paymentError }}</p>
 
-        <div class="order-detail__actions">
-          <button
-            class="btn btn-secondary order-detail__action"
-            type="button"
-            :disabled="!canCancel"
-            @click="cancelOpen = true"
-          >
-            Cancel order
-          </button>
+        <Alert v-if="paymentMessage" role="status" class="text-success">
+          <CircleCheckIcon />
+          <AlertTitle>Thank you!</AlertTitle>
+          <AlertDescription>{{ paymentMessage }}</AlertDescription>
+        </Alert>
+        <Alert v-if="paymentError" variant="destructive" role="alert">
+          <CircleAlertIcon />
+          <AlertTitle>Payment failed</AlertTitle>
+          <AlertDescription>{{ paymentError }}</AlertDescription>
+        </Alert>
+
+        <div v-if="order.status !== 'CANCELLED'" class="flex flex-col items-start gap-2 border-t pt-6">
+          <Button variant="destructive" :disabled="!canCancel" @click="cancelOpen = true">
+            <XCircleIcon data-icon="inline-start" /> Cancel order
+          </Button>
+          <p v-if="!canCancel" class="text-sm text-muted-foreground">
+            {{
+              order.payed
+                ? 'A paid order cannot be cancelled online.'
+                : 'An order can be cancelled only before the restaurant starts preparing it.'
+            }}
+          </p>
+          <Alert v-if="cancelError" variant="destructive" role="alert">
+            <CircleAlertIcon />
+            <AlertDescription>{{ cancelError }}</AlertDescription>
+          </Alert>
         </div>
-        <p v-if="!canCancel" class="text-muted order-detail__hint">
-          {{
-            order.payed
-              ? 'A paid order cannot be cancelled online.'
-              : 'An order can be cancelled only before the restaurant starts preparing it.'
-          }}
-        </p>
-        <p v-if="cancelError" role="alert" class="order-detail__error">{{ cancelError }}</p>
 
         <ConfirmDialog
           :open="cancelOpen"
           title="Cancel this order?"
-          body="The restaurant has not started preparing it yet. Cancelling deletes the order and cannot be undone."
+          body="The restaurant has not started preparing it yet. This cannot be undone."
           confirm-label="Cancel order"
           cancel-label="Keep order"
           @confirm="confirmCancel"
           @cancel="cancelOpen = false"
         />
-      </template>
+      </div>
     </StateBlock>
   </div>
 </template>
-
-<style scoped lang="scss">
-// One color per step state, iterated below to generate the modifiers.
-$step-states: (
-  done: $color-accent,
-  current: $color-accent,
-  todo: var(--color-neutral-400),
-);
-
-.order-detail {
-  max-width: 960px;
-
-  &__kicker {
-    color: $color-accent;
-  }
-
-  &__header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: space(3);
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: space(5);
-  }
-
-  &__title {
-    margin: 0;
-  }
-
-  &__meta {
-    font-size: 13px;
-    margin: space(1) 0 0;
-  }
-
-  &__id {
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__section {
-    margin-bottom: space(5);
-  }
-
-  &__section-title {
-    @include eyebrow;
-    font-size: 13px;
-    margin: 0 0 space(3);
-  }
-
-  &__status {
-    font-size: 22px;
-    font-weight: 800;
-    margin: 0 0 space(3);
-  }
-
-  // Vertical stepper on phones, horizontal from tablet up.
-  &__steps {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
-
-    @include respond-to(tablet) {
-      flex-direction: row;
-      gap: 0;
-    }
-  }
-
-  &__step {
-    display: flex;
-    align-items: center;
-    gap: space(2);
-    font-size: 14px;
-
-    @include respond-to(tablet) {
-      flex: 1;
-      flex-direction: column;
-      align-items: flex-start;
-      border-top: 3px solid var(--color-neutral-300);
-      padding-top: space(2);
-    }
-
-    @each $state, $color in $step-states {
-      &--#{$state} .order-detail__dot {
-        border-color: $color;
-        @if $state == done {
-          background: $color;
-        }
-      }
-
-      @if $state != todo {
-        &--#{$state} {
-          @include respond-to(tablet) {
-            border-top-color: $color;
-          }
-        }
-      }
-    }
-
-    &--current {
-      font-weight: 800;
-    }
-
-    &--todo {
-      color: color-mix(in srgb, #{$color-text} 55%, transparent);
-    }
-  }
-
-  &__dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid;
-    flex: none;
-  }
-
-  &__grid {
-    display: grid;
-    gap: 0 space(6);
-
-    @include respond-to(tablet) {
-      grid-template-columns: 3fr 2fr;
-    }
-  }
-
-  &__lines {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  &__line {
-    display: flex;
-    gap: space(2);
-    padding: space(2) 0;
-    border-bottom: 1px solid $color-divider;
-    font-size: 14px;
-  }
-
-  &__num {
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__name {
-    flex: 1;
-  }
-
-  &__total {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: space(3);
-
-    strong {
-      font-size: 20px;
-      font-variant-numeric: tabular-nums;
-    }
-  }
-
-  &__info {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: space(2) space(4);
-    margin: 0;
-    font-size: 14px;
-
-    dt {
-      color: color-mix(in srgb, #{$color-text} 55%, transparent);
-    }
-
-    dd {
-      margin: 0;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: space(3);
-  }
-
-  &__action {
-    min-height: $touch-target;
-  }
-
-  &__hint {
-    font-size: 12px;
-    margin: space(2) 0 0;
-  }
-
-  &__error,
-  &__success {
-    font-size: 13px;
-    margin: space(2) 0 0;
-  }
-
-  &__error {
-    color: var(--color-accent-700);
-  }
-
-  &__success {
-    font-weight: 600;
-  }
-
-  &__methods {
-    display: flex;
-    flex-wrap: wrap;
-    gap: space(4);
-    border: 0;
-    padding: 0;
-    margin: 0 0 space(3);
-  }
-}
-
-// Kept in the DOM for screen readers, removed from the visual layout.
-.visually-hidden {
-  @include visually-hidden;
-}
-</style>

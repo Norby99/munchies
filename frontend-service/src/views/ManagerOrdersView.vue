@@ -11,7 +11,27 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import {
+  ArrowRightIcon,
+  BikeIcon,
+  ChevronDownIcon,
+  CircleAlertIcon,
+  ClipboardListIcon,
+  ClockIcon,
+  RotateCwIcon,
+  StoreIcon,
+  UserRoundIcon,
+} from '@lucide/vue'
+
+import OrderStatusBadge from '@/components/OrderStatusBadge.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
@@ -131,9 +151,12 @@ async function advance(order: Order): Promise<void> {
   }
 }
 
-function selectRestaurant(event: Event): void {
-  const id = (event.target as HTMLSelectElement).value
-  router.push({ query: { ...route.query, restaurant: id } })
+function selectRestaurant(id: unknown): void {
+  if (typeof id === 'string' && id) router.push({ query: { ...route.query, restaurant: id } })
+}
+
+function itemCount(order: Order): number {
+  return order.items.reduce((n, line) => n + line.quantity, 0)
 }
 
 onMounted(load)
@@ -143,274 +166,145 @@ watch(restaurantId, (next, previous) => {
 </script>
 
 <template>
-  <div class="manager-orders">
-    <div class="manager-orders__header">
-      <div>
-        <h6 class="manager-orders__kicker">Manager</h6>
-        <h2 class="manager-orders__title">Orders</h2>
-      </div>
-      <div class="manager-orders__controls">
-        <div v-if="restaurants.items.length > 1" class="field">
-          <label for="manager-orders-restaurant">Restaurant</label>
-          <select
-            id="manager-orders-restaurant"
-            class="input"
-            :value="restaurantId ?? ''"
-            @change="selectRestaurant"
+  <div>
+    <PageHeader eyebrow="Manager" title="Orders">
+      <template #description>
+        <template v-if="status === 'ready'">
+          {{ activeCount }} active {{ activeCount === 1 ? 'order' : 'orders' }}<template v-if="catalog.restaurant.value">
+            at {{ catalog.restaurant.value.name }}</template
           >
-            <option v-for="r in restaurants.items" :key="r.id" :value="r.id">{{ r.name }}</option>
-          </select>
-        </div>
-        <button
-          v-if="status === 'ready'"
-          class="btn btn-secondary"
-          type="button"
-          :disabled="refreshing"
-          @click="refresh"
-        >
-          {{ refreshing ? 'Refreshing...' : 'Refresh' }}
-        </button>
-      </div>
-    </div>
+        </template>
+        <template v-else>Incoming orders, from received to completed.</template>
+      </template>
+      <template #actions>
+        <Field v-if="restaurants.items.length > 1" orientation="horizontal" class="w-auto gap-2">
+          <FieldLabel for="manager-orders-restaurant" class="sr-only">Restaurant</FieldLabel>
+          <NativeSelect
+            id="manager-orders-restaurant"
+            :model-value="restaurantId ?? ''"
+            class="min-w-48"
+            @update:model-value="selectRestaurant"
+          >
+            <NativeSelectOption v-for="r in restaurants.items" :key="r.id" :value="r.id">{{ r.name }}</NativeSelectOption>
+          </NativeSelect>
+        </Field>
+        <Button v-if="status === 'ready'" variant="outline" :disabled="refreshing" @click="refresh">
+          <Spinner v-if="refreshing" data-icon="inline-start" />
+          <RotateCwIcon v-else data-icon="inline-start" />
+          Refresh
+        </Button>
+      </template>
+    </PageHeader>
 
-    <p class="visually-hidden" aria-live="polite">{{ announcement }}</p>
+    <p class="sr-only" aria-live="polite">{{ announcement }}</p>
 
     <StateBlock
       :status="status"
       :error-message="errorMessage"
       empty-title="No restaurants yet"
       empty-body="Create a restaurant first: its orders will show up here."
+      :empty-icon="StoreIcon"
       empty-action-label="Go to my restaurants"
       @retry="load"
       @empty-action="router.push({ name: 'manager-restaurants' })"
     >
-      <p class="text-muted manager-orders__summary">
-        {{ activeCount }} active {{ activeCount === 1 ? 'order' : 'orders' }}
-        <template v-if="catalog.restaurant.value"> at {{ catalog.restaurant.value.name }}</template>
-      </p>
-
-      <div class="manager-orders__board">
+      <!-- Columns stack on phones, two per row on tablets, the full board on wide screens. -->
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <section
           v-for="column in columns"
           :key="column.status"
-          class="manager-orders__column"
+          class="flex flex-col gap-3 rounded-2xl bg-muted/60 p-3"
           :aria-labelledby="`column-${column.status}`"
         >
-          <h3 :id="`column-${column.status}`" class="manager-orders__column-title">
-            {{ STATUS_LABELS[column.status] }}
-            <span class="manager-orders__count">{{ column.orders.length }}</span>
-          </h3>
+          <h2 :id="`column-${column.status}`" class="flex items-center justify-between px-1 pt-1">
+            <OrderStatusBadge :status="column.status" />
+            <span class="text-sm font-semibold text-muted-foreground tabular-nums">
+              {{ column.orders.length }}<span class="sr-only"> orders</span>
+            </span>
+          </h2>
 
-          <p v-if="column.orders.length === 0" class="text-muted manager-orders__none">No orders</p>
+          <p v-if="column.orders.length === 0" class="rounded-xl border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
+            No orders
+          </p>
 
-          <ul class="manager-orders__cards">
-            <li v-for="order in column.orders" :key="order.orderId" class="manager-orders__card">
-              <div class="manager-orders__card-head">
-                <strong>{{ TYPE_LABELS[order.orderType] }}</strong>
-                <span class="manager-orders__id">#{{ shortId(order) }}</span>
-              </div>
-              <p class="manager-orders__time">
-                {{ order.orderType === 'DELIVERY' ? 'Deliver at' : 'Pickup at' }}
-                {{ formatEpoch(order.estimatedDeliveryTime ?? order.pickupTime) }}
-              </p>
-              <ul class="manager-orders__items">
-                <li v-for="line in order.items" :key="line.menuItemId">
-                  {{ line.quantity }}&times; {{ itemName(line.menuItemId) }}
-                </li>
-              </ul>
-              <p class="text-muted manager-orders__who">
-                <template v-if="order.orderType === 'DELIVERY'">
-                  {{ order.deliveryAddress }} &middot; bell: {{ order.bellName }} &middot; {{ order.customerPhone }}
-                </template>
-                <template v-else-if="order.orderType === 'TAKEAWAY'">{{ order.customerName }}</template>
-                <template v-else>Table {{ order.tableNumber }} &middot; {{ order.numberOfGuests }} guests</template>
-              </p>
-              <span class="tag" :class="order.payed ? 'tag-neutral' : 'tag-outline'">
-                {{ order.payed ? 'Paid' : 'Not paid' }}
-              </span>
-
-              <button
-                v-if="nextStatus(order)"
-                class="btn btn-primary manager-orders__advance"
-                type="button"
-                :disabled="advancing === order.orderId"
-                @click="advance(order)"
-              >
-                {{
-                  advancing === order.orderId
-                    ? 'Updating...'
-                    : `Mark as ${STATUS_LABELS[nextStatus(order)!].toLowerCase()}`
-                }}
-              </button>
-              <p v-if="cardErrors[order.orderId]" role="alert" class="manager-orders__error">
-                {{ cardErrors[order.orderId] }}
-              </p>
+          <ul class="flex flex-col gap-3">
+            <li v-for="order in column.orders" :key="order.orderId">
+              <Card size="sm" class="gap-3">
+                <CardHeader class="flex items-center justify-between gap-2">
+                  <span class="flex items-center gap-1.5 text-sm font-semibold">
+                    <BikeIcon v-if="order.orderType === 'DELIVERY'" class="size-4" aria-hidden="true" />
+                    <StoreIcon v-else class="size-4" aria-hidden="true" />
+                    {{ TYPE_LABELS[order.orderType] }}
+                  </span>
+                  <span class="text-xs text-muted-foreground tabular-nums">#{{ shortId(order) }}</span>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-2 text-sm">
+                  <p class="flex items-center gap-1.5 font-semibold">
+                    <ClockIcon class="size-4 text-muted-foreground" aria-hidden="true" />
+                    {{ formatEpoch(order.estimatedDeliveryTime ?? order.pickupTime) }}
+                  </p>
+                  <ul class="flex flex-col gap-0.5">
+                    <li v-for="line in order.items" :key="line.menuItemId" class="flex gap-2">
+                      <span class="font-semibold tabular-nums">{{ line.quantity }}&times;</span>
+                      <span class="min-w-0">{{ itemName(line.menuItemId) }}</span>
+                    </li>
+                  </ul>
+                  <p class="flex items-start gap-1.5 text-xs text-muted-foreground">
+                    <UserRoundIcon class="mt-px size-3.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      <template v-if="order.orderType === 'DELIVERY'">
+                        {{ order.deliveryAddress }} &middot; bell: {{ order.bellName }} &middot; {{ order.customerPhone }}
+                      </template>
+                      <template v-else-if="order.orderType === 'TAKEAWAY'">{{ order.customerName }}</template>
+                      <template v-else>Table {{ order.tableNumber }} &middot; {{ order.numberOfGuests }} guests</template>
+                    </span>
+                  </p>
+                  <div>
+                    <Badge v-if="order.payed" variant="outline" class="text-success">Paid</Badge>
+                    <Badge v-else variant="outline" class="text-warning">Not paid</Badge>
+                  </div>
+                  <p v-if="cardErrors[order.orderId]" role="alert" class="flex items-center gap-1.5 text-destructive">
+                    <CircleAlertIcon class="size-4 shrink-0" aria-hidden="true" />
+                    {{ cardErrors[order.orderId] }}
+                  </p>
+                </CardContent>
+                <CardFooter v-if="nextStatus(order)">
+                  <Button class="w-full" :disabled="advancing === order.orderId" @click="advance(order)">
+                    <Spinner v-if="advancing === order.orderId" data-icon="inline-start" />
+                    Mark as {{ STATUS_LABELS[nextStatus(order)!].toLowerCase() }}
+                    <ArrowRightIcon v-if="advancing !== order.orderId" data-icon="inline-end" />
+                  </Button>
+                </CardFooter>
+              </Card>
             </li>
           </ul>
         </section>
       </div>
 
-      <div class="manager-orders__completed">
-        <button
-          class="btn btn-ghost"
-          type="button"
+      <section class="mt-8">
+        <Button
+          variant="ghost"
+          class="-ml-2.5"
           :aria-expanded="showCompleted"
           aria-controls="manager-orders-completed"
           @click="showCompleted = !showCompleted"
         >
+          <ChevronDownIcon :class="['transition-transform', showCompleted ? 'rotate-180' : '']" data-icon="inline-start" />
           {{ showCompleted ? 'Hide' : 'Show' }} closed orders ({{ completed.length }})
-        </button>
-        <ul v-show="showCompleted" id="manager-orders-completed" class="manager-orders__done">
-          <li v-for="order in completed" :key="order.orderId">
-            <span class="manager-orders__id">#{{ shortId(order) }}</span>
-            {{ STATUS_LABELS[order.status] }} &middot; {{ TYPE_LABELS[order.orderType] }} &middot;
-            {{ formatEpoch(order.estimatedDeliveryTime ?? order.pickupTime) }} &middot;
-            {{ order.items.reduce((n, l) => n + l.quantity, 0) }} items
+        </Button>
+        <ul v-show="showCompleted" id="manager-orders-completed" class="mt-3 flex flex-col divide-y rounded-xl border bg-card">
+          <li v-for="order in completed" :key="order.orderId" class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm">
+            <OrderStatusBadge :status="order.status" />
+            <span class="text-muted-foreground tabular-nums">#{{ shortId(order) }}</span>
+            <span>{{ TYPE_LABELS[order.orderType] }}</span>
+            <span class="text-muted-foreground">{{ formatEpoch(order.estimatedDeliveryTime ?? order.pickupTime) }}</span>
+            <span class="ml-auto text-muted-foreground">{{ itemCount(order) }} items</span>
           </li>
-          <li v-if="completed.length === 0" class="text-muted">No completed or cancelled orders.</li>
+          <li v-if="completed.length === 0" class="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
+            <ClipboardListIcon class="size-4" aria-hidden="true" /> No completed or cancelled orders.
+          </li>
         </ul>
-      </div>
+      </section>
     </StateBlock>
   </div>
 </template>
-
-<style scoped lang="scss">
-.manager-orders {
-  &__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: space(3);
-    margin-bottom: space(4);
-  }
-
-  &__kicker {
-    color: $color-accent;
-  }
-
-  &__title {
-    margin: 0;
-  }
-
-  &__controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: space(3);
-  }
-
-  &__summary {
-    font-size: 13px;
-    margin: 0 0 space(4);
-  }
-
-  // Columns stack on phones (in lifecycle order), sit side by side from the wide breakpoint.
-  &__board {
-    display: grid;
-    gap: space(5);
-
-    @include respond-to(tablet) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    @include respond-to(wide) {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: space(4);
-    }
-  }
-
-  &__column-title {
-    @include eyebrow;
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin: 0 0 space(2);
-    padding-bottom: space(2);
-    border-bottom: 2px solid $color-divider;
-  }
-
-  &__count {
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__none {
-    font-size: 13px;
-  }
-
-  &__cards {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
-  }
-
-  &__card {
-    background: var(--color-surface);
-    padding: space(3);
-    font-size: 13px;
-  }
-
-  &__card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: space(1);
-  }
-
-  &__id {
-    font-variant-numeric: tabular-nums;
-    color: color-mix(in srgb, #{$color-text} 55%, transparent);
-  }
-
-  &__time {
-    margin: 0 0 space(2);
-    font-weight: 600;
-  }
-
-  &__items {
-    margin: 0 0 space(2);
-    padding-left: space(4);
-  }
-
-  &__who {
-    margin: 0 0 space(2);
-    font-size: 12px;
-  }
-
-  &__advance {
-    width: 100%;
-    justify-content: center;
-    margin-top: space(3);
-    min-height: $touch-target;
-  }
-
-  &__error {
-    color: var(--color-accent-700);
-    margin: space(2) 0 0;
-  }
-
-  &__completed {
-    margin-top: space(6);
-  }
-
-  &__done {
-    list-style: none;
-    padding: 0;
-    margin: space(2) 0 0;
-    font-size: 13px;
-
-    li {
-      padding: space(2) 0;
-      border-bottom: 1px solid $color-divider;
-    }
-  }
-}
-
-// Kept in the DOM for screen readers, removed from the visual layout.
-.visually-hidden {
-  @include visually-hidden;
-}
-</style>

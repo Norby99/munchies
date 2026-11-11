@@ -94,6 +94,7 @@ src/
                      (user, restaurant, order, ...) plus a shared client
   types/             TypeScript types for API payloads and view models
   assets/index.css   Tailwind entry point and theme tokens (see "Styling")
+scripts/shadcn-vue.sh  runs the shadcn-vue CLI in Docker (see "UI components")
 ```
 
 Rules:
@@ -175,10 +176,14 @@ Components come from shadcn-vue. The project skill `.claude/skills/shadcn-vue` (
 `npx skills add unovue/shadcn-vue`, pinned in the root `skills-lock.json`) covers the CLI, composition rules, forms,
 theming and the MCP server: follow it whenever adding or changing UI.
 
-- **Run the CLI from `frontend-service/`**, where `components.json` lives (not from the repository root):
-  `npx shadcn-vue@latest add <component>`, `npx shadcn-vue@latest info --json`, `npx shadcn-vue@latest docs <component>`.
-  Since the monorepo root has no `components.json`, the project context the skill injects when invoked from the
-  root is empty: run `info` from `frontend-service/` instead.
+- **Run the CLI through Docker, never on the host**: `scripts/shadcn-vue.sh <args>` (e.g.
+  `scripts/shadcn-vue.sh add button card`, `scripts/shadcn-vue.sh info --json`) runs `npx shadcn-vue@latest` in a
+  throwaway `node` container on a copy of `frontend-service/`, and copies back only the files the CLI created or
+  changed (`src/`, `package.json`, `package-lock.json`, `components.json`). The host `node_modules` is never
+  touched; the Docker build installs new dependencies with `npm ci`. The project context the skill tries to inject
+  with a host `npx` call is therefore empty: use the script's `info` instead.
+- **Dependencies are changed in a container too**, lockfile only, e.g.
+  `docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/app -w /app node:24.0.0-alpine npm install --package-lock-only <pkg>`.
 - **Use an existing component before writing a custom one**, and compose them (e.g. a form is `Field`/`FieldGroup`
   with inputs; an option set is a `ToggleGroup`; a dialog always has a `DialogTitle`). Use the built-in variants
   (`variant`, `size`) before adding custom classes.
@@ -205,9 +210,13 @@ Styling uses **Tailwind CSS only**, as required by shadcn-vue. SCSS and Bootstra
   If custom breakpoints are needed, define them once in the Tailwind theme.
 - Avoid `<style>` blocks in SFCs; when one is truly needed (e.g. a complex animation), keep it scoped and use the
   theme variables.
-- The existing SCSS under `src/styles/` (abstracts, mixins, per-component `<style lang="scss">`) predates this
-  decision: migrate it to Tailwind when touching the related components, and remove the `sass` dependency and the
-  Vite `scss.additionalData` setting once nothing uses them.
+- **Status colors** are theme tokens too (`success`, `warning`, `info`, besides `primary` and `destructive`), used
+  as text on a light tint of themselves (`bg-success/12 text-success`); `OrderStatusBadge` maps order states to
+  them. Every token pair is checked for WCAG AA contrast in both themes: keep it that way when retuning colors.
+- **Dark mode**: the theme follows the system setting or the user's choice in the account menu
+  (`composables/useTheme.ts`), applied as the `dark` class on `<html>`; an inline script in `index.html` applies it
+  before the first paint.
+- Icons come from `@lucide/vue` (the `iconLibrary` in `components.json`), imported with the `...Icon` suffix.
 
 ## Course requirements
 

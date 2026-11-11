@@ -12,15 +12,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        // Makes the SCSS abstracts (breakpoints, spacing, mixins) available in every component
-        // without an explicit @use; they emit no CSS, so injecting them everywhere is free.
-        additionalData: `@use "@/styles/abstracts" as *;\n`,
-      },
-    },
-  },
   server: {
     port: 5173,
     proxy: {

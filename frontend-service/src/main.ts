@@ -4,10 +4,8 @@ import { createApp } from 'vue'
 import App from '@/App.vue'
 import { router } from '@/router'
 
-// Tailwind and the shadcn-vue theme first. The legacy styles.css is unlayered, so it still wins
-// over Tailwind's layered base styles while it is being migrated (see CLAUDE.md, Styling).
+// Tailwind CSS and the shadcn-vue theme: the only global stylesheet (see CLAUDE.md, Styling).
 import '@/assets/index.css'
-import '@/assets/styles.css'
 
 const app = createApp(App)
 

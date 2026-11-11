@@ -1,12 +1,14 @@
 <script setup lang="ts">
-// Builder's right column: the selected item's editable form. PUT replaces
-// the whole item, so Save always submits every field, including untouched
-// variations — there is no partial-update endpoint.
+// Menu builder's dish editor. PUT replaces the whole item, so Save always submits every field,
+// including untouched variations: there is no partial-update endpoint.
 
 import { reactive, ref, watch } from 'vue'
+import { TrashIcon } from '@lucide/vue'
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import MenuItemFieldsForm from '@/components/MenuItemFieldsForm.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import type { MenuItemInput } from '@/api/menus'
 import type { MenuItem } from '@/types'
 
@@ -45,40 +47,30 @@ function confirmDelete(): void {
 </script>
 
 <template>
-  <div>
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px">
-      <h6 style="margin: 0">Item</h6>
-      <button
-        class="btn btn-ghost"
-        type="button"
-        style="flex: none; white-space: nowrap; margin-left: auto"
-        @click="deleteOpen = true"
-      >
-        Delete item
-      </button>
+  <form class="flex flex-col gap-5" @submit.prevent="onSave">
+    <div class="flex items-center gap-2">
+      <h3 class="min-w-0 flex-1 truncate text-base font-bold">Edit dish</h3>
+      <Button type="button" variant="ghost" size="icon" :aria-label="`Delete ${props.item.name}`" @click="deleteOpen = true">
+        <TrashIcon />
+      </Button>
     </div>
 
     <MenuItemFieldsForm id-prefix="item" v-model="draft" />
 
-    <p v-if="saveError" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 12px 0 0">
-      {{ saveError }}
-    </p>
+    <Alert v-if="saveError" variant="destructive" role="alert">
+      <AlertDescription>{{ saveError }}</AlertDescription>
+    </Alert>
 
-    <div class="hr" style="margin: 16px 0"></div>
-    <button class="btn btn-primary btn-block" type="button" @click="onSave">Save item</button>
-    <p class="text-muted" style="font-size: 11px; margin-top: 10px">
-      PUT replaces the whole item, so the form always submits every field — including untouched
-      variations.
-    </p>
+    <Button type="submit" class="w-full">Save dish</Button>
 
     <ConfirmDialog
       :open="deleteOpen"
-      title="Delete this item?"
-      :body="`${props.item.name} will be removed permanently.`"
+      title="Delete this dish?"
+      :body="`${props.item.name} will be removed from the menu permanently.`"
       confirm-label="Delete permanently"
-      cancel-label="Keep item"
+      cancel-label="Keep dish"
       @cancel="deleteOpen = false"
       @confirm="confirmDelete"
     />
-  </div>
+  </form>
 </template>
