@@ -1,14 +1,25 @@
 <script setup lang="ts">
-// Customer checkout: review the cart, pick how to receive the order, fill the per-type details,
-// then POST /orders/place. Only DELIVERY and TAKEAWAY are offered: DINE_IN needs a table, and
-// table assignment belongs to table-reservation-service, which is not implemented yet.
+// Customer checkout: pick how to receive the order, fill the per-type details, review the bag, then
+// POST /orders/place. Only DELIVERY and TAKEAWAY are offered: DINE_IN needs a table, and table
+// assignment belongs to table-reservation-service, which is not implemented yet.
 //
-// On success the cart is emptied and the user lands on the order detail page.
+// On success the cart is emptied and the user lands on the order page, where they can pay.
 
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ArrowLeftIcon, BikeIcon, CircleAlertIcon, ShoppingBagIcon, StoreIcon } from '@lucide/vue'
 
+import ChoiceCard from '@/components/ChoiceCard.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { RadioGroup } from '@/components/ui/radio-group'
+import { Separator } from '@/components/ui/separator'
+import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
 import { useOnline } from '@/composables/useOnline'
@@ -91,7 +102,7 @@ function validate(): boolean {
 async function submit(): Promise<void> {
   formError.value = null
   if (!validate()) {
-    formError.value = 'Some fields need attention.'
+    formError.value = 'Some fields need your attention.'
     return
   }
 
@@ -134,293 +145,148 @@ function backToMenu(): void {
 </script>
 
 <template>
-  <div class="checkout">
-    <h6 class="checkout__kicker">Checkout</h6>
-    <h2 class="checkout__title">{{ catalog.restaurant.value?.name ?? 'Your order' }}</h2>
+  <div class="mx-auto max-w-5xl">
+    <Button variant="ghost" class="mb-4 -ml-2.5" @click="backToMenu">
+      <ArrowLeftIcon data-icon="inline-start" /> Back to the menu
+    </Button>
+    <PageHeader eyebrow="Checkout" :title="catalog.restaurant.value?.name ?? 'Your order'" />
 
     <StateBlock
       :status="status"
-      empty-title="Your cart is empty"
+      empty-title="Your bag is empty"
       empty-body="Add something from this restaurant's menu before checking out."
+      :empty-icon="ShoppingBagIcon"
       empty-action-label="Back to the menu"
       @retry="load"
       @empty-action="backToMenu"
     >
-      <div class="checkout__grid">
-        <form class="checkout__form" novalidate @submit.prevent="submit">
-          <fieldset class="checkout__fieldset">
-            <legend class="checkout__legend">How do you want it?</legend>
-            <div class="seg">
-              <label class="seg-opt">
-                <input v-model="form.orderType" type="radio" name="order-type" value="DELIVERY" />
-                <span>Delivery</span>
-              </label>
-              <label class="seg-opt">
-                <input v-model="form.orderType" type="radio" name="order-type" value="TAKEAWAY" />
-                <span>Takeaway</span>
-              </label>
-            </div>
-            <p class="text-muted checkout__hint">
-              Dine-in will be available together with table reservations.
-            </p>
-          </fieldset>
+      <form class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]" novalidate @submit.prevent="submit">
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg">How do you want it?</CardTitle>
+            <CardDescription>Dine-in will be available together with table reservations.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <FieldSet>
+                <FieldLegend class="sr-only">Order type</FieldLegend>
+                <RadioGroup v-model="form.orderType" class="grid gap-3 sm:grid-cols-2">
+                  <ChoiceCard id="checkout-delivery" value="DELIVERY" title="Delivery" description="We bring it to your door" :icon="BikeIcon" />
+                  <ChoiceCard id="checkout-takeaway" value="TAKEAWAY" title="Takeaway" description="Pick it up yourself" :icon="StoreIcon" />
+                </RadioGroup>
+              </FieldSet>
 
-          <div class="field checkout__field">
-            <label for="checkout-time">{{ timeLabel }}</label>
-            <input
-              id="checkout-time"
-              v-model="form.time"
-              class="input"
-              type="datetime-local"
-              :min="toDateTimeLocal(new Date())"
-              required
-              :aria-invalid="!!fieldErrors.time"
-              :aria-describedby="fieldErrors.time ? 'checkout-time-error' : undefined"
-            />
-            <p v-if="fieldErrors.time" id="checkout-time-error" class="checkout__field-error">
-              {{ fieldErrors.time }}
-            </p>
-          </div>
+              <Field :data-invalid="!!fieldErrors.time || undefined">
+                <FieldLabel for="checkout-time">{{ timeLabel }}</FieldLabel>
+                <Input
+                  id="checkout-time"
+                  v-model="form.time"
+                  class="h-10 sm:max-w-64"
+                  type="datetime-local"
+                  :min="toDateTimeLocal(new Date())"
+                  required
+                  :aria-invalid="!!fieldErrors.time || undefined"
+                />
+                <FieldError v-if="fieldErrors.time">{{ fieldErrors.time }}</FieldError>
+              </Field>
 
-          <template v-if="form.orderType === 'DELIVERY'">
-            <div class="field checkout__field">
-              <label for="checkout-address">Delivery address</label>
-              <input
-                id="checkout-address"
-                v-model="form.deliveryAddress"
-                class="input"
-                type="text"
-                autocomplete="street-address"
-                required
-                :aria-invalid="!!fieldErrors.deliveryAddress"
-                :aria-describedby="fieldErrors.deliveryAddress ? 'checkout-address-error' : undefined"
-              />
-              <p v-if="fieldErrors.deliveryAddress" id="checkout-address-error" class="checkout__field-error">
-                {{ fieldErrors.deliveryAddress }}
-              </p>
-            </div>
+              <template v-if="form.orderType === 'DELIVERY'">
+                <Field :data-invalid="!!fieldErrors.deliveryAddress || undefined">
+                  <FieldLabel for="checkout-address">Delivery address</FieldLabel>
+                  <Input
+                    id="checkout-address"
+                    v-model="form.deliveryAddress"
+                    class="h-10"
+                    type="text"
+                    autocomplete="street-address"
+                    placeholder="Via Roma 1, Cesena"
+                    required
+                    :aria-invalid="!!fieldErrors.deliveryAddress || undefined"
+                  />
+                  <FieldError v-if="fieldErrors.deliveryAddress">{{ fieldErrors.deliveryAddress }}</FieldError>
+                </Field>
+                <div class="grid gap-6 sm:grid-cols-2">
+                  <Field :data-invalid="!!fieldErrors.bellName || undefined">
+                    <FieldLabel for="checkout-bell">Name on the doorbell</FieldLabel>
+                    <Input
+                      id="checkout-bell"
+                      v-model="form.bellName"
+                      class="h-10"
+                      type="text"
+                      autocomplete="family-name"
+                      required
+                      :aria-invalid="!!fieldErrors.bellName || undefined"
+                    />
+                    <FieldError v-if="fieldErrors.bellName">{{ fieldErrors.bellName }}</FieldError>
+                  </Field>
+                  <Field :data-invalid="!!fieldErrors.customerPhone || undefined">
+                    <FieldLabel for="checkout-phone">Phone</FieldLabel>
+                    <Input
+                      id="checkout-phone"
+                      v-model="form.customerPhone"
+                      class="h-10"
+                      type="tel"
+                      autocomplete="tel"
+                      inputmode="tel"
+                      placeholder="+39 333 1234567"
+                      required
+                      :aria-invalid="!!fieldErrors.customerPhone || undefined"
+                    />
+                    <FieldError v-if="fieldErrors.customerPhone">{{ fieldErrors.customerPhone }}</FieldError>
+                  </Field>
+                </div>
+              </template>
 
-            <div class="checkout__row">
-              <div class="field checkout__field">
-                <label for="checkout-bell">Name on the doorbell</label>
-                <input
-                  id="checkout-bell"
-                  v-model="form.bellName"
-                  class="input"
+              <Field v-else :data-invalid="!!fieldErrors.customerName || undefined">
+                <FieldLabel for="checkout-name">Name for pickup</FieldLabel>
+                <Input
+                  id="checkout-name"
+                  v-model="form.customerName"
+                  class="h-10"
                   type="text"
-                  autocomplete="family-name"
+                  autocomplete="name"
                   required
-                  :aria-invalid="!!fieldErrors.bellName"
-                  :aria-describedby="fieldErrors.bellName ? 'checkout-bell-error' : undefined"
+                  :aria-invalid="!!fieldErrors.customerName || undefined"
                 />
-                <p v-if="fieldErrors.bellName" id="checkout-bell-error" class="checkout__field-error">
-                  {{ fieldErrors.bellName }}
-                </p>
-              </div>
+                <FieldError v-if="fieldErrors.customerName">{{ fieldErrors.customerName }}</FieldError>
+              </Field>
+            </FieldGroup>
+          </CardContent>
+        </Card>
 
-              <div class="field checkout__field">
-                <label for="checkout-phone">Phone</label>
-                <input
-                  id="checkout-phone"
-                  v-model="form.customerPhone"
-                  class="input"
-                  type="tel"
-                  autocomplete="tel"
-                  inputmode="tel"
-                  required
-                  :aria-invalid="!!fieldErrors.customerPhone"
-                  :aria-describedby="fieldErrors.customerPhone ? 'checkout-phone-error' : undefined"
-                />
-                <p v-if="fieldErrors.customerPhone" id="checkout-phone-error" class="checkout__field-error">
-                  {{ fieldErrors.customerPhone }}
-                </p>
-              </div>
+        <Card class="lg:sticky lg:top-24">
+          <CardHeader>
+            <CardTitle class="text-lg">Order summary</CardTitle>
+          </CardHeader>
+          <CardContent class="flex flex-col gap-4">
+            <ul class="flex flex-col gap-3">
+              <li v-for="line in lines" :key="line.itemId" class="flex gap-3 text-sm">
+                <span class="font-semibold tabular-nums">{{ line.quantity }}&times;</span>
+                <span class="min-w-0 flex-1">{{ line.item.name }}</span>
+                <span class="tabular-nums">{{ line.totalLabel }}</span>
+              </li>
+            </ul>
+            <Separator />
+            <div class="flex items-baseline justify-between">
+              <span class="font-semibold">Total</span>
+              <strong class="text-2xl tabular-nums">{{ totalLabel }}</strong>
             </div>
-          </template>
-
-          <div v-else class="field checkout__field">
-            <label for="checkout-name">Name for pickup</label>
-            <input
-              id="checkout-name"
-              v-model="form.customerName"
-              class="input"
-              type="text"
-              autocomplete="name"
-              required
-              :aria-invalid="!!fieldErrors.customerName"
-              :aria-describedby="fieldErrors.customerName ? 'checkout-name-error' : undefined"
-            />
-            <p v-if="fieldErrors.customerName" id="checkout-name-error" class="checkout__field-error">
-              {{ fieldErrors.customerName }}
+            <Alert v-if="formError" variant="destructive" role="alert">
+              <CircleAlertIcon />
+              <AlertDescription>{{ formError }}</AlertDescription>
+            </Alert>
+          </CardContent>
+          <CardFooter class="flex-col items-stretch gap-2">
+            <Button type="submit" size="lg" class="h-11 w-full" :disabled="submitting || !isOnline">
+              <Spinner v-if="submitting" data-icon="inline-start" />
+              Place order
+            </Button>
+            <p class="text-center text-xs text-muted-foreground" role="status">
+              {{ isOnline ? 'You will pay on the next page.' : 'You are offline: you can order once you are back online.' }}
             </p>
-          </div>
-
-          <p v-if="formError" role="alert" class="checkout__form-error">{{ formError }}</p>
-
-          <div class="checkout__actions">
-            <button class="btn btn-secondary" type="button" @click="backToMenu">Back to the menu</button>
-            <button class="btn btn-primary checkout__submit" type="submit" :disabled="submitting || !isOnline">
-              {{ submitting ? 'Placing order...' : 'Place order' }}
-            </button>
-          </div>
-          <p v-if="!isOnline" class="text-muted checkout__hint" role="status">
-            You are offline: the order can be placed once the connection is back.
-          </p>
-        </form>
-
-        <aside class="checkout__summary" aria-labelledby="checkout-summary-title">
-          <h3 id="checkout-summary-title" class="checkout__summary-title">Summary</h3>
-          <ul class="checkout__lines">
-            <li v-for="line in lines" :key="line.itemId" class="checkout__line">
-              <span class="checkout__qty">{{ line.quantity }}&times;</span>
-              <span class="checkout__name">{{ line.item.name }}</span>
-              <span class="checkout__price">{{ line.totalLabel }}</span>
-            </li>
-          </ul>
-          <div class="checkout__total">
-            <span>Total</span>
-            <strong>{{ totalLabel }}</strong>
-          </div>
-          <p class="text-muted checkout__hint">
-            Payment happens after the order is placed, from the order page.
-          </p>
-        </aside>
-      </div>
+          </CardFooter>
+        </Card>
+      </form>
     </StateBlock>
   </div>
 </template>
-
-<style scoped lang="scss">
-.checkout {
-  max-width: 1080px;
-
-  &__kicker {
-    color: $color-accent;
-  }
-
-  &__title {
-    margin: 0 0 space(5);
-  }
-
-  // Mobile first: summary above nothing, stacked below the form; side by side on wide screens.
-  &__grid {
-    display: grid;
-    gap: space(6);
-
-    @include respond-to(wide) {
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-      align-items: start;
-    }
-  }
-
-  &__fieldset {
-    border: 0;
-    margin: 0 0 space(5);
-    padding: 0;
-  }
-
-  &__legend {
-    @include eyebrow;
-    padding: 0;
-    margin-bottom: space(2);
-  }
-
-  &__field {
-    margin-bottom: space(4);
-  }
-
-  &__row {
-    display: grid;
-    gap: 0 space(4);
-
-    @include respond-to(tablet) {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  &__hint {
-    font-size: 12px;
-    margin: space(2) 0 0;
-  }
-
-  &__field-error,
-  &__form-error {
-    font-size: 13px;
-    color: var(--color-accent-700);
-    margin: space(1) 0 0;
-  }
-
-  &__form-error {
-    margin: 0 0 space(3);
-  }
-
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: space(3);
-    justify-content: flex-end;
-  }
-
-  &__submit {
-    min-height: $touch-target;
-  }
-
-  &__summary {
-    border-top: 2px solid $color-divider;
-    padding-top: space(4);
-
-    @include respond-to(wide) {
-      border-top: 0;
-      border-left: 2px solid $color-divider;
-      padding: 0 0 0 space(5);
-      position: sticky;
-      top: space(5);
-    }
-  }
-
-  &__summary-title {
-    @include eyebrow;
-    font-size: 13px;
-    margin: 0 0 space(3);
-  }
-
-  &__lines {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  &__line {
-    display: flex;
-    gap: space(2);
-    padding: space(2) 0;
-    border-bottom: 1px solid $color-divider;
-    font-size: 14px;
-  }
-
-  &__qty,
-  &__price {
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__name {
-    flex: 1;
-  }
-
-  &__total {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: space(4);
-
-    span {
-      @include eyebrow;
-    }
-
-    strong {
-      font-size: 22px;
-      font-variant-numeric: tabular-nums;
-    }
-  }
-}
-</style>

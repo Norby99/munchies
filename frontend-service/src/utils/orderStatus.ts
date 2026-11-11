@@ -43,3 +43,15 @@ export function expectedTime(order: Order): number {
   const ms = raw ? Number(raw) : Number.NaN
   return Number.isNaN(ms) ? Number.MAX_SAFE_INTEGER : ms
 }
+
+// Visual tone of each status, mapped to the theme's status colors by OrderStatusBadge.
+export type StatusTone = 'warning' | 'info' | 'primary' | 'success' | 'muted'
+
+export const STATUS_TONES: Record<OrderStatus, StatusTone> = {
+  PENDING: 'warning',
+  PREPARING: 'info',
+  READY: 'primary',
+  ON_THE_WAY: 'info',
+  COMPLETED: 'success',
+  CANCELLED: 'muted',
+}

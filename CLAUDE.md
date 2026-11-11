@@ -38,7 +38,6 @@ microservices architecture.
 - **Microservices Patterns**:
     - API Gateway
     - SAGA Pattern (for distributed transactions)
-    - Circuit Breaker Pattern (for resiliency)
     - Observability Pattern
 
 ## Microservices Structure

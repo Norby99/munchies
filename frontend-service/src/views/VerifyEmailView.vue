@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { CircleAlertIcon, MailCheckIcon } from '@lucide/vue'
 
 import AuthLayout from '@/components/AuthLayout.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import { homeFor } from '@/router'
 import { useSessionStore } from '@/stores/session'
@@ -22,10 +28,10 @@ async function onSubmit(): Promise<void> {
   error.value = null
   submitting.value = true
   try {
-    await session.verify(otk.value)
+    await session.verify(otk.value.trim())
     router.push(homeFor(session.role))
   } catch (err) {
-    error.value = err instanceof ApiError ? err.message : 'Something went wrong.'
+    error.value = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
   } finally {
     submitting.value = false
   }
@@ -33,61 +39,48 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <AuthLayout kicker="Step 2 of 2" heading="Verify email">
-    <p class="text-muted" style="font-size: 14px">
-      We sent a one-time key to
-      <strong style="color: var(--color-text)">{{ session.user?.email }}</strong>. Registration
-      already signed you in, so this can be skipped and resumed later.
-    </p>
-    <div class="hr"></div>
+  <AuthLayout heading="Check your inbox">
+    <div class="mb-6 flex items-start gap-3 rounded-lg bg-muted p-3 text-sm">
+      <MailCheckIcon class="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+      <p>
+        We sent a verification key to
+        <strong class="font-semibold break-all">{{ session.user?.email }}</strong>. You are already signed in,
+        so you can also verify later.
+      </p>
+    </div>
 
     <form @submit.prevent="onSubmit">
-      <div class="field" style="margin-bottom: 16px">
-        <label for="otk">One-time key</label>
-        <input
-          id="otk"
-          class="verify-view__otk-input input"
-          type="text"
-          autocomplete="one-time-code"
-          autocapitalize="off"
-          spellcheck="false"
-          aria-describedby="otk-hint"
-          v-model.trim="otk"
-        />
-        <p id="otk-hint" class="text-muted" style="font-size: 12px; margin: 6px 0 0">
-          Paste the key from the email: it is a long code of letters and digits.
-        </p>
-      </div>
+      <FieldGroup>
+        <Field>
+          <FieldLabel for="otk">Verification key</FieldLabel>
+          <!-- The key is a 64-character hex hash (user-service), meant to be pasted, not typed. -->
+          <Input
+            id="otk"
+            v-model="otk"
+            class="h-10 font-mono text-sm"
+            type="text"
+            autocomplete="one-time-code"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="otk-hint"
+            required
+          />
+          <FieldDescription id="otk-hint">Paste the key from the email: a long code of letters and digits.</FieldDescription>
+        </Field>
 
-      <p v-if="error" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 0 0 12px">
-        {{ error }}
-      </p>
+        <Alert v-if="error" variant="destructive" role="alert">
+          <CircleAlertIcon />
+          <AlertDescription>{{ error }}</AlertDescription>
+        </Alert>
 
-      <button class="btn btn-primary btn-block" type="submit" :disabled="submitting">Verify</button>
+        <div class="flex flex-col gap-2">
+          <Button type="submit" size="lg" class="h-10 w-full" :disabled="submitting">
+            <Spinner v-if="submitting" data-icon="inline-start" />
+            Verify email
+          </Button>
+          <Button type="button" variant="ghost" size="lg" class="h-10 w-full" @click="skip">Skip for now</Button>
+        </div>
+      </FieldGroup>
     </form>
-
-    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; font-size: 13px">
-      <a href="#" @click.prevent="skip">Skip for now</a>
-      <span style="opacity: 0.35">·</span>
-      <span
-        class="tag tag-outline"
-        style="flex: none; white-space: nowrap"
-        title="No resend-OTK endpoint is routed through the gateway"
-      >
-        Resend key — needs backend
-      </span>
-    </div>
-    <p class="text-muted" style="font-size: 12px; margin-top: 16px">
-      Verification status is never returned by the API, so no screen can show a "verified" badge.
-    </p>
   </AuthLayout>
 </template>
-
-<style scoped>
-.verify-view__otk-input {
-  /* The key is a 64-character hex hash (user-service), meant to be pasted, not typed. */
-  font-family: ui-monospace, monospace;
-  font-size: 13px;
-  min-height: 44px;
-}
-</style>

@@ -1,91 +1,57 @@
 <script setup lang="ts">
-// Generic confirm dialog, reused for every destructive confirmation (delete
-// restaurant, delete menu/category/item, delete account). Traps focus inside
-// itself while open, restores it to the trigger on close, and closes on Escape.
+// Generic confirmation, reused for every destructive action (delete restaurant, menu, category,
+// item, account; cancel order). Built on the shadcn-vue AlertDialog (Reka UI), which traps focus,
+// restores it to the trigger on close and closes on Escape.
 
-import { nextTick, ref, watch } from 'vue'
+import { TriangleAlertIcon } from '@lucide/vue'
 
-const props = withDefaults(
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+
+withDefaults(
   defineProps<{
     open: boolean
     title: string
     body: string
     confirmLabel?: string
     cancelLabel?: string
+    pending?: boolean
   }>(),
-  { confirmLabel: 'Confirm', cancelLabel: 'Cancel' },
+  { confirmLabel: 'Confirm', cancelLabel: 'Cancel', pending: false },
 )
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
-const dialogRef = ref<HTMLElement | null>(null)
-let previouslyFocused: HTMLElement | null = null
-
-function focusableElements(): HTMLElement[] {
-  if (!dialogRef.value) return []
-  return Array.from(
-    dialogRef.value.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    ),
-  )
+function onOpenChange(open: boolean): void {
+  if (!open) emit('cancel')
 }
-
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') {
-    emit('cancel')
-    return
-  }
-  if (event.key !== 'Tab') return
-
-  const focusable = focusableElements()
-  if (focusable.length === 0) return
-
-  const first = focusable[0]
-  const last = focusable[focusable.length - 1]
-
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault()
-    first.focus()
-  }
-}
-
-watch(
-  () => props.open,
-  async (open) => {
-    if (open) {
-      previouslyFocused = document.activeElement as HTMLElement | null
-      await nextTick()
-      focusableElements()[0]?.focus()
-    } else {
-      previouslyFocused?.focus()
-      previouslyFocused = null
-    }
-  },
-)
 </script>
 
 <template>
-  <div v-if="open" class="dialog-backdrop" role="presentation" @keydown="onKeydown">
-    <div
-      ref="dialogRef"
-      class="dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-dialog-title"
-    >
-      <h3 id="confirm-dialog-title" class="dialog-title">{{ title }}</h3>
-      <p class="dialog-body" style="margin: 0">{{ body }}</p>
-      <div class="dialog-actions">
-        <button class="btn btn-secondary" type="button" style="min-height: 44px" @click="emit('cancel')">
-          {{ cancelLabel }}
-        </button>
-        <button class="btn btn-primary" type="button" style="min-height: 44px" @click="emit('confirm')">
-          {{ confirmLabel }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <AlertDialog :open="open" @update:open="onOpenChange">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogMedia class="bg-destructive/10 text-destructive">
+          <TriangleAlertIcon />
+        </AlertDialogMedia>
+        <AlertDialogTitle>{{ title }}</AlertDialogTitle>
+        <AlertDialogDescription>{{ body }}</AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>{{ cancelLabel }}</AlertDialogCancel>
+        <!-- A plain button, not AlertDialogAction: the dialog closes only once the parent has
+             handled the confirmation (and possibly shown an error in the body). -->
+        <Button variant="destructive" :disabled="pending" @click="emit('confirm')">{{ confirmLabel }}</Button>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>

@@ -1,4 +1,0 @@
-// Single entry point for the SCSS abstracts (no CSS output, only variables, functions and
-// mixins). Injected into every SFC <style lang="scss"> block by vite.config.ts.
-@forward 'variables';
-@forward 'mixins';
