@@ -104,13 +104,25 @@ nav:
       - Self evaluation:
           - ds/09-self-evaluation/self-evaluation.md
   - SAAP:
-      - Overview: saap/index.md
-      - Implementation:
-          - Microservices Patterns: saap/02-Implementation/microservices-patterns.md
-          - Hexagonal Architecture: saap/02-Implementation/hexagonal-architecture.md
+      - Introduction: saap/index.md
+      - Domain Driven Design:
+          - Requirements:
+              - Business: "saap/01-Domain Driven Design/business-requirements.md"
+              - Functional: "saap/01-Domain Driven Design/functional-requirements.md"
+              - Non-functional: "saap/01-Domain Driven Design/non-functional-requirements.md"
+          - User Stories: "saap/01-Domain Driven Design/User Stories.md"
+          - Glossary: "saap/01-Domain Driven Design/glossary.md"
+          - Domain Model: "saap/01-Domain Driven Design/domain-model.md"
+      - Architecture and Implementation:
+          - Hexagonal Architecture: "saap/03-Architecture and Implementation/hexagonal-architecture.md"
+          - Microservices Patterns: "saap/03-Architecture and Implementation/microservices-patterns.md"
           - Testing: saap/02-Implementation/testing.md
       - Deployment:
           - Docker Compose: saap/03-Deployment/docker-compose.md
+          - Kubernetes: saap/03-Deployment/kubernetes.md
+          - Scaling Benchmark: saap/03-Deployment/scaling-benchmark.md
+      - Agent-Based Architecture:
+          - Capacity Agent: "saap/04-Agent-Based Architecture/capacity-agent.md"
   - ASMD:
       - Overview: asmd/index.md
   - Other Munchies Docs:

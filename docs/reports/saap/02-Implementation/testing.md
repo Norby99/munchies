@@ -6,7 +6,7 @@ isolation, integration tests check the adapters against the real technology, com
 a black box, and end-to-end tests check the services working together.
 
 The examples below come mainly from `user-service`, the same reference service used in
-[Hexagonal Architecture](hexagonal-architecture.md); `payment-service` shows the same levels on the Express.js stack.
+[Hexagonal Architecture](../03-Architecture%20and%20Implementation/hexagonal-architecture.md); `payment-service` shows the same levels on the Express.js stack.
 
 | Level            | What is tested                        | Tools                                 | Location                                |
 |------------------|---------------------------------------|---------------------------------------|-----------------------------------------|
@@ -213,7 +213,7 @@ The dependency rule of the hexagonal architecture is checked automatically by th
 `architecture-rules` module: the domain must depend only on `commons`, the application on the domain, and use cases
 must reside in `application.usecase`. They run as unit tests in the services that extend `ArchitectureKonsistTest`
 (`user-service` and `restaurant-service`). Details are given in
-[Hexagonal Architecture](hexagonal-architecture.md#verification).
+[Hexagonal Architecture](../03-Architecture%20and%20Implementation/hexagonal-architecture.md#verification).
 
 ### Load tests
 

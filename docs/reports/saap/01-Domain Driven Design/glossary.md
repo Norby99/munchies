@@ -151,7 +151,7 @@ language every team member uses for the same concept.
 |-------------------|-------------------------------------------------------------|
 | Table Reservation | A customer's booking of a restaurant table for a given time |
 
-*Present in the codebase but incomplete; see [Microservices](../02-implementation/microservices.md).*
+*Present in the codebase but incomplete; see [Microservices](../../spe/02-implementation/microservices.md) in the SPE report.*
 
 See [Domain Model](domain-model.md) for how these concepts are actually implemented as entities, value objects and
 aggregates, and how the bounded contexts above integrate with each other.
