@@ -11,7 +11,6 @@
 import { createRouter, createWebHistory, type RouteLocationRaw } from 'vue-router'
 
 import { useSessionStore } from '@/stores/session'
-import { useCartStore } from '@/stores/cart'
 import type { Role } from '@/types'
 
 declare module 'vue-router' {
@@ -112,12 +111,11 @@ export const router = createRouter({
   routes,
 })
 
+// Where a user lands after login and when clicking the Munchies logo: managers on their
+// restaurants, customers always on the restaurant list (never on the last restaurant visited, which
+// would feel like "their" restaurant; the bag's restaurant is marked in the list).
 export function homeFor(role: Role | null): RouteLocationRaw {
-  if (role === 'MANAGER') return { name: 'manager-restaurants' }
-
-  const cart = useCartStore()
-  if (cart.restaurantId) return { name: 'restaurant-detail', params: { restaurantId: cart.restaurantId } }
-  return { name: 'explore' }
+  return role === 'MANAGER' ? { name: 'manager-restaurants' } : { name: 'explore' }
 }
 
 let hydrationAttempted = false

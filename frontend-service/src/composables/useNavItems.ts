@@ -3,9 +3,8 @@
 
 import { computed, type Component } from 'vue'
 import { useRoute, type RouteLocationRaw } from 'vue-router'
-import { ClipboardListIcon, ReceiptTextIcon, SearchIcon, SquareMenuIcon, StoreIcon, UserRoundIcon, UtensilsIcon } from '@lucide/vue'
+import { ClipboardListIcon, ReceiptTextIcon, SearchIcon, SquareMenuIcon, StoreIcon, UserRoundIcon } from '@lucide/vue'
 
-import { useCartStore } from '@/stores/cart'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { useSessionStore } from '@/stores/session'
 
@@ -21,7 +20,6 @@ export interface NavItem {
 export function useNavItems() {
   const session = useSessionStore()
   const restaurants = useRestaurantsStore()
-  const cart = useCartStore()
   const route = useRoute()
 
   return computed<NavItem[]>(() => {
@@ -56,27 +54,16 @@ export function useNavItems() {
       ]
     }
 
-    const restaurantId = (route.params.restaurantId as string | undefined) ?? cart.restaurantId ?? undefined
-    const restaurantName = restaurantId
-      ? restaurants.items.find((r) => r.id === restaurantId)?.name
-      : undefined
-
-    // The restaurant being browsed (or the one the bag belongs to) gets its own entry next to the
-    // search, so the customer can jump back to it.
-    const current: NavItem[] = restaurantId
-      ? [
-          {
-            label: restaurantName ?? 'Restaurant',
-            icon: UtensilsIcon,
-            to: { name: 'restaurant-detail', params: { restaurantId } },
-            matches: ['restaurant-detail', 'checkout'],
-          },
-        ]
-      : []
-
+    // No entry for a single restaurant: a customer owns none, and an item named after one would read
+    // as "my restaurant". Browsing a restaurant and its checkout live under "Restaurants"; the way
+    // back to the bag's restaurant is the "Your bag" badge in the search results.
     return [
-      { label: 'Restaurants', icon: SearchIcon, to: { name: 'explore' }, matches: ['explore'] },
-      ...current,
+      {
+        label: 'Restaurants',
+        icon: SearchIcon,
+        to: { name: 'explore' },
+        matches: ['explore', 'restaurant-detail', 'checkout'],
+      },
       { label: 'My orders', icon: ReceiptTextIcon, to: { name: 'my-orders' }, matches: ['my-orders', 'order-detail'] },
       { label: 'Account', icon: UserRoundIcon, to: { name: 'account' }, matches: ['account'] },
     ]
