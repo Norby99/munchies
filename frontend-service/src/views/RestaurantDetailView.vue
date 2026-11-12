@@ -25,6 +25,7 @@ import { useCartStore } from '@/stores/cart'
 import { useMenusStore } from '@/stores/menus'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { openingStatus, type OpeningStatus } from '@/utils/openingHours'
+import { SCHEDULER_DEFAULT_POLICY } from '@/utils/schedulerDefaults'
 import { describe, isValid } from '@/utils/validity'
 import type { LoadStatus, Menu, Restaurant } from '@/types'
 
@@ -41,7 +42,8 @@ const restaurant = ref<Restaurant | null>(null)
 const status = ref<LoadStatus>('loading')
 const loadedMenus = ref<Menu[]>([])
 const bagOpen = ref(false)
-// Opening hours from the capacity policy; null while unknown or not set by the restaurant.
+// Opening hours from the capacity policy, or the scheduler's default (marked indicative) while the
+// restaurant has not set its own; null only while loading or if the hours could not be read.
 const hours = ref<OpeningStatus | null>(null)
 
 const activeMenu = computed(() => loadedMenus.value.find((m) => m.id === menus.activeMenuId) ?? null)
@@ -78,13 +80,16 @@ async function load(): Promise<void> {
   }
 }
 
-// Loaded on its own: hours are a detail of the header, so a failure (or a restaurant that has not
-// set them) only hides that line and never blocks the menu.
+// Loaded on its own: hours are a detail of the header, so a failure only hides that line and
+// never blocks the menu. A restaurant without its own hours (404, read as null) shows the
+// scheduler's default ones, the hours its pickup slots are actually offered in.
 async function loadHours(): Promise<void> {
   const requestedFor = props.restaurantId
   try {
     const policy = await restaurantsApi.getCapacityPolicy(requestedFor)
-    if (policy && requestedFor === props.restaurantId) hours.value = openingStatus(policy.opening, policy.closing)
+    if (requestedFor !== props.restaurantId) return
+    const source = policy ?? SCHEDULER_DEFAULT_POLICY
+    hours.value = openingStatus(source.opening, source.closing, new Date(), policy === null)
   } catch {
     // Leave the hours out.
   }
@@ -112,7 +117,10 @@ function checkout(): void {
         </li>
         <li v-if="hours" class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
           <ClockIcon class="size-4" aria-hidden="true" />
-          <span>Hours <span class="font-semibold tabular-nums">{{ hours.hours }}</span></span>
+          <span>
+            Hours <span class="font-semibold tabular-nums">{{ hours.hours }}</span
+            ><span v-if="hours.indicative" class="text-accent-foreground/80"> (indicative)</span>
+          </span>
           <Badge
             variant="outline"
             :class="['ml-1 border-current/30 bg-card', hours.open ? 'text-success' : 'text-muted-foreground']"

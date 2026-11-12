@@ -27,24 +27,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as restaurantsApi from '@/api/restaurants'
 import type { CapacityPolicy } from '@/api/restaurants'
+import { SCHEDULER_DEFAULT_POLICY } from '@/utils/schedulerDefaults'
 import type { Restaurant } from '@/types'
 
 const props = defineProps<{ restaurant: Restaurant | null }>()
 const emit = defineEmits<{ close: [] }>()
 
-// Same values as scheduler-service's default policy, so a first save changes nothing but enables
+// Pre-filled with the scheduler's own default, so a first save changes nothing but enables
 // deliveries.
-const DEFAULT_POLICY: CapacityPolicy = {
-  slotMinutes: 30,
-  maxCapacityUnits: 8,
-  opening: '11:00',
-  closing: '22:00',
-  prepLeadMinutes: 30,
-  maxAdvanceDays: 7,
-  maxTripsPerSlot: 2,
-  maxTripKmBudget: 15,
-  maxDetourKm: 1,
-}
+const DEFAULT_POLICY: CapacityPolicy = { ...SCHEDULER_DEFAULT_POLICY }
 
 const loading = ref(false)
 const saving = ref(false)

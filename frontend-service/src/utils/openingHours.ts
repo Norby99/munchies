@@ -5,6 +5,11 @@
 export interface OpeningStatus {
   /** "11:00 – 22:00" */
   hours: string
+  /**
+   * True when the restaurant has not published its hours and these are the scheduler's default,
+   * in which pickups are booked: shown to customers as indicative.
+   */
+  indicative: boolean
   open: boolean
   /** "Open now · closes at 22:00", "Opens at 11:00", "Closed for today · opens at 11:00". */
   label: string
@@ -15,7 +20,12 @@ function minutesOfDay(hhmm: string): number | null {
   return match ? Number(match[1]) * 60 + Number(match[2]) : null
 }
 
-export function openingStatus(opening: string, closing: string, now: Date = new Date()): OpeningStatus | null {
+export function openingStatus(
+  opening: string,
+  closing: string,
+  now: Date = new Date(),
+  indicative = false,
+): OpeningStatus | null {
   const from = minutesOfDay(opening)
   const to = minutesOfDay(closing)
   if (from === null || to === null || from >= to) return null
@@ -26,5 +36,5 @@ export function openingStatus(opening: string, closing: string, now: Date = new 
   if (open) label = `Open now · closes at ${closing}`
   else if (current < from) label = `Closed · opens at ${opening}`
   else label = `Closed for today · opens tomorrow at ${opening}`
-  return { hours: `${opening} – ${closing}`, open, label }
+  return { hours: `${opening} – ${closing}`, indicative, open, label }
 }
