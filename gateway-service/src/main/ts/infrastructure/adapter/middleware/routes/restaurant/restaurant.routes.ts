@@ -13,6 +13,7 @@ import { GetRestaurantLocationRoute } from "./get-restaurant-location.route";
 import { GetRestaurantMenusRoute } from "./get-restaurant-menus.route";
 import { GetRestaurantRoute } from "./get-restaurant.route";
 import { RemoveMenuItemRoute } from "./remove-menu-item.route";
+import { SearchRestaurantsRoute } from "./search-restaurants.route";
 import { UpdateCapacityPolicyRoute } from "./update-capacity-policy.route";
 import { UpdateCategoryRoute } from "./update-category.route";
 import { UpdateMenuItemRoute } from "./update-menu-item.route";
@@ -22,6 +23,7 @@ import { UpdateRestaurantRoute } from "./update-restaurant.route";
 
 export const restaurantRoutes: SimpleRoute<any>[] = [
   new CreateRestaurantRoute(),
+  new SearchRestaurantsRoute(),
   new GetManagerRestaurantsRoute(),
   new GetRestaurantRoute(),
   new UpdateRestaurantRoute(),

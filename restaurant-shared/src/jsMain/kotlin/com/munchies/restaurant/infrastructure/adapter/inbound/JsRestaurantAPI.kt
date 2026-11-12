@@ -42,6 +42,25 @@ abstract class JsGetRestaurantAPI<E : WebResponse<Any>> :
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
 }
 
+/**
+ * Customer search of restaurants by name or address. The search text is the `q` query parameter
+ * ([RestaurantServiceConfig.SEARCH_QUERY_PARAM]); an empty one lists every restaurant.
+ */
+@JsExport
+abstract class JsSearchRestaurantsAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, SearchRestaurantsResponse>() {
+  abstract fun searchRestaurants(query: String): Promise<E>
+  override fun parseResponse(json: String): SearchRestaurantsResponse =
+    searchRestaurantsResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.SEARCH_RESTAURANTS_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
 @JsExport
 abstract class JsGetManagerRestaurantsAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetManagerRestaurantsResponse>() {

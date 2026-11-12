@@ -11,6 +11,8 @@ import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantComma
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantLocationCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantLocationResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.SearchRestaurantsCommand
+import com.munchies.restaurant.application.usecase.restaurant.SearchRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateCapacityPolicyResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantLocationResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantResult
@@ -28,6 +30,7 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Ge
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest
@@ -43,6 +46,7 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Put
+import io.micronaut.http.annotation.QueryValue
 
 @Controller("/restaurants")
 class RestaurantController(private val restaurantService: RestaurantService) {
@@ -56,6 +60,18 @@ class RestaurantController(private val restaurantService: RestaurantService) {
       is CreateRestaurantResult.Success -> HttpResponse.created(result.toResponse())
       is CreateRestaurantResult.InvalidRestaurant -> throw ValidationException(result.error)
       CreateRestaurantResult.NameAlreadyExists -> throw ConflictException("Name already exists")
+    }
+  }
+
+  /** Customer search by name or address; `q` missing or blank lists every restaurant. */
+  @Get("/")
+  suspend fun searchRestaurants(
+    @QueryValue(RestaurantServiceConfig.SEARCH_QUERY_PARAM) q: String?,
+  ): HttpResponse<SearchRestaurantsResponse> {
+    val command = SearchRestaurantsCommand(q.orEmpty())
+    return when (val result = restaurantService.searchRestaurants(command)) {
+      is SearchRestaurantsResult.Success -> HttpResponse.ok(result.toResponse())
+      is SearchRestaurantsResult.ValidationError -> throw ValidationException(result.error)
     }
   }
 

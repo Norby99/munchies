@@ -39,6 +39,7 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Ge
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest
@@ -85,6 +86,7 @@ import jakarta.inject.Singleton
 @SerdeImport(GetRestaurantResponse::class)
 @SerdeImport(GetManagerRestaurantsRequest::class)
 @SerdeImport(GetManagerRestaurantsResponse::class)
+@SerdeImport(SearchRestaurantsResponse::class)
 @SerdeImport(CapacityPolicyDto::class)
 @SerdeImport(GeoPointDto::class)
 @SerdeImport(GetCapacityPolicyResponse::class)

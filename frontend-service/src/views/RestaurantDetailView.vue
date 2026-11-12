@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Customer restaurant page: header, menu picker, dishes grouped by category, and the cart.
-// Reachable by direct link (or QR) only: there is no browse/search endpoint for customers yet.
+// Reached from the restaurant search (ExploreView) or by direct link (e.g. a QR code).
 // Every menu is fetched in full up front, since each tab shows its availability.
 //
 // The cart sits in a sticky side panel from the lg breakpoint; on smaller screens a floating

@@ -13,6 +13,8 @@ import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantLocat
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantLocationResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
 import com.munchies.restaurant.application.usecase.restaurant.RestaurantUseCases
+import com.munchies.restaurant.application.usecase.restaurant.SearchRestaurantsCommand
+import com.munchies.restaurant.application.usecase.restaurant.SearchRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateCapacityPolicyCommand
 import com.munchies.restaurant.application.usecase.restaurant.UpdateCapacityPolicyResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantCommand
@@ -29,6 +31,7 @@ interface RestaurantService {
   suspend fun getManagerRestaurants(
     command: GetManagerRestaurantsCommand,
   ): GetManagerRestaurantsResult
+  suspend fun searchRestaurants(command: SearchRestaurantsCommand): SearchRestaurantsResult
   suspend fun getCapacityPolicy(command: GetCapacityPolicyCommand): GetCapacityPolicyResult
   suspend fun updateCapacityPolicy(
     command: UpdateCapacityPolicyCommand,
@@ -66,6 +69,12 @@ internal class RestaurantApplicationService(
     command: GetManagerRestaurantsCommand,
   ): GetManagerRestaurantsResult {
     return restaurantUseCases.getManagerRestaurants(command)
+  }
+
+  override suspend fun searchRestaurants(
+    command: SearchRestaurantsCommand,
+  ): SearchRestaurantsResult {
+    return restaurantUseCases.search(command)
   }
 
   override suspend fun getCapacityPolicy(

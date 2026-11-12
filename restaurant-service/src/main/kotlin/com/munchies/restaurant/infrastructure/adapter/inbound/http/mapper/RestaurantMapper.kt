@@ -7,6 +7,7 @@ import com.munchies.restaurant.application.usecase.restaurant.DeleteRestaurantRe
 import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsCommand
 import com.munchies.restaurant.application.usecase.restaurant.GetManagerRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.GetRestaurantResult
+import com.munchies.restaurant.application.usecase.restaurant.SearchRestaurantsResult
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantCommand
 import com.munchies.restaurant.application.usecase.restaurant.UpdateRestaurantResult
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.CreateRestaurantRequest
@@ -16,6 +17,7 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.De
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse
 
@@ -39,6 +41,11 @@ fun GetManagerRestaurantsRequest.toCommand(): GetManagerRestaurantsCommand =
 
 fun GetManagerRestaurantsResult.Success.toResponse(): GetManagerRestaurantsResponse =
   GetManagerRestaurantsResponse(restaurants.map { it.toDto() }.toTypedArray())
+
+// --- Search ---
+
+fun SearchRestaurantsResult.Success.toResponse(): SearchRestaurantsResponse =
+  SearchRestaurantsResponse(restaurants.map { it.toDto() }.toTypedArray())
 
 // --- Update ---
 

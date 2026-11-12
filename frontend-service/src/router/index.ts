@@ -68,6 +68,13 @@ const routes = [
     props: true,
   },
   {
+    // Customer restaurant search. Not "/restaurants": that prefix is proxied to the gateway.
+    path: '/explore',
+    name: 'explore',
+    component: () => import('@/views/ExploreView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+  },
+  {
     path: '/r/:restaurantId',
     name: 'restaurant-detail',
     component: () => import('@/views/RestaurantDetailView.vue'),
@@ -110,7 +117,7 @@ export function homeFor(role: Role | null): RouteLocationRaw {
 
   const cart = useCartStore()
   if (cart.restaurantId) return { name: 'restaurant-detail', params: { restaurantId: cart.restaurantId } }
-  return { name: 'my-orders' }
+  return { name: 'explore' }
 }
 
 let hydrationAttempted = false

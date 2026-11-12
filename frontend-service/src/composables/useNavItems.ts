@@ -3,7 +3,7 @@
 
 import { computed, type Component } from 'vue'
 import { useRoute, type RouteLocationRaw } from 'vue-router'
-import { ClipboardListIcon, ReceiptTextIcon, SquareMenuIcon, StoreIcon, UserRoundIcon, UtensilsIcon } from '@lucide/vue'
+import { ClipboardListIcon, ReceiptTextIcon, SearchIcon, SquareMenuIcon, StoreIcon, UserRoundIcon, UtensilsIcon } from '@lucide/vue'
 
 import { useCartStore } from '@/stores/cart'
 import { useRestaurantsStore } from '@/stores/restaurants'
@@ -61,15 +61,22 @@ export function useNavItems() {
       ? restaurants.items.find((r) => r.id === restaurantId)?.name
       : undefined
 
-    return [
-      restaurantId
-        ? {
+    // The restaurant being browsed (or the one the bag belongs to) gets its own entry next to the
+    // search, so the customer can jump back to it.
+    const current: NavItem[] = restaurantId
+      ? [
+          {
             label: restaurantName ?? 'Restaurant',
             icon: UtensilsIcon,
             to: { name: 'restaurant-detail', params: { restaurantId } },
             matches: ['restaurant-detail', 'checkout'],
-          }
-        : { label: 'Restaurant', icon: UtensilsIcon, to: { name: 'account' }, disabled: true, matches: [] },
+          },
+        ]
+      : []
+
+    return [
+      { label: 'Restaurants', icon: SearchIcon, to: { name: 'explore' }, matches: ['explore'] },
+      ...current,
       { label: 'My orders', icon: ReceiptTextIcon, to: { name: 'my-orders' }, matches: ['my-orders', 'order-detail'] },
       { label: 'Account', icon: UserRoundIcon, to: { name: 'account' }, matches: ['account'] },
     ]
