@@ -48,6 +48,19 @@ export declare const GetRestaurantResponse: typeof
 export declare const getRestaurantResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getRestaurantResponseFromJson;
 
+export type SearchRestaurantsAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsSearchRestaurantsAPI;
+export declare const SearchRestaurantsAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsSearchRestaurantsAPI;
+
+export type SearchRestaurantsResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse;
+export declare const SearchRestaurantsResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse;
+
+export declare const searchRestaurantsResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.searchRestaurantsResponseFromJson;
+
 export type GetManagerRestaurantsAPI =
   com.munchies.restaurant.infrastructure.adapter.inbound.JsGetManagerRestaurantsAPI;
 export declare const GetManagerRestaurantsAPI: typeof

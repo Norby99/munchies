@@ -32,6 +32,14 @@ export async function getRestaurant(restaurantId: string): Promise<Restaurant> {
   return unwrap(http.get(`${BASE}${restaurantId}/`))
 }
 
+// Customer search by name or address, matched ignoring case; an empty query lists every
+// restaurant. Sorted by name and capped server-side at SEARCH_LIMIT results.
+export const SEARCH_LIMIT = 50
+
+export async function searchRestaurants(query: string): Promise<Restaurant[]> {
+  return unwrap(http.get(BASE, { params: { q: query } }))
+}
+
 export async function listMyRestaurants(): Promise<Restaurant[]> {
   return unwrap(http.request({ method: 'get', url: `${BASE}manager/`, data: {} }))
 }

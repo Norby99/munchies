@@ -27,6 +27,10 @@ module.exports = {
   GetRestaurantResponse: _httpRestaurant.GetRestaurantResponse,
   getRestaurantResponseFromJson: _httpRestaurant.getRestaurantResponseFromJson,
 
+  SearchRestaurantsAPI: _inbound.JsSearchRestaurantsAPI,
+  SearchRestaurantsResponse: _httpRestaurant.SearchRestaurantsResponse,
+  searchRestaurantsResponseFromJson: _httpRestaurant.searchRestaurantsResponseFromJson,
+
   GetManagerRestaurantsAPI: _inbound.JsGetManagerRestaurantsAPI,
   GetManagerRestaurantsRequest: _httpRestaurant.GetManagerRestaurantsRequest,
   GetManagerRestaurantsResponse: _httpRestaurant.GetManagerRestaurantsResponse,
