@@ -4,7 +4,7 @@ import dev.langchain4j.model.ollama.OllamaChatModel
 import java.time.Duration
 
 object ModelConstants {
-  const val OLLAMA_BASE_URL: String = "http://localhost:11434"
+  val OLLAMA_BASE_URL: String = System.getenv("OLLAMA_BASE_URL") ?: "http://localhost:11435"
 
   const val CHAT_MODEL_SMOLLM: String = "smollm2:135m"
   const val CHAT_MODEL_QWEN: String = "qwen3.5:0.8b"

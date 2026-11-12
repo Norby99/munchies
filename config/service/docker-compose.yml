@@ -167,6 +167,23 @@ services:
       retries: 12
       start_period: 15s
 
+  ollama-service:
+    container_name: munchies-ollama
+    build:
+      context: suggestion-service/docker/ollama
+    image: munchies-ollama:latest
+    ports: [ "11435:11434" ]
+    environment:
+      OLLAMA_MODEL: smollm2:135m
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:11434/api/tags" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   suggestion-service:
     <<: *service-common
     container_name: munchies-suggestion-service
@@ -174,7 +191,14 @@ services:
       context: suggestion-service/build/docker/main
     image: munchies-suggestion-service:latest
     ports: [ "8088:8080" ]
+    depends_on:
+      ollama-service:
+        condition: service_healthy
     environment:
       <<: [ *service-env ]
       GATEWAY_SERVICE_URL: http://gateway-service:8080
+      OLLAMA_BASE_URL: http://ollama-service:11435
     healthcheck: *micronaut-healthcheck
+
+volumes:
+  ollama_models:
