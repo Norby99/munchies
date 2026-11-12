@@ -25,6 +25,7 @@ testing {
 
         implementation(project(":commons"))
         implementation(project(":order-shared"))
+        implementation(project(":restaurant-shared"))
         implementation(project(":user-shared"))
       }
     }
