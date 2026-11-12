@@ -25,9 +25,10 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
 
   @MockBean(OrderNotificationPublisher::class)
   @Singleton
-  fun orderNotificationPublisher(): OrderNotificationPublisher = object : OrderNotificationPublisher {
-    override fun publishStatusChanged(order: Order) = Unit
-  }
+  fun orderNotificationPublisher(): OrderNotificationPublisher =
+    object : OrderNotificationPublisher {
+      override fun publishStatusChanged(order: Order) = Unit
+    }
 
   // ==========================================
   // TEST: POST orders/{id}/advance
