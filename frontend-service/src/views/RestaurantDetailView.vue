@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Customer restaurant page: header, menu picker, dishes grouped by category, and the cart.
-// Reached from the restaurant search (ExploreView) or by direct link (e.g. a QR code).
+// Reached from the restaurant search (ExploreView) or by direct link (e.g. a QR code). The header
+// shows the opening hours when the restaurant has set them (its capacity policy).
 // Every menu is fetched in full up front, since each tab shows its availability.
 //
 // The cart sits in a sticky side panel from the lg breakpoint; on smaller screens a floating
@@ -15,6 +16,7 @@ import MenuTabs from '@/components/MenuTabs.vue'
 import OrderDraft from '@/components/OrderDraft.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useOnline } from '@/composables/useOnline'
@@ -22,6 +24,7 @@ import * as restaurantsApi from '@/api/restaurants'
 import { useCartStore } from '@/stores/cart'
 import { useMenusStore } from '@/stores/menus'
 import { useRestaurantsStore } from '@/stores/restaurants'
+import { openingStatus, type OpeningStatus } from '@/utils/openingHours'
 import { describe, isValid } from '@/utils/validity'
 import type { LoadStatus, Menu, Restaurant } from '@/types'
 
@@ -38,6 +41,8 @@ const restaurant = ref<Restaurant | null>(null)
 const status = ref<LoadStatus>('loading')
 const loadedMenus = ref<Menu[]>([])
 const bagOpen = ref(false)
+// Opening hours from the capacity policy; null while unknown or not set by the restaurant.
+const hours = ref<OpeningStatus | null>(null)
 
 const activeMenu = computed(() => loadedMenus.value.find((m) => m.id === menus.activeMenuId) ?? null)
 const menuOpen = computed(() => (activeMenu.value ? isValid(activeMenu.value.validity) : false))
@@ -50,6 +55,8 @@ const bagTotal = computed(() => (activeMenu.value ? cart.totalLabel(activeMenu.v
 
 async function load(): Promise<void> {
   status.value = 'loading'
+  hours.value = null
+  loadHours()
   try {
     restaurant.value = await restaurantsApi.getRestaurant(props.restaurantId)
     restaurants.cacheOne(restaurant.value)
@@ -68,6 +75,18 @@ async function load(): Promise<void> {
     status.value = loadedMenus.value.length === 0 ? 'empty' : 'ready'
   } catch {
     status.value = 'error'
+  }
+}
+
+// Loaded on its own: hours are a detail of the header, so a failure (or a restaurant that has not
+// set them) only hides that line and never blocks the menu.
+async function loadHours(): Promise<void> {
+  const requestedFor = props.restaurantId
+  try {
+    const policy = await restaurantsApi.getCapacityPolicy(requestedFor)
+    if (policy && requestedFor === props.restaurantId) hours.value = openingStatus(policy.opening, policy.closing)
+  } catch {
+    // Leave the hours out.
   }
 }
 
@@ -90,6 +109,16 @@ function checkout(): void {
         <li class="flex items-center gap-1.5">
           <PhoneIcon class="size-4" aria-hidden="true" />
           <a :href="`tel:${restaurant.phone}`" class="underline-offset-4 hover:underline">{{ restaurant.phone }}</a>
+        </li>
+        <li v-if="hours" class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          <ClockIcon class="size-4" aria-hidden="true" />
+          <span>Hours <span class="font-semibold tabular-nums">{{ hours.hours }}</span></span>
+          <Badge
+            variant="outline"
+            :class="['ml-1 border-current/30 bg-card', hours.open ? 'text-success' : 'text-muted-foreground']"
+          >
+            {{ hours.label }}
+          </Badge>
         </li>
       </ul>
     </header>
