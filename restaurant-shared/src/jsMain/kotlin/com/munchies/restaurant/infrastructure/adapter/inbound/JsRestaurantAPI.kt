@@ -108,6 +108,11 @@ abstract class JsDeleteRestaurantAPI<E : WebResponse<Any>> :
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
 }
 
+/**
+ * Reading the capacity policy is open to customers: its opening and closing times are the
+ * restaurant's hours, shown on the restaurant page. Changing it stays manager-only
+ * ([JsUpdateCapacityPolicyAPI]).
+ */
 @JsExport
 abstract class JsGetCapacityPolicyAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetCapacityPolicyResponse>() {
@@ -119,7 +124,7 @@ abstract class JsGetCapacityPolicyAPI<E : WebResponse<Any>> :
     RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.CAPACITY_POLICY_PATH
   override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
-  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
 }
 

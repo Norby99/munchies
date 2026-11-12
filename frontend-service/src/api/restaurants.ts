@@ -55,6 +55,9 @@ export async function deleteRestaurant(restaurantId: string): Promise<string> {
 // Scheduling settings read by scheduler-service. Both answer 404 while the restaurant has not set
 // them: that is "not configured" (null) for the UI, not an error. Deliveries are offered only once
 // both are set.
+//
+// Customers may read the capacity policy too (its opening/closing are the restaurant's hours);
+// only managers may change either setting.
 
 export interface CapacityPolicy {
   slotMinutes: number
