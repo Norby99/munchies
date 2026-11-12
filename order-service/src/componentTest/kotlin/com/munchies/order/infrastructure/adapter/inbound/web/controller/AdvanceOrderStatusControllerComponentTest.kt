@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.DeliveryOrder
+import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.fixtures.createAdvanceOrderStatusRequest
@@ -15,8 +16,6 @@ import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import io.mockk.every
-import io.mockk.mockk
 import jakarta.inject.Singleton
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -26,10 +25,9 @@ class AdvanceOrderStatusControllerComponentTest : BaseOrderController() {
 
   @MockBean(OrderNotificationPublisher::class)
   @Singleton
-  fun orderNotificationPublisher(): OrderNotificationPublisher =
-    mockk<OrderNotificationPublisher>(relaxed = false).also {
-      every { it.publishStatusChanged(any()) } returns Unit
-    }
+  fun orderNotificationPublisher(): OrderNotificationPublisher = object : OrderNotificationPublisher {
+    override fun publishStatusChanged(order: Order) = Unit
+  }
 
   // ==========================================
   // TEST: POST orders/{id}/advance
