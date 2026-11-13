@@ -6,7 +6,7 @@ set -e
 pid=$!
 
 echo "Waiting for Ollama daemon to become ready..."
-while ! curl -s http://localhost:11435/api/tags > /dev/null 2>&1; do
+until ollama list > /dev/null 2>&1; do
   sleep 1
 done
 

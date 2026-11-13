@@ -177,12 +177,13 @@ services:
       OLLAMA_MODEL: smollm2:135m
     volumes:
       - ollama_models:/root/.ollama
+    # The ollama/ollama image has no curl: probe with the ollama CLI instead.
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:11434/api/tags" ]
+      test: [ "CMD-SHELL", "ollama show \"$${OLLAMA_MODEL}\" > /dev/null 2>&1" ]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 15s
+      retries: 30
+      start_period: 30s
 
   suggestion-service:
     <<: *service-common
@@ -197,7 +198,8 @@ services:
     environment:
       <<: [ *service-env ]
       GATEWAY_SERVICE_URL: http://gateway-service:8080
-      OLLAMA_BASE_URL: http://ollama-service:11435
+      # Container-to-container traffic uses the in-container port, not the host mapping.
+      OLLAMA_BASE_URL: http://ollama-service:11434
     healthcheck: *micronaut-healthcheck
 
 volumes:
