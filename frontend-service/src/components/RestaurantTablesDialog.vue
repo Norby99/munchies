@@ -23,39 +23,66 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as restaurantsApi from '@/api/restaurants'
-import type { Restaurant } from '@/types'
+import type { DiningTable, Restaurant } from '@/types'
 
 const props = defineProps<{ restaurant: Restaurant | null }>()
 const emit = defineEmits<{ close: [] }>()
 
-// Kept as strings while editing: an empty field must stay empty, not become 0.
-interface Row {
+// The layout is edited as groups, "how many tables x seats each" (e.g. 2 x 8 and 4 x 4), which is
+// how staff describe a dining room. The service stores individual tables, so on save the groups
+// are expanded in order and numbered 1..N; on load, consecutive tables with the same seats are
+// folded back into one group. An earlier version asked for each table's number, and a manager
+// read that column as a count: numbering automatically removes that ambiguity.
+//
+// Values are kept as strings while editing: an empty field must stay empty, not become 0.
+interface Group {
   key: number
-  number: string
+  count: string
   seats: string
 }
 
-const rows = ref<Row[]>([])
+const groups = ref<Group[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const error = ref<string | null>(null)
 let nextKey = 0
 
-const totalSeats = computed(() => rows.value.reduce((sum, r) => sum + (Number(r.seats) || 0), 0))
+const totalTables = computed(() => groups.value.reduce((sum, g) => sum + (Number(g.count) || 0), 0))
+const totalSeats = computed(() =>
+  groups.value.reduce((sum, g) => sum + (Number(g.count) || 0) * (Number(g.seats) || 0), 0),
+)
+
+// The table numbers each group will get, e.g. "Tables 3-6", shown so staff can label the room.
+const numbering = computed(() => {
+  let next = 1
+  return groups.value.map((g) => {
+    const count = Number(g.count)
+    if (!Number.isInteger(count) || count < 1) return ''
+    const first = next
+    next += count
+    return count === 1 ? `Table ${first}` : `Tables ${first}-${next - 1}`
+  })
+})
+
+function foldIntoGroups(tables: DiningTable[]): Group[] {
+  const folded: Group[] = []
+  for (const table of tables.slice().sort((a, b) => a.number - b.number)) {
+    const last = folded[folded.length - 1]
+    if (last && Number(last.seats) === table.seats) last.count = String(Number(last.count) + 1)
+    else folded.push({ key: nextKey++, count: '1', seats: String(table.seats) })
+  }
+  return folded
+}
 
 watch(
   () => props.restaurant?.id,
   async (id) => {
     if (!id) return
     error.value = null
-    rows.value = []
+    groups.value = []
     loading.value = true
     try {
-      const tables = await restaurantsApi.getTables(id)
-      rows.value = tables
-        .slice()
-        .sort((a, b) => a.number - b.number)
-        .map((t) => ({ key: nextKey++, number: String(t.number), seats: String(t.seats) }))
+      groups.value = foldIntoGroups(await restaurantsApi.getTables(id))
     } catch (err) {
       error.value = err instanceof ApiError ? err.message : 'The tables could not be loaded.'
     } finally {
@@ -65,27 +92,29 @@ watch(
   { immediate: true },
 )
 
-function addTable(): void {
-  const highest = rows.value.reduce((max, r) => Math.max(max, Number(r.number) || 0), 0)
-  rows.value.push({ key: nextKey++, number: String(highest + 1), seats: '4' })
+function addGroup(): void {
+  groups.value.push({ key: nextKey++, count: '1', seats: '4' })
 }
 
-function removeTable(key: number): void {
-  rows.value = rows.value.filter((r) => r.key !== key)
+function removeGroup(key: number): void {
+  groups.value = groups.value.filter((g) => g.key !== key)
 }
 
-// Same rules as restaurant-service: positive whole numbers, table numbers unique.
 function validate(): string | null {
-  const numbers = new Set<number>()
-  for (const row of rows.value) {
-    const number = Number(row.number)
-    const seats = Number(row.seats)
-    if (!Number.isInteger(number) || number < 1) return 'Every table needs a number of 1 or more.'
-    if (!Number.isInteger(seats) || seats < 1) return `Table ${row.number} needs at least one seat.`
-    if (numbers.has(number)) return `Table number ${number} is used twice.`
-    numbers.add(number)
+  for (const group of groups.value) {
+    const count = Number(group.count)
+    const seats = Number(group.seats)
+    if (!Number.isInteger(count) || count < 1) return 'Every row needs at least one table.'
+    if (!Number.isInteger(seats) || seats < 1) return 'Every table needs at least one seat.'
   }
   return null
+}
+
+function expand(): DiningTable[] {
+  let number = 1
+  return groups.value.flatMap((g) =>
+    Array.from({ length: Number(g.count) }, () => ({ number: number++, seats: Number(g.seats) })),
+  )
 }
 
 async function save(): Promise<void> {
@@ -94,10 +123,7 @@ async function save(): Promise<void> {
   if (error.value) return
   saving.value = true
   try {
-    await restaurantsApi.updateTables(
-      props.restaurant.id,
-      rows.value.map((r) => ({ number: Number(r.number), seats: Number(r.seats) })),
-    )
+    await restaurantsApi.updateTables(props.restaurant.id, expand())
     emit('close')
   } catch (err) {
     error.value = err instanceof ApiError ? err.message : 'The tables could not be saved.'
@@ -118,35 +144,47 @@ function onOpenChange(open: boolean): void {
         <DialogHeader>
           <DialogTitle>Tables at {{ restaurant?.name }}</DialogTitle>
           <DialogDescription>
-            Customers can book a table once you list them here. Each party gets the smallest free table that fits.
+            Customers can book once you list your tables, e.g. 2 tables of 8 seats and 4 of 4. Each party gets the
+            smallest free table that fits, and tables are never joined: the largest table is the largest party.
           </DialogDescription>
         </DialogHeader>
 
         <div v-if="loading" class="flex justify-center py-10"><Spinner class="size-6" /></div>
 
         <template v-else>
-          <p v-if="rows.length === 0" class="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+          <p v-if="groups.length === 0" class="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
             No tables yet: this restaurant does not take reservations.
           </p>
           <table v-else class="w-full text-sm">
-            <caption class="sr-only">Tables of the dining room</caption>
+            <caption class="sr-only">Tables of the dining room, grouped by size</caption>
             <thead class="text-left text-muted-foreground">
               <tr>
-                <th scope="col" class="pb-2 font-medium">Table number</th>
-                <th scope="col" class="pb-2 font-medium">Seats</th>
+                <th scope="col" class="pb-2 font-medium">How many tables</th>
+                <th scope="col" class="pb-2 font-medium">Seats each</th>
                 <th scope="col" class="pb-2"><span class="sr-only">Remove</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in rows" :key="row.key">
-                <td class="py-1 pr-3">
-                  <Input v-model="row.number" class="h-9" type="number" min="1" step="1" :aria-label="`Number of table ${row.number}`" />
+              <tr v-for="(group, index) in groups" :key="group.key">
+                <td class="py-1 pr-3 align-top">
+                  <Input
+                    v-model="group.count"
+                    class="h-9"
+                    type="number"
+                    min="1"
+                    step="1"
+                    :aria-label="`How many tables in row ${index + 1}`"
+                    :aria-describedby="`tables-numbering-${group.key}`"
+                  />
+                  <span :id="`tables-numbering-${group.key}`" class="mt-1 block text-xs text-muted-foreground">
+                    {{ numbering[index] }}
+                  </span>
                 </td>
-                <td class="py-1 pr-3">
-                  <Input v-model="row.seats" class="h-9" type="number" min="1" step="1" :aria-label="`Seats at table ${row.number}`" />
+                <td class="py-1 pr-3 align-top">
+                  <Input v-model="group.seats" class="h-9" type="number" min="1" step="1" :aria-label="`Seats at each table in row ${index + 1}`" />
                 </td>
-                <td class="py-1 text-right">
-                  <Button type="button" variant="ghost" size="icon-sm" :aria-label="`Remove table ${row.number}`" @click="removeTable(row.key)">
+                <td class="py-1 text-right align-top">
+                  <Button type="button" variant="ghost" size="icon-sm" :aria-label="`Remove row ${index + 1}`" @click="removeGroup(group.key)">
                     <Trash2Icon />
                   </Button>
                 </td>
@@ -154,11 +192,11 @@ function onOpenChange(open: boolean): void {
             </tbody>
           </table>
           <div class="flex items-center justify-between gap-3">
-            <Button type="button" variant="outline" size="sm" @click="addTable">
-              <PlusIcon data-icon="inline-start" /> Add a table
+            <Button type="button" variant="outline" size="sm" @click="addGroup">
+              <PlusIcon data-icon="inline-start" /> Add tables
             </Button>
-            <span v-if="rows.length" class="text-sm text-muted-foreground tabular-nums">
-              {{ rows.length }} {{ rows.length === 1 ? 'table' : 'tables' }}, {{ totalSeats }} seats
+            <span v-if="groups.length" class="text-sm text-muted-foreground tabular-nums" role="status">
+              {{ totalTables }} {{ totalTables === 1 ? 'table' : 'tables' }}, {{ totalSeats }} seats
             </span>
           </div>
         </template>
