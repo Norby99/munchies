@@ -22,7 +22,8 @@ declare module 'vue-router' {
 }
 
 // Client-side paths must never start with an API prefix proxied to the gateway (/users,
-// /restaurants, /restaurant, /orders, /payments, /schedule: see vite.config.ts and nginx/default.conf.template),
+// /restaurants, /restaurant, /orders, /payments, /schedule, /reservations: see vite.config.ts and
+// nginx/default.conf.template),
 // otherwise reloading such a page would be proxied to the gateway and show its JSON.
 const routes = [
   {
@@ -57,6 +58,12 @@ const routes = [
     path: '/manager/orders',
     name: 'manager-orders',
     component: () => import('@/views/ManagerOrdersView.vue'),
+    meta: { role: 'MANAGER' as Role },
+  },
+  {
+    path: '/manager/bookings',
+    name: 'manager-reservations',
+    component: () => import('@/views/ManagerReservationsView.vue'),
     meta: { role: 'MANAGER' as Role },
   },
   {
@@ -98,6 +105,13 @@ const routes = [
     component: () => import('@/views/OrderDetailView.vue'),
     meta: { role: 'CUSTOMER' as Role },
     props: true,
+  },
+  {
+    // Not "/reservations": that prefix is proxied to the gateway.
+    path: '/my-bookings',
+    name: 'my-reservations',
+    component: () => import('@/views/MyReservationsView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
   },
   {
     path: '/account',

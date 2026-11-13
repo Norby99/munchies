@@ -30,8 +30,12 @@ export interface PlaceTakeawayOrderInput extends PlaceOrderBase {
   customerName: string
 }
 
+// A dine-in order is always placed for one of the customer's table reservations: order-service
+// reads the table and the number of guests from the reservation (tableNumber and numberOfGuests
+// are then ignored, but the request still carries them).
 export interface PlaceDineInOrderInput extends PlaceOrderBase {
   orderType: 'DINE_IN'
+  reservationId: string
   tableNumber: number
   numberOfGuests: number
 }

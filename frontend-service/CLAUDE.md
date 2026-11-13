@@ -30,18 +30,21 @@ Features currently backed by gateway routes
 - **Customer**:
     - browse restaurants and their menus, categories and menu items;
     - place an order (delivery or takeaway), edit its items or its delivery/takeaway details, discard it;
+    - book a table at a restaurant (day, arrival time, guests; the service picks the table), list own
+      reservations, change or cancel one until it starts;
+    - order to the table (dine-in) while holding an active reservation at that restaurant: checkout offers
+      "At my table" and sends the reservation id to `POST /orders/place`, bypassing the scheduler;
     - pay an order;
     - list own orders and follow the status of each one.
 - **Manager (restaurant staff)**:
     - create, update and delete own restaurants;
     - manage menus, categories and menu items;
+    - configure each restaurant's tables (number and seats), which makes it bookable;
+    - see a restaurant's reservations day by day (read-only: only the customer changes or cancels them);
     - see incoming orders and advance their status through the order lifecycle.
 
 Planned, not yet in the UI (design it so they can be added without restructuring):
 
-- **Table reservations** (`table-reservation-service`): the backend exists and is routed by the gateway under
-  `/reservations/*` (reserve, list, read, modify, cancel) and `/restaurants/{id}/tables/` (the manager's table
-  layout), with contracts in `table-reservation-shared` and `restaurant-shared`; no screen uses it yet.
 - **Delivery scheduling** (`scheduler-service`).
 - **Real-time notifications**: `notification-service` will push notifications (e.g. order status changes, payment
   success) to the frontend over a WebSocket proxied by the gateway (see
