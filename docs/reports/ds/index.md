@@ -18,18 +18,22 @@ final report/artifact."
 
 _Munchies_ is an online food ordering platform that will allow both customers to order their
 favourite food and managers to create and manage their restaurants. The platform allows customers to
-browse the closest restaurants and to order from their menus. They can choose when the food should
-be delivered, and they can also customize each dish. Customers can also choose if they want their order
-to be delivered to their home, if they want a takeaway, or consume their meal at the restaurant allowing them
-to reserve a table.
+view restaurants and to order from their menus, and it will let them browse the closest restaurants first
+_(planned)_. They can choose when the food should be delivered, and they will be able to customize each dish
+by choosing among its variations _(planned)_. Customers can also choose if they want their order
+to be delivered to their home, if they want a takeaway, or consume their meal at the restaurant, reserving a
+table in advance _(planned)_.
 
 Meanwhile, managers can create and manage multiple restaurants. Specifically, they can manage
-the business hours, menus and the variations for each dish.
+the menus of each restaurant, and the variations offered for each dish. Managing business hours is _(planned)_.
+
+Features marked as _(planned)_ are part of the product scope, but are not available yet, as tracked in the
+[requirements](02-requirements/requirements.md).
 
 ### Goals
 _Munchies_ is meant to condense multiple exams into one project. The technologies, programming paradigms and design choises used, respect and fulfill the requirements given by each course.
 
-In this report we wrote the design, implementation and operation choices, we made during _munchies_' development to fulfill the requirements set by the Distributed Systems' course.
+In this report we wrote the design, implementation and operation choices, we made during _munchies_' development to fulfill the requirements set by the Distributed Systems course.
 
 
 ### Achievements
@@ -92,7 +96,6 @@ As of currently writing this, _munchies_ is a distributed, multiplatform, contai
 - [Docker Hub](https://hub.docker.com/)
 - [Maven](https://central.sonatype.com/)
 - [NPM](https://www.npmjs.com/)
-- [Gradle](https://gradle.org/)
 
 
-It is still in development as not all other courses requirements are fulfilled yet.  
+It is still in development as not all other courses requirements are fulfilled yet.
