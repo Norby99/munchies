@@ -189,6 +189,45 @@ export declare const UpdateRestaurantLocationResponse: typeof
 export declare const updateRestaurantLocationResponseFromJson: typeof
   com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateRestaurantLocationResponseFromJson;
 
+export type TableDto =
+  com.munchies.restaurant.infrastructure.adapter.dto.TableDto;
+export declare const TableDto: typeof
+  com.munchies.restaurant.infrastructure.adapter.dto.TableDto;
+
+export type GetTablesAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsGetTablesAPI;
+export declare const GetTablesAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsGetTablesAPI;
+
+export type GetTablesResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetTablesResponse;
+export declare const GetTablesResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetTablesResponse;
+
+export declare const getTablesResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.getTablesResponseFromJson;
+
+export type UpdateTablesAPI =
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateTablesAPI;
+export declare const UpdateTablesAPI: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.JsUpdateTablesAPI;
+
+export type UpdateTablesRequest =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateTablesRequest;
+export declare const UpdateTablesRequest: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateTablesRequest;
+
+export declare const updateTablesRequestFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateTablesRequestFromJson;
+
+export type UpdateTablesResponse =
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateTablesResponse;
+export declare const UpdateTablesResponse: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateTablesResponse;
+
+export declare const updateTablesResponseFromJson: typeof
+  com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.updateTablesResponseFromJson;
+
 // ---- Menu API ----
 
 export type CreateMenuAPI =

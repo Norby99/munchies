@@ -9,6 +9,7 @@ import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
+import com.munchies.restaurant.domain.valueobject.restaurant.Table
 import java.time.LocalDateTime
 
 data class RestaurantDetails(
@@ -24,6 +25,7 @@ class Restaurant private constructor(
   var details: RestaurantDetails,
   var capacityPolicy: CapacityPolicy?,
   var location: GeoPoint?,
+  tables: List<Table>,
   val createdAt: LocalDateTime,
   var updatedAt: LocalDateTime,
 ) : AggregateRoot<RestaurantId>(id) {
@@ -32,6 +34,22 @@ class Restaurant private constructor(
   val address get(): Address = details.address
   val phone get(): Phone = details.phone
   val email get(): Email = details.email
+
+  /** The tables of the dining room, by table number; empty until the manager configures them. */
+  var tables: List<Table> = tables.sortedBy { it.number }
+    private set
+
+  /**
+   * Replaces the whole table layout.
+   *
+   * @throws IllegalArgumentException if two tables share the same number.
+   */
+  fun updateTables(newTables: List<Table>) {
+    val duplicated = newTables.groupingBy { it.number }.eachCount().filterValues { it > 1 }.keys
+    require(duplicated.isEmpty()) { "duplicated table numbers: ${duplicated.sorted()}" }
+    this.tables = newTables.sortedBy { it.number }
+    this.updatedAt = LocalDateTime.now()
+  }
 
   fun updateCapacityPolicy(newPolicy: CapacityPolicy) {
     this.capacityPolicy = newPolicy
@@ -77,6 +95,7 @@ class Restaurant private constructor(
         managerId = managerId,
         capacityPolicy = null,
         location = null,
+        tables = emptyList(),
         createdAt = now,
         updatedAt = now,
       )
@@ -101,6 +120,7 @@ class Restaurant private constructor(
       updatedAt: LocalDateTime,
       capacityPolicy: CapacityPolicy? = null,
       location: GeoPoint? = null,
+      tables: List<Table> = emptyList(),
     ): Restaurant {
       return Restaurant(
         id = id,
@@ -108,6 +128,7 @@ class Restaurant private constructor(
         details = details,
         capacityPolicy = capacityPolicy,
         location = location,
+        tables = tables,
         createdAt = createdAt,
         updatedAt = updatedAt,
       )
