@@ -1,7 +1,7 @@
 # Implementation
 
 This chapter describes the concrete choices that realize the design. Limits that come from the code rather than from
-the design are listed at the end.
+the design are listed under [Known gaps](../02-requirements/requirements.md#known-gaps).
 
 ## Network protocols
 
