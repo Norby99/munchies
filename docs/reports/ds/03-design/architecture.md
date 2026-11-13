@@ -1,12 +1,5 @@
 # Architecture
 
-- Which architectural style?
-    + why?
-
----
-
-# Architecture of Munchies
-
 ## Architectural style
 
 _Munchies_ follows a **microservices** architecture: the backend is a set of independently deployable services, each
