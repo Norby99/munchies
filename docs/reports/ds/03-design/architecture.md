@@ -1,12 +1,5 @@
 # Architecture
 
-- Which architectural style?
-    + why?
-
----
-
-# Architecture of Munchies
-
 ## Architectural style
 
 _Munchies_ follows a **microservices** architecture: the backend is a set of independently deployable services, each
@@ -24,13 +17,13 @@ Three more styles are applied inside this frame, each one only where it is neede
 
 The main reason is the shape of the load. Demand is bursty and concentrated around meal times, and it does not grow
 evenly across the system: with separate services, ordering can scale at lunchtime without also replicating, for
-instance, catalogue administration (`NFR1`).
+instance, catalogue administration.
 
-The split also limits the impact of a failure, since a failed service only takes down the features that depend on it
-(`NFR4`), and it allows each service to be deployed with no coordination with the others (`NFR17`).
+The split also limits the impact of a failure, since a failed service only takes down the features that depend on it,
+and it allows each service to be deployed with no coordination with the others.
 
 Finally, bounded contexts map directly onto services, which gives each piece of data a single owner: no service touches
-the data of another (`NFR9`). Each context can therefore choose the persistence model that suits it, such as event
+the data of another. Each context can therefore choose the persistence model that suits it, such as event
 sourcing for orders only.
 
 ### Costs of the choice

@@ -1,15 +1,5 @@
 # Design
 
-This chapter explains the strategies used to meet the requirements identified in the analysis.
-Ideally, the design should be the same, regardless of the technological choices made during the implementation phase.
-
-> You can re-order the sections as you prefer, but all the sections must be present in the end
-
-
----
-
-# Design of Munchies
-
 This chapter explains how _Munchies_ meets the [requirements](../02-requirements/requirements.md). It is organized as
 follows:
 
@@ -38,5 +28,7 @@ The main design decisions, and the requirements driving them, are the following:
 | Reads and writes on orders use separate models                     | `FR-O7`, `NFR10`               | [Data and Consistency Issues](data-and-consistency-issues.md) |
 | Only stateless services are replicated                             | `NFR1`, `NFR3`                 | [Availability](availability.md)                               |
 
-The chapter describes the system as it is designed today. Parts that do not exist yet are always marked as _planned_,
-and each section ends with the limits of the current design.
+The chapter describes the system as it is designed today. Parts that do not exist yet are always marked as _planned_.
+[Infrastructure](infrastructure.md) and [Security](security.md) end with the limits of their part of the design, while
+the gaps between each requirement and the current system are listed under
+[Known gaps](../02-requirements/requirements.md#known-gaps).
