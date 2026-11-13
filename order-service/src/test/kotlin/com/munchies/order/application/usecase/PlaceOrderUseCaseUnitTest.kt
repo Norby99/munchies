@@ -24,7 +24,7 @@ class PlaceOrderUseCaseUnitTest {
 
   private val eventStore = mockk<OrderEventStore>()
   private val menuCatalog = mockk<MenuCatalog>()
-  private val useCase = PlaceOrderUseCase(eventStore, menuCatalog)
+  private val useCase = PlaceOrderUseCase(eventStore, menuCatalog, mockk())
 
   /** The fixture commands order item-1; this is its menu price. */
   private val item1Price = Price(950)

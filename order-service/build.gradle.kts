@@ -9,6 +9,8 @@ dependencies {
   implementation(project(":order-shared"))
   // Menu contracts (paths, DTOs, JSON parsers) used to read item prices from restaurant-service.
   implementation(project(":restaurant-shared"))
+  // Reservation contracts used to read the table a dine-in order is placed for.
+  implementation(project(":table-reservation-shared"))
 
   testImplementation(testFixtures(project(":architecture-rules")))
   // The tracing component test attaches its own appender to check which trace a line belongs to.

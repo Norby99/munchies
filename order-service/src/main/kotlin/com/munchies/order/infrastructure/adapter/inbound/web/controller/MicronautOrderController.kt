@@ -227,9 +227,15 @@ class MicronautOrderController(
     description = "Places a new order with the provided order type and details.",
   )
   @ApiResponse(responseCode = "200", description = "Order placed successfully")
-  @ApiResponse(responseCode = "400", description = "Invalid order data or items not on the menu")
-  @ApiResponse(responseCode = "404", description = "Restaurant not found")
-  @ApiResponse(responseCode = "503", description = "Menu prices unavailable, retry later")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid order data, items not on the menu, or reservation not usable",
+  )
+  @ApiResponse(responseCode = "404", description = "Restaurant or reservation not found")
+  @ApiResponse(
+    responseCode = "503",
+    description = "Menu prices or reservation unavailable, retry later",
+  )
   override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<PlaceOrderResponse> {
     return when (val res = placeOrder.execute(request.toCommand())) {
       is PlaceOrder.Result.Success -> HttpResponse.ok(
@@ -251,6 +257,13 @@ class MicronautOrderController(
       )
       is PlaceOrder.Result.Failure.MenuUnavailable -> throw ServiceUnavailableException(
         MENU_UNAVAILABLE,
+      )
+      is PlaceOrder.Result.Failure.ReservationNotFound -> throw NotFoundException(
+        "Reservation not found",
+      )
+      is PlaceOrder.Result.Failure.ReservationNotUsable -> throw ValidationException(res.reason)
+      is PlaceOrder.Result.Failure.ReservationUnavailable -> throw ServiceUnavailableException(
+        RESERVATION_UNAVAILABLE,
       )
     }
   }
@@ -483,5 +496,7 @@ class MicronautOrderController(
 
   private companion object {
     const val MENU_UNAVAILABLE = "Menu prices are temporarily unavailable, please retry"
+    const val RESERVATION_UNAVAILABLE =
+      "The table reservation cannot be checked right now, please retry"
   }
 }

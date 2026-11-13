@@ -21,6 +21,12 @@ micronaut:
         url: ${RESTAURANT_SERVICE_URL:http://localhost:8087}
         connect-timeout: 2s
         read-timeout: 3s
+      # Source of the table of a dine-in order placed for a reservation
+      # (TableReservationServiceClient). Short timeouts, for the same reason.
+      table-reservation-service:
+        url: ${TABLE_RESERVATION_SERVICE_URL:http://localhost:8085}
+        connect-timeout: 2s
+        read-timeout: 3s
   metrics:
     enabled: true
     export:

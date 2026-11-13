@@ -8,8 +8,9 @@ import com.munchies.order.domain.model.RestaurantId
  * Command to place an order in the system.
  *
  * This sealed interface defines the structure of the command for placing an order,
- * which can be of three types: Delivery, Takeaway, or DineIn. Each type has its own
- * specific fields relevant to the order type.
+ * which can be of three types: Delivery, Takeaway, or DineIn (the latter either at a table
+ * given by the caller, or at the table of a reservation). Each type has its own specific fields
+ * relevant to the order type.
  */
 sealed interface PlaceOrderCommand {
   val restaurantId: RestaurantId
@@ -43,5 +44,16 @@ sealed interface PlaceOrderCommand {
     override val items: List<RequestedItem>,
     val tableNumber: Int,
     val numberOfGuests: Int,
+  ) : PlaceOrderCommand
+
+  /**
+   * Represents a dine-in order placed for an accepted table reservation: the table and the
+   * number of guests are not given by the caller, they are the reservation's.
+   */
+  data class ReservedDineIn(
+    override val restaurantId: RestaurantId,
+    override val customerId: CustomerId,
+    override val items: List<RequestedItem>,
+    val reservationId: String,
   ) : PlaceOrderCommand
 }
