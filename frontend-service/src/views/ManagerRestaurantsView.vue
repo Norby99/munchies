@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Manager: my restaurants, as cards with their menu count and quick links to orders and menus.
 // Creating and editing happen in a dialog, and so do the scheduling settings (location and
-// capacity policy) that enable deliveries. Menu counts are not part of RestaurantDto, so they are
+// capacity policy) that enable deliveries, and the dining room tables that enable reservations. Menu counts are not part of RestaurantDto, so they are
 // derived by fetching each restaurant's menu summaries through the menus store.
 
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
+  ArmchairIcon,
   CalendarClockIcon,
   CircleAlertIcon,
   ClipboardListIcon,
@@ -23,6 +24,7 @@ import {
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import RestaurantSchedulingDialog from '@/components/RestaurantSchedulingDialog.vue'
+import RestaurantTablesDialog from '@/components/RestaurantTablesDialog.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -67,6 +69,8 @@ const deleteTarget = ref<Restaurant | null>(null)
 const deleteError = ref<string | null>(null)
 // Restaurant whose scheduling settings (location, capacity policy) are being edited.
 const schedulingTarget = ref<Restaurant | null>(null)
+// Restaurant whose dining room tables are being edited.
+const tablesTarget = ref<Restaurant | null>(null)
 
 async function load(): Promise<void> {
   await restaurants.fetchMine()
@@ -188,6 +192,7 @@ function cancelDelete(): void {
                     <DropdownMenuGroup>
                       <DropdownMenuItem @select="openEdit(restaurant)"><PencilIcon /> Edit details</DropdownMenuItem>
                       <DropdownMenuItem @select="schedulingTarget = restaurant"><CalendarClockIcon /> Scheduling and delivery</DropdownMenuItem>
+                      <DropdownMenuItem @select="tablesTarget = restaurant"><ArmchairIcon /> Tables</DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
@@ -258,6 +263,7 @@ function cancelDelete(): void {
     </Dialog>
 
     <RestaurantSchedulingDialog :restaurant="schedulingTarget" @close="schedulingTarget = null" />
+    <RestaurantTablesDialog :restaurant="tablesTarget" @close="tablesTarget = null" />
 
     <ConfirmDialog
       :open="deleteTarget !== null"
