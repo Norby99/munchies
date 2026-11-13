@@ -27,6 +27,8 @@ data class RestaurantUseCases(val repository: RestaurantRepository) {
   val updateCapacityPolicy = UpdateCapacityPolicyUseCase(repository)
   val getRestaurantLocation = GetRestaurantLocationUseCase(repository)
   val updateRestaurantLocation = UpdateRestaurantLocationUseCase(repository)
+  val getTables = GetTablesUseCase(repository)
+  val updateTables = UpdateTablesUseCase(repository)
 }
 
 // --- Get Restaurant ---
