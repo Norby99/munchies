@@ -24,7 +24,9 @@ WebSockets are not used yet: there is no push towards the browser yet, so a clie
 it reloads the data.
 
 Each service listens on port 8080 inside its pod, and is reached through the DNS name of its Kubernetes `Service`, so
-no address is hard-coded.
+no address is hard-coded. For instance, the order service is reachable at
+`order-service.order-service.svc.cluster.local`. The same `Service` balances the requests across the ready replicas,
+while a `HorizontalPodAutoscaler` adjusts their number from the CPU usage.
 
 ## Data representation
 

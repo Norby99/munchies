@@ -89,8 +89,8 @@ different failure zones.
 
 Components find each other through the platform, with no dedicated registry to operate:
 
-- Each service is published under a **stable logical name**, resolved by the cluster DNS. For instance, the order
-  service is reachable at `order-service.order-service.svc.cluster.local`.
+- Each service is published under a **stable logical name**, resolved by the cluster DNS, made of the name of the
+  service and of its namespace.
 - The name stands for all the replicas of that service: the platform tracks which ones are alive and ready, and each
   request reaches one of them. Callers do not know how many replicas exist, nor where (`NFR1`).
 - Names are not part of the code: each service receives the addresses of its dependencies through its configuration.
