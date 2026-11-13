@@ -147,6 +147,7 @@ function onOpenChange(open: boolean): void {
             <QuantityStepper
               :quantity="form.guests"
               label="guests"
+              :disabled="form.guests >= maxGuests"
               @increment="form.guests = Math.min(form.guests + 1, maxGuests)"
               @decrement="form.guests = Math.max(form.guests - 1, 1)"
             />
