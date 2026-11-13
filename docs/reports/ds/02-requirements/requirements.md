@@ -227,7 +227,7 @@ The table below explains every requirement that is not _Done_ yet.
 | `NFR4`                  | Timeouts apply to calls going through the gateway, but the behaviour with a service down has not been verified                                       |
 | `NFR5`                  | No circuit breaker has been implemented                                                                                                              |
 | `NFR11`                 | A failure after the payment is only logged, as no compensation exists                                                                                |
-| `NFR12`                 | Some services are published as `NodePort`, so they can be reached without going through the gateway                                                  |
+| `NFR12`                 | All the backend services are published as `NodePort`, so they can be reached without going through the gateway                                      |
 | `NFR14`                 | Logging out only removes the cookie: a copy of the token stays valid until it expires, since revocation is not checked when a token is validated. The signing key is fixed in the configuration, and a public route returns a valid token to anyone |
 | `NFR18`                 | The restaurant service has no OpenAPI description                                                                                                    |
 | `NFR19`                 | Responsiveness has not been verified on all the views                                                                                                |
