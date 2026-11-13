@@ -28,5 +28,7 @@ The main design decisions, and the requirements driving them, are the following:
 | Reads and writes on orders use separate models                     | `FR-O7`, `NFR10`               | [Data and Consistency Issues](data-and-consistency-issues.md) |
 | Only stateless services are replicated                             | `NFR1`, `NFR3`                 | [Availability](availability.md)                               |
 
-The chapter describes the system as it is designed today. Parts that do not exist yet are always marked as _planned_,
-and each section ends with the limits of the current design.
+The chapter describes the system as it is designed today. Parts that do not exist yet are always marked as _planned_.
+[Infrastructure](infrastructure.md) and [Security](security.md) end with the limits of their part of the design, while
+the gaps between each requirement and the current system are listed under
+[Known gaps](../02-requirements/requirements.md#known-gaps).

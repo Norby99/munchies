@@ -66,3 +66,14 @@ The cookie holding the token has these attributes:
 
 Tokens are not encrypted, since they only hold the user id and role, and no sensitive data. Logs never contain the
 payloads of requests, which may hold credentials or personal data (`NFR13`).
+
+## Limits of the current design
+
+- Services trust the caller's id they receive, but they can also be reached without going through the gateway (see
+  [Infrastructure](infrastructure.md)). A client reaching a service directly can therefore act as any user (`NFR12`).
+- Logging out only removes the cookie: a copy of the token stays valid until it expires, since no revocation list is
+  checked (`NFR14`).
+- The signing key is fixed in the configuration, and a public route returns a valid token to anyone (`NFR14`).
+- Ownership is only checked by `restaurant-service`. Orders can be read by any logged user, and advancing an order only
+  requires the customer role (`FR-A8`, `FR-O5`).
+- Traffic between the client and the system is not encrypted yet, as HTTPS is _planned_.

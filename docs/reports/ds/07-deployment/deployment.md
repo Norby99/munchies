@@ -173,5 +173,5 @@ In both modes the databases start empty, so there are no users, restaurants or m
 
 - **Table reservations:** `table-reservation-service` is disabled in Compose, and only runs on Kubernetes.
 - **Databases:** Compose exposes each MongoDB on the host, while on Kubernetes they stay inside the cluster.
-- **Images:** both modes build images from the local sources, so that a change can be tried right away. The images
-  published on Docker Hub are not used, as explained in [release](../06-release/release.md).
+- **Images:** both modes build images from the local sources, so that a change can be tried right away. For this
+  reason, the images published on Docker Hub (see [release](../06-release/release.md)) are not used.
