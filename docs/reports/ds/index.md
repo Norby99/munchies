@@ -9,6 +9,8 @@
 ```
 "During the preparation of this work, the author(s) used:
 - Gemini to edit simple documents, generate code documentation and write basic unit tests. 
+- Claude (Anthropic), through Claude Code, to review the report against the course template and the
+  source code, and to edit it accordingly.
 After using this tool/service, the author(s) reviewed and edited the
 content as needed and take(s) full responsibility for the content of the
 final report/artifact."
