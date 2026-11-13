@@ -104,9 +104,9 @@ topic, which is defined by the shared contract of the event. Topics are named af
 
 ## Limits of the current design
 
-- The web client is not deployed yet on the cluster, as it only runs on a development server.
-- Every service is published as `NodePort`, and no rule limits traffic between namespaces, so the gateway is not the
-  only way in (`NFR12`).
+- Every backend service is also published on a port of the cluster nodes, and no rule limits traffic between
+  namespaces, so the gateway is not the only way in (`NFR12`). Only the web server, the databases and the broker are
+  not published this way.
 - The database and the broker run on a single node, which makes them single points of failure
   (see [Fault-Tolerance](fault-tolerance.md)).
 - `payment-service` and `notification-service` are not autoscaled.
