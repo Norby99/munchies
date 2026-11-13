@@ -30,6 +30,10 @@ interface PlaceOrder {
    *  - `UnknownItems`: One or more items are not on any menu of the restaurant.
    *  - `RestaurantNotFound`: The restaurant does not exist.
    *  - `MenuUnavailable`: restaurant-service could not be asked for the prices.
+   *  - `ReservationNotFound`: the customer has no such table reservation.
+   *  - `ReservationNotUsable`: the reservation cannot back this order (canceled, or made at
+   *                            another restaurant).
+   *  - `ReservationUnavailable`: table-reservation-service could not be asked.
    */
   sealed interface Result {
     data class Success(val order: OrderDto) : Result
@@ -40,6 +44,9 @@ interface PlaceOrder {
       data class UnknownItems(val menuItemIds: Set<MenuItemId>) : Failure
       data object RestaurantNotFound : Failure
       data object MenuUnavailable : Failure
+      data object ReservationNotFound : Failure
+      data class ReservationNotUsable(val reason: String) : Failure
+      data object ReservationUnavailable : Failure
     }
   }
 }

@@ -44,15 +44,33 @@ object CommandFactory {
       customerName = customerName
         ?: throw IllegalArgumentException("Customer name is required for takeaway orders"),
     )
-    DINE_IN -> PlaceOrderCommand.DineIn(
-      restaurantId = RestaurantId(restaurantId),
-      customerId = CustomerId(customerId),
-      items = items.map { it.toRequestedItem() },
-      tableNumber = tableNumber
-        ?: throw IllegalArgumentException("Table number is required for dine-in orders"),
-      numberOfGuests = numberOfGuests
-        ?: throw IllegalArgumentException("Number of guests is required for dine-in orders"),
-    )
+    DINE_IN -> toDineInCommand()
+  }
+
+  /**
+   * A dine-in order names either a reservation, whose table it is then served at, or the table
+   * and number of guests directly.
+   */
+  private fun PlaceOrderRequest.toDineInCommand(): PlaceOrderCommand {
+    val reservation = reservationId
+    return if (!reservation.isNullOrBlank()) {
+      PlaceOrderCommand.ReservedDineIn(
+        restaurantId = RestaurantId(restaurantId),
+        customerId = CustomerId(customerId),
+        items = items.map { it.toRequestedItem() },
+        reservationId = reservation,
+      )
+    } else {
+      PlaceOrderCommand.DineIn(
+        restaurantId = RestaurantId(restaurantId),
+        customerId = CustomerId(customerId),
+        items = items.map { it.toRequestedItem() },
+        tableNumber = tableNumber
+          ?: throw IllegalArgumentException("Table number is required for dine-in orders"),
+        numberOfGuests = numberOfGuests
+          ?: throw IllegalArgumentException("Number of guests is required for dine-in orders"),
+      )
+    }
   }
 
   /**

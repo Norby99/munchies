@@ -14,6 +14,7 @@ import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.port.MenuCatalog
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.TableReservations
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import org.slf4j.LoggerFactory
 
@@ -29,19 +30,82 @@ import org.slf4j.LoggerFactory
  * The returned DTO is built from the command-side state rebuilt from that very event,
  * not from the read model, so the caller always sees its own write.
  *
+ * A dine-in order placed for a table reservation is first resolved through [TableReservations]:
+ * the reservation must be an accepted one of the same customer at the same restaurant, and the
+ * order is served at its table, for its number of guests.
+ *
  * @property eventStore The event store holding the order streams.
  * @property menuCatalog The restaurant menus, source of the item prices.
+ * @property tableReservations The table reservations, source of a reserved dine-in order's table.
  */
 class PlaceOrderUseCase(
   private val eventStore: OrderEventStore,
   private val menuCatalog: MenuCatalog,
+  private val tableReservations: TableReservations,
 ) : PlaceOrder {
 
-  override fun execute(command: PlaceOrderCommand): PlaceOrder.Result =
-    when (val pricing = menuCatalog.checkAndPrice(command.restaurantId, command.items)) {
-      is PricingResult.Priced -> place(command, pricing.items)
-      is PricingResult.Rejected -> rejected(command.restaurantId, pricing)
+  override fun execute(command: PlaceOrderCommand): PlaceOrder.Result {
+    // Resolved before pricing: an order for a reservation that cannot back it is refused
+    // whatever its items.
+    val resolved = when (command) {
+      is PlaceOrderCommand.ReservedDineIn -> when (val table = reservedTable(command)) {
+        is ReservedTable.Usable -> command.at(table.info)
+        is ReservedTable.Refused -> return table.failure
+      }
+      else -> command
     }
+    return when (val pricing = menuCatalog.checkAndPrice(resolved.restaurantId, resolved.items)) {
+      is PricingResult.Priced -> place(resolved, pricing.items)
+      is PricingResult.Rejected -> rejected(resolved.restaurantId, pricing)
+    }
+  }
+
+  /** Outcome of resolving the reservation of a [PlaceOrderCommand.ReservedDineIn]. */
+  private sealed interface ReservedTable {
+    data class Usable(val info: TableInfo) : ReservedTable
+    data class Refused(val failure: PlaceOrder.Result.Failure) : ReservedTable
+  }
+
+  private fun reservedTable(command: PlaceOrderCommand.ReservedDineIn): ReservedTable =
+    when (val lookup = tableReservations.find(command.reservationId, command.customerId)) {
+      is TableReservations.Lookup.NotFound ->
+        ReservedTable.Refused(PlaceOrder.Result.Failure.ReservationNotFound)
+      is TableReservations.Lookup.Unavailable -> {
+        logger.error("Order rejected: table-reservation-service did not return the reservation")
+        ReservedTable.Refused(PlaceOrder.Result.Failure.ReservationUnavailable)
+      }
+      is TableReservations.Lookup.Found -> {
+        val reservation = lookup.reservation
+        when {
+          !reservation.accepted -> notUsable(command, "The reservation is not active")
+          reservation.restaurantId != command.restaurantId ->
+            notUsable(command, "The reservation was made at another restaurant")
+          else -> ReservedTable.Usable(
+            TableInfo(
+              tableNumber = reservation.tableNumber,
+              numberOfGuests = reservation.numberOfGuests,
+            ),
+          )
+        }
+      }
+    }
+
+  private fun notUsable(
+    command: PlaceOrderCommand.ReservedDineIn,
+    reason: String,
+  ): ReservedTable.Refused {
+    logger.warn("Order rejected for reservation {}: {}", command.reservationId, reason)
+    return ReservedTable.Refused(PlaceOrder.Result.Failure.ReservationNotUsable(reason))
+  }
+
+  /** The dine-in order served at the reservation's table. */
+  private fun PlaceOrderCommand.ReservedDineIn.at(table: TableInfo) = PlaceOrderCommand.DineIn(
+    restaurantId = restaurantId,
+    customerId = customerId,
+    items = items,
+    tableNumber = table.tableNumber,
+    numberOfGuests = table.numberOfGuests,
+  )
 
   private fun rejected(
     restaurantId: RestaurantId,
@@ -102,6 +166,8 @@ class PlaceOrderUseCase(
           numberOfGuests = command.numberOfGuests,
         ),
       )
+      is PlaceOrderCommand.ReservedDineIn ->
+        error("A reserved dine-in order is resolved to its table before being placed")
     }
 
     if (creationResult is OrderCreationResult.Failure) {
