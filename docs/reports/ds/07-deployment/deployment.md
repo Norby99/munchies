@@ -1,13 +1,5 @@
 # Deployment
 
-- should one install your software from scratch, how to do it?
-    * provide instructions
-    * provide expected outcomes
-
----
-
-# Deployment of Munchies
-
 Munchies is built from source and runs in containers. No cloud account is needed, as the whole system fits on a single
 machine (`IR3`). There are two ways to run it:
 
