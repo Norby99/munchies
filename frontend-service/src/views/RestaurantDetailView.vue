@@ -1,7 +1,9 @@
 <script setup lang="ts">
 // Customer restaurant page: header, menu picker, dishes grouped by category, and the cart.
 // Reached from the restaurant search (ExploreView) or by direct link (e.g. a QR code). The header
-// shows the opening hours when the restaurant has set them (its capacity policy).
+// shows the opening hours when the restaurant has set them (its capacity policy) and, when the
+// restaurant has configured its dining room tables, lets a customer book a table
+// (table-reservation-service): the booking dialog offers arrival times within those hours.
 // Every menu is fetched in full up front, since each tab shows its availability.
 //
 // The cart sits in a sticky side panel from the lg breakpoint; on smaller screens a floating
@@ -9,25 +11,31 @@
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ClockIcon, MapPinIcon, PhoneIcon, ShoppingBagIcon, SquareMenuIcon } from '@lucide/vue'
+import { CalendarPlusIcon, ClockIcon, MapPinIcon, PhoneIcon, ShoppingBagIcon, SquareMenuIcon } from '@lucide/vue'
 
 import MenuItemRow from '@/components/MenuItemRow.vue'
 import MenuTabs from '@/components/MenuTabs.vue'
 import OrderDraft from '@/components/OrderDraft.vue'
+import ReservationDialog from '@/components/ReservationDialog.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useOnline } from '@/composables/useOnline'
+import { ApiError } from '@/api/client'
+import * as reservationsApi from '@/api/reservations'
+import type { ReservationInput } from '@/api/reservations'
 import * as restaurantsApi from '@/api/restaurants'
 import { useCartStore } from '@/stores/cart'
 import { useMenusStore } from '@/stores/menus'
 import { useRestaurantsStore } from '@/stores/restaurants'
+import { useSessionStore } from '@/stores/session'
 import { openingStatus, type OpeningStatus } from '@/utils/openingHours'
 import { SCHEDULER_DEFAULT_POLICY } from '@/utils/schedulerDefaults'
 import { describe, isValid } from '@/utils/validity'
-import type { LoadStatus, Menu, Restaurant } from '@/types'
+import type { DiningTable, LoadStatus, Menu, Reservation, Restaurant } from '@/types'
 
 const props = defineProps<{ restaurantId: string }>()
 
@@ -36,6 +44,7 @@ const router = useRouter()
 const restaurants = useRestaurantsStore()
 const menus = useMenusStore()
 const cart = useCartStore()
+const session = useSessionStore()
 const { isOnline } = useOnline()
 
 const restaurant = ref<Restaurant | null>(null)
@@ -45,6 +54,17 @@ const bagOpen = ref(false)
 // Opening hours from the capacity policy, or the scheduler's default (marked indicative) while the
 // restaurant has not set its own; null only while loading or if the hours could not be read.
 const hours = ref<OpeningStatus | null>(null)
+// The same hours as raw "HH:MM" bounds, for the arrival times offered when booking a table.
+const openingHours = ref<{ opening: string; closing: string }>({
+  opening: SCHEDULER_DEFAULT_POLICY.opening,
+  closing: SCHEDULER_DEFAULT_POLICY.closing,
+})
+// The dining room; empty means the restaurant takes no reservations.
+const tables = ref<DiningTable[]>([])
+const booking = ref({ open: false, submitting: false, error: null as string | null, confirmed: null as Reservation | null })
+
+const canBook = computed(() => session.role === 'CUSTOMER' && tables.value.length > 0)
+const maxGuests = computed(() => Math.max(1, ...tables.value.map((t) => t.seats)))
 
 const activeMenu = computed(() => loadedMenus.value.find((m) => m.id === menus.activeMenuId) ?? null)
 const menuOpen = computed(() => (activeMenu.value ? isValid(activeMenu.value.validity) : false))
@@ -58,7 +78,9 @@ const bagTotal = computed(() => (activeMenu.value ? cart.totalLabel(activeMenu.v
 async function load(): Promise<void> {
   status.value = 'loading'
   hours.value = null
+  tables.value = []
   loadHours()
+  loadTables()
   try {
     restaurant.value = await restaurantsApi.getRestaurant(props.restaurantId)
     restaurants.cacheOne(restaurant.value)
@@ -90,8 +112,41 @@ async function loadHours(): Promise<void> {
     if (requestedFor !== props.restaurantId) return
     const source = policy ?? SCHEDULER_DEFAULT_POLICY
     hours.value = openingStatus(source.opening, source.closing, new Date(), policy === null)
+    openingHours.value = { opening: source.opening, closing: source.closing }
   } catch {
     // Leave the hours out.
+  }
+}
+
+// Also on its own: without tables the "Book a table" action is simply not offered.
+async function loadTables(): Promise<void> {
+  const requestedFor = props.restaurantId
+  try {
+    const found = await restaurantsApi.getTables(requestedFor)
+    if (requestedFor === props.restaurantId) tables.value = found
+  } catch {
+    // No booking offered.
+  }
+}
+
+function openBooking(): void {
+  booking.value = { open: true, submitting: false, error: null, confirmed: null }
+}
+
+async function book(input: ReservationInput): Promise<void> {
+  booking.value.submitting = true
+  booking.value.error = null
+  try {
+    booking.value.confirmed = await reservationsApi.reserveTable(props.restaurantId, input)
+  } catch (err) {
+    booking.value.error =
+      err instanceof ApiError && err.code === 409
+        ? 'No table is free for your party at that time. Try another time or day.'
+        : err instanceof ApiError
+          ? err.message
+          : 'The table could not be booked.'
+  } finally {
+    booking.value.submitting = false
   }
 }
 
@@ -129,7 +184,27 @@ function checkout(): void {
           </Badge>
         </li>
       </ul>
+      <div v-if="canBook">
+        <Button variant="outline" class="bg-card" @click="openBooking">
+          <CalendarPlusIcon data-icon="inline-start" /> Book a table
+        </Button>
+      </div>
     </header>
+
+    <ReservationDialog
+      v-if="restaurant"
+      :open="booking.open"
+      :restaurant-name="restaurant.name"
+      :opening="openingHours.opening"
+      :closing="openingHours.closing"
+      :max-guests="maxGuests"
+      :submitting="booking.submitting"
+      :error="booking.error"
+      :confirmed="booking.confirmed"
+      @submit="book"
+      @close="booking.open = false"
+      @view-reservations="router.push({ name: 'my-reservations' })"
+    />
 
     <StateBlock
       :status="status"

@@ -2,8 +2,12 @@
 // Customer checkout: pick how to receive the order, the day and a time slot, fill the per-type
 // details, review the bag, then book it through scheduler-service (POST /schedule/{id}/orders),
 // which places the order in order-service once the kitchen (and, for delivery, a driver trip) can
-// take it. Only DELIVERY and TAKEAWAY are offered: DINE_IN needs a table, and table assignment
-// belongs to table-reservation-service, which is not implemented yet.
+// take it.
+//
+// DINE_IN ("At my table") is offered only to a customer with an active table reservation at this
+// restaurant (booked and not yet ended): the order goes straight to order-service with the
+// reservation id, and order-service takes the table and the guests from the reservation. It needs
+// no time slot, since the customer is (or will be) seated.
 //
 // Slots come from GET /schedule/{id}/availability for the chosen day and type. Delivery slots also
 // depend on where the customer is (a trip must be able to reach them), so the customer's position
@@ -22,6 +26,7 @@ import {
   LocateFixedIcon,
   ShoppingBagIcon,
   StoreIcon,
+  UtensilsIcon,
 } from '@lucide/vue'
 
 import ChoiceCard from '@/components/ChoiceCard.vue'
@@ -37,18 +42,21 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ApiError } from '@/api/client'
+import * as ordersApi from '@/api/orders'
+import * as reservationsApi from '@/api/reservations'
 import * as scheduleApi from '@/api/schedule'
 import type { AvailableSlot, GeoPoint } from '@/api/schedule'
 import { useOnline } from '@/composables/useOnline'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { useCartStore } from '@/stores/cart'
 import { useSessionStore } from '@/stores/session'
+import { formatDay, formatTimeRange, isActive } from '@/utils/reservations'
 import { toDateInput } from '@/utils/time'
-import type { LoadStatus } from '@/types'
+import type { LoadStatus, Reservation } from '@/types'
 
 const props = defineProps<{ restaurantId: string }>()
 
-type CheckoutType = 'DELIVERY' | 'TAKEAWAY'
+type CheckoutType = 'DELIVERY' | 'TAKEAWAY' | 'DINE_IN'
 
 // Days offered at checkout. The restaurant may allow fewer (its maxAdvanceDays): those days then
 // simply come back with no slots.
@@ -79,6 +87,8 @@ const form = reactive({
   date: days[0].value,
   // Epoch ms of the chosen slot start, as a string (ToggleGroup values are strings); '' = none.
   slot: '',
+  // DINE_IN: the reservation the order is for.
+  reservationId: '',
   deliveryAddress: '',
   bellName: '',
   customerPhone: '',
@@ -95,6 +105,9 @@ const slotsError = ref<string | null>(null)
 // False when the restaurant does not offer the chosen order type (delivery not set up).
 const typeOffered = ref(true)
 const locating = ref(false)
+// The customer's active reservations at this restaurant, which make "At my table" available.
+const tableReservations = ref<Reservation[]>([])
+const isDineIn = computed(() => form.orderType === 'DINE_IN')
 
 const lines = computed(() => cart.lines(catalog.mergedMenu.value))
 const totalLabel = computed(() => cart.totalLabel(catalog.mergedMenu.value))
@@ -119,10 +132,24 @@ async function load(): Promise<void> {
       status.value = 'empty'
       return
     }
-    await catalog.load(props.restaurantId)
+    await Promise.all([catalog.load(props.restaurantId), loadTableReservations()])
     status.value = lines.value.length === 0 ? 'empty' : 'ready'
   } catch {
     status.value = 'error'
+  }
+}
+
+// Best-effort: without them, checkout simply offers no "At my table".
+async function loadTableReservations(): Promise<void> {
+  try {
+    const list = await reservationsApi.listReservations(props.restaurantId)
+    tableReservations.value = list.filter((r) => isActive(r)).sort((a, b) => a.start.localeCompare(b.start))
+    if (tableReservations.value.length > 0) {
+      form.orderType = 'DINE_IN'
+      form.reservationId = tableReservations.value[0].id
+    }
+  } catch {
+    tableReservations.value = []
   }
 }
 
@@ -132,6 +159,12 @@ let slotsRequest = 0
 async function fetchSlots(): Promise<void> {
   const request = ++slotsRequest
   slotsError.value = null
+  const orderType = form.orderType
+  if (orderType === 'DINE_IN') {
+    slots.value = []
+    slotsLoading.value = false
+    return
+  }
   if (needsPosition.value) {
     slots.value = []
     typeOffered.value = true
@@ -143,8 +176,8 @@ async function fetchSlots(): Promise<void> {
     const availability = await scheduleApi.getAvailability(
       props.restaurantId,
       form.date,
-      form.orderType,
-      form.orderType === 'DELIVERY' ? (position.value ?? undefined) : undefined,
+      orderType,
+      orderType === 'DELIVERY' ? (position.value ?? undefined) : undefined,
     )
     if (request !== slotsRequest) return
     typeOffered.value = availability.slotMinutes > 0
@@ -196,6 +229,11 @@ function useCurrentPosition(): void {
 function validate(): boolean {
   for (const key of Object.keys(fieldErrors) as (keyof typeof form)[]) delete fieldErrors[key]
 
+  if (form.orderType === 'DINE_IN') {
+    if (!form.reservationId) fieldErrors.reservationId = 'Choose the reservation you are ordering for.'
+    return Object.keys(fieldErrors).length === 0
+  }
+
   if (form.orderType === 'DELIVERY') {
     if (!position.value) fieldErrors.lat = 'Share your position or enter valid coordinates.'
     if (!form.deliveryAddress.trim()) fieldErrors.deliveryAddress = 'Enter the delivery address.'
@@ -223,6 +261,20 @@ async function submit(): Promise<void> {
 
   submitting.value = true
   try {
+    if (form.orderType === 'DINE_IN') {
+      const reservation = tableReservations.value.find((r) => r.id === form.reservationId)!
+      const order = await ordersApi.placeOrder({
+        orderType: 'DINE_IN',
+        restaurantId: props.restaurantId,
+        items,
+        reservationId: reservation.id,
+        tableNumber: reservation.tableNumber,
+        numberOfGuests: reservation.numberOfGuests,
+      })
+      cart.clear()
+      await router.replace({ name: 'order-detail', params: { orderId: order.orderId } })
+      return
+    }
     const booked = await scheduleApi.scheduleOrder(
       props.restaurantId,
       form.orderType === 'DELIVERY'
@@ -273,17 +325,48 @@ function backToMenu(): void {
         <Card>
           <CardHeader>
             <CardTitle class="text-lg">How do you want it?</CardTitle>
-            <CardDescription>Pick a time the kitchen can still take. Dine-in will come with table reservations.</CardDescription>
+            <CardDescription>
+              {{ isDineIn ? 'Order now and it is served at your table.' : 'Pick a time the kitchen can still take.' }}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup>
               <FieldSet>
                 <FieldLegend class="sr-only">Order type</FieldLegend>
-                <RadioGroup v-model="form.orderType" class="grid gap-3 sm:grid-cols-2">
+                <RadioGroup
+                  v-model="form.orderType"
+                  :class="['grid gap-3', tableReservations.length ? 'sm:grid-cols-3' : 'sm:grid-cols-2']"
+                >
+                  <ChoiceCard
+                    v-if="tableReservations.length"
+                    id="checkout-dine-in"
+                    value="DINE_IN"
+                    title="At my table"
+                    description="Served at your reserved table"
+                    :icon="UtensilsIcon"
+                  />
                   <ChoiceCard id="checkout-delivery" value="DELIVERY" title="Delivery" description="We bring it to your door" :icon="BikeIcon" />
                   <ChoiceCard id="checkout-takeaway" value="TAKEAWAY" title="Takeaway" description="Pick it up yourself" :icon="StoreIcon" />
                 </RadioGroup>
               </FieldSet>
+
+              <FieldSet v-if="isDineIn" :data-invalid="!!fieldErrors.reservationId || undefined">
+                <FieldLegend variant="label">Your reservation</FieldLegend>
+                <FieldDescription>The kitchen serves the order at the table booked for you.</FieldDescription>
+                <RadioGroup v-model="form.reservationId" class="grid gap-3">
+                  <ChoiceCard
+                    v-for="reservation in tableReservations"
+                    :id="`checkout-reservation-${reservation.id}`"
+                    :key="reservation.id"
+                    :value="reservation.id"
+                    :title="`Table ${reservation.tableNumber} · ${reservation.numberOfGuests} ${reservation.numberOfGuests === 1 ? 'guest' : 'guests'}`"
+                    :description="`${formatDay(reservation.start)}, ${formatTimeRange(reservation)}`"
+                  />
+                </RadioGroup>
+                <FieldError v-if="fieldErrors.reservationId">{{ fieldErrors.reservationId }}</FieldError>
+              </FieldSet>
+
+              <template v-if="!isDineIn">
 
               <Field v-if="form.orderType === 'DELIVERY'" :data-invalid="!!fieldErrors.lat || undefined">
                 <FieldLabel for="checkout-lat">Your position</FieldLabel>
@@ -426,6 +509,7 @@ function backToMenu(): void {
                 />
                 <FieldError v-if="fieldErrors.customerName">{{ fieldErrors.customerName }}</FieldError>
               </Field>
+              </template>
             </FieldGroup>
           </CardContent>
         </Card>

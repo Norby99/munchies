@@ -15,7 +15,7 @@ server {
 
   # Same paths proxied by the Vite dev server. The address goes through a variable so that it is
   # resolved on each request: otherwise nginx would refuse to start until the gateway exists.
-  location ~ ^/(users|restaurants|restaurant|orders|payments|schedule)(/|$) {
+  location ~ ^/(users|restaurants|restaurant|orders|payments|schedule|reservations)(/|$) {
     set $gateway ${GATEWAY_URL};
     proxy_pass $gateway;
     proxy_set_header Host $host;

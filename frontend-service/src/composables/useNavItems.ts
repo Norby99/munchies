@@ -3,7 +3,15 @@
 
 import { computed, type Component } from 'vue'
 import { useRoute, type RouteLocationRaw } from 'vue-router'
-import { ClipboardListIcon, ReceiptTextIcon, SearchIcon, SquareMenuIcon, StoreIcon, UserRoundIcon } from '@lucide/vue'
+import {
+  CalendarDaysIcon,
+  ClipboardListIcon,
+  ReceiptTextIcon,
+  SearchIcon,
+  SquareMenuIcon,
+  StoreIcon,
+  UserRoundIcon,
+} from '@lucide/vue'
 
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { useSessionStore } from '@/stores/session'
@@ -42,6 +50,14 @@ export function useNavItems() {
           matches: ['manager-orders'],
         },
         {
+          label: 'Reservations',
+          icon: CalendarDaysIcon,
+          to: activeRestaurantId
+            ? { name: 'manager-reservations', query: { restaurant: activeRestaurantId } }
+            : { name: 'manager-reservations' },
+          matches: ['manager-reservations'],
+        },
+        {
           label: 'Menus',
           icon: SquareMenuIcon,
           to: activeRestaurantId
@@ -65,6 +81,12 @@ export function useNavItems() {
         matches: ['explore', 'restaurant-detail', 'checkout'],
       },
       { label: 'My orders', icon: ReceiptTextIcon, to: { name: 'my-orders' }, matches: ['my-orders', 'order-detail'] },
+      {
+        label: 'Reservations',
+        icon: CalendarDaysIcon,
+        to: { name: 'my-reservations' },
+        matches: ['my-reservations'],
+      },
       { label: 'Account', icon: UserRoundIcon, to: { name: 'account' }, matches: ['account'] },
     ]
   })

@@ -13,7 +13,7 @@
 // forwards a body on methods it's told to (see internal-client.ts).
 
 import { ApiError, http, unwrap } from '@/api/client'
-import type { Restaurant } from '@/types'
+import type { DiningTable, Restaurant } from '@/types'
 
 const BASE = '/restaurants/'
 
@@ -100,4 +100,15 @@ export async function getLocation(restaurantId: string): Promise<GeoLocation | n
 
 export async function updateLocation(restaurantId: string, location: GeoLocation): Promise<GeoLocation> {
   return unwrap(http.put(`${BASE}${restaurantId}/location/`, { managerId: '', ...location }))
+}
+
+// The dining room tables, used by table-reservation-service to seat each party. Anyone signed in
+// may read them (an empty list means the restaurant takes no reservations); only the restaurant's
+// manager may replace them, always as a whole layout.
+export async function getTables(restaurantId: string): Promise<DiningTable[]> {
+  return unwrap(http.get(`${BASE}${restaurantId}/tables/`))
+}
+
+export async function updateTables(restaurantId: string, tables: DiningTable[]): Promise<DiningTable[]> {
+  return unwrap(http.put(`${BASE}${restaurantId}/tables/`, { managerId: '', tables }))
 }

@@ -158,3 +158,26 @@ export interface ApiEnvelope<T> {
 }
 
 export type LoadStatus = 'ready' | 'loading' | 'empty' | 'error'
+
+// A table of a restaurant's dining room, as configured by its manager (restaurant-service).
+export interface DiningTable {
+  // The number the staff uses for the table, unique within the restaurant.
+  number: number
+  seats: number
+}
+
+// ACCEPTED: the table is booked. CANCELED: freed by the customer (spelled with one L, as on the wire).
+export type ReservationStatus = 'ACCEPTED' | 'CANCELED'
+
+// A table reservation (table-reservation-service). `start` and `end` are ISO-8601 UTC instants;
+// the length is fixed by the service, the customer only picks the arrival time.
+export interface Reservation {
+  id: string
+  restaurantId: string
+  customerId: string
+  start: string
+  end: string
+  numberOfGuests: number
+  tableNumber: number
+  status: ReservationStatus
+}
