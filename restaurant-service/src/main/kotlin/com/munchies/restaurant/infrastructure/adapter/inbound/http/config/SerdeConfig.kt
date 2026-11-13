@@ -8,6 +8,7 @@ import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuItemDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuSummaryDto
 import com.munchies.restaurant.infrastructure.adapter.dto.RestaurantDto
+import com.munchies.restaurant.infrastructure.adapter.dto.TableDto
 import com.munchies.restaurant.infrastructure.adapter.dto.ValidityDto
 import com.munchies.restaurant.infrastructure.adapter.dto.ValidityType
 import com.munchies.restaurant.infrastructure.adapter.dto.VariationDto
@@ -39,6 +40,7 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Ge
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetTablesResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse
@@ -46,10 +48,16 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Up
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateTablesRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateTablesResponse
 import io.micronaut.serde.annotation.SerdeImport
 import jakarta.inject.Singleton
 
 @SerdeImport(ErrorResponse::class)
+@SerdeImport(TableDto::class)
+@SerdeImport(GetTablesResponse::class)
+@SerdeImport(UpdateTablesRequest::class)
+@SerdeImport(UpdateTablesResponse::class)
 @SerdeImport(CreateMenuRequest::class)
 @SerdeImport(CreateMenuResponse::class)
 @SerdeImport(ValidityType::class)
