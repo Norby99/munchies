@@ -23,6 +23,9 @@ env:
   # Menu prices of every placed or updated order are read from restaurant-service.
   - name: RESTAURANT_SERVICE_URL
     value: "http://restaurant-service.restaurant-service.svc.cluster.local:8080"
+  # The table of a dine-in order placed for a reservation is read from table-reservation-service.
+  - name: TABLE_RESERVATION_SERVICE_URL
+    value: "http://table-reservation-service.table-reservation-service.svc.cluster.local:8080"
 
 metrics:
   path: /prometheus

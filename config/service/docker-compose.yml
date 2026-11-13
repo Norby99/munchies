@@ -43,6 +43,9 @@ services:
       <<: [ *kafka-env, *service-env ]
       MONGODB_URI: mongodb://munchies-order-mongo:27017/order-service
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
+      # Read only when a dine-in order is placed for a table reservation; not a startup
+      # dependency, so the two services can start in any order.
+      TABLE_RESERVATION_SERVICE_URL: http://table-reservation-service:8080
     healthcheck: *micronaut-healthcheck
 
   user-service:
@@ -96,20 +99,33 @@ services:
     environment:
       <<: [ *kafka-env, *service-env ]
 
-  #  table-reservation-service:
-  #    <<: *service-common
-  #    container_name: munchies-table-reservation-service
-  #    build:
-  #      context: table-reservation-service/build/docker/main
-  #    image: munchies-table-reservation-service:latest
-  #    ports: [ "8085:8080" ]
-  #    depends_on:
-  #      <<: *kafka-dependency
-  #      munchies-table-reservation-mongo:
-  #        condition: service_healthy
-  #    environment:
-  #      <<: [ *kafka-env, *service-env ]
-  #      MONGODB_URI: mongodb://munchies-table-reservation-mongo:27017/table-reservation-service
+  table-reservation-service:
+    <<: *service-common
+    container_name: munchies-table-reservation-service
+    build:
+      context: table-reservation-service/build/docker/main
+    image: munchies-table-reservation-service:latest
+    ports: [ "8085:8080" ]
+    depends_on:
+      <<: *kafka-dependency
+      munchies-table-reservation-mongo:
+        condition: service_healthy
+      # Reservations are booked against the tables the manager configured in restaurant-service.
+      restaurant-service:
+        condition: service_healthy
+    environment:
+      <<: [ *kafka-env, *service-env ]
+      MONGODB_URI: mongodb://munchies-table-reservation-mongo:27017/table-reservation-service
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8080
+      # How long a table stays booked, in minutes (a multiple of 15).
+      RESERVATION_DURATION_MINUTES: 120
+    healthcheck:
+      # node:*-alpine base image ships busybox wget, not curl
+      test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
 
   restaurant-service:
     <<: *service-common
@@ -196,6 +212,8 @@ services:
         condition: service_started
       scheduler-service:
         condition: service_healthy
+      table-reservation-service:
+        condition: service_healthy
     environment:
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
@@ -203,6 +221,7 @@ services:
       ORDER_SERVICE_URL: http://order-service:8080
       PAYMENT_SERVICE_URL: http://payment-service:8080
       SCHEDULER_SERVICE_URL: http://scheduler-service:8080
+      TABLE_RESERVATION_SERVICE_URL: http://table-reservation-service:8080
     healthcheck:
       # node:*-alpine base image ships busybox wget, not curl
       test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]
