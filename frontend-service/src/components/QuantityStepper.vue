@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// Compact minus / quantity / plus control for one cart line.
+// Compact minus / quantity / plus control (a cart line, the guests of a booking). The buttons are
+// type="button": inside a <form> a button without a type submits it, so every click would submit.
 import { MinusIcon, PlusIcon } from '@lucide/vue'
 
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ const emit = defineEmits<{ increment: []; decrement: [] }>()
 <template>
   <div class="inline-flex items-center rounded-full border bg-card" role="group" :aria-label="`Quantity of ${props.label}`">
     <Button
+      type="button"
       variant="ghost"
       size="icon"
       class="size-9 rounded-full"
@@ -21,6 +23,7 @@ const emit = defineEmits<{ increment: []; decrement: [] }>()
     </Button>
     <span class="min-w-6 text-center text-sm font-semibold tabular-nums" aria-live="polite">{{ props.quantity }}</span>
     <Button
+      type="button"
       variant="ghost"
       size="icon"
       class="size-9 rounded-full"
