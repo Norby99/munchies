@@ -42,9 +42,7 @@ or `infrastructure/` in a backend service.
   routing/auth middleware and proxying (`infrastructure/adapter/middleware/`).
 - `notification-service` has no `application/` by design: it is an agent-based, event-driven consumer that reacts
   to Kafka messages directly in `infrastructure/adapter/inbound/kafka/`.
-- `table-reservation-service` has not implemented this structure yet (stub controller only); it should adopt it,
-  following `payment-service`, as business logic is added — flag missing layers there as "not yet built", not as a
-  violation.
+
 - `frontend-service` (Vue.js) is out of scope for this checklist entirely.
 
 ## When reviewing a diff

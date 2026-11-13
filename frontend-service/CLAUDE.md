@@ -37,9 +37,11 @@ Features currently backed by gateway routes
     - manage menus, categories and menu items;
     - see incoming orders and advance their status through the order lifecycle.
 
-Planned, not yet exposed by the gateway (design the UI so they can be added without restructuring):
+Planned, not yet in the UI (design it so they can be added without restructuring):
 
-- **Table reservations** (`table-reservation-service`, still a stub).
+- **Table reservations** (`table-reservation-service`): the backend exists and is routed by the gateway under
+  `/reservations/*` (reserve, list, read, modify, cancel) and `/restaurants/{id}/tables/` (the manager's table
+  layout), with contracts in `table-reservation-shared` and `restaurant-shared`; no screen uses it yet.
 - **Delivery scheduling** (`scheduler-service`).
 - **Real-time notifications**: `notification-service` will push notifications (e.g. order status changes, payment
   success) to the frontend over a WebSocket proxied by the gateway (see
