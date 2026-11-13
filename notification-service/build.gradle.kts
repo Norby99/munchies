@@ -8,4 +8,5 @@ dependencies {
   jsImplementation(project(":user-shared"))
   jsImplementation(project(":payment-shared"))
   jsImplementation(project(":order-shared"))
+  jsImplementation(project(":table-reservation-shared"))
 }

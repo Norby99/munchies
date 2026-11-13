@@ -4,6 +4,9 @@ import {
   _UserEmailConfirmationNotification,
   OrderStatusChangedNotification,
   PaymentSuccessNotification,
+  TableReservationAcceptedNotification,
+  TableReservationCanceledNotification,
+  TableReservationModifiedNotification,
 } from "@main/domain/external-modules";
 import { notificationsReceived } from "@main/infrastructure/adapter/inbound/web/config/metrics";
 import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
@@ -59,5 +62,38 @@ export class NotificationController extends NotificationAPI {
    */
   public handleOrderStatusChanged(event: OrderStatusChangedNotification): void {
     logger.info({ event: event.toString() }, "Received OrderStatusChangedNotification");
+  }
+
+  /**
+   * Handles a table-reservation-accepted event, published by table-reservation-service once a table
+   * has been booked for a reservation.
+   */
+  public async handleTableReservationAccepted(
+    event: TableReservationAcceptedNotification
+  ): Promise<void> {
+    notificationsReceived.inc({ type: "table_reservation_accepted" });
+    logger.info({ event: event.toString() }, "Received TableReservationAcceptedNotification");
+  }
+
+  /**
+   * Handles a table-reservation-modified event, published by table-reservation-service once a
+   * reservation has changed time slot and/or number of guests.
+   */
+  public async handleTableReservationModified(
+    event: TableReservationModifiedNotification
+  ): Promise<void> {
+    notificationsReceived.inc({ type: "table_reservation_modified" });
+    logger.info({ event: event.toString() }, "Received TableReservationModifiedNotification");
+  }
+
+  /**
+   * Handles a table-reservation-canceled event, published by table-reservation-service once a
+   * reservation has been canceled.
+   */
+  public async handleTableReservationCanceled(
+    event: TableReservationCanceledNotification
+  ): Promise<void> {
+    notificationsReceived.inc({ type: "table_reservation_canceled" });
+    logger.info({ event: event.toString() }, "Received TableReservationCanceledNotification");
   }
 }
