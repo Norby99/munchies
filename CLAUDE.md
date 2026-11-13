@@ -63,7 +63,8 @@ Backend services follow a Hexagonal Architecture (Ports & Adapters) layout insid
 stack. Reference implementations for new code:
 
 - **Kotlin + Micronaut**: `order-service`
-- **Express.js**: `payment-service`
+- **Express.js**: `payment-service` (`table-reservation-service` follows the same layout and also shows
+  Mongo persistence, several use cases and a REST client towards another service)
 
 The folder names are the same across both stacks, only the language differs:
 
@@ -105,8 +106,6 @@ New services, and new code in existing ones, should follow this structure.
 - `notification-service` intentionally has no `application/` layer: it follows an agent-based, event-driven
   architecture and reacts to Kafka messages directly in `infrastructure/adapter/inbound/kafka/`, with no use cases
   to orchestrate.
-- `table-reservation-service` does not yet implement this structure (only a stub controller exists); it should
-  adopt it, following `payment-service`, as business logic is added.
 - `frontend-service` (Vue.js) does not follow this backend layering; it is structured separately as a frontend
   application.
 
