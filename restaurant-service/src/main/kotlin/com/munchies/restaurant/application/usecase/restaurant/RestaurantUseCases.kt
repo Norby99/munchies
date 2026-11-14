@@ -22,10 +22,13 @@ data class RestaurantUseCases(val repository: RestaurantRepository) {
   val delete = DeleteRestaurantUseCase(repository)
   val getDetails = GetRestaurantUseCase(repository)
   val getManagerRestaurants = GetManagerRestaurantsUseCase(repository)
+  val search = SearchRestaurantsUseCase(repository)
   val getCapacityPolicy = GetCapacityPolicyUseCase(repository)
   val updateCapacityPolicy = UpdateCapacityPolicyUseCase(repository)
   val getRestaurantLocation = GetRestaurantLocationUseCase(repository)
   val updateRestaurantLocation = UpdateRestaurantLocationUseCase(repository)
+  val getTables = GetTablesUseCase(repository)
+  val updateTables = UpdateTablesUseCase(repository)
 }
 
 // --- Get Restaurant ---
@@ -74,6 +77,50 @@ class GetManagerRestaurantsUseCase(
       val restaurants = repository.findAllByManagerId(managerId)
       GetManagerRestaurantsResult.Success(restaurants)
     }.getOrElse { GetManagerRestaurantsResult.ValidationError(it.message.orEmpty()) }
+  }
+}
+
+// --- Search Restaurants ---
+
+/**
+ * Customer-facing search: [query] is matched, ignoring case, against the restaurant's name and
+ * address; a blank query lists every restaurant.
+ */
+data class SearchRestaurantsCommand(
+  val query: String,
+)
+
+sealed interface SearchRestaurantsResult {
+  data class Success(val restaurants: List<Restaurant>) : SearchRestaurantsResult
+  data class ValidationError(val error: String) : SearchRestaurantsResult
+}
+
+class SearchRestaurantsUseCase(
+  private val repository: RestaurantRepository,
+) : UseCase<SearchRestaurantsCommand, SearchRestaurantsResult> {
+
+  override suspend operator fun invoke(command: SearchRestaurantsCommand): SearchRestaurantsResult {
+    val query = command.query.trim()
+    return if (query.length > MAX_QUERY_LENGTH) {
+      SearchRestaurantsResult.ValidationError(
+        "The search text cannot exceed $MAX_QUERY_LENGTH characters",
+      )
+    } else {
+      // Sorted by name for a stable, readable list, and capped so that a blank or very short
+      // query cannot return the whole collection in one response.
+      val restaurants = repository.search(query)
+        .sortedBy { it.name.value.lowercase() }
+        .take(MAX_RESULTS)
+      SearchRestaurantsResult.Success(restaurants)
+    }
+  }
+
+  companion object {
+    /** Upper bound of the restaurants returned by one search. */
+    const val MAX_RESULTS = 50
+
+    /** Longest accepted search text, after trimming. */
+    const val MAX_QUERY_LENGTH = 100
   }
 }
 

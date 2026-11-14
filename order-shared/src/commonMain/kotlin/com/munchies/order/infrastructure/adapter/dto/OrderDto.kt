@@ -13,6 +13,9 @@ import kotlinx.serialization.Serializable
  * @property customerId The unique identifier for the customer.
  * @property status The current status of the order.
  * @property items The list of order items.
+ * @property payed Whether the order has been paid.
+ * @property totalCents What the customer owes, in euro cents: the sum of the item subtotals at
+ * the prices frozen in the order. payment-service charges this amount.
  *
  * // Delivery-specific properties
  * @property estimatedDeliveryTime The estimated time for delivery in milliseconds (applicable for Delivery orders).
@@ -39,6 +42,7 @@ data class OrderDto(
   val status: String,
   val items: List<OrderItemDto>,
   val payed: Boolean,
+  val totalCents: Int = 0,
 
   // Delivery
   val estimatedDeliveryTime: String? = null,

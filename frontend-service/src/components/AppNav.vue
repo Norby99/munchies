@@ -1,115 +1,134 @@
 <script setup lang="ts">
-// App header — brand, role tag, logout — always visible. The text nav links
-// only render at desktop widths; mobile gets MobileTabBar instead (see
-// AppShell), so the two never appear together.
+// App header, sticky on every page: brand, the role's nav links (from md up; phones get
+// MobileTabBar instead, see AppShell), and the account menu with theme choice and logout.
 
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { LogOutIcon, MonitorIcon, MoonIcon, SunIcon, UserRoundIcon } from '@lucide/vue'
 
-import { useBreakpoints } from '@/composables/useBreakpoints'
+import BrandMark from '@/components/BrandMark.vue'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useNavItems } from '@/composables/useNavItems'
+import { useTheme } from '@/composables/useTheme'
+import { homeFor } from '@/router'
 import { useSessionStore } from '@/stores/session'
+import { cn } from '@/lib/utils'
 
 const session = useSessionStore()
+const route = useRoute()
 const router = useRouter()
 const navItems = useNavItems()
-const { isMobile } = useBreakpoints()
+const { choice } = useTheme()
 
-function logout(): void {
-  session.logout()
-  router.push({ name: 'login' })
+const initials = computed(() => (session.user?.username ?? '?').slice(0, 2).toUpperCase())
+const roleLabel = computed(() => (session.role === 'MANAGER' ? 'Manager' : 'Customer'))
+
+function isActive(matches: string[]): boolean {
+  return matches.includes(String(route.name))
+}
+
+async function logout(): Promise<void> {
+  await session.logout()
+  await router.push({ name: 'login' })
 }
 </script>
 
 <template>
-  <header class="app-nav" :class="{ 'app-nav--mobile': isMobile }">
-    <span class="app-nav__brand">Munchies</span>
-    <nav v-if="!isMobile" class="app-nav__links">
-      <router-link
-        v-for="item in navItems"
-        :key="item.label"
-        :to="item.to"
-        class="app-nav__link"
-        :class="{ 'app-nav__link--disabled': item.disabled }"
-        active-class="app-nav__link--active"
-        :tabindex="item.disabled ? -1 : undefined"
-        :aria-disabled="item.disabled || undefined"
-      >
-        {{ item.label }}
-      </router-link>
-    </nav>
-    <span class="tag tag-neutral app-nav__role">{{ session.role }}</span>
-    <button
-      class="btn btn-ghost app-nav__logout"
-      type="button"
-      title="No logout endpoint exists — clears client state only"
-      @click="logout"
-    >
-      Log out
-    </button>
+  <header class="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-backdrop-filter:bg-background/70">
+    <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-6">
+      <RouterLink :to="homeFor(session.role)" class="rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+        <BrandMark />
+        <span class="sr-only">, home</span>
+      </RouterLink>
+
+      <nav aria-label="Main" class="hidden items-center gap-1 md:flex">
+        <template v-for="item in navItems" :key="item.label">
+          <span
+            v-if="item.disabled"
+            class="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground/60"
+            aria-disabled="true"
+          >
+            <component :is="item.icon" class="size-4" aria-hidden="true" />
+            {{ item.label }}
+          </span>
+          <RouterLink
+            v-else
+            :to="item.to"
+            :aria-current="isActive(item.matches) ? 'page' : undefined"
+            :class="
+              cn(
+                'inline-flex h-9 max-w-56 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                isActive(item.matches)
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )
+            "
+          >
+            <component :is="item.icon" class="size-4 shrink-0" aria-hidden="true" />
+            <span class="truncate">{{ item.label }}</span>
+          </RouterLink>
+        </template>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="ghost" class="h-10 gap-2 rounded-full pr-3 pl-1" aria-label="Account menu">
+              <Avatar class="size-8">
+                <AvatarFallback class="bg-accent text-xs font-semibold text-accent-foreground">
+                  {{ initials }}
+                </AvatarFallback>
+              </Avatar>
+              <span class="hidden max-w-32 truncate text-sm font-medium sm:inline">
+                {{ session.user?.username }}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="w-60">
+            <DropdownMenuLabel class="flex flex-col gap-1">
+              <span class="flex items-center justify-between gap-2">
+                <span class="truncate font-semibold text-foreground">{{ session.user?.username }}</span>
+                <Badge variant="secondary">{{ roleLabel }}</Badge>
+              </span>
+              <span class="truncate text-xs font-normal text-muted-foreground">{{ session.user?.email }}</span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem @select="router.push({ name: 'account' })">
+                <UserRoundIcon />
+                Account settings
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel class="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+            <DropdownMenuRadioGroup v-model="choice">
+              <DropdownMenuRadioItem value="light"><SunIcon /> Light</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="dark"><MoonIcon /> Dark</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="auto"><MonitorIcon /> System</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem variant="destructive" @select="logout">
+                <LogOutIcon />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   </header>
 </template>
-
-<style scoped>
-.app-nav {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 40px;
-  border-bottom: 2px solid var(--color-divider);
-}
-
-@media (max-width: 1439px) {
-  .app-nav {
-    padding: 14px 24px;
-  }
-}
-
-.app-nav.app-nav--mobile {
-  padding: 14px 16px;
-  gap: 8px;
-}
-
-.app-nav__brand {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 18px;
-  margin-right: auto;
-}
-
-.app-nav__links {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.app-nav__link {
-  text-decoration: none;
-  white-space: nowrap;
-  font-size: 14px;
-  padding: 4px 0;
-  border-bottom: 2px solid transparent;
-  color: var(--color-text);
-}
-
-.app-nav__link--active {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
-}
-
-.app-nav__link--disabled {
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-.app-nav__role {
-  margin-left: 16px;
-  flex: none;
-  white-space: nowrap;
-}
-
-.app-nav__logout {
-  margin-left: 8px;
-  flex: none;
-  white-space: nowrap;
-}
-</style>

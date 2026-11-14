@@ -42,6 +42,25 @@ abstract class JsGetRestaurantAPI<E : WebResponse<Any>> :
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
 }
 
+/**
+ * Customer search of restaurants by name or address. The search text is the `q` query parameter
+ * ([RestaurantServiceConfig.SEARCH_QUERY_PARAM]); an empty one lists every restaurant.
+ */
+@JsExport
+abstract class JsSearchRestaurantsAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, SearchRestaurantsResponse>() {
+  abstract fun searchRestaurants(query: String): Promise<E>
+  override fun parseResponse(json: String): SearchRestaurantsResponse =
+    searchRestaurantsResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.SEARCH_RESTAURANTS_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
 @JsExport
 abstract class JsGetManagerRestaurantsAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetManagerRestaurantsResponse>() {
@@ -89,6 +108,11 @@ abstract class JsDeleteRestaurantAPI<E : WebResponse<Any>> :
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
 }
 
+/**
+ * Reading the capacity policy is open to customers: its opening and closing times are the
+ * restaurant's hours, shown on the restaurant page. Changing it stays manager-only
+ * ([JsUpdateCapacityPolicyAPI]).
+ */
 @JsExport
 abstract class JsGetCapacityPolicyAPI<E : WebResponse<Any>> :
   SimpleAPI<Nothing, GetCapacityPolicyResponse>() {
@@ -100,7 +124,7 @@ abstract class JsGetCapacityPolicyAPI<E : WebResponse<Any>> :
     RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.CAPACITY_POLICY_PATH
   override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
-  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
 }
 
@@ -152,6 +176,39 @@ abstract class JsUpdateRestaurantLocationAPI<E : WebResponse<Any>> :
   override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
   override fun getPath(): String =
     RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.RESTAURANT_LOCATION_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+}
+
+/**
+ * Reading the tables is public within the authenticated area: customers need them to see how a
+ * restaurant can seat them, managers to edit the layout.
+ */
+@JsExport
+abstract class JsGetTablesAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, GetTablesResponse>() {
+  abstract fun getTables(restaurantId: String): Promise<E>
+  override fun parseResponse(json: String): GetTablesResponse = getTablesResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.TABLES_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
+@JsExport
+abstract class JsUpdateTablesAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateTablesRequest, UpdateTablesResponse>() {
+  abstract fun updateTables(restaurantId: String, request: UpdateTablesRequest): Promise<E>
+  override fun parseRequest(json: String): UpdateTablesRequest = updateTablesRequestFromJson(json)
+  override fun parseResponse(json: String): UpdateTablesResponse =
+    updateTablesResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.TABLES_PATH
   override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.PUT
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER

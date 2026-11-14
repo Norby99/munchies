@@ -105,6 +105,37 @@ class MongoRestaurantRepositoryIntegrationTest {
     found.first().id shouldBe owned.id
   }
 
+  private fun named(name: String, address: String): Restaurant = Restaurant.create(
+    managerId = UserId(),
+    name = RestaurantName.of(name),
+    address = Address.of(address),
+    phone = Phone.of("+39 333 1234567"),
+    email = Email.of("info@example.com"),
+  )
+
+  @Test
+  fun `search matches name or address ignoring case, and a blank text matches all`() {
+    repository.save(named("Trattoria da Piero", "Via Emilia 10, Forli"))
+    repository.save(named("Pizzeria Bella Napoli", "Via Roma 1, Cesena"))
+    repository.save(named("Sushi Zen", "Corso Garibaldi 3, FORLI"))
+
+    repository.search("PIZZ").map { it.name.value } shouldBe listOf("Pizzeria Bella Napoli")
+    repository.search("forli").map {
+      it.name.value
+    }.toSet() shouldBe setOf("Trattoria da Piero", "Sushi Zen")
+    repository.search("kebab") shouldHaveSize 0
+    repository.search("") shouldHaveSize 3
+  }
+
+  @Test
+  fun `search treats regex characters in the text literally`() {
+    repository.save(named("Bar (Centro)", "Via Roma 1"))
+    repository.save(named("Bar Centro", "Via Roma 2"))
+
+    repository.search("(centro)").map { it.name.value } shouldBe listOf("Bar (Centro)")
+    repository.search(".*") shouldHaveSize 0
+  }
+
   @Test
   fun `update persists changes to the restaurant's details`() {
     val restaurant = restaurant()

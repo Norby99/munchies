@@ -9,7 +9,7 @@ import com.munchies.order.domain.model.*
 fun deliveryCommand(
   restaurantId: RestaurantId = RestaurantId("rest-1"),
   customerId: CustomerId = CustomerId("cust-1"),
-  items: List<OrderItem> = listOf(OrderItem(MenuItemId("item-1"), 2)),
+  items: List<RequestedItem> = listOf(RequestedItem(MenuItemId("item-1"), 2)),
   estimatedDeliveryTime: Long = 1_000L,
   deliveryAddress: String = "Via Roma 1",
   bellName: String = "Rossi",
@@ -27,7 +27,7 @@ fun deliveryCommand(
 fun takeawayCommand(
   restaurantId: RestaurantId = RestaurantId("rest-1"),
   customerId: CustomerId = CustomerId("cust-1"),
-  items: List<OrderItem> = listOf(OrderItem(MenuItemId("item-1"), 2)),
+  items: List<RequestedItem> = listOf(RequestedItem(MenuItemId("item-1"), 2)),
   pickupTime: Long = 1_000L,
   customerName: String = "Bianchi",
 ): PlaceOrderCommand.Takeaway = PlaceOrderCommand.Takeaway(
@@ -41,7 +41,7 @@ fun takeawayCommand(
 fun dineInCommand(
   restaurantId: RestaurantId = RestaurantId("rest-1"),
   customerId: CustomerId = CustomerId("cust-1"),
-  items: List<OrderItem> = listOf(OrderItem(MenuItemId("item-1"), 2)),
+  items: List<RequestedItem> = listOf(RequestedItem(MenuItemId("item-1"), 2)),
   tableNumber: Int = 5,
   numberOfGuests: Int = 2,
 ): PlaceOrderCommand.DineIn = PlaceOrderCommand.DineIn(
@@ -62,7 +62,7 @@ fun createUpdateDeliveryOrderInfoCommand(estimatedDeliveryTime: Long = futureTim
     customerPhone = "987654321",
   )
 
-fun createUpdateOrderItemsCommand(items: List<OrderItem> = createNewItems()) =
+fun createUpdateOrderItemsCommand(items: List<RequestedItem> = requested()) =
   UpdateOrderItemsCommand(
     orderId = defaultOrderId,
     customerId = defaultCustomerId,

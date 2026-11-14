@@ -7,6 +7,7 @@ import com.munchies.order.domain.model.OrderDetails
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
 import com.munchies.order.domain.model.OrderStatus
+import com.munchies.order.domain.model.Price
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.model.event.DeliveryInfoUpdated
@@ -52,6 +53,9 @@ data class OrderView(
   val lastUpdatedAt: Long,
   val version: Long,
 ) {
+
+  /** What the customer owes: the sum of the line subtotals, as in [Order.total]. */
+  val total: Price get() = items.fold(Price.ZERO) { sum, item -> sum + item.subtotal }
 
   /**
    * Folds [event] into the view and returns the updated view, bumping [version] by one. Like

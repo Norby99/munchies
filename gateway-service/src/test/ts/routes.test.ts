@@ -108,5 +108,28 @@ describe("routes.ts", () => {
       expect(nextFn).toHaveBeenCalled();
       logSpy.mockRestore();
     });
+
+    // Express dispatches to the first matching registration, so a second route on the same
+    // method + path is silently unreachable (as GetOrdersRoute was behind GetOrderDetailsRoute).
+    it("never registers the same method and path twice", () => {
+      const registered: string[] = [];
+      const record = (method: string) =>
+        vi.fn((path: string) => {
+          registered.push(`${method} ${path}`);
+          return mockApp;
+        });
+      const mockApp: any = {
+        post: record("POST"),
+        put: record("PUT"),
+        delete: record("DELETE"),
+        patch: record("PATCH"),
+        get: record("GET"),
+      };
+
+      applyRoutes(mockApp);
+
+      const duplicates = registered.filter((entry, index) => registered.indexOf(entry) !== index);
+      expect(duplicates).toEqual([]);
+    });
   });
 });

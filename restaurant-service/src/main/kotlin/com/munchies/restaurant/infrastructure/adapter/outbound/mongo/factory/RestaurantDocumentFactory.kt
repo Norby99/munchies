@@ -10,9 +10,11 @@ import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
+import com.munchies.restaurant.domain.valueobject.restaurant.Table
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.CapacityPolicyData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.GeoPointData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.RestaurantDocument
+import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.TableData
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -31,6 +33,7 @@ object RestaurantDocumentFactory {
     updatedAt = updatedAt,
     capacityPolicy = capacityPolicy?.toData(),
     location = location?.toData(),
+    tables = tables.map { TableData(number = it.number, seats = it.seats) },
   )
 
   fun RestaurantDocument.toDomain(): Restaurant = Restaurant.fromDatabase(
@@ -46,6 +49,7 @@ object RestaurantDocumentFactory {
     updatedAt = updatedAt,
     capacityPolicy = capacityPolicy?.toDomain(),
     location = location?.toDomain(),
+    tables = tables.map { Table(number = it.number, seats = it.seats) },
   )
 
   private fun CapacityPolicy.toData(): CapacityPolicyData = CapacityPolicyData(

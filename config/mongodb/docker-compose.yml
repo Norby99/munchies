@@ -27,12 +27,12 @@ services:
     volumes: [ "mongo_payment_data:/data/db" ]
     healthcheck: *mongo-healthcheck
 
-  #  munchies-table-reservation-mongo:
-  #    image: mongo:7.0
-  #    container_name: munchies-table-reservation-mongo
-  #    ports: [ "27022:27017" ]
-  #    volumes: [ "mongo_table_reservation_data:/data/db" ]
-  #    healthcheck: *mongo-healthcheck
+  munchies-table-reservation-mongo:
+    image: mongo:7.0
+    container_name: munchies-table-reservation-mongo
+    ports: [ "27022:27017" ]
+    volumes: [ "mongo_table_reservation_data:/data/db" ]
+    healthcheck: *mongo-healthcheck
 
   munchies-restaurant-mongo:
     image: mongo:7.0

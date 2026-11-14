@@ -1,13 +1,5 @@
 # Deployment
 
-- should one install your software from scratch, how to do it?
-    * provide instructions
-    * provide expected outcomes
-
----
-
-# Deployment of Munchies
-
 Munchies is built from source and runs in containers. No cloud account is needed, as the whole system fits on a single
 machine (`IR3`). There are two ways to run it:
 
@@ -181,5 +173,5 @@ In both modes the databases start empty, so there are no users, restaurants or m
 
 - **Table reservations:** `table-reservation-service` is disabled in Compose, and only runs on Kubernetes.
 - **Databases:** Compose exposes each MongoDB on the host, while on Kubernetes they stay inside the cluster.
-- **Images:** both modes build images from the local sources, so that a change can be tried right away. The images
-  published on Docker Hub are not used, as explained in [release](../06-release/release.md).
+- **Images:** both modes build images from the local sources, so that a change can be tried right away. For this
+  reason, the images published on Docker Hub (see [release](../06-release/release.md)) are not used.

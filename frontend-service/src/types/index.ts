@@ -121,6 +121,9 @@ export type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'ON_THE_WAY' | 'CO
 export interface OrderLineItem {
   menuItemId: string
   quantity: number
+  // Price of one unit in euro cents, frozen by order-service from the menu when the item was
+  // ordered. Ignored in requests: the server always prices items itself.
+  unitPriceCents?: number
 }
 
 export interface Order {
@@ -130,6 +133,11 @@ export interface Order {
   status: OrderStatus
   items: OrderLineItem[]
   orderType: OrderType
+  // Spelled `payed` on the wire (OrderDto in order-shared).
+  payed: boolean
+  // What the customer owes, in euro cents (sum of the line subtotals). payment-service charges
+  // exactly this amount.
+  totalCents: number
 
   estimatedDeliveryTime?: string
   deliveryAddress?: string
@@ -150,3 +158,26 @@ export interface ApiEnvelope<T> {
 }
 
 export type LoadStatus = 'ready' | 'loading' | 'empty' | 'error'
+
+// A table of a restaurant's dining room, as configured by its manager (restaurant-service).
+export interface DiningTable {
+  // The number the staff uses for the table, unique within the restaurant.
+  number: number
+  seats: number
+}
+
+// ACCEPTED: the table is booked. CANCELED: freed by the customer (spelled with one L, as on the wire).
+export type ReservationStatus = 'ACCEPTED' | 'CANCELED'
+
+// A table reservation (table-reservation-service). `start` and `end` are ISO-8601 UTC instants;
+// the length is fixed by the service, the customer only picks the arrival time.
+export interface Reservation {
+  id: string
+  restaurantId: string
+  customerId: string
+  start: string
+  end: string
+  numberOfGuests: number
+  tableNumber: number
+  status: ReservationStatus
+}

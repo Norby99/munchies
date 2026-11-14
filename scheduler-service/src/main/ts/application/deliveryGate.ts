@@ -2,6 +2,8 @@ import { CapacityPolicy, assertValidPolicy } from "../domain/model/capacityPolic
 import { GeoPoint } from "../domain/model/geo";
 import { RestaurantLocation } from "../domain/ports/restaurantLocation";
 import { RestaurantPolicyClient } from "../domain/ports/restaurantPolicyClient";
+import { AdmissionQuotaAgent } from "../domain/ports/admissionQuotaAgent";
+import { withAgentQuota } from "./agentQuota";
 
 export interface DeliverySetup {
   policy: CapacityPolicy;
@@ -13,11 +15,14 @@ export interface DeliverySetup {
  * capacity policy in restaurant-service. Nothing is defaulted here, unlike PolicyResolver:
  * a default trip budget or a default origin would quote deliveries the restaurant never
  * agreed to serve. Returns null while either is missing or invalid.
+ *
+ * When an admission quota agent is given, its quota replaces the policy's maxCapacityUnits.
  */
 export class DeliveryGate {
   constructor(
     private readonly policies: RestaurantPolicyClient,
     private readonly locations: RestaurantLocation,
+    private readonly agent?: AdmissionQuotaAgent,
   ) {}
 
   async resolve(restaurantId: string): Promise<DeliverySetup | null> {
@@ -31,6 +36,6 @@ export class DeliveryGate {
     } catch {
       return null;
     }
-    return { policy, origin };
+    return { policy: await withAgentQuota(policy, restaurantId, this.agent), origin };
   }
 }

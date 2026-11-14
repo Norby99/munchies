@@ -5,7 +5,7 @@ import com.munchies.order.domain.model.CustomerId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.RestaurantId
 import com.munchies.order.infrastructure.adapter.dto.OrderType.*
-import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toDomain
+import com.munchies.order.infrastructure.adapter.dto.factory.OrderItemDtoFactory.toRequestedItem
 import com.munchies.order.infrastructure.adapter.inbound.request.*
 
 /**
@@ -23,7 +23,7 @@ object CommandFactory {
     DELIVERY -> PlaceOrderCommand.Delivery(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
-      items = items.map { it.toDomain() },
+      items = items.map { it.toRequestedItem() },
       estimatedDeliveryTime = estimatedDeliveryTime?.toLongOrNull()
         ?: throw IllegalArgumentException(
           "Estimated delivery time is required for delivery orders",
@@ -38,21 +38,39 @@ object CommandFactory {
     TAKEAWAY -> PlaceOrderCommand.Takeaway(
       restaurantId = RestaurantId(restaurantId),
       customerId = CustomerId(customerId),
-      items = items.map { it.toDomain() },
+      items = items.map { it.toRequestedItem() },
       pickupTime = pickupTime?.toLongOrNull()
         ?: throw IllegalArgumentException("Pickup time is required for takeaway orders"),
       customerName = customerName
         ?: throw IllegalArgumentException("Customer name is required for takeaway orders"),
     )
-    DINE_IN -> PlaceOrderCommand.DineIn(
-      restaurantId = RestaurantId(restaurantId),
-      customerId = CustomerId(customerId),
-      items = items.map { it.toDomain() },
-      tableNumber = tableNumber
-        ?: throw IllegalArgumentException("Table number is required for dine-in orders"),
-      numberOfGuests = numberOfGuests
-        ?: throw IllegalArgumentException("Number of guests is required for dine-in orders"),
-    )
+    DINE_IN -> toDineInCommand()
+  }
+
+  /**
+   * A dine-in order names either a reservation, whose table it is then served at, or the table
+   * and number of guests directly.
+   */
+  private fun PlaceOrderRequest.toDineInCommand(): PlaceOrderCommand {
+    val reservation = reservationId
+    return if (!reservation.isNullOrBlank()) {
+      PlaceOrderCommand.ReservedDineIn(
+        restaurantId = RestaurantId(restaurantId),
+        customerId = CustomerId(customerId),
+        items = items.map { it.toRequestedItem() },
+        reservationId = reservation,
+      )
+    } else {
+      PlaceOrderCommand.DineIn(
+        restaurantId = RestaurantId(restaurantId),
+        customerId = CustomerId(customerId),
+        items = items.map { it.toRequestedItem() },
+        tableNumber = tableNumber
+          ?: throw IllegalArgumentException("Table number is required for dine-in orders"),
+        numberOfGuests = numberOfGuests
+          ?: throw IllegalArgumentException("Number of guests is required for dine-in orders"),
+      )
+    }
   }
 
   /**
@@ -67,7 +85,7 @@ object CommandFactory {
   fun UpdateOrderItemsRequest.toCommand(): UpdateOrderItemsCommand = UpdateOrderItemsCommand(
     orderId = OrderId(orderId),
     customerId = CustomerId(customerId),
-    items = items.map { it.toDomain() },
+    items = items.map { it.toRequestedItem() },
   )
 
   /**

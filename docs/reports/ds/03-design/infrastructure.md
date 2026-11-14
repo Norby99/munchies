@@ -1,24 +1,5 @@
 # Infrastructure
 
-- are there _infrastructural components_ that need to be introduced? _how many_?
-    * e.g. _clients_, _servers_, _load balancers_, _caches_, _databases_, _message brokers_, _queues_, _workers_,
-      _proxies_, _firewalls_, _CDNs_, _etc._
-
-- how do components    _distribute_ over the network? _where_?
-    * e.g. do servers / brokers / databases / etc. sit on the same machine? on the same network? on the same datacenter?
-      on the same continent?
-
-- how do components _find_ each other?
-    * how to _name_ components?
-    * e.g. DNS, _service discovery_, _load balancing_, _etc._
-
-> Component diagrams are welcome here
-
-
----
-
-# Infrastructure of Munchies
-
 ## Infrastructural components
 
 | Component            | How many                                                                                         | Purpose                                                      |
@@ -108,8 +89,8 @@ different failure zones.
 
 Components find each other through the platform, with no dedicated registry to operate:
 
-- Each service is published under a **stable logical name**, resolved by the cluster DNS. For instance, the order
-  service is reachable at `order-service.order-service.svc.cluster.local`.
+- Each service is published under a **stable logical name**, resolved by the cluster DNS, made of the name of the
+  service and of its namespace.
 - The name stands for all the replicas of that service: the platform tracks which ones are alive and ready, and each
   request reaches one of them. Callers do not know how many replicas exist, nor where (`NFR1`).
 - Names are not part of the code: each service receives the addresses of its dependencies through its configuration.
@@ -123,9 +104,9 @@ topic, which is defined by the shared contract of the event. Topics are named af
 
 ## Limits of the current design
 
-- The web client is not deployed yet on the cluster, as it only runs on a development server.
-- Every service is published as `NodePort`, and no rule limits traffic between namespaces, so the gateway is not the
-  only way in (`NFR12`).
+- Every backend service is also published on a port of the cluster nodes, and no rule limits traffic between
+  namespaces, so the gateway is not the only way in (`NFR12`). Only the web server, the databases and the broker are
+  not published this way.
 - The database and the broker run on a single node, which makes them single points of failure
   (see [Fault-Tolerance](fault-tolerance.md)).
 - `payment-service` and `notification-service` are not autoscaled.

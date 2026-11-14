@@ -24,14 +24,20 @@ class GetCapacityPolicyUseCase(
   private val repository: RestaurantRepository,
 ) : UseCase<GetCapacityPolicyCommand, GetCapacityPolicyResult> {
 
-  override suspend operator fun invoke(command: GetCapacityPolicyCommand): GetCapacityPolicyResult {
-    val restaurantId = runCatching { RestaurantId.of(command.restaurantId) }
-      .getOrElse { return GetCapacityPolicyResult.InvalidRestaurant(it.message.orEmpty()) }
+  override suspend operator fun invoke(command: GetCapacityPolicyCommand): GetCapacityPolicyResult =
+    runCatching { RestaurantId.of(command.restaurantId) }.fold(
+      onSuccess = { policyOf(it) },
+      onFailure = { GetCapacityPolicyResult.InvalidRestaurant(it.message.orEmpty()) },
+    )
+
+  private suspend fun policyOf(restaurantId: RestaurantId): GetCapacityPolicyResult {
     val restaurant = repository.findById(restaurantId)
-      ?: return GetCapacityPolicyResult.RestaurantNotFound
-    val policy = restaurant.capacityPolicy
-      ?: return GetCapacityPolicyResult.NotConfigured
-    return GetCapacityPolicyResult.Success(policy)
+    val policy = restaurant?.capacityPolicy
+    return when {
+      restaurant == null -> GetCapacityPolicyResult.RestaurantNotFound
+      policy == null -> GetCapacityPolicyResult.NotConfigured
+      else -> GetCapacityPolicyResult.Success(policy)
+    }
   }
 }
 
@@ -63,23 +69,41 @@ class UpdateCapacityPolicyUseCase(
   private val repository: RestaurantRepository,
 ) : UseCase<UpdateCapacityPolicyCommand, UpdateCapacityPolicyResult> {
 
+  // Inputs are validated in this order: restaurant id, caller, policy values; the first invalid
+  // one decides the result, before the repository is touched.
   override suspend operator fun invoke(
     command: UpdateCapacityPolicyCommand,
   ): UpdateCapacityPolicyResult {
     val restaurantId = runCatching { RestaurantId.of(command.restaurantId) }
-      .getOrElse { return UpdateCapacityPolicyResult.InvalidRestaurant(it.message.orEmpty()) }
-    val managerId = runCatching { UserId.of(command.managerId) }
-      .getOrElse { return UpdateCapacityPolicyResult.Unauthorized }
+    val managerId = runCatching { UserId.of(command.managerId) }.getOrNull()
     val policy = runCatching { command.toPolicy() }
-      .getOrElse { return UpdateCapacityPolicyResult.InvalidPolicy(it.message.orEmpty()) }
+    return when {
+      restaurantId.isFailure ->
+        UpdateCapacityPolicyResult.InvalidRestaurant(
+          restaurantId.exceptionOrNull()?.message.orEmpty(),
+        )
+      managerId == null -> UpdateCapacityPolicyResult.Unauthorized
+      policy.isFailure ->
+        UpdateCapacityPolicyResult.InvalidPolicy(policy.exceptionOrNull()?.message.orEmpty())
+      else -> update(restaurantId.getOrThrow(), managerId, policy.getOrThrow())
+    }
+  }
 
+  private suspend fun update(
+    restaurantId: RestaurantId,
+    managerId: UserId,
+    policy: CapacityPolicy,
+  ): UpdateCapacityPolicyResult {
     val restaurant = repository.findById(restaurantId)
-      ?: return UpdateCapacityPolicyResult.NotFound
-    if (restaurant.managerId != managerId) return UpdateCapacityPolicyResult.Unauthorized
-
-    restaurant.updateCapacityPolicy(policy)
-    repository.update(restaurant)
-    return UpdateCapacityPolicyResult.Success(policy)
+    return when {
+      restaurant == null -> UpdateCapacityPolicyResult.NotFound
+      restaurant.managerId != managerId -> UpdateCapacityPolicyResult.Unauthorized
+      else -> {
+        restaurant.updateCapacityPolicy(policy)
+        repository.update(restaurant)
+        UpdateCapacityPolicyResult.Success(policy)
+      }
+    }
   }
 
   private fun UpdateCapacityPolicyCommand.toPolicy(): CapacityPolicy = CapacityPolicy(

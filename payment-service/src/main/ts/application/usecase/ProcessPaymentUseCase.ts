@@ -17,10 +17,15 @@ import {
   ProcessPaymentRequestValidator,
   PaymentStatus,
   InvalidInput,
+  Currency,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
 
 /**
  * Use case processing a payment for an order.
+ *
+ * Before any money moves it reads the order from order-service and checks that it belongs to
+ * the paying customer and is not paid yet. The amount charged is the order total computed by
+ * order-service from the restaurant's menu prices, in euro: the client only chooses the method.
  *
  * On a successful payment, once the completed payment is persisted, it performs the two
  * follow-up steps of the payment workflow, both through outbound ports:
@@ -53,10 +58,41 @@ export class ProcessPaymentUseCase implements ProcessPayment {
       };
     }
 
+    const lookup = await this.orderServiceClient.getOrder(request.orderId);
+    switch (lookup.type) {
+      case "NOT_FOUND":
+        return { type: "ORDER_NOT_FOUND", reason: "Order not found" };
+      case "UNAVAILABLE":
+        this.logger.error("Cannot read the order to pay", {
+          orderId: request.orderId,
+          reason: lookup.reason,
+        });
+        return {
+          type: "ORDER_UNAVAILABLE",
+          reason: "The order cannot be checked right now, please retry",
+        };
+      case "FOUND":
+        break;
+    }
+    const order = lookup.order;
+    if (order.customerId !== request.customerId) {
+      this.logger.warn("Refused to pay another customer's order", {
+        orderId: request.orderId,
+      });
+      return { type: "FORBIDDEN", reason: "You can only pay your own orders" };
+    }
+    if (order.payed) {
+      return { type: "ALREADY_PAID", reason: "Order already paid" };
+    }
+    if (order.totalCents <= 0) {
+      return { type: "NOTHING_TO_PAY", reason: "The order has no amount to pay" };
+    }
+
     try {
       const orderId = new UUIDEntityId(request.orderId);
-      const amount = request.paymentDetails.amount;
-      const currency = request.paymentDetails.currency;
+      const amount = order.totalCents;
+      // Menus, hence order totals, are priced in euro.
+      const currency = Currency.EUR;
       const method = request.paymentDetails.method;
 
       const payment = Payment.create(orderId, amount, currency, method);

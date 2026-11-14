@@ -17,7 +17,7 @@ gateway-service (Express/TS, port 8086 external / 8080 internal)
 ```
 
 - **Single base URL**, no version prefix (`/users/...`, `/restaurants/...`, `/orders/...` directly — not `/api/v1/...`).
-- **user, restaurant, order and scheduler are reachable from the frontend.** `scheduler-service` is routed through the gateway under `/schedule/*` (see §9). `payment-service`, `notification-service` and `table-reservation-service` exist in the repo but are not routed through the gateway — do not design screens that call them directly.
+- **user, restaurant, order and scheduler are reachable from the frontend.** `scheduler-service` is routed through the gateway under `/schedule/*` (see §9). `table-reservation-service` is routed under `/reservations/*` (and the table layout under `/restaurants/{id}/tables/`), but no screen is specified for it yet. `payment-service` and `notification-service` exist in the repo but are not routed through the gateway — do not design screens that call them directly.
 - No CORS configuration and no rate limiting exist on the gateway today; if the Vue app is served from a different origin, this will need to be added on the backend first.
 
 ## 2. Auth model

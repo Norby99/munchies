@@ -63,3 +63,18 @@ export {
   OrderStatusChangedNotificationSubject,
   orderStatusChangedNotificationFromJson,
 } from "munchies-order-service-shared/kotlin/order-modules";
+
+// Table reservation notifications, published by table-reservation-service when a reservation
+// is accepted, modified or canceled.
+export {
+  TableReservationNotificationInfo,
+  TableReservationAcceptedNotification,
+  TableReservationAcceptedNotificationObserver,
+  tableReservationAcceptedNotificationFromJson,
+  TableReservationModifiedNotification,
+  TableReservationModifiedNotificationObserver,
+  tableReservationModifiedNotificationFromJson,
+  TableReservationCanceledNotification,
+  TableReservationCanceledNotificationObserver,
+  tableReservationCanceledNotificationFromJson,
+} from "munchies-table-reservation-service-shared/kotlin/table-reservation-modules";

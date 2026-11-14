@@ -4,6 +4,7 @@ import com.munchies.commons.domain.port.ValidationException
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.port.ConcurrentOrderModificationException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.ServiceUnavailableException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import io.micronaut.http.HttpRequest
@@ -96,6 +97,27 @@ class ConcurrentOrderModificationExceptionHandler :
         ErrorResponse(
           result = exception.message ?: "Order was modified concurrently",
           code = HttpStatus.CONFLICT.code,
+        ),
+      )
+  }
+}
+
+/**
+ * Maps an unreachable dependency to `503 Service Unavailable`, telling the client the request
+ * was valid and can be retried, unlike a `500`.
+ */
+@Singleton
+class ServiceUnavailableExceptionHandler :
+  ExceptionHandler<ServiceUnavailableException, HttpResponse<ErrorResponse>> {
+  override fun handle(
+    request: HttpRequest<*>,
+    exception: ServiceUnavailableException,
+  ): HttpResponse<ErrorResponse> {
+    return HttpResponse.status<ErrorResponse>(HttpStatus.SERVICE_UNAVAILABLE)
+      .body(
+        ErrorResponse(
+          result = exception.message ?: "Service temporarily unavailable",
+          code = HttpStatus.SERVICE_UNAVAILABLE.code,
         ),
       )
   }

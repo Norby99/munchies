@@ -1,22 +1,30 @@
-// Route table + the global auth guard. Auth screens render without the app
-// shell (see App.vue); everything else requires an active session, and
-// `/manager/*` additionally requires role === MANAGER (the backend enforces
+// Route table + the global auth guard. Two independent route flags:
+// - `public`: reachable without a session (login, register); a signed-in user is sent home.
+// - `bare`: rendered without the app shell (see App.vue). The verify screen is bare but NOT
+//   public: the gateway requires the session cookie to verify an email, and registration
+//   has just created that session.
+// Every non-public route requires an active session, and `/manager/*` additionally requires
+// role === MANAGER (the backend enforces
 // this regardless — the guard just avoids offering entry points a customer
 // role would be rejected from).
 
 import { createRouter, createWebHistory, type RouteLocationRaw } from 'vue-router'
 
 import { useSessionStore } from '@/stores/session'
-import { useCartStore } from '@/stores/cart'
 import type { Role } from '@/types'
 
 declare module 'vue-router' {
   interface RouteMeta {
     public?: boolean
+    bare?: boolean
     role?: Role
   }
 }
 
+// Client-side paths must never start with an API prefix proxied to the gateway (/users,
+// /restaurants, /restaurant, /orders, /payments, /schedule, /reservations: see vite.config.ts and
+// nginx/default.conf.template),
+// otherwise reloading such a page would be proxied to the gateway and show its JSON.
 const routes = [
   {
     path: '/',
@@ -26,24 +34,36 @@ const routes = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
-    meta: { public: true },
+    meta: { public: true, bare: true },
   },
   {
     path: '/register',
     name: 'register',
     component: () => import('@/views/RegisterView.vue'),
-    meta: { public: true },
+    meta: { public: true, bare: true },
   },
   {
     path: '/verify',
     name: 'verify',
     component: () => import('@/views/VerifyEmailView.vue'),
-    meta: { public: true },
+    meta: { bare: true },
   },
   {
     path: '/manager/restaurants',
     name: 'manager-restaurants',
     component: () => import('@/views/ManagerRestaurantsView.vue'),
+    meta: { role: 'MANAGER' as Role },
+  },
+  {
+    path: '/manager/orders',
+    name: 'manager-orders',
+    component: () => import('@/views/ManagerOrdersView.vue'),
+    meta: { role: 'MANAGER' as Role },
+  },
+  {
+    path: '/manager/bookings',
+    name: 'manager-reservations',
+    component: () => import('@/views/ManagerReservationsView.vue'),
     meta: { role: 'MANAGER' as Role },
   },
   {
@@ -54,10 +74,44 @@ const routes = [
     props: true,
   },
   {
+    // Customer restaurant search. Not "/restaurants": that prefix is proxied to the gateway.
+    path: '/explore',
+    name: 'explore',
+    component: () => import('@/views/ExploreView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+  },
+  {
     path: '/r/:restaurantId',
     name: 'restaurant-detail',
     component: () => import('@/views/RestaurantDetailView.vue'),
     props: true,
+  },
+  {
+    path: '/r/:restaurantId/checkout',
+    name: 'checkout',
+    component: () => import('@/views/CheckoutView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+    props: true,
+  },
+  {
+    path: '/my-orders',
+    name: 'my-orders',
+    component: () => import('@/views/MyOrdersView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+  },
+  {
+    path: '/my-orders/:orderId',
+    name: 'order-detail',
+    component: () => import('@/views/OrderDetailView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
+    props: true,
+  },
+  {
+    // Not "/reservations": that prefix is proxied to the gateway.
+    path: '/my-bookings',
+    name: 'my-reservations',
+    component: () => import('@/views/MyReservationsView.vue'),
+    meta: { role: 'CUSTOMER' as Role },
   },
   {
     path: '/account',
@@ -71,12 +125,11 @@ export const router = createRouter({
   routes,
 })
 
+// Where a user lands after login and when clicking the Munchies logo: managers on their
+// restaurants, customers always on the restaurant list (never on the last restaurant visited, which
+// would feel like "their" restaurant; the bag's restaurant is marked in the list).
 export function homeFor(role: Role | null): RouteLocationRaw {
-  if (role === 'MANAGER') return { name: 'manager-restaurants' }
-
-  const cart = useCartStore()
-  if (cart.restaurantId) return { name: 'restaurant-detail', params: { restaurantId: cart.restaurantId } }
-  return { name: 'account' }
+  return role === 'MANAGER' ? { name: 'manager-restaurants' } : { name: 'explore' }
 }
 
 let hydrationAttempted = false

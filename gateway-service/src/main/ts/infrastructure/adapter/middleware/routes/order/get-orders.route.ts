@@ -15,8 +15,6 @@ import {
 import {AuthedRequest} from "../../auth";
 import {request} from "../internal-client";
 import {SimpleRoute} from "../simple-route";
-import {com} from "munchies-order-service-shared";
-import OrderServiceConfig = com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig;
 
 export class GetOrdersRoute
     extends GetOrdersAPI<GetOrdersResponse | ErrorResponse>
@@ -50,9 +48,9 @@ export class GetOrdersRoute
         if (orderStatus) params.append("status", orderStatus);
 
         const queryString = params.toString();
-        const targetPath =
-            uri + this.path + OrderServiceConfig.GET_ORDERS_PATH +
-            (queryString ? `?${queryString}` : "");
+        // this.path is the collection root ("/orders/"), the same path order-service maps the
+        // list on; filters travel as query parameters.
+        const targetPath = uri + this.path + (queryString ? `?${queryString}` : "");
 
         const response = request<GetOrdersResponse>(
             targetPath,
@@ -75,9 +73,14 @@ export class GetOrdersRoute
                 const restaurantId = req.query.restaurantId
                     ? String(req.query.restaurantId)
                     : null;
-                const customerId = req.query.customerId
-                    ? String(req.query.customerId)
-                    : null;
+                // A customer may only list their own orders: the filter is taken from the session
+                // token, never from the query string. Managers keep the query filters.
+                const isCustomer = req.user?.role.name === AuthRole.CUSTOMER.name;
+                const customerId = isCustomer
+                    ? req.user!!.id
+                    : req.query.customerId
+                        ? String(req.query.customerId)
+                        : null;
                 const orderStatus = req.query.status
                     ? String(req.query.status)
                     : null;
