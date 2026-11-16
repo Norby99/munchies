@@ -37,14 +37,18 @@ flowchart LR
     gw -->|HTTP| rs["restaurant-service"]
     gw -->|HTTP| os["order-service"]
     gw -->|HTTP| ss["scheduler-service"]
+    gw -->|HTTP| ps["payment-service"]
+    gw -->|HTTP| ts["table-reservation-service"]
 
     ss -->|HTTP| os
     ss -->|HTTP| rs
-    ps["payment-service"] -->|HTTP| os
+    ps -->|HTTP| os
+    ts -->|HTTP| rs
 
     us -.->|events| k[("Kafka")]
     os -.->|events| k
     ps -.->|events| k
+    ts -.->|events| k
     k -.->|events| ns["notification-service"]
 ```
 
@@ -54,21 +58,18 @@ flowchart LR
 | `user-service`              | Kotlin + Micronaut | User accounts, authentication and authorization                      |
 | `restaurant-service`        | Kotlin + Micronaut | Restaurants, menus, business hours and dish availability             |
 | `order-service`             | Kotlin + Micronaut | Order creation and status tracking, stored as an event log           |
-| `scheduler-service`         | Express.js         | Delivery scheduling, between the customer and `order-service`        |
+| `scheduler-service`         | Express.js         | Time slots and delivery scheduling, between the customer and `order-service` |
 | `payment-service`           | Express.js         | Payment processing                                                   |
 | `notification-service`      | Express.js         | Notifications to users and staff, driven only by Kafka events        |
-| `table-reservation-service` | Express.js         | Table reservations (stub)                                            |
+| `table-reservation-service` | Express.js         | Table reservations against the restaurant's dining room              |
 | `frontend-service`          | Vue.js             | User interface for customers and managers                            |
-
-`table-reservation-service` is still a stub. `scheduler-service` has routes in the gateway but is not yet part of the
-Docker Compose or Kubernetes deployments.
 
 ## Main architectural decisions
 
 - **Domain-Driven Design and hexagonal architecture.** Each service owns a bounded context. Inside it, the code is
   split into domain, application and infrastructure layers, with ports and adapters at the boundaries. The layout is
   the same in both stacks, and architecture tests check it. See [Domain Model](01-Domain%20Driven%20Design/domain-model.md)
-  and [Hexagonal Architecture](03-Architecture%20and%20Implementation/hexagonal-architecture.md).
+  and [Hexagonal Architecture](02-Architecture%20and%20Implementation/hexagonal-architecture.md).
 - **Database per service.** No service reads another service's database. In Kubernetes, each service and its database
   also share their own namespace, so the boundary exists in the infrastructure too.
 - **Synchronous REST, asynchronous only for notifications.** Business interactions go over REST, behind the API
@@ -80,7 +81,7 @@ Docker Compose or Kubernetes deployments.
   state with plain CRUD.
 - **Kubernetes driven by service level objectives.** The production deployment autoscales on indicators chosen against
   explicit service level objectives (p95 latency and error rate). An observability stack collects metrics, logs
-  and traces from every service. See [Microservices Patterns](03-Architecture%20and%20Implementation/microservices-patterns.md)
+  and traces from every service. See [Microservices Patterns](02-Architecture%20and%20Implementation/microservices-patterns.md)
   and [Deployment on Kubernetes](03-Deployment/kubernetes.md).
 
 ## Technology stack
@@ -117,14 +118,17 @@ is in the [SPE report](../spe/index.md#technology-stack).
 
 ## Structure of the report
 
-1. **Domain Driven Design**: Requirements ([Business](01-Domain%20Driven%20Design/business-requirements.md), [Functional](01-Domain%20Driven%20Design/functional-requirements.md), [Non-functional](01-Domain%20Driven%20Design/non-functional-requirements.md)), [User Stories](01-Domain%20Driven%20Design/User%20Stories.md),
+1. **Domain Driven Design**: Requirements ([Business](01-Domain%20Driven%20Design/business-requirements.md), [Functional](01-Domain%20Driven%20Design/functional-requirements.md), [Non-functional](01-Domain%20Driven%20Design/non-functional-requirements.md), [Quality Attribute Scenarios](01-Domain%20Driven%20Design/quality-attribute-scenarios.md)), [User Stories](01-Domain%20Driven%20Design/User%20Stories.md),
    [Glossary](01-Domain%20Driven%20Design/glossary.md) and [Domain Model](01-Domain%20Driven%20Design/domain-model.md).
 2. **Architecture and Implementation**:
-   [Hexagonal Architecture](03-Architecture%20and%20Implementation/hexagonal-architecture.md),
-   [Microservices Patterns](03-Architecture%20and%20Implementation/microservices-patterns.md) and
-   [Testing](02-Implementation/testing.md).
+   [Hexagonal Architecture](02-Architecture%20and%20Implementation/hexagonal-architecture.md),
+   [Microservices Patterns](02-Architecture%20and%20Implementation/microservices-patterns.md),
+   [Interactions](02-Architecture%20and%20Implementation/interactions.md),
+   [Architecture Decisions](02-Architecture%20and%20Implementation/architecture-decisions.md) and
+   [Testing](02-Architecture%20and%20Implementation/testing.md).
 3. **Deployment**: [Docker Compose](03-Deployment/docker-compose.md), [Kubernetes](03-Deployment/kubernetes.md) and the
    [Scaling Benchmark](03-Deployment/scaling-benchmark.md) that checks autoscaling against the service level
    objectives.
 4. **Agent-Based Architecture**: the [Capacity Agent](04-Agent-Based%20Architecture/capacity-agent.md), an autonomous
    agent that decides how many orders a restaurant accepts per time slot.
+5. **[Conclusions](05-conclusions.md)**: what the architecture delivered, what it cost and what remains open.

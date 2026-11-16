@@ -1,7 +1,7 @@
 # Deployment with Docker Compose
 
-The whole backend can be started on a single machine with Docker Compose: every microservice, its MongoDB and the
-Kafka broker run as separate containers on the same Docker network.
+The whole system can be started on a single machine with Docker Compose: every microservice, its MongoDB, the
+frontend and the Kafka broker run as separate containers on the same Docker network.
 
 Docker Compose is used mainly for development: it brings up the complete system locally with one command, to run and
 debug the services together. The production deployment runs on Kubernetes, which adds what Compose does not provide,
@@ -34,11 +34,14 @@ single Compose project, so services in one file can depend on containers defined
 ```mermaid
 flowchart TB
     subgraph svc["config/service/docker-compose.yml"]
+        frontend["frontend-service<br/>:5173"]
         gateway["gateway-service<br/>:8086"]
         user["user-service<br/>:8082"]
         restaurant["restaurant-service<br/>:8087"]
         order["order-service<br/>:8081"]
         payment["payment-service<br/>:8083"]
+        scheduler["scheduler-service<br/>:8088"]
+        reservation["table-reservation-service<br/>:8085"]
         notification["notification-service<br/>(no port)"]
     end
 
@@ -47,24 +50,34 @@ flowchart TB
         rmongo[("munchies-restaurant-mongo")]
         omongo[("munchies-order-mongo")]
         pmongo[("munchies-payment-mongo")]
+        tmongo[("munchies-table-reservation-mongo")]
     end
 
     subgraph kafka_file["config/kafka/docker-compose.yml"]
         kafka[["munchies-kafka"]]
     end
 
-    client(["Client"]) --> gateway
+    client(["Client"]) --> frontend
+    frontend --> gateway
     gateway --> user
     gateway --> restaurant
     gateway --> order
+    gateway --> payment
+    gateway --> scheduler
+    gateway --> reservation
     payment --> order
+    scheduler --> order
+    scheduler --> restaurant
+    reservation --> restaurant
     user --> umongo
     restaurant --> rmongo
     order --> omongo
     payment --> pmongo
+    reservation --> tmongo
     user -.->|user_email_confirmation_topic| kafka
     order -.->|order_status_changed_topic| kafka
     payment -.->|payment_success_topic| kafka
+    reservation -.->|table_reservation_*_topic| kafka
     kafka -.-> notification
 ```
 
@@ -72,16 +85,19 @@ Solid arrows are REST calls or database connections, dashed arrows are Kafka mes
 
 ### `config/service` — the microservices
 
-One container per microservice, named `munchies-<name>-service` and built from the image described above. Every
+One container per microservice, plus the frontend, named `munchies-<name>-service` and built from the image described above. Every
 container listens on port `8080` internally; only the port needed for local access is published on the host:
 
 | Container                       | Host port | Depends on (must be healthy)                          |
 |---------------------------------|-----------|-------------------------------------------------------|
-| `munchies-gateway-service`      | `8086`    | `user-service`, `restaurant-service`, `order-service` |
+| `munchies-frontend-service`     | `5173`    | `gateway-service`                                     |
+| `munchies-gateway-service`      | `8086`    | every service it routes to (`payment-service` only has to be started) |
 | `munchies-user-service`         | `8082`    | Kafka, `munchies-user-mongo`                          |
 | `munchies-restaurant-service`   | `8087`    | Kafka, `munchies-restaurant-mongo`                    |
 | `munchies-order-service`        | `8081`    | Kafka, `munchies-order-mongo`                         |
 | `munchies-payment-service`      | `8083`    | Kafka, `munchies-payment-mongo`, `order-service`      |
+| `munchies-scheduler-service`    | `8088`    | `order-service`, `restaurant-service`                 |
+| `munchies-table-reservation-service` | `8085` | Kafka, `munchies-table-reservation-mongo`, `restaurant-service` |
 | `munchies-notification-service` | none      | Kafka                                                 |
 
 `notification-service` publishes no port, since it exposes no API and only receives messages from Kafka.
@@ -117,27 +133,31 @@ gateway-service:
     USER_SERVICE_URL: http://user-service:8080
     RESTAURANT_SERVICE_URL: http://restaurant-service:8080
     ORDER_SERVICE_URL: http://order-service:8080
+    PAYMENT_SERVICE_URL: http://payment-service:8080
+    SCHEDULER_SERVICE_URL: http://scheduler-service:8080
+    TABLE_RESERVATION_SERVICE_URL: http://table-reservation-service:8080
 ```
 
 ## Startup order and healthchecks
 
 `depends_on` with `condition: service_healthy` makes Compose start a container only after its dependencies report
-themselves healthy, so the stack comes up in the order databases and broker, then services, then gateway:
+themselves healthy, so the stack comes up in the order databases and broker, then services, then gateway, then frontend:
 
 | Component          | Healthcheck                                                          |
 |--------------------|----------------------------------------------------------------------|
 | MongoDB            | `mongosh --eval "db.adminCommand('ping')"`                           |
 | Kafka              | `kafka-broker-api-versions.sh --bootstrap-server localhost:9092`     |
 | Micronaut services | `curl --fail http://localhost:8080/health`                           |
-| `gateway-service`  | `wget http://localhost:8080/health` (the Alpine image has no `curl`) |
+| Express.js services and frontend | `wget http://localhost:8080/health` (the Alpine images have no `curl`) |
 
 The Kafka healthcheck queries the broker API instead of only checking that the port is open: the port accepts
 connections before the KRaft controller has finished electing itself, and services starting at that moment would fail
 to create their topics. For the Micronaut services, `/health` also includes the MongoDB check provided by
 `MongoHealthIndicator`, so a service is healthy only when its database is reachable.
 
-`payment-service` and `notification-service` do not define a healthcheck yet; `payment-service` waits for
-`order-service`, which it calls to mark orders as paid.
+`payment-service` and `notification-service` do not define a healthcheck yet, so the gateway only waits for
+`payment-service` to be started; `payment-service` itself waits for `order-service`, which it calls to mark orders as
+paid. `scheduler-service` keeps its bookings in memory and has no database.
 
 ## Running the stack
 

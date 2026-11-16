@@ -47,6 +47,7 @@ flowchart LR
     gwd -->|HTTP| usd
     gwd -->|HTTP| rsd
     gwd -->|HTTP| osd
+    gwd -->|HTTP| psd
     psd -->|HTTP| osd
     usd -.->|events| kafka
     osd -.->|events| kafka
@@ -55,8 +56,8 @@ flowchart LR
     stack -.->|scrape metrics, collect logs| gw
 ```
 
-The diagram leaves out `table-reservation-service`, which is deployed the same way as `payment-service` but is still a
-stub, and draws the observability links for one namespace only: the stack scrapes and collects from every application
+The diagram leaves out `table-reservation-service`, which is deployed the same way as `payment-service` and calls
+`restaurant-service`, and `frontend-service`, a stateless nginx in front of the gateway. It draws the observability links for one namespace only: the stack scrapes and collects from every application
 namespace.
 
 Services find each other through Kubernetes DNS (`<service>.<namespace>.svc.cluster.local`), passed to each pod as an
@@ -66,7 +67,8 @@ to know how many there are.
 
 | Workload | Deployed from | Own MongoDB | Autoscaled |
 |---|---|---|---|
-| `gateway-service` | Helm chart `helm/munchies-service` | no | yes |
+| `frontend-service` | Helm chart `helm/munchies-service` | no | no |
+| `gateway-service` | Helm chart | no | yes |
 | `user-service` | Helm chart | yes | yes |
 | `restaurant-service` | Helm chart | yes | yes |
 | `order-service` | Helm chart | yes | yes |
@@ -144,8 +146,10 @@ No service registers itself, sends heartbeats or deregisters on shutdown: regist
 
 | Caller | Target | Name | Notes |
 |---|---|---|---|
-| `gateway-service` | `user-service`, `restaurant-service`, `order-service` | `<service>.<namespace>.svc.cluster.local:8080` | ClusterIP `Service`, balanced across the replicas |
+| `gateway-service` | `user-service`, `restaurant-service`, `order-service`, `payment-service`, `table-reservation-service` | `<service>.<namespace>.svc.cluster.local:8080` | ClusterIP `Service`, balanced across the replicas |
 | `payment-service` | `order-service` | `order-service.order-service.svc.cluster.local:8080` | same |
+| `table-reservation-service` | `restaurant-service` | `restaurant-service.restaurant-service.svc.cluster.local:8080` | same |
+| `frontend-service` | `gateway-service` | `gateway-service.gateway-service.svc.cluster.local:8080` | same |
 | each service | its own MongoDB | e.g. `order-mongodb.order-service.svc.cluster.local:27017` | the manifests under `k8s/` use the short form (`payment-mongodb`), which resolves within the caller's own namespace |
 | producers, `notification-service` | Kafka | `kafka-0.kafka-headless.kafka.svc.cluster.local:9092` | headless `Service` (see [Stateful components](#stateful-components)) |
 | Prometheus, Alloy | every application pod | Kubernetes API, `pod` role | see below |
@@ -192,8 +196,8 @@ only a URL.
   service mesh could add these, at the cost of more components.
 - **Removal is not instantaneous.** A pod is taken out of the `Service` only after its readiness probe has failed
   several times in a row (three by default, checked every 5 seconds), so a pod that stops answering may still receive
-  requests for up to about 15 seconds. Together with the missing graceful shutdown (see [Limitations](#limitations)),
-  this is where requests can be lost while the set of replicas changes.
+  requests for up to about 15 seconds. Together with the graceful shutdown that most services still lack (see
+  [Limitations](#limitations)), this is where requests can be lost while the set of replicas changes.
 
 ## Pod configuration
 
@@ -219,8 +223,8 @@ stops; the service must then handle `SIGTERM` by finishing the requests in progr
 `gateway-service` does both, with a 10 s sleep; the other services do not yet.
 
 **Metrics annotations.** Pods are annotated with `prometheus.io/scrape`, `path` and `port`, so Prometheus discovers
-them without any service knowing where Prometheus runs (`/prometheus` for Micronaut, `/metrics` for Express). The one
-exception is `table-reservation-service`, a stub whose manifest has no annotations yet.
+them without any service knowing where Prometheus runs (`/prometheus` for Micronaut, `/metrics` for Express). `frontend-service`, an nginx serving
+the built application, exposes no metrics endpoint and is not scraped.
 
 ## Stateful components
 
@@ -291,7 +295,7 @@ apart (see the [Scaling Benchmark](scaling-benchmark.md#final-configuration)).
 Alloy for logs, Tempo for traces, and Grafana with provisioned dashboards. The _Scaling_ dashboard plots ready replicas,
 the autoscaler's desired against current replicas, and per-pod CPU against the request, which is how a scaling event is
 observed over time. The stack is described in detail under Observability in
-[Microservices Patterns](../03-Architecture%20and%20Implementation/microservices-patterns.md).
+[Microservices Patterns](../02-Architecture%20and%20Implementation/microservices-patterns.md).
 
 ## Deploying
 
@@ -308,8 +312,8 @@ minikube addons enable metrics-server
 
 ## Limitations
 
-- **Two services are not deployed.** `frontend-service` and `scheduler-service` have neither a Helm values file nor
-  manifests.
+- **One service is not deployed.** `scheduler-service` has neither a Helm values file nor manifests; it runs only in
+  Docker Compose.
 - **Images are local.** The chart uses `:latest` images loaded into Minikube (`pullPolicy: Never`), not the images
   published by CI, so a deployment is not tied to a released version.
 - **No liveness probe on the services.** A pod that hangs while still answering `/health` is not restarted; only the
