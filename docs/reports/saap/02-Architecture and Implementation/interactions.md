@@ -1,7 +1,7 @@
 # Interactions
 
 This page shows how the microservices collaborate at run time, through the main flows of the system. The static view,
-which service exists and which one it may call, is in the [Introduction](../index.md#architecture-at-a-glance); the
+which service exists and which one it may call, is in [General Architecture](general-architecture.md); the
 patterns behind the flows are described in [Microservices Patterns](microservices-patterns.md).
 
 All the flows follow the same rules:
