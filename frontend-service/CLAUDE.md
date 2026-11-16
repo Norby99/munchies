@@ -35,13 +35,19 @@ Features currently backed by gateway routes
     - order to the table (dine-in) while holding an active reservation at that restaurant: checkout offers
       "At my table" and sends the reservation id to `POST /orders/place`, bypassing the scheduler;
     - pay an order;
-    - list own orders and follow the status of each one.
+    - list own orders and follow the status of each one;
+    - follow the driver of a delivery that is on the way, on a map (`scheduler-service`).
 - **Manager (restaurant staff)**:
     - create, update and delete own restaurants;
     - manage menus, categories and menu items;
+<<<<<<< Updated upstream
     - configure each restaurant's tables (number and seats), which makes it bookable;
     - see a restaurant's reservations day by day (read-only: only the customer changes or cancels them);
     - see incoming orders and advance their status through the order lifecycle.
+=======
+    - see incoming orders and advance their status through the order lifecycle;
+    - see where the driver of a delivery on the way is.
+>>>>>>> Stashed changes
 
 Planned, not yet in the UI (design it so they can be added without restructuring):
 
@@ -50,6 +56,13 @@ Planned, not yet in the UI (design it so they can be added without restructuring
   success) to the frontend over a WebSocket proxied by the gateway (see
   [Communication with the gateway](#communication-with-the-gateway)). Until it exists, refresh data on navigation/user action; do not build a
   polling loop that would later have to be torn out. See the `event-driven` skill for the backend side.
+
+**The one polling exception: the driver's position.** Notifications are events and start from the server (the
+WebSocket above). The position of the driver is state that only matters while a user is looking at the tracking
+area, so the UI asks for it: `composables/useDeliveryTracking.ts` re-reads
+`GET /schedule/orders/{orderId}/tracking` every few seconds, only for a delivery that is `ON_THE_WAY`, only while
+the page is visible, and stops once the driver has arrived. Do not copy this for anything that is an event (status
+changes, payments): those wait for the WebSocket.
 
 When a feature needs data the gateway does not expose yet, the fix belongs in `gateway-service` (and the owning
 service), not in a workaround in the frontend.
