@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import http from "node:http";
 import { createManagementApp } from "@main/infrastructure/adapter/inbound/web/config/managementApp";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import { fakeNotifier } from "@test/fixtures/liveNotifier";
 import { UserEmailConfirmationNotification } from "@main/domain/external-modules";
 
 async function httpGet(
@@ -55,7 +56,7 @@ describe("createManagementApp", () => {
   it("counts every handled notification by type", async () => {
     server = await startServer();
 
-    new NotificationController().handleUserEmailConfirmation(
+    new NotificationController(fakeNotifier()).handleUserEmailConfirmation(
       new UserEmailConfirmationNotification("user-1", "otk-123")
     );
     const res = await httpGet(server, "/metrics");

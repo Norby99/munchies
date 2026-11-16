@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import { Kafka } from "kafkajs";
 import { KafkaUserEmailConfirmationNotificationConsumer } from "@main/infrastructure/adapter/inbound/kafka/KafkaUserNotificationConsumer";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import { fakeNotifier } from "@test/fixtures/liveNotifier";
 import { UserEmailConfirmationNotification } from "@main/domain/external-modules";
 import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
@@ -24,10 +25,10 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
 
   it("forwards received events to the notification controller via update()", () => {
     const { fakeKafka } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handleUserEmailConfirmation")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
       fakeKafka,
@@ -44,7 +45,7 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
 
   it("connect() calls consumer.connect() and subscribes to the topic", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
       fakeKafka,
@@ -64,7 +65,7 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
 
   it("disconnect() calls consumer.disconnect()", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
       fakeKafka,
@@ -80,10 +81,10 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
 
   it("run() registers eachMessage handler that parses and forwards a valid message", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handleUserEmailConfirmation")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
       fakeKafka,
@@ -104,10 +105,10 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
 
   it("run() eachMessage handler skips messages with null value", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handleUserEmailConfirmation")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
       fakeKafka,
@@ -126,7 +127,7 @@ describe("KafkaUserEmailConfirmationNotificationConsumer", () => {
 
   it("run() eachMessage handler logs an error when message parsing fails", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const consoleErrorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
 
     const consumer = new KafkaUserEmailConfirmationNotificationConsumer(
