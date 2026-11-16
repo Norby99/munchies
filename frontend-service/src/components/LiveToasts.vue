@@ -32,6 +32,12 @@ function close(id: number): void {
   live.dismiss(id)
 }
 
+/** Following the link closes the toast and marks its bell entry as read. */
+function open(id: number): void {
+  close(id)
+  live.markRead(id)
+}
+
 // Start a timer for every new toast; forget those of toasts that are gone.
 watch(
   () => live.toasts.map((t) => t.id),
@@ -74,7 +80,7 @@ onUnmounted(() => timers.forEach((timer) => clearTimeout(timer)))
           <RouterLink
             :to="toast.to"
             class="mt-1 self-start text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:underline"
-            @click="close(toast.id)"
+            @click="open(toast.id)"
           >
             {{ toast.linkLabel }}
           </RouterLink>

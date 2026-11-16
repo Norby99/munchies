@@ -1,12 +1,14 @@
 <script setup lang="ts">
 // App header, sticky on every page: brand, the role's nav links (from md up; phones get
-// MobileTabBar instead, see AppShell), and the account menu with theme choice and logout.
+// MobileTabBar instead, see AppShell), the notification bell, and the account menu with theme
+// choice and logout.
 
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LogOutIcon, MonitorIcon, MoonIcon, SunIcon, UserRoundIcon } from '@lucide/vue'
 
 import BrandMark from '@/components/BrandMark.vue'
+import NotificationBell from '@/components/NotificationBell.vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -84,6 +86,7 @@ async function logout(): Promise<void> {
       </nav>
 
       <div class="ml-auto flex items-center gap-2">
+        <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button variant="ghost" class="h-10 gap-2 rounded-full pr-3 pl-1" aria-label="Account menu">
