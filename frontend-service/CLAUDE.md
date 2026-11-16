@@ -40,14 +40,10 @@ Features currently backed by gateway routes
 - **Manager (restaurant staff)**:
     - create, update and delete own restaurants;
     - manage menus, categories and menu items;
-<<<<<<< Updated upstream
     - configure each restaurant's tables (number and seats), which makes it bookable;
     - see a restaurant's reservations day by day (read-only: only the customer changes or cancels them);
-    - see incoming orders and advance their status through the order lifecycle.
-=======
     - see incoming orders and advance their status through the order lifecycle;
     - see where the driver of a delivery on the way is.
->>>>>>> Stashed changes
 
 Planned, not yet in the UI (design it so they can be added without restructuring):
 
