@@ -79,7 +79,7 @@ service), not in a workaround in the frontend.
 | Routing             | Vue Router (`createWebHistory`), named routes, lazy-loaded views             |
 | Global state        | Pinia, setup-store syntax (`defineStore('id', () => { ... })`)               |
 | HTTP client         | Axios, wrapped in a single API module, always sending cookies (no `fetch`)   |
-| API contracts       | Kotlin Multiplatform `-shared` packages (paths, methods, DTOs, JSON mapping) |
+| API contracts       | Hand-written in `api/` and `types/`, mirroring the `-shared` Kotlin DTOs     |
 | UI components       | shadcn-vue (components copied into `src/components/ui/`, built on Reka UI)   |
 | Styling             | Tailwind CSS only (theme tokens as CSS variables); no SCSS, no Bootstrap     |
 | Unit/component test | Vitest + Vue Test Utils (Vitest is already used by `gateway-service`)        |
@@ -153,41 +153,27 @@ The frontend has exactly two channels towards the backend, both terminated by `g
     - keep only non-sensitive session info (user id, role) in the session store, taken from the login response or
       from the "get user" endpoint, and rebuild it on page reload by calling that endpoint;
     - treat a `401` from the gateway as "session expired": clear the session store and redirect to login.
-- Errors from the gateway follow the shared `ErrorResponse` shape (`message`, `code`, from `munchies-commons`); map
-  them to user-friendly messages in one place in the `api/` layer.
+- Errors from the gateway come in the same `{ result, code }` envelope as successes (`result` is the message); map
+  them to user-friendly messages in one place in the `api/` layer (`api/client.ts`).
 
 ### Shared API contracts (`-shared` packages)
 
-Like the other Express.js services (`gateway-service`, `payment-service`, `notification-service`), the frontend does
-**not** hand-write endpoint paths or DTOs: it reuses the Kotlin Multiplatform `-shared` modules compiled to JS.
+Unlike the Express.js services, the frontend does **not** import the Kotlin Multiplatform `-shared` packages. Paths,
+request bodies and response types are written by hand in `api/` (one module per backend area) and `types/`, and
+each module's header names the Kotlin DTOs it mirrors (e.g. `PlaceOrderRequest` in `order-shared`). This is a
+deliberate choice:
 
-- **What they provide**: each `<service>-shared` module exposes, per endpoint, a JS API class (e.g. `LoginUserAPI`
-  from `munchies-user-service-shared/kotlin/user-modules`, built on `API`/`SimpleAPI` in `commons`) with
-  `getPath()`, `getMethod()`, request/response classes with `toJson()`, and `parseRequest()` / `parseResponse()` /
-  `parseError()` for JSON mapping, plus the generated `.d.ts` typings. `munchies-commons/kotlin/commons-modules`
-  provides `HttpMethod`, `AuthRole`, `ErrorResponse` and the other cross-service types.
-- **Packages needed**: the ones the gateway routes use: `munchies-commons`, `munchies-user-service-shared`,
-  `munchies-restaurant-service-shared`, `munchies-order-service-shared` (add `munchies-gateway-service-shared` or
-  others only when a feature needs them).
-- **How they get here** (same mechanism as `build-logic/.../express-server.gradle.kts`):
-    1. declare them in `frontend-service/build.gradle.kts` as `jsImplementation(project(":commons"))`,
-       `jsImplementation(project(":user-shared"))`, ...;
-    2. a `moveJsDeps` task runs each module's `pack_<module>` task and copies the resulting tarball to
-       `frontend-service/build/libs/munchies-<module>.tgz`. The `frontend-server` convention plugin does not have
-       this yet: add the `jsImplementation` configuration and `moveJsDeps` to it, reusing the express-server logic
-       rather than duplicating a different mechanism;
-    3. reference them in `package.json` as `"munchies-user-service-shared": "file:./build/libs/munchies-user-shared.tgz"`;
-    4. **remove the `integrity` field** of those entries from `package-lock.json` (the tarballs are rebuilt on every
-       build, see root `CLAUDE.md`);
-    5. since the image is compiled inside Docker (`frontend-service/Dockerfile`), the Docker build must copy
-       `build/libs/*.tgz` into the build stage before `npm install`.
-- **How to use them in `api/`**: Axios is the transport, the shared API class is the contract. Build the URL from
-  `getPath()` (filling `{param}` placeholders), the verb from `getMethod()`, send `request.toJson()` as the body,
-  and turn the raw response text into typed objects with `parseResponse()` / `parseError()`. For these calls,
-  configure Axios to keep the raw body (`responseType: 'text'`, no JSON transform) so that the shared parser does
-  the mapping, exactly as the gateway does.
-- Keep the Kotlin-generated classes inside the `api/` layer: views and stores receive plain, frontend-friendly
-  view models, so the rest of the app does not depend on Kotlin/JS specifics.
+- the frontend's contract is the **gateway's**, not the services': every response comes in the gateway's
+  `{ result, code }` envelope, the gateway injects ids from the session and some routes exist only there (logout,
+  the scheduler pass-through), so the services' parsers would not apply to what the browser receives;
+- the Kotlin/JS bundles would add their runtime to the SPA bundle, and their classes (Kotlin enums, `toJson()`
+  objects) would have to be converted anyway into plain objects for Vue's reactivity and the views;
+- the Docker build of the frontend stays a plain `npm ci` + `vite build`, with no Gradle step or local tarballs.
+
+The cost is that a contract change is not caught by the compiler: when a `-shared` DTO or a gateway route changes,
+update the matching `api/` module and `types/` in the same change. Keep the Kotlin-specific quirks inside `api/`
+(empty `customerId` / `managerId` fields the DTOs require, `payed` spelling, `ValidityDto` decoding), so views and
+stores only see frontend-friendly types. `docs/ui_specification.md` lists every endpoint the UI uses.
 
 ## UI components (shadcn-vue)
 
