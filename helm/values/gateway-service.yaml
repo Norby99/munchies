@@ -23,6 +23,9 @@ env:
     value: "http://payment-service.payment-service.svc.cluster.local:8080"
   - name: TABLE_RESERVATION_SERVICE_URL
     value: "http://table-reservation-service.table-reservation-service.svc.cluster.local:8080"
+  # Target of the live-notification WebSocket proxy.
+  - name: NOTIFICATION_SERVICE_URL
+    value: "http://notification-service.notification-service.svc.cluster.local:8080"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://tempo.observability.svc.cluster.local:4318"
 

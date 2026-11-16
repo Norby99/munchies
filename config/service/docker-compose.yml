@@ -93,7 +93,8 @@ services:
     build:
       context: notification-service/build/docker/main
     image: munchies-notification-service:latest
-    #? no need for port mapping (no API exposed)
+    # No port mapping: its only public endpoint, the live-notification WebSocket, is reached
+    # through gateway-service, which authenticates it and forwards the user's identity.
     depends_on:
       <<: *kafka-dependency
     environment:
@@ -217,6 +218,9 @@ services:
         condition: service_healthy
       table-reservation-service:
         condition: service_healthy
+      # Target of the live-notification WebSocket proxy.
+      notification-service:
+        condition: service_started
     environment:
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
@@ -225,6 +229,7 @@ services:
       PAYMENT_SERVICE_URL: http://payment-service:8080
       SCHEDULER_SERVICE_URL: http://scheduler-service:8080
       TABLE_RESERVATION_SERVICE_URL: http://table-reservation-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
     healthcheck:
       # node:*-alpine base image ships busybox wget, not curl
       test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]

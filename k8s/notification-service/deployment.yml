@@ -6,6 +6,9 @@ metadata:
   labels:
     app: notification-service
 spec:
+  # A single replica on purpose: the live-notification rooms (Socket.io) live in the process's
+  # memory, and with several replicas a user's connection and the Kafka partition carrying their
+  # events could land on different pods. Scaling out needs a shared Socket.io adapter first.
   replicas: 1
   selector:
     matchLabels:
@@ -58,4 +61,6 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
-  type: NodePort
+  # Internal only: the live-notification WebSocket trusts the identity headers set by
+  # gateway-service, so it must not be reachable from outside the cluster.
+  type: ClusterIP
