@@ -23,67 +23,6 @@ restaurant, in which case the customer can also reserve a table.
 Managers can create and manage multiple restaurants: their business hours, their menus and the variations available
 for each dish.
 
-## Architecture at a glance
-
-The backend is a set of microservices, each one owning a single bounded context and its own MongoDB database. Clients
-reach them only through an API Gateway. Services call each other synchronously over REST; Apache Kafka is used only
-to deliver events to `notification-service`.
-
-```mermaid
-flowchart LR
-    fe["frontend-service<br/>(Vue.js)"] -->|HTTP| gw["gateway-service"]
-
-    gw -->|HTTP| us["user-service"]
-    gw -->|HTTP| rs["restaurant-service"]
-    gw -->|HTTP| os["order-service"]
-    gw -->|HTTP| ss["scheduler-service"]
-    gw -->|HTTP| ps["payment-service"]
-    gw -->|HTTP| ts["table-reservation-service"]
-
-    ss -->|HTTP| os
-    ss -->|HTTP| rs
-    ps -->|HTTP| os
-    ts -->|HTTP| rs
-
-    us -.->|events| k[("Kafka")]
-    os -.->|events| k
-    ps -.->|events| k
-    ts -.->|events| k
-    k -.->|events| ns["notification-service"]
-```
-
-| Service                     | Stack              | Responsibility                                                       |
-|-----------------------------|--------------------|----------------------------------------------------------------------|
-| `gateway-service`           | Express.js         | Single entry point: routing, authentication, proxying                |
-| `user-service`              | Kotlin + Micronaut | User accounts, authentication and authorization                      |
-| `restaurant-service`        | Kotlin + Micronaut | Restaurants, menus, business hours and dish availability             |
-| `order-service`             | Kotlin + Micronaut | Order creation and status tracking, stored as an event log           |
-| `scheduler-service`         | Express.js         | Time slots and delivery scheduling, between the customer and `order-service` |
-| `payment-service`           | Express.js         | Payment processing                                                   |
-| `notification-service`      | Express.js         | Notifications to users and staff, driven only by Kafka events        |
-| `table-reservation-service` | Express.js         | Table reservations against the restaurant's dining room              |
-| `frontend-service`          | Vue.js             | User interface for customers and managers                            |
-
-## Main architectural decisions
-
-- **Domain-Driven Design and hexagonal architecture.** Each service owns a bounded context. Inside it, the code is
-  split into domain, application and infrastructure layers, with ports and adapters at the boundaries. The layout is
-  the same in both stacks, and architecture tests check it. See [Domain Model](01-Domain%20Driven%20Design/domain-model.md)
-  and [Hexagonal Architecture](02-Architecture%20and%20Implementation/hexagonal-architecture.md).
-- **Database per service.** No service reads another service's database. In Kubernetes, each service and its database
-  also share their own namespace, so the boundary exists in the infrastructure too.
-- **Synchronous REST, asynchronous only for notifications.** Business interactions go over REST, behind the API
-  Gateway. Events bound to `notification-service` go through Kafka, one topic per event. Each event carries all the
-  data the consumer needs (event-carried state transfer), so `notification-service` never calls back into the
-  service that sent it.
-- **Event sourcing and CQRS where they pay off.** Only the `Order` aggregate, whose history of status changes matters,
-  is stored as an append-only event log, and it has a separate read model. Every other service stores its current
-  state with plain CRUD.
-- **Kubernetes driven by service level objectives.** The production deployment autoscales on indicators chosen against
-  explicit service level objectives (p95 latency and error rate). An observability stack collects metrics, logs
-  and traces from every service. See [Microservices Patterns](02-Architecture%20and%20Implementation/microservices-patterns.md)
-  and [Deployment on Kubernetes](03-Deployment/kubernetes.md).
-
 ## Technology stack
 
 The technologies that shape the architecture are listed below. The complete list, including build and CI/CD tooling,
@@ -118,9 +57,14 @@ is in the [SPE report](../spe/index.md#technology-stack).
 
 ## Structure of the report
 
-1. **Domain Driven Design**: Requirements ([Business](01-Domain%20Driven%20Design/business-requirements.md), [Functional](01-Domain%20Driven%20Design/functional-requirements.md), [Non-functional](01-Domain%20Driven%20Design/non-functional-requirements.md), [Quality Attribute Scenarios](01-Domain%20Driven%20Design/quality-attribute-scenarios.md)), [User Stories](01-Domain%20Driven%20Design/User%20Stories.md),
-   [Glossary](01-Domain%20Driven%20Design/glossary.md) and [Domain Model](01-Domain%20Driven%20Design/domain-model.md).
+1. **Domain Driven Design**: Requirements ([Business](01-Domain%20Driven%20Design/business-requirements.md), [Functional](01-Domain%20Driven%20Design/functional-requirements.md), [Non-functional](01-Domain%20Driven%20Design/non-functional-requirements.md), [Quality Attribute Scenarios](01-Domain%20Driven%20Design/quality-attribute-scenarios.md)), [User Stories](01-Domain%20Driven%20Design/User%20Stories.md), [Use Cases](01-Domain%20Driven%20Design/use-cases.md),
+   [Glossary](01-Domain%20Driven%20Design/glossary.md),
+   [Event Storming](01-Domain%20Driven%20Design/event-storming.md),
+   [Bounded Contexts](01-Domain%20Driven%20Design/bounded-contexts.md),
+   [Context Map](01-Domain%20Driven%20Design/context-map.md) and
+   [Domain Model](01-Domain%20Driven%20Design/domain-model.md).
 2. **Architecture and Implementation**:
+   [General Architecture](02-Architecture%20and%20Implementation/general-architecture.md),
    [Hexagonal Architecture](02-Architecture%20and%20Implementation/hexagonal-architecture.md),
    [Microservices Patterns](02-Architecture%20and%20Implementation/microservices-patterns.md),
    [Interactions](02-Architecture%20and%20Implementation/interactions.md),
