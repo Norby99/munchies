@@ -1,6 +1,6 @@
 // Menu / category / item CRUD. Routes are singular (`/restaurant/...`),
 // unlike the restaurant family above — a real inconsistency in the API, kept
-// as-is rather than "fixed" client-side (see ui_specification.md §7.1).
+// as-is rather than "fixed" client-side (see ui_specification.md §11.1).
 //
 // There is no GET for a single category or item — both only come back as
 // part of the full menu fetch (getMenu).
