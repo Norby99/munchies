@@ -53,6 +53,24 @@ Following the course's taxonomy, the agent is **model-based and utility-based**:
   as a risk tolerance rather than as an exchange rate between minutes of delay and orders.
 - **Execution cycle.** Perceive, revise beliefs, decide, act: once per period (here, before each Friday).
 
+```mermaid
+flowchart LR
+    manager(["Manager"])
+    subgraph agent["Capacity agent"]
+        direction TB
+        perceive["Perceive<br/>order log, slot lateness,<br/>rota, oven report, declared times"]
+        revise["Revise beliefs<br/>arrival rate, stage times"]
+        decide["Decide<br/>simulate candidate quotas on the<br/>KitchenPipeline model"]
+        act["Act<br/>apply or recommend the quota,<br/>advise on the rota"]
+        perceive --> revise --> decide --> act
+    end
+    env["KitchenEnvironment<br/>(simulated kitchen today,<br/>restaurant-service later)"]
+    manager -->|goal, risk tolerance,<br/>quota bounds, mode| agent
+    env -->|perceive| perceive
+    act -->|applyQuota| env
+    act -.->|advice, alerts| manager
+```
+
 **Relation to the other architectures of the course.**
 
 - *BDI.* The agent has beliefs (rates, staffing), one desire (the delay goal) and an intention (the quota for the
@@ -204,7 +222,8 @@ Each variant changes one choice of the agent above and keeps everything else:
 - **Peak-profile agent:** fits one arrival rate per slot from 8 past Fridays, instead of one rate for the whole
   evening from 2.
 
-#### Results
+#### Results of the variants
+
 **Stage-log agent.** `node demo-node.js logs` runs it on the same 11 weeks. It does not do better: it
 matches calibration on the oven fault, and does worse with the new pizza maker (52 breaches in week 8 instead of 8),
 because its fit still mixes in the Friday before the change, while calibration looks only at the last one. Learning

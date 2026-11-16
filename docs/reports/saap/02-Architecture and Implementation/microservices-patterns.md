@@ -31,7 +31,7 @@ _Microservices Patterns_. The internal structure of each service is described se
 
 `gateway-service` is the single entry point of the backend for `frontend-service`. It holds no business logic and has
 no `domain` or `application` layer: it only authenticates, authorizes and forwards requests to `user-service`,
-`restaurant-service` and `order-service`.
+`restaurant-service`, `order-service`, `payment-service`, `scheduler-service` and `table-reservation-service`.
 
 **Routes from shared contracts.** Each route is a class extending the API contract published by the target service in
 its `-shared` module. For example, `PlaceOrderRoute` extends
@@ -54,7 +54,7 @@ export class PlaceOrderRoute
 }
 ```
 
-`applyRoutes()` registers all the routes of the three services and builds, for each one, a chain of Express
+`applyRoutes()` registers the routes of every service behind the gateway and builds, for each one, a chain of Express
 middlewares: request logging, then `requireAuth()` and `requireRole(role)` when the contract declares a role, then the
 forwarding handler.
 
@@ -85,14 +85,7 @@ On login, the gateway issues a JWT signed with the `JWT_SECRET` key, carrying th
 
 ```typescript
 // middleware/token.ts
-generateToken(id
-:
-UUIDEntityId, role
-:
-AuthRole
-):
-GenerateTokenResult
-{
+generateToken(id: UUIDEntityId, role: AuthRole): GenerateTokenResult {
     if (!this.secret) return new GenerateTokenFailure("Secret is missing");
     const nowSeconds = Math.floor(Date.now() / 1000);
     const payload: TokenClaims = {
@@ -121,6 +114,9 @@ services stay REST-based and add a single, narrow Kafka producer for each event 
 | `user_email_confirmation_topic` | `user-service`    | `UserEmailConfirmationNotification` | user id, confirmation key                        |
 | `payment_success_topic`         | `payment-service` | `PaymentSuccessNotification`        | payment id, order id, amount, currency           |
 | `order_status_changed_topic`    | `order-service`   | `OrderStatusChangedNotification`    | order id, restaurant id, customer id, new status |
+| `table_reservation_accepted_topic` | `table-reservation-service` | `TableReservationAcceptedNotification` | reservation id, restaurant id, customer id, start and end of the slot, number of guests, table number |
+| `table_reservation_modified_topic` | `table-reservation-service` | `TableReservationModifiedNotification` | same as above |
+| `table_reservation_canceled_topic` | `table-reservation-service` | `TableReservationCanceledNotification` | same as above |
 
 **Event-carried state transfer.** Each payload carries everything the consumer needs, so `notification-service` never
 calls back into the producing service.
@@ -138,7 +134,8 @@ not block the others.
 
 **Producers.** On the producer side the event is published behind an outbound port, e.g. `OrderNotificationPublisher`
 implemented by `KafkaOrderNotificationPublisher` in `order-service`, and `PaymentNotificationPublisher` implemented by
-`KafkaPaymentNotificationPublisher` in `payment-service`.
+`KafkaPaymentNotificationPublisher` in `payment-service`, and `KafkaTableReservationNotificationPublisher` in
+`table-reservation-service`.
 
 At the moment `NotificationController` only logs each event and increments the `notifications_received_total` metric;
 the actual channels (email, SMS, WebSocket push to the frontend) are not implemented yet and will be plugged into its
@@ -163,7 +160,7 @@ driver. As a result, `/health` also reflects the database connection.
 | Service                                               | Library                          | Endpoint      |
 |-------------------------------------------------------|----------------------------------|---------------|
 | `user-service`, `order-service`, `restaurant-service` | Micrometer + Prometheus registry | `/prometheus` |
-| `gateway-service`, `payment-service`                  | `prom-client`                    | `/metrics`    |
+| `gateway-service`, `payment-service`, `table-reservation-service` | `prom-client`        | `/metrics`    |
 | `notification-service`                                | `prom-client`                    | `/metrics`    |
 
 The two stacks publish request latency under the same name and labels (`http_server_requests_seconds`, with `method`,
@@ -245,8 +242,6 @@ The state of an order is never saved as a whole: each command produces domain ev
 and appends the new events with the version it read. A unique index on (order id, sequence) rejects concurrent appends,
 which are reported as `ConcurrentOrderModificationException` (optimistic concurrency).
 
-The design of the aggregate and of its events is described in the dedicated Event Storming / CQRS section.
-
 ### 6. CQRS — _order-service_
 
 On top of the event store, `order-service` separates the write side from the read side:
@@ -258,8 +253,7 @@ On top of the event store, `order-service` separates the write side from the rea
   event, and `OrderViewProjector` folds the new events into the view. The projector is the only writer of the read
   model; if it detects a gap in the sequence, it rebuilds the view from the full stream.
 
-The wiring of the two sides is kept separate in `OrderBeans` and `OrderProjectionBeans`. More details are given in the
-dedicated Event Storming / CQRS section.
+The wiring of the two sides is kept separate in `OrderBeans` and `OrderProjectionBeans`.
 
 ### 7. Service Discovery — Kubernetes DNS
 

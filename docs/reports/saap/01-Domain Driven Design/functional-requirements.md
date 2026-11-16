@@ -30,28 +30,28 @@ everything a customer can.
 | FR-10 | A manager can create, update and remove the menus of their restaurant, each with an optional validity (e.g. a seasonal menu).     | BR-7       | -                                               |
 | FR-11 | A manager can organize a menu into categories, and define variations on a category that apply to all of its items.                | BR-4, BR-7 | -                                               |
 | FR-12 | A manager can create, update and remove menu items, each with name, description, price, optional variations and optional validity. | BR-4, BR-7 | -                                               |
-| FR-13 | A manager can mark a dish as unavailable, and available again; an unavailable dish cannot be ordered.                             | BR-7       | Restaurant staff marks a dish as unavailable    |
+| FR-13 | A manager can mark a dish as unavailable, and available again; an unavailable dish cannot be ordered.                             | BR-7       | Manager marks a dish as unavailable             |
 | FR-14 | A customer can find the restaurants closest to a given location.                                                                  | BR-1       | -                                               |
-| FR-15 | A customer can open a restaurant's menu and see its dishes, with their details, variations and availability.                      | BR-1, BR-4 | Client browses a restaurant menu                |
+| FR-15 | A customer can open a restaurant's menu and see its dishes, with their details, variations and availability.                      | BR-1, BR-4 | Customer browses a restaurant menu              |
 
 ## Order and scheduling
 
 | ID    | Requirement                                                                                                                                         | Covers     | User story                  |
 |-------|-----------------------------------------------------------------------------------------------------------------------------------------------------|------------|-----------------------------|
-| FR-16 | A customer can place an order for a set of items from one restaurant, choosing the quantity and the variations of each item.                         | BR-1, BR-4 | Client places a delivery order |
-| FR-17 | When placing an order, the customer chooses how it is fulfilled: delivery to an address, takeaway, or dine-in.                                       | BR-2       | Client places a delivery order |
+| FR-16 | A customer can place an order for a set of items from one restaurant, choosing the quantity and the variations of each item.                         | BR-1, BR-4 | Customer places a delivery order |
+| FR-17 | When placing an order, the customer chooses how it is fulfilled: delivery to an address, takeaway, or dine-in.                                       | BR-2       | Customer places a delivery order |
 | FR-18 | When placing an order, the customer chooses when it should be ready or delivered, among the time slots the restaurant still has available.           | BR-3       | -                           |
 | FR-19 | The system offers a time slot only if the restaurant is open and the kitchen still has capacity for it.                                             | BR-9       | -                           |
 | FR-20 | A customer can change the items of an order, and cancel it, while it is still pending.                                                              | BR-1       | -                           |
 | FR-21 | An order moves through `PENDING → PREPARING → READY → COMPLETED`; delivery orders pass through `ON_THE_WAY` between `READY` and `COMPLETED`. Only a pending order can be cancelled. | BR-2 | - |
-| FR-22 | A customer can follow the status of their order as it advances.                                                                                     | BR-10      | Client tracks the order status |
+| FR-22 | A customer can follow the status of their order as it advances.                                                                                     | BR-10      | Customer tracks the order status |
 
 ## Payment
 
 | ID    | Requirement                                                                                          | Covers | User story              |
 |-------|------------------------------------------------------------------------------------------------------|--------|-------------------------|
-| FR-23 | A customer can pay for an order they placed.                                                         | BR-6   | Client pays for an order |
-| FR-24 | When the payment completes, the order is marked as paid and confirmed.                               | BR-6   | Client pays for an order |
+| FR-23 | A customer can pay for an order they placed.                                                         | BR-6   | Customer pays for an order |
+| FR-24 | When the payment completes, the order is marked as paid and confirmed.                               | BR-6   | Customer pays for an order |
 | FR-25 | When the payment fails or is cancelled, the order stays unpaid and is not confirmed.                 | BR-6   | -                       |
 
 ## Notification
@@ -59,14 +59,14 @@ everything a customer can.
 | ID    | Requirement                                                                                     | Covers | User story                                     |
 |-------|-------------------------------------------------------------------------------------------------|--------|------------------------------------------------|
 | FR-26 | When a user registers, they receive a notification asking them to confirm their email address.   | BR-10  | -                                              |
-| FR-27 | When a payment completes, the customer receives a payment confirmation notification.             | BR-10  | Client is notified of a successful payment     |
+| FR-27 | When a payment completes, the customer receives a payment confirmation notification.             | BR-10  | Customer is notified of a successful payment   |
 | FR-28 | When the status of an order changes, the customer receives a notification.                       | BR-10  | -                                              |
 
 ## Table reservation
 
 | ID    | Requirement                                                                            | Covers     | User story              |
 |-------|----------------------------------------------------------------------------------------|------------|-------------------------|
-| FR-29 | A customer can reserve a table at a restaurant for a given time, if a table is free.   | BR-5       | Client reserves a table |
+| FR-29 | A customer can reserve a table at a restaurant for a given time, if a table is free.   | BR-5       | Customer reserves a table |
 
 ## Coverage
 

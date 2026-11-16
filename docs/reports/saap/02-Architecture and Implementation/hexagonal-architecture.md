@@ -7,7 +7,7 @@ the code and how the dependency rule is checked.
 
 The reference service is `user-service` (Kotlin + Micronaut). It persists the current state of its aggregates with
 plain CRUD, so it shows the hexagon without any other pattern on top. `order-service`, which adds event sourcing and
-CQRS, is covered in the dedicated sections.
+CQRS, is covered in [Microservices Patterns](microservices-patterns.md#5-event-sourcing-order-service).
 
 ## Layers and the dependency rule
 
@@ -194,7 +194,7 @@ role is played by `PaymentBeans`.
 
 The dependency rule is enforced automatically by the `architecture-rules` module with
 [Konsist](https://docs.konsist.lemonappdev.com/). A service opts in by extending `ArchitectureKonsistTest`
-(currently `user-service` and `restaurant-service`):
+(currently `user-service`, `restaurant-service` and `order-service`):
 
 ```kotlin
 class UserArchitectureKonsistTest : ArchitectureKonsistTest("user")

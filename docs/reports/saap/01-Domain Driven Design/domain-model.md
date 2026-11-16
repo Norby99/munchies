@@ -1,19 +1,18 @@
 # Domain Model
 
-The backend of _Munchies_ is divided into microservices that follows the Domain-Driven Design, inside a Hexagonal
+The backend of _Munchies_ is divided into microservices that follow Domain-Driven Design, inside a Hexagonal
 layout.
 Each microservice has the same folder structure and naming regardless of technological stack.
 
 This section describes that structure, its class hierarchy, and how the layers depend on one another, using
-[
-```order-service```](https://github.com/Norby99/munchies/tree/master/order-service/src/main/kotlin/com/munchies/order) (
-implemented in Kotlin)
-and [```payment-service```](https://github.com/Norby99/munchies/tree/master/payment-service/src/main/ts) (implemented in
+[`order-service`](https://github.com/Norby99/munchies/tree/master/order-service/src/main/kotlin/com/munchies/order)
+(implemented in Kotlin)
+and [`payment-service`](https://github.com/Norby99/munchies/tree/master/payment-service/src/main/ts) (implemented in
 Express).
 
 ## Layers and dependency direction
 
-As mentioned above, each microservice follows the Hexagonal layout, with it's ```infrastructure```,  ```application```
+As mentioned above, each microservice follows the Hexagonal layout, with its ```infrastructure```,  ```application```
 and ```domain``` layers:
 
 ```mermaid
@@ -79,7 +78,7 @@ infrastructure/
   adapter/dto/factory/                DTO <-> Command mapping
 ```
 
-## Class hierarchy: the `Order` aggregate
+## Class hierarchy
 
 Here is a high level representation of the domain model of the system.
 
