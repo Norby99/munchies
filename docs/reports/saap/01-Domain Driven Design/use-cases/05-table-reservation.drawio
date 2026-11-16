@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="05-table-reservation" name="table-reservation-service">
+    <mxGraphModel dx="1030" dy="540" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=none;spacingTop=8;" value="table-reservation-service" vertex="1">
+          <mxGeometry height="390" width="630" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="reserve" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Reserve a table" vertex="1">
+          <mxGeometry height="60" width="230" x="280" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="modify" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Modify a reservation" vertex="1">
+          <mxGeometry height="60" width="230" x="410" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="cancel" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Cancel a reservation" vertex="1">
+          <mxGeometry height="60" width="230" x="620" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="mine" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="View my reservations" vertex="1">
+          <mxGeometry height="60" width="230" x="620" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="all" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="View the restaurant&#39;s reservations" vertex="1">
+          <mxGeometry height="60" width="230" x="300" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="free" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Find a free table" vertex="1">
+          <mxGeometry height="60" width="230" x="620" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="customer" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Customer" vertex="1">
+          <mxGeometry height="60" width="30" x="80" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="manager" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Manager" vertex="1">
+          <mxGeometry height="60" width="30" x="80" y="338" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" edge="1" parent="1" source="reserve" style="endArrow=open;endSize=10;dashed=1;html=1;" target="free" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="reserve" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="modify" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="cancel" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="mine" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="all" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="modify" style="endArrow=open;endSize=10;dashed=1;html=1;" target="free" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="manager" style="endArrow=block;endFill=0;endSize=14;html=1;" target="customer" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

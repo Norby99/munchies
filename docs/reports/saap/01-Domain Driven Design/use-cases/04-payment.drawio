@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="04-payment" name="payment-service">
+    <mxGraphModel dx="1030" dy="540" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=none;spacingTop=8;" value="payment-service" vertex="1">
+          <mxGeometry height="320" width="630" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pay" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Pay an order" vertex="1">
+          <mxGeometry height="60" width="230" x="280" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="check" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Check order owner and total" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="charge" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Charge the order total" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="mark" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Mark the order as paid" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="customer" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Customer" vertex="1">
+          <mxGeometry height="60" width="30" x="120" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gateway" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Payment gateway" vertex="1">
+          <mxGeometry height="60" width="30" x="960" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" edge="1" parent="1" source="pay" style="endArrow=open;endSize=10;dashed=1;html=1;" target="check" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="pay" style="endArrow=open;endSize=10;dashed=1;html=1;" target="charge" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="pay" style="endArrow=open;endSize=10;dashed=1;html=1;" target="mark" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="pay" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="gateway" style="endArrow=none;html=1;" target="charge" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
