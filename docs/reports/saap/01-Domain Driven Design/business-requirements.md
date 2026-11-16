@@ -31,17 +31,18 @@ A manager is also a customer: every manager can use the platform to order like a
 
 | ID    | Requirement                                                                                                         | Rationale                                                                                   |
 |-------|---------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| BR-1  | Customers can find the restaurants closest to them and order from their menus online.                               | The core value of the platform for customers.                                               |
+| BR-1  | Customers can find restaurants and order from their menus online. | The core value of the platform for customers.                                               |
 | BR-2  | An order can be fulfilled by delivery, by takeaway, or by eating at the restaurant (dine-in).                        | Restaurants serve all three channels; one platform must cover them all.                     |
 | BR-3  | Customers choose when their order should be ready or delivered.                                                     | Lets customers plan ahead and spreads orders over time instead of concentrating them.       |
 | BR-4  | Customers can customize each dish with the variations the restaurant offers.                                        | Customization is part of the restaurant's offer and affects the price.                      |
 | BR-5  | Customers eating at the restaurant can reserve a table in advance.                                                  | Completes the dine-in channel.                                                              |
-| BR-6  | Customers pay for their orders online.                                                                              | An order is confirmed only once it is paid, so the restaurant does not prepare unpaid food. |
-| BR-7  | Managers create and manage their own restaurants: details, business hours, menus, dishes, variations and availability. | Restaurants keep full control of their offer without going through the platform operator.  |
+| BR-6  | Customers pay for their orders online.                                                                              | Customers pay without cash, and the restaurant sees which of its orders are already paid. |
+| BR-7  | Managers create and manage their own restaurants: details, menus, dishes, variations, tables and capacity. | Restaurants keep full control of their offer without going through the platform operator.  |
 | BR-8  | A manager can run several restaurants from the same account.                                                        | Owners with more than one location are a key segment.                                       |
-| BR-9  | Each restaurant accepts only as many orders per time slot as its kitchen can prepare.                               | Prevents late orders during peaks; see the [Capacity Agent](../04-Agent-Based%20Architecture/capacity-agent.md). |
-| BR-10 | Customers are kept informed about their account, their payments and the progress of their orders.                   | Reduces uncertainty and support requests.                                                   |
+| BR-9  | Each restaurant accepts only as many orders per time slot as its kitchen can prepare and its drivers can deliver. | Prevents late orders during peaks; see the [Capacity Agent](../04-Agent-Based%20Architecture/capacity-agent.md). |
+| BR-10 | Customers are kept informed about their account, their payments, their reservations and the progress of their orders, up to where their delivery is. | Reduces uncertainty and support requests.                                                   |
 | BR-11 | The platform stays responsive during lunch and dinner peaks, and its running cost follows the load.                 | Peaks are when most revenue is made; idle capacity outside them is wasted.                  |
+| BR-12 | Managers follow and handle the orders and the table reservations of their restaurants in one place. | The restaurant runs its service from the platform, not alongside it. |
 
 BR-11 is not a feature but a business driver for the system's qualities. It is refined into measurable targets in the
 [Non-functional Requirements](non-functional-requirements.md).
