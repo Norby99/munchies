@@ -2,8 +2,9 @@
 // Customer order detail and tracking: status stepper, ordered lines, per-type details, payment and
 // cancellation.
 //
-// Status updates are not pushed yet: until notification-service delivers them over the gateway
-// WebSocket, the user refreshes explicitly. No polling loop on purpose (see CLAUDE.md).
+// Status updates are pushed: a live notification about this order (it was advanced, paid or
+// cancelled, possibly from another tab) re-reads it, see useLiveUpdates. The Refresh button stays
+// for when the live connection is down. No polling loop on purpose (see CLAUDE.md).
 //
 // The one exception is the driver's position of a delivery that is on the way: it is state the
 // page is looking at, not an event, so the tracking area asks for it (see useDeliveryTracking).
@@ -49,6 +50,7 @@ import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { formatCents } from '@/utils/money'
 import { STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Order } from '@/types'
 
 // Loaded on demand: it brings Leaflet, which only a delivery on the way needs.
@@ -191,6 +193,7 @@ async function pay(): Promise<void> {
 }
 
 onMounted(load)
+useLiveUpdates((n) => n.type === 'ORDER_CHANGED' && n.orderId === props.orderId, refresh)
 watch(() => props.orderId, load)
 </script>
 

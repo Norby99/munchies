@@ -25,6 +25,7 @@ import type { ReservationInput } from '@/api/reservations'
 import * as restaurantsApi from '@/api/restaurants'
 import { formatDay, formatTimeRange, isActive, isChangeable, isOngoing, splitInstant } from '@/utils/reservations'
 import { SCHEDULER_DEFAULT_POLICY } from '@/utils/schedulerDefaults'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Reservation } from '@/types'
 
 const router = useRouter()
@@ -75,6 +76,18 @@ async function load(): Promise<void> {
 }
 
 onMounted(load)
+
+// Changes made from another tab or device arrive as live notifications: re-read in place.
+async function refreshQuietly(): Promise<void> {
+  try {
+    reservations.value = await reservationsApi.listReservations()
+    await resolveRestaurantNames(reservations.value)
+    status.value = reservations.value.length === 0 ? 'empty' : 'ready'
+  } catch {
+    // Keep the last known list.
+  }
+}
+useLiveUpdates((n) => n.type === 'RESERVATION_CHANGED', refreshQuietly)
 
 function restaurantName(reservation: Reservation): string {
   return restaurantNames.value[reservation.restaurantId] ?? 'Restaurant'

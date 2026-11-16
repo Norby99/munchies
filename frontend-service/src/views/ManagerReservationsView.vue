@@ -5,7 +5,8 @@
 //
 // The restaurant lives in the URL query (?restaurant=<id>), as on the order board, so the page
 // survives a reload and the nav keeps the same restaurant across manager pages. The whole list is
-// read once and filtered by day in the browser.
+// read once and filtered by day in the browser, and read again when a live notification says a
+// reservation of this restaurant was booked, changed or canceled.
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -25,6 +26,7 @@ import * as reservationsApi from '@/api/reservations'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { bookableDays, formatTimeRange, isOngoing } from '@/utils/reservations'
 import { toDateInput } from '@/utils/time'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Reservation } from '@/types'
 
 const TOGGLE_ON = 'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
@@ -108,6 +110,7 @@ async function refresh(): Promise<void> {
 
 onMounted(load)
 watch(restaurantId, load)
+useLiveUpdates((n) => n.type === 'RESERVATION_CHANGED' && n.restaurantId === restaurantId.value, refresh)
 
 function selectRestaurant(id: unknown): void {
   if (typeof id === 'string' && id) router.replace({ query: { ...route.query, restaurant: id } })

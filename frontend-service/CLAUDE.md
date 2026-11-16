@@ -35,27 +35,25 @@ Features currently backed by gateway routes
     - order to the table (dine-in) while holding an active reservation at that restaurant: checkout offers
       "At my table" and sends the reservation id to `POST /orders/place`, bypassing the scheduler;
     - pay an order;
-    - list own orders and follow the status of each one;
+    - list own orders and follow the status of each one, updated live (see below);
     - follow the driver of a delivery that is on the way, on a map (`scheduler-service`).
+- **Live notifications (both roles)**: the WebSocket described in
+  [Communication with the gateway](#communication-with-the-gateway) (`api/live.ts`, `stores/live.ts`). Screens
+  showing orders or reservations refresh when a notification concerns them (`composables/useLiveUpdates.ts`), and
+  a toast (`components/LiveToasts.vue`) tells the user about what they did not do themselves: a customer about
+  their order moving on, a manager about new and paid orders, cancellations and table bookings
+  (`utils/liveNotifications.ts`).
 - **Manager (restaurant staff)**:
     - create, update and delete own restaurants;
     - manage menus, categories and menu items;
-<<<<<<< Updated upstream
     - configure each restaurant's tables (number and seats), which makes it bookable;
     - see a restaurant's reservations day by day (read-only: only the customer changes or cancels them);
-    - see incoming orders and advance their status through the order lifecycle.
-=======
     - see incoming orders and advance their status through the order lifecycle;
     - see where the driver of a delivery on the way is.
->>>>>>> Stashed changes
 
-Planned, not yet in the UI (design it so they can be added without restructuring):
-
-- **Delivery scheduling** (`scheduler-service`).
-- **Real-time notifications**: `notification-service` will push notifications (e.g. order status changes, payment
-  success) to the frontend over a WebSocket proxied by the gateway (see
-  [Communication with the gateway](#communication-with-the-gateway)). Until it exists, refresh data on navigation/user action; do not build a
-  polling loop that would later have to be torn out. See the `event-driven` skill for the backend side.
+Delivery scheduling (`scheduler-service`) is used by the checkout (time slots) and the manager's order board
+(kitchen load, advancing orders). Do not add polling loops: data refreshes on navigation, on user action, and on
+live notifications. See the `event-driven` skill for the backend side of the notifications.
 
 **The one polling exception: the driver's position.** Notifications are events and start from the server (the
 WebSocket above). The position of the driver is state that only matters while a user is looking at the tracking
@@ -132,7 +130,7 @@ The frontend has exactly two channels towards the backend, both terminated by `g
 
 - **REST over HTTP (Axios)** for every request/response interaction: account, restaurants, menus, orders,
   payments, and any future feature (reservations, scheduling).
-- **One WebSocket, only for receiving notifications.** The frontend opens it on the same origin (e.g.
+- **One WebSocket (Socket.io), only for receiving notifications.** The frontend opens it on the same origin (e.g.
   `wss://<origin>/notifications`); the gateway authenticates the upgrade request with the `authToken` cookie and
   proxies the connection to `notification-service` (which stays internal, with no exposed port), forwarding the
   user identity. Frames are relayed end to end: there is no REST step and no polling. The socket is read-only from
