@@ -85,6 +85,30 @@ export interface ScheduledOrder {
   tripId: string | null
 }
 
+// Where the driver carrying a delivery order is. WAITING: the driver has not left the restaurant
+// yet. ARRIVED: the driver has reached this order's address. The position is mocked by the
+// scheduler, which moves the driver at a constant speed along a route planned on the streets
+// (straight lines when no road route could be planned).
+export interface OrderTracking {
+  orderId: string
+  tripId: string
+  status: 'WAITING' | 'ON_THE_WAY' | 'ARRIVED'
+  /** The restaurant the driver leaves from. */
+  origin: GeoPoint
+  destination: GeoPoint
+  /** Null until the driver leaves. */
+  driverPosition: GeoPoint | null
+  /** Km the driver still has to cover before this delivery, other stops included. */
+  remainingKm: number
+  etaEpochMs: number | null
+  /** Other deliveries the driver makes before this one. */
+  stopsBefore: number
+  /** The streets still to drive, from the driver to this delivery. Null unless on the way. */
+  routeAhead: GeoPoint[] | null
+  speedKmh: number
+  updatedAtEpochMs: number | null
+}
+
 const BASE = '/schedule/'
 
 // Bookable slots of one day for an order type. DELIVERY also needs the customer's position: a
@@ -119,4 +143,10 @@ export async function scheduleOrder(restaurantId: string, input: ScheduleOrderIn
 // the booking as CONFIRMED, would advance the order a second time when its prep time comes.
 export async function advanceScheduledOrder(orderId: string): Promise<void> {
   await unwrap(http.post(`${BASE}orders/${orderId}/advance`, {}))
+}
+
+// Latest known driver position for a delivery order. 404 when the scheduler has no delivery for
+// the order (not a delivery, not the caller's order, or forgotten after a scheduler restart).
+export async function getOrderTracking(orderId: string): Promise<OrderTracking> {
+  return unwrap(http.get(`${BASE}orders/${orderId}/tracking`))
 }
