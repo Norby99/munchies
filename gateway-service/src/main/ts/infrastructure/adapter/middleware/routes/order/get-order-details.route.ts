@@ -11,12 +11,18 @@ import {
 import {
   GetOrderDetailsAPI,
   GetOrderDetailsResponse,
+  OrderServiceConfig,
 } from "munchies-order-service-shared/kotlin/order-modules";
 import { AuthedRequest } from "../../auth";
 import { request } from "../internal-client";
 import { fillPath } from "../routes";
 import { SimpleRoute } from "../simple-route";
 
+/**
+ * `GET /orders/{id}`: reads one order. A customer only gets their own: their id, taken from the
+ * session, is forwarded as `customerId` and order-service answers 404 for anyone else's order.
+ * Managers read the orders of their board without that filter.
+ */
 export class GetOrderDetailsRoute
   extends GetOrderDetailsAPI<GetOrderDetailsResponse | ErrorResponse>
   implements SimpleRoute<GetOrderDetailsResponse>
@@ -34,15 +40,21 @@ export class GetOrderDetailsRoute
   method: HttpMethod;
   authRole: AuthRole | null;
 
-  async getOrderDetails(id: string): Promise<GetOrderDetailsResponse | ErrorResponse> {
+  async getOrderDetails(
+    id: string,
+    customerId: string | null,
+  ): Promise<GetOrderDetailsResponse | ErrorResponse> {
     const uri = process.env.ORDER_SERVICE_URL;
     if (!uri)
       return Promise.resolve(
         new ErrorResponse("Missing Order Service URL", 500),
       );
 
+    const query = customerId
+      ? `?${new URLSearchParams({ [OrderServiceConfig.CUSTOMER_ID_QUERY]: customerId })}`
+      : "";
     const response = request<GetOrderDetailsResponse>(
-      fillPath(uri + this.path, id),
+      fillPath(uri + this.path, encodeURIComponent(id)) + query,
       this.method,
       "",
       this.parseResponse,
@@ -60,8 +72,8 @@ export class GetOrderDetailsRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const id = req.params.id;
-        return this.getOrderDetails(id);
+        const isCustomer = req.user?.role.name === AuthRole.CUSTOMER.name;
+        return this.getOrderDetails(req.params.id, isCustomer ? req.user!!.id : null);
       } catch (err: any) {
         return new ErrorResponse(
           "GetOrderDetails forward: \n" + String(err),

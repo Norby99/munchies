@@ -22,7 +22,7 @@ abstract class JsGetOrderDetailsAPI<E : WebResponse<Any>> :
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun getOrderDetails(id: String): Promise<E>
+  abstract override fun getOrderDetails(id: String, customerId: String?): Promise<E>
 
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
   override fun parseResponse(json: String): GetOrderDetailsResponse =
@@ -123,7 +123,7 @@ abstract class JsDiscardOrderAPI<E : WebResponse<Any>> :
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun discardOrder(id: String): Promise<E>
+  abstract override fun discardOrder(id: String, customerId: String?): Promise<E>
 
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
   override fun parseResponse(json: String): DiscardOrderResponse =

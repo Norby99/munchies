@@ -25,7 +25,9 @@ interface GetOrderDetails {
    * order details or a failure indicating that the order was not found.
    * - `Success`: Contains the `OrderDto` with the details of the retrieved order.
    * - `Failure`: Indicates that the order was not found in the system.
-   *  - `OrderNotFound`: No order exists with the provided identifier.
+   *  - `OrderNotFound`: No order exists with the provided identifier, or it belongs to another
+   *  customer than the one in the command (answered the same way, so that the existence of other
+   *  customers' orders is not revealed).
    */
   sealed interface Result {
     data class Success(val order: OrderDto) : Result

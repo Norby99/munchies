@@ -109,9 +109,11 @@ class MicronautOrderController(
    *
    * Translates the application-layer result into an HTTP response:
    * - `200 OK` with the order DTO if the order is found
-   * - `404 Not Found` if the order does not exist
+   * - `404 Not Found` if the order does not exist, or belongs to another customer than
+   *   `customerId`
    *
    * @param id The order identifier received from the path.
+   * @param customerId Set by the gateway when the caller is a customer: the order must be theirs.
    * @return An HTTP response containing the order DTO or a not-found status.
    */
   @Get(OrderServiceConfig.GET_ORDER_PATH)
@@ -121,9 +123,14 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Found")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  override fun getOrderDetails(@PathVariable id: String): HttpResponse<GetOrderDetailsResponse> {
+  override fun getOrderDetails(
+    @PathVariable id: String,
+    @QueryValue(OrderServiceConfig.CUSTOMER_ID_QUERY) customerId: String?,
+  ): HttpResponse<GetOrderDetailsResponse> {
     return when (
-      val res = getOrderDetails.execute(GetOrderDetailsCommand(OrderId(id)))
+      val res = getOrderDetails.execute(
+        GetOrderDetailsCommand(OrderId(id), customerId?.let { CustomerId(it) }),
+      )
     ) {
       is GetOrderDetails.Result.Success -> HttpResponse.ok(
         GetOrderDetailsResponse(
@@ -316,10 +323,11 @@ class MicronautOrderController(
    *
    * Response mapping:
    * - `200 OK` when order is discarded successfully
-   * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` when order cannot be canceled
+   * - `404 Not Found` when order does not exist, or belongs to another customer than `customerId`
+   * - `400 Bad Request` when order cannot be canceled (no longer pending, or already paid)
    *
    * @param id Request containing order identifiers.
+   * @param customerId The caller, set by the gateway from the session: the order must be theirs.
    * @return An HTTP response representing the discard result.
    */
   @Delete(OrderServiceConfig.DISCARD_ORDER_PATH)
@@ -330,9 +338,12 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "200", description = "Order discarded successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Order cannot be cancelled")
-  override fun discardOrder(@PathVariable id: String): HttpResponse<DiscardOrderResponse> {
+  override fun discardOrder(
+    @PathVariable id: String,
+    @QueryValue(OrderServiceConfig.CUSTOMER_ID_QUERY) customerId: String?,
+  ): HttpResponse<DiscardOrderResponse> {
     return when (
-      discardOrder.execute(DiscardOrderCommand(OrderId(id)))
+      discardOrder.execute(DiscardOrderCommand(OrderId(id), customerId?.let { CustomerId(it) }))
     ) {
       is DiscardOrder.Result.Success -> HttpResponse.ok(
         DiscardOrderResponse(
@@ -342,6 +353,9 @@ class MicronautOrderController(
       is DiscardOrder.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
       is DiscardOrder.Result.Failure.OrderNotCancellable -> throw ValidationException(
         "Order cannot be cancelled",
+      )
+      is DiscardOrder.Result.Failure.OrderAlreadyPaid -> throw ValidationException(
+        "A paid order cannot be cancelled",
       )
     }
   }
