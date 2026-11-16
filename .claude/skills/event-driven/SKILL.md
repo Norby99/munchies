@@ -1,6 +1,6 @@
 ---
 name: event-driven
-description: Guide to Munchies' event-driven architecture (EDA) — the agent-based, Kafka-consuming pattern used ONLY by notification-service to react to domain events and turn them into user notifications (and, later, WebSocket pushes to frontend-service). Distinct from the event-sourcing skill, which is about how one service persists its own aggregate. Use this whenever the user wants to add a new notification-bound event/topic, touch notification-service's Kafka consumers or its NotificationController, add a Kafka producer in another service that targets notification-service, or asks anything about "event-driven architecture", "agents", "choreography vs orchestration", or which parts of Munchies should react to Kafka — even without the words "event-driven" or "EDA".
+description: Guide to Munchies' event-driven architecture (EDA) — the agent-based, Kafka-consuming pattern used ONLY by notification-service to react to domain events and turn them into user notifications, pushed live to frontend-service over a WebSocket. Distinct from the event-sourcing skill, which is about how one service persists its own aggregate. Use this whenever the user wants to add a new notification-bound event/topic, touch notification-service's Kafka consumers or its NotificationController, add a Kafka producer in another service that targets notification-service, or asks anything about "event-driven architecture", "agents", "choreography vs orchestration", or which parts of Munchies should react to Kafka — even without the words "event-driven" or "EDA".
 ---
 
 # Event-Driven Architecture guide (notification-service only)
@@ -56,11 +56,11 @@ processing for everything else notification-service is supposed to be handling c
 entire reason to make this one service event-driven in the first place.
 
 Rule for this project: every step of notification-service's pipeline — the `eachMessage` handler, every
-`NotificationController.handle*` method, and the future WebSocket push — must be `async`/return a `Promise` and use
-the non-blocking API of whatever client library is involved (Mongo driver, Kafka client, WS library), never a
-synchronous blocking call. The existing consumers already follow this (`async run()`, `await
-consumer.subscribe(...)`) — keep new code consistent with it, and when `NotificationController.handle*` methods
-stop being stub `console.log` calls and start dispatching real notifications, make them `async` too.
+`NotificationController.handle*` method, and the WebSocket push (`LiveNotifier`) — must be `async`/return a
+`Promise` and use the non-blocking API of whatever client library is involved (Mongo driver, Kafka client, Socket.io),
+never a synchronous blocking call. The existing code follows this (`async run()`, `await consumer.subscribe(...)`,
+`async handle*`, Socket.io's `emit`, which only queues frames) — keep new code consistent with it. The `handle*`
+methods also never reject: the consumers' observer `update` is synchronous and calls them without awaiting.
 
 ## notification-service's agent-based architecture (the reference pattern)
 
@@ -76,10 +76,16 @@ The existing code is already the concrete instance of the course's "agent" patte
   about each other.
 - Every consumer forwards what it receives into the single shared
   `infrastructure/adapter/inbound/web/controller/controller.ts`'s `NotificationController`, one `handle*` method
-  per event type. That's the "process" step, currently a stub that logs — this is where turning the received event
-  into an actual notification will go. `notification-service` does not persist an event store of what it
-  receives — Event Sourcing in this project applies to `order-service`'s `Order` aggregate instead, see
-  [[event-sourcing]].
+  per event type. That's the "process" step: it turns the event into a `LiveNotification` (domain model) and decides
+  who gets it (the customer, the restaurant's staff, or both), then hands it to the `LiveNotifier` port.
+  `notification-service` does not persist an event store of what it receives — Event Sourcing in this project
+  applies to `order-service`'s `Order` aggregate instead, see [[event-sourcing]].
+- The "produce" step is `infrastructure/adapter/outbound/websocket/SocketIoLiveNotifier.ts`, the `LiveNotifier`
+  adapter: a Socket.io server on the service's HTTP server, path `LiveNotificationsConfig.PATH` (in
+  `notification-shared`). `gateway-service` authenticates the frontend's WebSocket with the session cookie and
+  proxies it here, forwarding the user's id, role and (for a manager) owned restaurants in headers; each connection
+  joins the rooms `user:<id>` and `restaurant:<id>`, and a push is one `emit` to a room. Rooms live in memory, so the
+  service runs as one replica (see `k8s/notification-service/deployment.yml`).
 
 Mapped onto the course's `poll -> process -> produce -> commit` loop:
 
@@ -87,7 +93,7 @@ Mapped onto the course's `poll -> process -> produce -> commit` loop:
 |---|---|
 | poll | `kafkajs`'s `consumer.run({ eachMessage })` — handled by the library, not hand-written |
 | process | `NotificationController.handle*(event)` — must be `async`, no blocking calls |
-| produce | not implemented yet — will become the WebSocket push to `frontend-service` |
+| produce | `LiveNotifier.toUser` / `toRestaurant` — a Socket.io emit to the frontend, through the gateway |
 | commit | `kafkajs`'s consumer-group offset management (`fromBeginning`, auto-commit) |
 
 ## Checklist: adding a new notification-bound event type
