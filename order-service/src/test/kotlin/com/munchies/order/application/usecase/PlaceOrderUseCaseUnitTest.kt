@@ -6,6 +6,7 @@ import com.munchies.order.domain.factory.OrderFactory
 import com.munchies.order.domain.model.*
 import com.munchies.order.domain.port.MenuCatalog
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.fixtures.asHistory
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createDineInOrder
@@ -24,7 +25,8 @@ class PlaceOrderUseCaseUnitTest {
 
   private val eventStore = mockk<OrderEventStore>()
   private val menuCatalog = mockk<MenuCatalog>()
-  private val useCase = PlaceOrderUseCase(eventStore, menuCatalog, mockk())
+  private val notificationPublisher = mockk<OrderNotificationPublisher>(relaxed = true)
+  private val useCase = PlaceOrderUseCase(eventStore, menuCatalog, mockk(), notificationPublisher)
 
   /** The fixture commands order item-1; this is its menu price. */
   private val item1Price = Price(950)
@@ -73,6 +75,7 @@ class PlaceOrderUseCaseUnitTest {
     verify(exactly = 0) { OrderFactory.createDineIn(any(), any(), any(), any(), any()) }
     verify(exactly = 1) { eventStore.append(any(), 0, any()) }
     verify(exactly = 1) { OrderFactory.fromHistory(any()) }
+    verify(exactly = 1) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   // ---------- TAKEAWAY ----------
@@ -104,6 +107,7 @@ class PlaceOrderUseCaseUnitTest {
     verify(exactly = 0) { OrderFactory.createDineIn(any(), any(), any(), any(), any()) }
     verify(exactly = 1) { eventStore.append(any(), 0, any()) }
     verify(exactly = 1) { OrderFactory.fromHistory(any()) }
+    verify(exactly = 1) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   // ---------- DINE IN ----------
@@ -135,6 +139,7 @@ class PlaceOrderUseCaseUnitTest {
     verify(exactly = 0) { OrderFactory.createTakeaway(any(), any(), any(), any(), any()) }
     verify(exactly = 1) { eventStore.append(any(), 0, any()) }
     verify(exactly = 1) { OrderFactory.fromHistory(any()) }
+    verify(exactly = 1) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   // ---------- FAILURE MAPPING ----------
@@ -149,6 +154,7 @@ class PlaceOrderUseCaseUnitTest {
     result shouldBe PlaceOrder.Result.Failure.EmptyItems
     verify(exactly = 1) { OrderFactory.createDelivery(any(), any(), any(), any(), any()) }
     verify(exactly = 0) { eventStore.append(any(), any(), any()) }
+    verify(exactly = 0) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   @Test

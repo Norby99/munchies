@@ -10,6 +10,7 @@ import com.munchies.order.domain.model.event.OrderEvent
 import com.munchies.order.domain.model.event.OrderPlaced
 import com.munchies.order.domain.port.MenuCatalog
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.domain.port.TableReservations
 import com.munchies.order.domain.port.TableReservations.Lookup
 import com.munchies.order.fixtures.dineInCommand
@@ -30,7 +31,12 @@ class PlaceReservedDineInOrderUseCaseUnitTest {
   private val eventStore = mockk<OrderEventStore>()
   private val menuCatalog = mockk<MenuCatalog>()
   private val tableReservations = mockk<TableReservations>()
-  private val useCase = PlaceOrderUseCase(eventStore, menuCatalog, tableReservations)
+  private val useCase = PlaceOrderUseCase(
+    eventStore,
+    menuCatalog,
+    tableReservations,
+    mockk<OrderNotificationPublisher>(relaxed = true),
+  )
 
   private val base = dineInCommand()
   private val command = PlaceOrderCommand.ReservedDineIn(

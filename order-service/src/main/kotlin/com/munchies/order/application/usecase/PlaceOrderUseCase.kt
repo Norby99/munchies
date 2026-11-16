@@ -14,6 +14,7 @@ import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.domain.port.MenuCatalog
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.domain.port.TableReservations
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import org.slf4j.LoggerFactory
@@ -34,14 +35,19 @@ import org.slf4j.LoggerFactory
  * the reservation must be an accepted one of the same customer at the same restaurant, and the
  * order is served at its table, for its number of guests.
  *
+ * Once the order is stored, downstream consumers are notified, so that it shows up on the
+ * restaurant's order board as it arrives.
+ *
  * @property eventStore The event store holding the order streams.
  * @property menuCatalog The restaurant menus, source of the item prices.
  * @property tableReservations The table reservations, source of a reserved dine-in order's table.
+ * @property notificationPublisher Publisher used to notify downstream consumers of the new order.
  */
 class PlaceOrderUseCase(
   private val eventStore: OrderEventStore,
   private val menuCatalog: MenuCatalog,
   private val tableReservations: TableReservations,
+  private val notificationPublisher: OrderNotificationPublisher,
 ) : PlaceOrder {
 
   override fun execute(command: PlaceOrderCommand): PlaceOrder.Result {
@@ -188,6 +194,7 @@ class PlaceOrderUseCase(
           "Order creation events must start with OrderPlaced"
         }
         eventStore.append(id, expectedVersion = 0, events = creationResult.events)
+        notificationPublisher.publishStatusChanged(order)
         logger.info(
           "Order {} placed for restaurant {} with {} item(s)",
           id.value,

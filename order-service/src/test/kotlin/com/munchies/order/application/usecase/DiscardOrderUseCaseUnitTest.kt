@@ -5,6 +5,7 @@ import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.event.OrderCancelled
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.fixtures.asHistory
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
@@ -20,7 +21,8 @@ import org.junit.jupiter.api.Test
 class DiscardOrderUseCaseUnitTest {
 
   private val eventStore = mockk<OrderEventStore>(relaxed = false)
-  private val useCase = DiscardOrderUseCase(eventStore)
+  private val notificationPublisher = mockk<OrderNotificationPublisher>(relaxed = true)
+  private val useCase = DiscardOrderUseCase(eventStore, notificationPublisher)
 
   private val command = DiscardOrderCommand(defaultOrderId)
 
@@ -43,6 +45,7 @@ class DiscardOrderUseCaseUnitTest {
 
     result shouldBeEqual DiscardOrder.Result.Failure.OrderNotCancellable
     verify(exactly = 0) { eventStore.append(any(), any(), any()) }
+    verify(exactly = 0) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   @Test
@@ -59,6 +62,13 @@ class DiscardOrderUseCaseUnitTest {
         command.orderId,
         history.size.toLong(),
         withArg { events -> events.single().shouldBeInstanceOf<OrderCancelled>() },
+      )
+    }
+    verify(exactly = 1) {
+      notificationPublisher.publishStatusChanged(
+        withArg {
+          it.status shouldBeEqual OrderStatus.CANCELLED
+        },
       )
     }
   }
