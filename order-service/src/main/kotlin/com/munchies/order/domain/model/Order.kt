@@ -68,12 +68,15 @@ sealed class Order(
   }
 
   /**
-   * Cancels the order if it is in a cancellable state.
+   * Cancels the order if it is in a cancellable state: still [OrderStatus.PENDING] and not paid.
+   * A paid order cannot be cancelled because there are no refunds: the money would be kept for an
+   * order that is never prepared.
    *
    * @return A [CancelResult] carrying an [OrderCancelled] event on success.
    */
   fun cancel(): CancelResult {
     if (status != OrderStatus.PENDING) return CancelResult.Failure.InvalidTransition
+    if (payed) return CancelResult.Failure.AlreadyPaid
     return CancelResult.Success(listOf(OrderCancelled(id)))
   }
 
@@ -228,6 +231,7 @@ sealed class Order(
     data class Success(val events: List<OrderEvent>) : CancelResult
     sealed interface Failure : CancelResult {
       data object InvalidTransition : Failure
+      data object AlreadyPaid : Failure
     }
   }
 

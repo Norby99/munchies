@@ -24,4 +24,12 @@ object OrderServiceConfig {
   const val UPDATE_ORDER_ITEMS_PATH = "items"
   const val UPDATE_DELIVERY_ORDER_INFO_PATH = "delivery"
   const val UPDATE_TAKEAWAY_ORDER_INFO_PATH = "takeaway"
+
+  /**
+   * Query parameter carrying the caller's id on `GET` and `DELETE /orders/{id}`, set by
+   * gateway-service from the session (never by the browser). When present, the order must belong
+   * to that customer, or it is answered as not found. Internal callers that are not acting for a
+   * customer (e.g. payment-service reading an order) omit it.
+   */
+  const val CUSTOMER_ID_QUERY = "customerId"
 }

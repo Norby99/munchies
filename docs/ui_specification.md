@@ -192,10 +192,10 @@ is **event-sourced**: nothing is deleted, a cancelled order stays readable with 
 | Action | Method & path | Body | Notes |
 |---|---|---|---|
 | List orders | `GET /orders/?restaurantId=&status=` | — | A customer always gets **only their own** (gateway forces `customerId`); a manager filters by restaurant. `404` = empty. |
-| Get order | `GET /orders/:id` | — | ⚠️ No ownership check (see §11). |
+| Get order | `GET /orders/:id` | — | A customer only gets their own: the gateway forwards their id and anyone else's order is a `404`. Managers are not filtered (see §11). |
 | Place order | `POST /orders/place` | per type, see below | Used directly only for **dine-in**; delivery and takeaway go through the scheduler (§9). |
 | Advance status | `POST /orders/advance` | `{ orderId }` | Managers advance scheduled orders through `/schedule/orders/:id/advance` instead (§9). |
-| Cancel order | `DELETE /orders/:id` | — | Only while `PENDING` and **unpaid** (no refunds). |
+| Cancel order | `DELETE /orders/:id` | — | Only the caller's own order (`404` otherwise), only while `PENDING` and **unpaid**: a paid order is refused with `400` (no refunds). Enforced by order-service. |
 | Update items | `PATCH /orders/items` | `{ orderId, customerId: "", items }` | Full replace; owner-only. |
 | Update delivery / takeaway info | `PATCH /orders/delivery`, `PATCH /orders/takeaway` | type-specific fields | |
 
@@ -208,7 +208,7 @@ the reservation.
 ```
 DELIVERY:           PENDING → PREPARING → READY → ON_THE_WAY → COMPLETED
 TAKEAWAY / DINE_IN: PENDING → PREPARING → READY → COMPLETED
-Cancel:             PENDING (unpaid) → CANCELLED, customer only
+Cancel:             PENDING (unpaid) → CANCELLED, by the customer who owns the order
 ```
 
 ### 6.4 Screens
@@ -307,8 +307,12 @@ not do themselves (customer: order progress; manager: new / paid / cancelled ord
 
 1. Restaurant routes are plural (`/restaurants/...`), menu/category/item routes singular (`/restaurant/...`). Real
    inconsistency; the client uses both forms as they are.
-2. `GET /orders/:id` and `DELETE /orders/:id` have **no ownership check** in order-service: any signed-in user who
-   knows an order id can read it, and the unpaid-pending cancel is not tied to the owner. Order ids are UUIDs and
-   appear only in the owner's own URLs, but this should be fixed server-side.
-3. Listing a manager's restaurants is a `GET` with a JSON body, as is the gateway's internal call.
-4. `PATCH /users/update-password/` names the current plaintext password `oldHashedPassword`.
+2. **Managers are not scoped to their restaurants** when reading one order (`GET /orders/:id`), listing orders
+   (`GET /orders/?restaurantId=`) or reading one reservation: a manager who knows the id of another restaurant's
+   order can read it. Customers are scoped (the gateway forwards their id and services answer `404` for anything
+   else). Closing it needs the gateway to check the restaurant against the manager's own list, an extra call
+   per request.
+3. **Managers cannot cancel or reject orders.** There is no such feature: cancelling is the customer's, and a
+   restaurant-side rejection would need its own event, a check on the restaurant, and refunds, which do not exist.
+4. Listing a manager's restaurants is a `GET` with a JSON body, as is the gateway's internal call.
+5. `PATCH /users/update-password/` names the current plaintext password `oldHashedPassword`.

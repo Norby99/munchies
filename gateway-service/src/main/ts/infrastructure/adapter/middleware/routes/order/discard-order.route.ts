@@ -11,12 +11,18 @@ import {
 import {
   DiscardOrderAPI,
   DiscardOrderResponse,
+  OrderServiceConfig,
 } from "munchies-order-service-shared/kotlin/order-modules";
 import { AuthedRequest } from "../../auth";
 import { request } from "../internal-client";
 import { fillPath } from "../routes";
 import { SimpleRoute } from "../simple-route";
 
+/**
+ * `DELETE /orders/{id}`: cancels an order. The caller's id, taken from the session, is always
+ * forwarded as `customerId`, whatever the role: order-service then cancels only the caller's own
+ * orders and answers 404 for anyone else's (a manager has no orders of their own to cancel here).
+ */
 export class DiscardOrderRoute
   extends DiscardOrderAPI<DiscardOrderResponse | ErrorResponse>
   implements SimpleRoute<DiscardOrderResponse>
@@ -34,15 +40,21 @@ export class DiscardOrderRoute
   method: HttpMethod;
   authRole: AuthRole | null;
 
-  async discardOrder(id: string): Promise<DiscardOrderResponse | ErrorResponse> {
+  async discardOrder(
+    id: string,
+    customerId: string | null,
+  ): Promise<DiscardOrderResponse | ErrorResponse> {
     const uri = process.env.ORDER_SERVICE_URL;
     if (!uri)
       return Promise.resolve(
         new ErrorResponse("Missing Order Service URL", 500),
       );
 
+    const query = customerId
+      ? `?${new URLSearchParams({ [OrderServiceConfig.CUSTOMER_ID_QUERY]: customerId })}`
+      : "";
     const response = request<DiscardOrderResponse>(
-      fillPath(uri + this.path, id),
+      fillPath(uri + this.path, encodeURIComponent(id)) + query,
       this.method,
       "",
       this.parseResponse,
@@ -60,8 +72,7 @@ export class DiscardOrderRoute
   } = {
     forward: async (req: AuthedRequest) => {
       try {
-        const id = req.params.id;
-        return this.discardOrder(id);
+        return this.discardOrder(req.params.id, req.user!!.id);
       } catch (err: any) {
         return new ErrorResponse(
           "DiscardOrder forward: \n" + String(err),

@@ -27,11 +27,17 @@ class DiscardOrderUseCase(
 ) : DiscardOrder {
   override fun execute(command: DiscardOrderCommand): DiscardOrder.Result {
     val (order, version) = eventStore.loadOrder(command.orderId) ?: return OrderNotFound
+    // Another customer's order is answered as missing, not as forbidden.
+    if (command.customerId != null && order.customerId != command.customerId) return OrderNotFound
 
     return when (val result = order.cancel()) {
       is Order.CancelResult.Failure.InvalidTransition -> {
         logger.warn("Order {} cannot be cancelled in status {}", order.id.value, order.status)
         OrderNotCancellable
+      }
+      is Order.CancelResult.Failure.AlreadyPaid -> {
+        logger.warn("Order {} cannot be cancelled: already paid", order.id.value)
+        OrderAlreadyPaid
       }
       is Order.CancelResult.Success -> {
         eventStore.append(order.id, version, result.events)

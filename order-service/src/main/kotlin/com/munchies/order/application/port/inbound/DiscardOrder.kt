@@ -21,15 +21,18 @@ interface DiscardOrder {
    * with specific reasons.
    * - `Success`: The order was successfully discarded.
    * - `Failure`: The attempt to discard the order failed, with specific reasons:
-   *  - `OrderNotFound`: No order exists with the provided identifier.
+   *  - `OrderNotFound`: No order exists with the provided identifier, or it belongs to another
+   *  customer than the one in the command (not revealing that it exists).
    *  - `OrderNotCancellable`: The order cannot be discarded because it has already been processed
    *  or is in a state that does not allow cancellation.
+   *  - `OrderAlreadyPaid`: The order is still pending but already paid, and there are no refunds.
    */
   sealed interface Result {
     data object Success : Result
     sealed interface Failure : Result {
       data object OrderNotFound : Failure
       data object OrderNotCancellable : Failure
+      data object OrderAlreadyPaid : Failure
     }
   }
 }
