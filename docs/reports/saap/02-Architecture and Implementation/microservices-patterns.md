@@ -193,7 +193,7 @@ Express and the Kafka client, so the business code is unchanged.
 
 | Services                                                     | Instrumentation                                                                                                                              | Enabled by                                                    |
 |--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
-| `gateway-service`, `payment-service`, `notification-service` | OpenTelemetry Node SDK with the HTTP, Express, KafkaJS and Pino instrumentations, in a `tracing.ts` module imported first by the entry point | `OTEL_EXPORTER_OTLP_ENDPOINT`                                 |
+| `gateway-service`, `payment-service`, `notification-service`, `table-reservation-service` | OpenTelemetry Node SDK with the HTTP, Express, KafkaJS and Pino instrumentations, in a `tracing.ts` module imported first by the entry point | `OTEL_EXPORTER_OTLP_ENDPOINT`                                 |
 | `user-service`, `order-service`, `restaurant-service`        | Micronaut Tracing (`micronaut-tracing-opentelemetry-http` and `-kafka`), added by the `micronaut-server` convention plugin                   | `OTEL_TRACES_EXPORTER=otlp` and `OTEL_EXPORTER_OTLP_ENDPOINT` |
 
 Both variables are set only in the Helm values and manifests, so local runs and tests need no trace backend. `/health`,
