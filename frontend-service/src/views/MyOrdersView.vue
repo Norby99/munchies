@@ -18,6 +18,7 @@ import { useRestaurantsStore } from '@/stores/restaurants'
 import { formatCents } from '@/utils/money'
 import { expectedTime, isActive, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Order } from '@/types'
 
 const restaurants = useRestaurantsStore()
@@ -76,6 +77,19 @@ function itemCount(order: Order): number {
 }
 
 onMounted(load)
+
+// A live notification about one of the customer's orders re-reads the list in place, without the
+// loading state (the list stays on screen while it updates).
+async function refreshQuietly(): Promise<void> {
+  try {
+    orders.value = await ordersApi.listOrders()
+    status.value = orders.value.length === 0 ? 'empty' : 'ready'
+    await resolveRestaurantNames(orders.value)
+  } catch {
+    // Keep the last known list; the next load or notification tries again.
+  }
+}
+useLiveUpdates((n) => n.type === 'ORDER_CHANGED', refreshQuietly)
 </script>
 
 <template>

@@ -7,8 +7,9 @@
 // demand.
 //
 // The selected restaurant lives in the URL query (?restaurant=<id>), so the board can be
-// bookmarked and the nav can deep-link into it. Like the customer screens, the board refreshes on
-// demand: live updates will come from the notification WebSocket, not from polling.
+// bookmarked and the nav can deep-link into it. The board is live: a notification about an order
+// of this restaurant (new, paid, advanced, cancelled) refreshes it, see useLiveUpdates. Order
+// changes are never polled.
 //
 // A delivery that is on the way has a "Track driver" action: it opens the same tracking area the
 // customer sees, which reads the driver's position while it is open (see useDeliveryTracking).
@@ -48,6 +49,7 @@ import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { expectedTime, isActive, nextStatus, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Order, OrderStatus } from '@/types'
 
 // Board columns, in lifecycle order. ON_THE_WAY only ever holds delivery orders.
@@ -151,6 +153,8 @@ async function refresh(): Promise<void> {
     refreshing.value = false
   }
 }
+
+useLiveUpdates((n) => n.type === 'ORDER_CHANGED' && n.restaurantId === restaurantId.value, refresh)
 
 async function advance(order: Order): Promise<void> {
   const target = nextStatus(order)

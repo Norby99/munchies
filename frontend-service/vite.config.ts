@@ -22,6 +22,8 @@ export default defineConfig({
       '/reservations': 'http://localhost:8086',
       '/payments': 'http://localhost:8086',
       '/schedule': 'http://localhost:8086',
+      // Live notifications (WebSocket, see src/api/live.ts).
+      '/notifications': { target: 'http://localhost:8086', ws: true },
     },
   },
 })

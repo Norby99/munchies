@@ -181,3 +181,37 @@ export interface Reservation {
   tableNumber: number
   status: ReservationStatus
 }
+
+// ---- Live notifications ----
+// Pushed by notification-service over the WebSocket (see stores/live.ts). Mirrors
+// notification-service/src/main/ts/domain/model/LiveNotification.ts: keep both in step.
+
+/**
+ * An order was placed, paid, advanced or cancelled. `status` and `payed` are its current ones:
+ * PENDING and not paid means just placed, PENDING and paid means just paid.
+ */
+export interface OrderChangedNotification {
+  type: 'ORDER_CHANGED'
+  orderId: string
+  restaurantId: string
+  customerId: string
+  status: OrderStatus
+  payed: boolean
+}
+
+export type ReservationChange = 'ACCEPTED' | 'MODIFIED' | 'CANCELED'
+
+/** A table reservation was booked, changed or canceled; carries the reservation as it is now. */
+export interface ReservationChangedNotification {
+  type: 'RESERVATION_CHANGED'
+  change: ReservationChange
+  reservationId: string
+  restaurantId: string
+  customerId: string
+  start: string
+  end: string
+  numberOfGuests: number
+  tableNumber: number
+}
+
+export type LiveNotification = OrderChangedNotification | ReservationChangedNotification
