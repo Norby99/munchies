@@ -183,6 +183,9 @@ services:
       PORT: 8080
       ORDER_SERVICE_URL: http://order-service:8080
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
+      # Road routes for the mocked drivers. Public OSRM demo server: no SLA, light use only, and
+      # it receives restaurant and delivery coordinates. Empty value: straight lines.
+      OSRM_URL: https://router.project-osrm.org
       # TEMPORARY: range of the random admission quota (see RandomAdmissionQuotaAgent).
       ADMISSION_QUOTA_MIN: 5
       ADMISSION_QUOTA_MAX: 20

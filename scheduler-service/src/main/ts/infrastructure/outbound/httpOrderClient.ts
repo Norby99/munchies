@@ -42,6 +42,18 @@ export class HttpOrderClient implements OrderClient {
     throw new OrderServiceError(this.message(res.data) ?? `HTTP ${res.status}`, res.status);
   }
 
+  async getStatus(orderId: string): Promise<string> {
+    const res = await this.http.get(`/orders/${encodeURIComponent(orderId)}`);
+    if (res.status >= 200 && res.status < 300) {
+      const status = res.data?.result?.status;
+      if (typeof status !== "string") {
+        throw new OrderServiceError("order-service response had no order status", 502);
+      }
+      return status;
+    }
+    throw new OrderServiceError(this.message(res.data) ?? `HTTP ${res.status}`, res.status);
+  }
+
   private message(data: unknown): string | null {
     if (data && typeof data === "object" && "result" in data) {
       const result = (data as { result: unknown }).result;

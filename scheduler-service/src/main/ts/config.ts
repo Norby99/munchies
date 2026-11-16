@@ -6,6 +6,12 @@ export interface SchedulerConfig {
   orderServiceUrl: string;
   restaurantServiceUrl: string;
   transitionTickMs: number;
+  /** How often the mocked driver reports a new position. */
+  driverTickMs: number;
+  /** Constant speed every mocked driver moves at. */
+  driverSpeedKmh: number;
+  /** OSRM server planning the drivers' routes on the streets. Empty: straight lines. */
+  osrmUrl: string;
   defaultPolicy: CapacityPolicy;
   /** Range of the TEMPORARY random admission quota (see RandomAdmissionQuotaAgent). */
   admissionQuotaMin: number;
@@ -32,6 +38,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): SchedulerConfi
     orderServiceUrl: str("ORDER_SERVICE_URL", "http://order-service:8080").replace(/\/+$/, ""),
     restaurantServiceUrl: str("RESTAURANT_SERVICE_URL", "http://restaurant-service:8080").replace(/\/+$/, ""),
     transitionTickMs: num("TRANSITION_TICK_MS", 30_000),
+    driverTickMs: num("DRIVER_TICK_MS", 5_000),
+    driverSpeedKmh: num("DRIVER_SPEED_KMH", 25),
+    // Unlike str(), an explicitly empty value is kept: it switches road routing off.
+    osrmUrl: (process.env.OSRM_URL ?? "https://router.project-osrm.org").trim().replace(/\/+$/, ""),
     admissionQuotaMin: num("ADMISSION_QUOTA_MIN", 5),
     admissionQuotaMax: num("ADMISSION_QUOTA_MAX", 20),
     defaultPolicy: {
