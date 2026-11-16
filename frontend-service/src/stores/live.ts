@@ -1,5 +1,9 @@
 // Live notifications: the one WebSocket connection of the signed-in user, the screens listening to
-// it, and the toasts it raises.
+// it, the toasts it raises and the bell's history.
+//
+// The history (NotificationBell) lists what was toasted since the app was opened, so a toast that
+// vanished while they were looking elsewhere is not lost. It lives only in memory: it is gone on
+// reload or sign-out, and there is no server-side inbox (notification-service keeps no state).
 //
 // App.vue opens the connection after sign-in and closes it on sign-out. Screens subscribe through
 // composables/useLiveUpdates, which refreshes them when a notification concerns their data, and
@@ -7,7 +11,7 @@
 // (the server keeps no backlog: this is a live channel, the REST API stays the source of truth).
 
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { openLiveConnection, type LiveConnection, type LiveStatus } from '@/api/live'
 import { useRestaurantsStore } from '@/stores/restaurants'
@@ -19,9 +23,17 @@ import type { LiveNotification } from '@/types'
 export const TOAST_MS = 8_000
 /** Older toasts are dropped beyond this many, so a burst never covers the screen. */
 const MAX_TOASTS = 3
+/** The bell keeps the most recent entries only. */
+const MAX_HISTORY = 30
 
 export interface ShownToast extends LiveToast {
   id: number
+}
+
+/** A bell entry: the same id as the toast it was shown as. */
+export interface HistoryEntry extends ShownToast {
+  receivedAt: Date
+  read: boolean
 }
 
 type Listener = (notification: LiveNotification) => void
@@ -32,6 +44,9 @@ export const useLiveStore = defineStore('live', () => {
 
   const status = ref<LiveStatus | 'closed'>('closed')
   const toasts = ref<ShownToast[]>([])
+  // Newest first.
+  const history = ref<HistoryEntry[]>([])
+  const unread = computed(() => history.value.filter((e) => !e.read).length)
   // Bumped on every reconnection: useLiveUpdates watches it to refetch what may have been missed.
   const resyncs = ref(0)
 
@@ -47,7 +62,9 @@ export const useLiveStore = defineStore('live', () => {
       (id) => restaurants.items.find((r) => r.id === id)?.name,
     )
     if (toast) {
-      toasts.value = [...toasts.value, { ...toast, id: nextToastId++ }].slice(-MAX_TOASTS)
+      const shown = { ...toast, id: nextToastId++ }
+      toasts.value = [...toasts.value, shown].slice(-MAX_TOASTS)
+      history.value = [{ ...shown, receivedAt: new Date(), read: false }, ...history.value].slice(0, MAX_HISTORY)
     }
   }
 
@@ -60,17 +77,23 @@ export const useLiveStore = defineStore('live', () => {
     })
   }
 
-  function disconnect(): void {
+  function close(): void {
     connection?.close()
     connection = null
     status.value = 'closed'
+  }
+
+  /** On sign-out: the next user must not see this one's notifications. */
+  function disconnect(): void {
+    close()
     toasts.value = []
+    history.value = []
   }
 
   /** Reopens the connection, e.g. when a manager's restaurants change (they are read on connect). */
   function reconnect(): void {
     if (!connection) return
-    disconnect()
+    close()
     connect()
     resyncs.value++
   }
@@ -84,5 +107,33 @@ export const useLiveStore = defineStore('live', () => {
     toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 
-  return { status, toasts, resyncs, connect, disconnect, reconnect, subscribe, dismiss }
+  /** Following a toast's or an entry's link counts as reading it. */
+  function markRead(id: number): void {
+    const entry = history.value.find((e) => e.id === id)
+    if (entry) entry.read = true
+  }
+
+  function markAllRead(): void {
+    history.value.forEach((e) => (e.read = true))
+  }
+
+  function clearHistory(): void {
+    history.value = []
+  }
+
+  return {
+    status,
+    toasts,
+    history,
+    unread,
+    resyncs,
+    connect,
+    disconnect,
+    reconnect,
+    subscribe,
+    dismiss,
+    markRead,
+    markAllRead,
+    clearHistory,
+  }
 })

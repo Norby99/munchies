@@ -42,7 +42,10 @@ Features currently backed by gateway routes
   showing orders or reservations refresh when a notification concerns them (`composables/useLiveUpdates.ts`), and
   a toast (`components/LiveToasts.vue`) tells the user about what they did not do themselves: a customer about
   their order moving on, a manager about new and paid orders, cancellations and table bookings
-  (`utils/liveNotifications.ts`).
+  (`utils/liveNotifications.ts`). The header bell (`components/NotificationBell.vue`) lists the same toasts
+  received since the app was opened, with an unread counter, so one that vanished is not lost. It is session-only
+  on purpose (memory, cleared on reload and sign-out): there is no server-side inbox, the screens it links to stay
+  the source of truth, and `notification-service` stays stateless.
 - **Manager (restaurant staff)**:
     - create, update and delete own restaurants;
     - manage menus, categories and menu items;
