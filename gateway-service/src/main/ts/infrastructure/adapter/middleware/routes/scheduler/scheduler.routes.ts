@@ -10,6 +10,8 @@ import { SchedulerProxyRoute } from "./scheduler-proxy.route";
  *  POST /schedule/{restaurantId}/orders                                     (CUSTOMER, customerId injected)
  *  POST /schedule/orders/{orderId}/advance                                  (MANAGER)
  *  GET  /schedule/bookings/{bookingId}                                      (MANAGER, includes tripId)
+ *  GET  /schedule/orders/{orderId}/tracking                                 (CUSTOMER, identity forwarded:
+ *                                                                            a customer only sees their own order)
  */
 export const schedulerRoutes: SimpleRoute<any>[] = [
   new SchedulerProxyRoute(
@@ -31,5 +33,12 @@ export const schedulerRoutes: SimpleRoute<any>[] = [
     HttpMethod.POST,
     AuthRole.MANAGER,
     "passthrough",
+  ),
+  new SchedulerProxyRoute(
+    "/schedule/orders/{orderId}/tracking",
+    HttpMethod.GET,
+    AuthRole.CUSTOMER,
+    "none",
+    true,
   ),
 ];
