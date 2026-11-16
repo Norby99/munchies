@@ -69,7 +69,7 @@ export async function getOrder(orderId: string): Promise<Order> {
 }
 
 // Moves one step forward in the order type's status chain
-// (see ui_specification.md §6.4 for the per-type chain).
+// (see ui_specification.md §6.3 for the per-type chain).
 export async function advanceOrderStatus(orderId: string): Promise<string> {
   return unwrap(http.post(BASE + 'advance', { orderId }))
 }

@@ -1,6 +1,6 @@
 // Restaurant CRUD. Routes are plural (`/restaurants/...`), unlike the menu
 // family below — a real inconsistency in the API, kept as-is rather than
-// "fixed" client-side (see ui_specification.md §7.1).
+// "fixed" client-side (see ui_specification.md §11.1).
 //
 // managerId is always injected server-side from the session cookie
 // (CreateRestaurantRequest.addId / UpdateRestaurantRequest.addId /
