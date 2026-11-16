@@ -2,6 +2,8 @@ package com.munchies.order.infrastructure.adapter.dto.factory
 
 import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.domain.model.Price
+import com.munchies.order.domain.model.RequestedItem
 import com.munchies.order.infrastructure.adapter.dto.OrderItemDto
 
 /**
@@ -20,7 +22,7 @@ object OrderItemDtoFactory {
    * @return The corresponding OrderItemDto representation.
    */
   fun OrderItem.toDto(): OrderItemDto {
-    return OrderItemDto(menuItemId.value, quantity)
+    return OrderItemDto(menuItemId.value, quantity, Math.toIntExact(unitPrice.cents))
   }
 
   /**
@@ -30,6 +32,15 @@ object OrderItemDtoFactory {
    * @return The corresponding OrderItem domain model.
    */
   fun OrderItemDto.toDomain(): OrderItem {
-    return OrderItem(MenuItemId(menuItemId), quantity)
+    return OrderItem(MenuItemId(menuItemId), quantity, Price(unitPriceCents.toLong()))
   }
+
+  /**
+   * Converts an OrderItemDto received in a request into a [RequestedItem]. Any price sent by the
+   * client is dropped on purpose: order-service prices the items from the restaurant's menus.
+   */
+  fun OrderItemDto.toRequestedItem(): RequestedItem = RequestedItem(
+    MenuItemId(menuItemId),
+    quantity,
+  )
 }

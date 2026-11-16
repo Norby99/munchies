@@ -1,27 +1,5 @@
 # Requirements
 
-- The requirements must explain __what__ (not how) the software being produced should do. 
-    * you should not focus on the particular problems, but exclusively on what you want the application to do.
-
-- Requirements must be clearly identified, and possibly numbered
-
-- Requirements are divided into:
-    - **Functional**: some functionality the software should provide to the user
-    - **Non-functional**: requirements that do not directly concern behavioural aspects, such as consistency, availability, etc.
-    - **Implementation**: constrain the entire phase of system realization, for instance by requiring the use of a specific programming language and/or a specific software tool
-        + these constraints should be adequately justified by political / economic / administrative reasons...
-        + ... otherwise, implementation choices should emerge _as a consequence of_ design
-
-- If there are domain-specific terms, these should be explained in a glossary
-
-- Each requirement must have its own __acceptance criteria__
-    + these will be important for the validation phase
-
-
----
-
-# Requirements of Munchies
-
 This chapter states what _Munchies_ must do. How each requirement is met belongs to the [design](../03-design/design.md)
 chapter; the acceptance criteria below are the ones verified in the [validation](../05-validation/acceptance-test.md)
 chapter.
@@ -249,7 +227,7 @@ The table below explains every requirement that is not _Done_ yet.
 | `NFR4`                  | Timeouts apply to calls going through the gateway, but the behaviour with a service down has not been verified                                       |
 | `NFR5`                  | No circuit breaker has been implemented                                                                                                              |
 | `NFR11`                 | A failure after the payment is only logged, as no compensation exists                                                                                |
-| `NFR12`                 | Some services are published as `NodePort`, so they can be reached without going through the gateway                                                  |
+| `NFR12`                 | All the backend services are published as `NodePort`, so they can be reached without going through the gateway                                      |
 | `NFR14`                 | Logging out only removes the cookie: a copy of the token stays valid until it expires, since revocation is not checked when a token is validated. The signing key is fixed in the configuration, and a public route returns a valid token to anyone |
 | `NFR18`                 | The restaurant service has no OpenAPI description                                                                                                    |
 | `NFR19`                 | Responsiveness has not been verified on all the views                                                                                                |

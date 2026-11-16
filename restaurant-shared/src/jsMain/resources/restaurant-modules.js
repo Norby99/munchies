@@ -11,6 +11,7 @@ const _dto = _adapter.dto;
 
 module.exports = {
   RestaurantDto: _dto.RestaurantDto,
+  TableDto: _dto.TableDto,
 
   RestaurantServiceConfig: _inbound.web.config.RestaurantServiceConfig,
   MenuServiceConfig: _inbound.web.config.MenuServiceConfig,
@@ -26,6 +27,10 @@ module.exports = {
   GetRestaurantRequest: _httpRestaurant.GetRestaurantRequest,
   GetRestaurantResponse: _httpRestaurant.GetRestaurantResponse,
   getRestaurantResponseFromJson: _httpRestaurant.getRestaurantResponseFromJson,
+
+  SearchRestaurantsAPI: _inbound.JsSearchRestaurantsAPI,
+  SearchRestaurantsResponse: _httpRestaurant.SearchRestaurantsResponse,
+  searchRestaurantsResponseFromJson: _httpRestaurant.searchRestaurantsResponseFromJson,
 
   GetManagerRestaurantsAPI: _inbound.JsGetManagerRestaurantsAPI,
   GetManagerRestaurantsRequest: _httpRestaurant.GetManagerRestaurantsRequest,
@@ -43,6 +48,36 @@ module.exports = {
   deleteRestaurantRequestFromJson: _httpRestaurant.deleteRestaurantRequestFromJson,
   DeleteRestaurantResponse: _httpRestaurant.DeleteRestaurantResponse,
   deleteRestaurantResponseFromJson: _httpRestaurant.deleteRestaurantResponseFromJson,
+
+  GetCapacityPolicyAPI: _inbound.JsGetCapacityPolicyAPI,
+  GetCapacityPolicyResponse: _httpRestaurant.GetCapacityPolicyResponse,
+  getCapacityPolicyResponseFromJson: _httpRestaurant.getCapacityPolicyResponseFromJson,
+
+  UpdateCapacityPolicyAPI: _inbound.JsUpdateCapacityPolicyAPI,
+  UpdateCapacityPolicyRequest: _httpRestaurant.UpdateCapacityPolicyRequest,
+  updateCapacityPolicyRequestFromJson: _httpRestaurant.updateCapacityPolicyRequestFromJson,
+  UpdateCapacityPolicyResponse: _httpRestaurant.UpdateCapacityPolicyResponse,
+  updateCapacityPolicyResponseFromJson: _httpRestaurant.updateCapacityPolicyResponseFromJson,
+
+  GetRestaurantLocationAPI: _inbound.JsGetRestaurantLocationAPI,
+  GetRestaurantLocationResponse: _httpRestaurant.GetRestaurantLocationResponse,
+  getRestaurantLocationResponseFromJson: _httpRestaurant.getRestaurantLocationResponseFromJson,
+
+  UpdateRestaurantLocationAPI: _inbound.JsUpdateRestaurantLocationAPI,
+  UpdateRestaurantLocationRequest: _httpRestaurant.UpdateRestaurantLocationRequest,
+  updateRestaurantLocationRequestFromJson: _httpRestaurant.updateRestaurantLocationRequestFromJson,
+  UpdateRestaurantLocationResponse: _httpRestaurant.UpdateRestaurantLocationResponse,
+  updateRestaurantLocationResponseFromJson: _httpRestaurant.updateRestaurantLocationResponseFromJson,
+
+  GetTablesAPI: _inbound.JsGetTablesAPI,
+  GetTablesResponse: _httpRestaurant.GetTablesResponse,
+  getTablesResponseFromJson: _httpRestaurant.getTablesResponseFromJson,
+
+  UpdateTablesAPI: _inbound.JsUpdateTablesAPI,
+  UpdateTablesRequest: _httpRestaurant.UpdateTablesRequest,
+  updateTablesRequestFromJson: _httpRestaurant.updateTablesRequestFromJson,
+  UpdateTablesResponse: _httpRestaurant.UpdateTablesResponse,
+  updateTablesResponseFromJson: _httpRestaurant.updateTablesResponseFromJson,
 
   // ---- Menu API ----
   CreateMenuAPI: _inbound.JsCreateMenuAPI,

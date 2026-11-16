@@ -4,6 +4,7 @@ import com.munchies.order.domain.model.DeliveryInfo
 import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.domain.model.OrderDetails
 import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.domain.model.Price
 import com.munchies.order.domain.model.TableInfo
 import com.munchies.order.domain.model.TakeawayInfo
 import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderSubDocument.BELL_NAME
@@ -20,6 +21,7 @@ import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderSu
 import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderSubDocument.QUANTITY
 import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderSubDocument.TABLE_NUMBER
 import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderSubDocument.TAKEAWAY
+import com.munchies.order.infrastructure.adapter.outbound.mongo.document.OrderSubDocument.UNIT_PRICE_CENTS
 import org.bson.Document
 
 /**
@@ -29,11 +31,23 @@ import org.bson.Document
 object OrderSubDocumentFactory {
 
   fun List<OrderItem>.toItemsDocument(): List<Document> = map {
-    Document(MENU_ITEM_ID, it.menuItemId.value).append(QUANTITY, it.quantity)
+    Document(MENU_ITEM_ID, it.menuItemId.value)
+      .append(QUANTITY, it.quantity)
+      .append(UNIT_PRICE_CENTS, it.unitPrice.cents)
   }
 
+  /**
+   * Reads order items. Events stored before items carried a price have no [UNIT_PRICE_CENTS]:
+   * they are upcast to a zero price instead of being rewritten, since events are immutable. Such
+   * legacy orders end up with a zero total, which payment-service refuses to charge.
+   */
   fun Document.readItems(key: String): List<OrderItem> = getList(key, Document::class.java).map {
-    OrderItem(MenuItemId(it.getString(MENU_ITEM_ID)), it.getInteger(QUANTITY))
+    OrderItem(
+      MenuItemId(it.getString(MENU_ITEM_ID)),
+      it.getInteger(QUANTITY),
+      it.get(UNIT_PRICE_CENTS, Number::class.java)?.let { cents -> Price(cents.toLong()) }
+        ?: Price.ZERO,
+    )
   }
 
   fun DeliveryInfo.toDocument(): Document = Document(DETAILS_TYPE, DELIVERY)

@@ -253,7 +253,8 @@ On top of the event store, `order-service` separates the write side from the rea
   event, and `OrderViewProjector` folds the new events into the view. The projector is the only writer of the read
   model; if it detects a gap in the sequence, it rebuilds the view from the full stream.
 
-The wiring of the two sides is kept separate in `OrderBeans` and `OrderProjectionBeans`.
+The wiring of the two sides is kept separate in `OrderBeans` and `OrderProjectionBeans`. More details are given in the
+dedicated Event Storming / CQRS section.
 
 ### 7. Service Discovery — Kubernetes DNS
 

@@ -8,10 +8,14 @@ import {
   UserEmailConfirmationTopic,
   PaymentSuccessNotificationInfo,
   OrderStatusChangedNotificationInfo,
+  TableReservationNotificationInfo,
 } from "@main/domain/external-modules";
 import { KafkaUserEmailConfirmationNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaUserNotificationConsumer";
 import { KafkaPaymentSuccessNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaPaymentSuccessNotificationConsumer";
 import { KafkaOrderStatusChangedNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaOrderStatusChangedNotificationConsumer";
+import { KafkaTableReservationAcceptedNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaTableReservationAcceptedNotificationConsumer";
+import { KafkaTableReservationModifiedNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaTableReservationModifiedNotificationConsumer";
+import { KafkaTableReservationCanceledNotificationConsumer } from "./infrastructure/adapter/inbound/kafka/KafkaTableReservationCanceledNotificationConsumer";
 import { NotificationController } from "./infrastructure/adapter/inbound/web/controller/controller";
 import { createManagementApp } from "./infrastructure/adapter/inbound/web/config/managementApp";
 import { logger } from "./infrastructure/adapter/outbound/logging/logger";
@@ -78,6 +82,36 @@ async function main() {
           kafka,
           orderStatusChangedTopic,
           OrderStatusChangedNotificationInfo.ORDER_STATUS_CHANGED_GROUP_ID,
+          controller
+        )
+    ),
+    startConsumer(
+      TableReservationNotificationInfo.TABLE_RESERVATION_ACCEPTED_TOPIC,
+      (kafka) =>
+        new KafkaTableReservationAcceptedNotificationConsumer(
+          kafka,
+          TableReservationNotificationInfo.TABLE_RESERVATION_ACCEPTED_TOPIC,
+          TableReservationNotificationInfo.TABLE_RESERVATION_ACCEPTED_GROUP_ID,
+          controller
+        )
+    ),
+    startConsumer(
+      TableReservationNotificationInfo.TABLE_RESERVATION_MODIFIED_TOPIC,
+      (kafka) =>
+        new KafkaTableReservationModifiedNotificationConsumer(
+          kafka,
+          TableReservationNotificationInfo.TABLE_RESERVATION_MODIFIED_TOPIC,
+          TableReservationNotificationInfo.TABLE_RESERVATION_MODIFIED_GROUP_ID,
+          controller
+        )
+    ),
+    startConsumer(
+      TableReservationNotificationInfo.TABLE_RESERVATION_CANCELED_TOPIC,
+      (kafka) =>
+        new KafkaTableReservationCanceledNotificationConsumer(
+          kafka,
+          TableReservationNotificationInfo.TABLE_RESERVATION_CANCELED_TOPIC,
+          TableReservationNotificationInfo.TABLE_RESERVATION_CANCELED_GROUP_ID,
           controller
         )
     ),

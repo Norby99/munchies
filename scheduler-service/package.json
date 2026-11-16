@@ -1,0 +1,29 @@
+{
+  "name": "scheduler-service",
+  "version": "1.0.0",
+  "description": "Munchies order scheduling service",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "src/main/ts/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main/ts/index.js",
+    "dev": "tsx watch src/main/ts/index.ts",
+    "analyze:scala": "cd analysis-scala && sbt fastLinkJS && node demo-node.js",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.19.39",
+    "@vitest/coverage-v8": "^2.1.8",
+    "scheduler-analysis": "file:analysis-scala",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

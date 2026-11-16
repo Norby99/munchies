@@ -20,5 +20,6 @@
     "src/main/ts/**/*.ts",
     "src/main/ts/types/**/*.d.ts",
     "src/test/ts/**/*.ts",
+    "src/integrationTest/ts/**/*.ts",
   ],
 }

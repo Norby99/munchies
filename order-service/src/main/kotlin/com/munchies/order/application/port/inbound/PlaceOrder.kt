@@ -1,6 +1,7 @@
 package com.munchies.order.application.port.inbound
 
 import com.munchies.order.application.port.inbound.command.PlaceOrderCommand
+import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.infrastructure.adapter.dto.OrderDto
 
 /**
@@ -26,6 +27,13 @@ interface PlaceOrder {
    *  - `InvalidDate`: The provided date for the order is invalid (e.g., in the past).
    *  - `EmptyItems`: The order does not contain any items.
    *  - `InvalidItemQuantity`: One or more items in the order have an invalid quantity.
+   *  - `UnknownItems`: One or more items are not on any menu of the restaurant.
+   *  - `RestaurantNotFound`: The restaurant does not exist.
+   *  - `MenuUnavailable`: restaurant-service could not be asked for the prices.
+   *  - `ReservationNotFound`: the customer has no such table reservation.
+   *  - `ReservationNotUsable`: the reservation cannot back this order (canceled, or made at
+   *                            another restaurant).
+   *  - `ReservationUnavailable`: table-reservation-service could not be asked.
    */
   sealed interface Result {
     data class Success(val order: OrderDto) : Result
@@ -33,6 +41,12 @@ interface PlaceOrder {
       data object InvalidDate : Failure
       data object EmptyItems : Failure
       data object InvalidItemQuantity : Failure
+      data class UnknownItems(val menuItemIds: Set<MenuItemId>) : Failure
+      data object RestaurantNotFound : Failure
+      data object MenuUnavailable : Failure
+      data object ReservationNotFound : Failure
+      data class ReservationNotUsable(val reason: String) : Failure
+      data object ReservationUnavailable : Failure
     }
   }
 }

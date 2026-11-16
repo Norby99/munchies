@@ -1,9 +1,20 @@
 <script setup lang="ts">
-// Raised by the axios response interceptor on a 401, not by any one view —
-// the cookie lasts one hour even though the JWT is valid for seven days.
+// Raised by the axios response interceptor on a 401, not by any one view: the session cookie lasts
+// one hour. The cart and the current route are kept, so signing in again returns the user here.
 
 import { useRouter } from 'vue-router'
+import { ClockAlertIcon } from '@lucide/vue'
 
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
@@ -16,19 +27,21 @@ function signInAgain(): void {
 </script>
 
 <template>
-  <div v-if="session.expired" class="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="exp-title">
-    <div class="dialog">
-      <span class="tag tag-outline" style="align-self: flex-start">code: 401</span>
-      <h3 class="dialog-title" id="exp-title">Session expired</h3>
-      <p class="dialog-body" style="margin: 0">
-        The cookie lasts one hour even though the JWT is valid for seven days. The interceptor
-        caught the 401 and kept your draft in the store — signing back in returns you here.
-      </p>
-      <div class="dialog-actions">
-        <button class="btn btn-primary" type="button" style="min-height: 44px" @click="signInAgain">
-          Sign in again
-        </button>
-      </div>
-    </div>
-  </div>
+  <AlertDialog :open="session.expired">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogMedia>
+          <ClockAlertIcon />
+        </AlertDialogMedia>
+        <AlertDialogTitle>Your session has expired</AlertDialogTitle>
+        <AlertDialogDescription>
+          For your security you are signed out after an hour. Sign in again to pick up where you left
+          off: your cart is still here.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <Button @click="signInAgain">Sign in again</Button>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>

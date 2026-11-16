@@ -2,9 +2,11 @@ package com.munchies.order.infrastructure.adapter.inbound.web.config
 
 import com.munchies.order.application.port.inbound.*
 import com.munchies.order.application.usecase.*
+import com.munchies.order.domain.port.MenuCatalog
 import com.munchies.order.domain.port.OrderEventStore
 import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.domain.port.OrderViewRepository
+import com.munchies.order.domain.port.TableReservations
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
@@ -33,15 +35,19 @@ class OrderBeans {
   fun payOrder(eventStore: OrderEventStore): PayOrder = PayOrderUseCase(eventStore)
 
   @Singleton
-  fun placeOrder(eventStore: OrderEventStore): PlaceOrder = PlaceOrderUseCase(eventStore)
+  fun placeOrder(
+    eventStore: OrderEventStore,
+    menuCatalog: MenuCatalog,
+    tableReservations: TableReservations,
+  ): PlaceOrder = PlaceOrderUseCase(eventStore, menuCatalog, tableReservations)
 
   @Singleton
   fun updateDeliveryOrderInfo(eventStore: OrderEventStore): UpdateDeliveryOrderInfo =
     UpdateDeliveryOrderInfoUseCase(eventStore)
 
   @Singleton
-  fun updateOrderItems(eventStore: OrderEventStore): UpdateOrderItems =
-    UpdateOrderItemsUseCase(eventStore)
+  fun updateOrderItems(eventStore: OrderEventStore, menuCatalog: MenuCatalog): UpdateOrderItems =
+    UpdateOrderItemsUseCase(eventStore, menuCatalog)
 
   @Singleton
   fun updateTakeawayOrderInfo(eventStore: OrderEventStore): UpdateTakeawayOrderInfo =

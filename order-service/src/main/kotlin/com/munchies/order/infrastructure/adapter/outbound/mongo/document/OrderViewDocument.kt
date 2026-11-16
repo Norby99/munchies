@@ -24,6 +24,7 @@ object OrderViewDocument {
 object OrderSubDocument {
   const val MENU_ITEM_ID = "menuItemId"
   const val QUANTITY = "quantity"
+  const val UNIT_PRICE_CENTS = "unitPriceCents"
 
   const val DETAILS_TYPE = "type"
   const val DELIVERY = "DELIVERY"

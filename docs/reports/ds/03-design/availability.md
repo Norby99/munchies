@@ -1,18 +1,5 @@
 # Availability
 
-- Is there any __caching__ mechanism?
-    * _where_? _why_?
-
-- Is there any form of __load balancing__?
-    * _where_? _why_?
-
-- In case of __network partitioning__, how does the system behave?
-    * _why_? _how_?
-
----
-
-# Availability of Munchies
-
 ## Caching
 
 No dedicated cache layer is used. Reads are served by indexed queries on a dedicated database, and a separate cache
@@ -36,20 +23,20 @@ slightly stale.
 
 ## Load balancing
 
-Load balancing between replicas is performed by Kubernetes. Callers address a service by its name, and Kubernetes
+Load balancing between replicas is performed by the platform. Callers address a service by its name, and the platform
 dynamically assigns incoming API calls to its replicas, taking into account only those that are ready. As replicas are
 added, removed or replaced, the assignment follows with no change on the side of the callers.
 
 | Where                        | How                                                                                    | Why                                                    |
 |------------------------------|----------------------------------------------------------------------------------------|--------------------------------------------------------|
-| Across replicas of a service | Kubernetes dynamically assigns API calls to the replicas that are ready                | Replicas are interchangeable, so no affinity is needed |
+| Across replicas of a service | The platform dynamically assigns API calls to the replicas that are ready              | Replicas are interchangeable, so no affinity is needed |
 | Across topics                | Each topic has its own consumer                                                        | A busy topic does not slow down the others             |
 | Over time                    | The broker buffers events, and the consumer takes them at its own pace                 | A burst of events does not overwhelm the consumer      |
 
 ### Autoscaling
 
 Load balancing is paired with autoscaling, which follows the bursty pattern of meals (`NFR1`). Autoscaling is also
-performed by Kubernetes, which monitors the CPU usage of each service and adjusts the number of its replicas with no
+performed by the platform, which monitors the CPU usage of each service and adjusts the number of its replicas with no
 human intervention. The gateway and the user, restaurant and order services go from 1 to 4 replicas, targeting 60% of
 CPU usage. Scaling out is fast, to absorb a peak as it begins, while scaling in removes one replica at a time, to avoid
 oscillations.

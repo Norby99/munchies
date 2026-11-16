@@ -1,17 +1,5 @@
 # Behaviour
 
-- how does _each_ component __behave__ individually (e.g. in _response_ to _events_ or messages)?
-    * some components may be _stateful_, others _stateless_
-
-- which components are in charge of updating the __state__ of the system? _when_? _how_?
-
-> State diagrams are welcome here
-
-
----
-
-# Behaviour of Munchies
-
 ## Component behaviour
 
 | Component              | Kind      | Behaviour                                                                                                                                                            |
@@ -93,11 +81,14 @@ stateDiagram-v2
     [*] --> PENDING
     PENDING --> COMPLETED: accepted by the provider
     PENDING --> FAILED: refused by the provider
-    PENDING --> CANCELLED
+    PENDING --> CANCELLED: cancelled (no use case yet)
     COMPLETED --> [*]
     FAILED --> [*]
     CANCELLED --> [*]
 ```
+
+A payment is `PENDING` only while its attempt is running: it is stored once the provider has answered, so every stored
+payment is either `COMPLETED` or `FAILED`. `CANCELLED` is part of the model, but no use case reaches it yet.
 
 ### Account access
 

@@ -1,58 +1,51 @@
 <script setup lang="ts">
-// Bottom tab bar replacing the desktop nav on mobile — sticky, one equal-flex
-// link per nav item, 44px minimum hit target.
+// Bottom tab bar replacing the header links on phones (hidden from md up): fixed, one equal-width
+// tab per nav item with icon and label, 56px tall (WCAG 2.2 target size), and padded for the
+// home indicator on notched devices.
+
+import { useRoute } from 'vue-router'
 
 import { useNavItems } from '@/composables/useNavItems'
+import { cn } from '@/lib/utils'
 
 const navItems = useNavItems()
+const route = useRoute()
+
+function isActive(matches: string[]): boolean {
+  return matches.includes(String(route.name))
+}
 </script>
 
 <template>
-  <nav class="mobile-tab-bar">
-    <router-link
-      v-for="item in navItems"
-      :key="item.label"
-      :to="item.to"
-      class="mobile-tab-bar__link"
-      :class="{ 'mobile-tab-bar__link--disabled': item.disabled }"
-      active-class="mobile-tab-bar__link--active"
-      :tabindex="item.disabled ? -1 : undefined"
-      :aria-disabled="item.disabled || undefined"
-    >
-      {{ item.label }}
-    </router-link>
+  <nav
+    aria-label="Main"
+    class="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+  >
+    <ul class="flex">
+      <li v-for="item in navItems" :key="item.label" class="flex-1">
+        <span
+          v-if="item.disabled"
+          class="flex h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground/50"
+          aria-disabled="true"
+        >
+          <component :is="item.icon" class="size-5" aria-hidden="true" />
+          <span class="max-w-full truncate px-1">{{ item.label }}</span>
+        </span>
+        <RouterLink
+          v-else
+          :to="item.to"
+          :aria-current="isActive(item.matches) ? 'page' : undefined"
+          :class="
+            cn(
+              'flex h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium outline-none focus-visible:bg-muted',
+              isActive(item.matches) ? 'text-primary' : 'text-muted-foreground',
+            )
+          "
+        >
+          <component :is="item.icon" class="size-5" aria-hidden="true" />
+          <span class="max-w-full truncate px-1">{{ item.label }}</span>
+        </RouterLink>
+      </li>
+    </ul>
   </nav>
 </template>
-
-<style scoped>
-.mobile-tab-bar {
-  display: flex;
-  border-top: 2px solid var(--color-divider);
-  background: var(--color-bg);
-  position: sticky;
-  bottom: 0;
-}
-
-.mobile-tab-bar__link {
-  flex: 1;
-  text-align: center;
-  padding: 14px 8px;
-  min-height: 44px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-  color: var(--color-text);
-  border-top: 3px solid transparent;
-}
-
-.mobile-tab-bar__link--active {
-  color: var(--color-accent);
-  border-top-color: var(--color-accent);
-}
-
-.mobile-tab-bar__link--disabled {
-  opacity: 0.45;
-  pointer-events: none;
-}
-</style>

@@ -1,22 +1,7 @@
 # Implementation
 
-- which __network protocols__ to use?
-    * e.g. UDP, TCP, HTTP, WebSockets, gRPC, XMPP, AMQP, MQTT, etc.
-- how should _in-transit data_ be __represented__?
-    * e.g. JSON, XML, YAML, Protocol Buffers, etc.
-- how should _databases_ be __queried__?
-    * e.g. SQL, NoSQL, etc.
-- how should components be _authenticated_?
-    * e.g. OAuth, JWT, etc.
-- how should components be _authorized_?
-    * e.g. RBAC, ABAC, etc.
-
----
-
-# Implementation of Munchies
-
 This chapter describes the concrete choices that realize the design. Limits that come from the code rather than from
-the design are listed at the end.
+the design are listed under [Known gaps](../02-requirements/requirements.md#known-gaps).
 
 ## Network protocols
 
@@ -39,7 +24,9 @@ WebSockets are not used yet: there is no push towards the browser yet, so a clie
 it reloads the data.
 
 Each service listens on port 8080 inside its pod, and is reached through the DNS name of its Kubernetes `Service`, so
-no address is hard-coded.
+no address is hard-coded. For instance, the order service is reachable at
+`order-service.order-service.svc.cluster.local`. The same `Service` balances the requests across the ready replicas,
+while a `HorizontalPodAutoscaler` adjusts their number from the CPU usage.
 
 ## Data representation
 

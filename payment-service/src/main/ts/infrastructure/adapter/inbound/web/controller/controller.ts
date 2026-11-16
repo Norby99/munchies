@@ -4,6 +4,9 @@ import {
   ProcessPaymentResponse,
 } from "munchies-payment-service-shared/kotlin/payment-modules";
 import { ProcessPayment } from "@main/application/port/inbound/ProcessPayment";
+import { PaymentError } from "./payment-error";
+
+export { PaymentError } from "./payment-error";
 import { PaymentBeans } from "@main/infrastructure/adapter/inbound/web/config/PaymentBeans";
 
 /**
@@ -26,25 +29,24 @@ export class PaymentController {
   /**
    * Creates and processes a payment for the provided order.
    *
-   * @param request Request body containing order and amount information.
+   * @param request The order to pay, the paying customer and the payment method. The amount
+   * is the order total read from order-service.
    * @returns The created payment details and acceptance status.
    */
   @Post()
   @SuccessResponse("200", "Payment processed successfully")
   @Response("400", "Invalid payment request or payment rejected")
+  @Response("403", "The order belongs to another customer")
+  @Response("404", "Order not found")
+  @Response("409", "Order already paid, or nothing to pay")
+  @Response("503", "order-service unavailable, retry later")
   public async processPayment(
     @Body()
     request: ProcessPaymentRequest
   ): Promise<ProcessPaymentResponse> {
     const result = await this.processPaymentUseCase.execute(request);
 
-    switch (result.type) {
-      case "SUCCESS":
-        return result.response;
-      case "INVALID_REQUEST":
-      case "PAYMENT_REJECTED":
-      case "FAILURE":
-        throw new Error(result.reason);
-    }
+    if (result.type === "SUCCESS") return result.response;
+    throw PaymentError.from(result);
   }
 }

@@ -1,7 +1,8 @@
 Feature: Advance order status
 
   Scenario: A client advances the status of a freshly placed order
-    Given an authenticated client
+    Given a restaurant with a dish on its menu
+    And an authenticated client
     And a valid delivery order
     When the client places the order
     And the client advances the order status

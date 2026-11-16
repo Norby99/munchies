@@ -15,4 +15,11 @@ class InMemoryRestaurantRepository : RestaurantRepository,
 
   override fun findAllByManagerId(managerId: UserId): List<Restaurant> =
     findAllByPredicate { it.managerId == managerId }
+
+  override fun search(text: String): List<Restaurant> = findAllByPredicate {
+    it.name.value.contains(
+      text,
+      ignoreCase = true,
+    ) || it.address.value.contains(text, ignoreCase = true)
+  }
 }

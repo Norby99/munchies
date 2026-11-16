@@ -37,6 +37,12 @@ sealed class Order(
   open val payed: Boolean,
 ) : Entity<OrderId>(id) {
 
+  /**
+   * What the customer owes for this order: the sum of the line subtotals, at the prices frozen
+   * when the items were ordered. Derived, not stored, so it can never disagree with [items].
+   */
+  val total: Price get() = items.fold(Price.ZERO) { sum, item -> sum + item.subtotal }
+
   // ---------------------------------------------------------------------------------------------
   // Process (command) methods: validate and return events.
   // ---------------------------------------------------------------------------------------------
@@ -80,11 +86,17 @@ sealed class Order(
    * @return An [UpdateResult] carrying an [OrderItemsUpdated] event on success.
    */
   fun updateItems(newItems: List<OrderItem>): UpdateResult {
-    if (status != OrderStatus.PENDING) return UpdateResult.Failure.NotModifiable
+    if (!areItemsModifiable) return UpdateResult.Failure.NotModifiable
     val validationError = validateItems(newItems)
     if (validationError != null) return UpdateResult.Failure.InvalidItems(validationError)
     return UpdateResult.Success(listOf(OrderItemsUpdated(id, newItems)))
   }
+
+  /**
+   * Whether the items can still change. Exposed so a caller can skip expensive preparation
+   * (e.g. pricing the new items) for a change [updateItems] would refuse anyway.
+   */
+  val areItemsModifiable: Boolean get() = status == OrderStatus.PENDING
 
   /**
    * Returns the status following [status] in this order type's workflow, or `null` if the

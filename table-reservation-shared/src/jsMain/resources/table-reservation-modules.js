@@ -1,7 +1,38 @@
+// table-reservation-modules.js
 const generated = require("./munchies-table-reservation-shared.js");
-const _table = generated.com.munchies.tablereservation;
+const _adapter = generated.com.munchies.tablereservation.infrastructure.adapter;
 
 module.exports = {
-  TableReservationAPI:
-    _table.infrastructure.adapter.inbound.TableReservationAPI,
+  ReservationStatus: _adapter.dto.ReservationStatus,
+  TableReservationDto: _adapter.dto.TableReservationDto,
+  TableReservationServiceConfig: _adapter.inbound.web.config.TableReservationServiceConfig,
+  TableReservationAPI: _adapter.inbound.TableReservationAPI,
+  ReserveTableAPI: _adapter.inbound.JsReserveTableAPI,
+  GetTableReservationAPI: _adapter.inbound.JsGetTableReservationAPI,
+  GetTableReservationsAPI: _adapter.inbound.JsGetTableReservationsAPI,
+  ModifyTableReservationAPI: _adapter.inbound.JsModifyTableReservationAPI,
+  CancelTableReservationAPI: _adapter.inbound.JsCancelTableReservationAPI,
+  ReserveTableRequest: _adapter.inbound.request.ReserveTableRequest,
+  reserveTableRequestFromJson: _adapter.inbound.request.reserveTableRequestFromJson,
+  ModifyTableReservationRequest: _adapter.inbound.request.ModifyTableReservationRequest,
+  modifyTableReservationRequestFromJson: _adapter.inbound.request.modifyTableReservationRequestFromJson,
+  CancelTableReservationRequest: _adapter.inbound.request.CancelTableReservationRequest,
+  cancelTableReservationRequestFromJson: _adapter.inbound.request.cancelTableReservationRequestFromJson,
+  TableReservationResponse: _adapter.outbound.response.TableReservationResponse,
+  tableReservationResponseFromJson: _adapter.outbound.response.tableReservationResponseFromJson,
+  TableReservationsResponse: _adapter.outbound.response.TableReservationsResponse,
+  tableReservationsResponseFromJson: _adapter.outbound.response.tableReservationsResponseFromJson,
+  TableReservationNotificationInfo: _adapter.outbound.notification.TableReservationNotificationInfo,
+  TableReservationAcceptedNotification: _adapter.outbound.notification.TableReservationAcceptedNotification,
+  tableReservationAcceptedNotificationFromJson: _adapter.outbound.notification.tableReservationAcceptedNotificationFromJson,
+  TableReservationAcceptedNotificationObserver: _adapter.outbound.notification.TableReservationAcceptedNotificationObserver,
+  TableReservationAcceptedNotificationSubject: _adapter.outbound.notification.TableReservationAcceptedNotificationSubject,
+  TableReservationModifiedNotification: _adapter.outbound.notification.TableReservationModifiedNotification,
+  tableReservationModifiedNotificationFromJson: _adapter.outbound.notification.tableReservationModifiedNotificationFromJson,
+  TableReservationModifiedNotificationObserver: _adapter.outbound.notification.TableReservationModifiedNotificationObserver,
+  TableReservationModifiedNotificationSubject: _adapter.outbound.notification.TableReservationModifiedNotificationSubject,
+  TableReservationCanceledNotification: _adapter.outbound.notification.TableReservationCanceledNotification,
+  tableReservationCanceledNotificationFromJson: _adapter.outbound.notification.tableReservationCanceledNotificationFromJson,
+  TableReservationCanceledNotificationObserver: _adapter.outbound.notification.TableReservationCanceledNotificationObserver,
+  TableReservationCanceledNotificationSubject: _adapter.outbound.notification.TableReservationCanceledNotificationSubject,
 };

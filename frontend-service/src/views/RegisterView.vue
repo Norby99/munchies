@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { CircleAlertIcon, ShoppingBagIcon, StoreIcon } from '@lucide/vue'
 
 import AuthLayout from '@/components/AuthLayout.vue'
+import ChoiceCard from '@/components/ChoiceCard.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { RadioGroup } from '@/components/ui/radio-group'
+import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import { useSessionStore } from '@/stores/session'
 import type { Role } from '@/types'
@@ -24,11 +32,11 @@ const submitting = ref(false)
 function validate(): boolean {
   Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key])
 
-  if (!form.username.trim()) fieldErrors.username = 'Username is required.'
-  if (!form.email.trim()) fieldErrors.email = 'Email is required.'
+  if (!form.username.trim()) fieldErrors.username = 'Choose a username.'
+  if (!form.email.trim()) fieldErrors.email = 'Enter your email address.'
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fieldErrors.email = 'Enter a valid email address.'
-  if (form.password.length < 8) fieldErrors.password = 'Password must be at least 8 characters.'
-  if (form.confirmPassword !== form.password) fieldErrors.confirmPassword = 'Passwords do not match.'
+  if (form.password.length < 8) fieldErrors.password = 'Use at least 8 characters.'
+  if (form.confirmPassword !== form.password) fieldErrors.confirmPassword = 'The passwords do not match.'
 
   return Object.keys(fieldErrors).length === 0
 }
@@ -42,7 +50,7 @@ async function onSubmit(): Promise<void> {
     await session.register(form.username.trim(), form.email.trim(), form.password, form.role)
     router.push({ name: 'verify' })
   } catch (err) {
-    formError.value = err instanceof ApiError ? err.message : 'Something went wrong.'
+    formError.value = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
   } finally {
     submitting.value = false
   }
@@ -50,90 +58,89 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <AuthLayout kicker="Create account" heading="Register">
-    <div class="hr"></div>
-
+  <AuthLayout heading="Create your account" description="It takes less than a minute.">
     <form novalidate @submit.prevent="onSubmit">
-      <div class="field" style="margin-bottom: 14px">
-        <label for="reg-user">Username</label>
-        <input id="reg-user" class="input" type="text" placeholder="chiara" v-model="form.username" />
-        <p v-if="fieldErrors.username" class="register-view__field-error">{{ fieldErrors.username }}</p>
-      </div>
-      <div class="field" style="margin-bottom: 14px">
-        <label for="reg-email">Email</label>
-        <input id="reg-email" class="input" type="email" placeholder="chiara@example.com" v-model="form.email" />
-        <p v-if="fieldErrors.email" class="register-view__field-error">{{ fieldErrors.email }}</p>
-      </div>
-      <div class="field" style="margin-bottom: 14px">
-        <label for="reg-pw">Password</label>
-        <input id="reg-pw" class="input" type="password" autocomplete="new-password" v-model="form.password" />
-        <p v-if="fieldErrors.password" class="register-view__field-error">{{ fieldErrors.password }}</p>
-      </div>
-      <div class="field" style="margin-bottom: 16px">
-        <label for="reg-pw2">Confirm password</label>
-        <input
-          id="reg-pw2"
-          class="input"
-          type="password"
-          autocomplete="new-password"
-          v-model="form.confirmPassword"
-        />
-        <p v-if="fieldErrors.confirmPassword" class="register-view__field-error">
-          {{ fieldErrors.confirmPassword }}
-        </p>
-      </div>
+      <FieldGroup>
+        <FieldSet>
+          <FieldLegend variant="label">I want to</FieldLegend>
+          <RadioGroup v-model="form.role" class="grid gap-3 sm:grid-cols-2">
+            <ChoiceCard id="reg-role-customer" value="CUSTOMER" title="Order food" description="Customer" :icon="ShoppingBagIcon" />
+            <ChoiceCard id="reg-role-manager" value="MANAGER" title="Run a restaurant" description="Manager" :icon="StoreIcon" />
+          </RadioGroup>
+        </FieldSet>
 
-      <div class="field" style="margin-bottom: 16px">
-        <span id="reg-account-type-label" class="register-view__group-label">Account type</span>
-        <div class="seg" role="group" aria-labelledby="reg-account-type-label" style="margin-top: 5px">
-          <label class="seg-opt">
-            <input type="radio" name="reg-role" :checked="form.role === 'CUSTOMER'" @change="form.role = 'CUSTOMER'" />
-            <span>Customer</span>
-          </label>
-          <label class="seg-opt">
-            <input type="radio" name="reg-role" :checked="form.role === 'MANAGER'" @change="form.role = 'MANAGER'" />
-            <span>Manager</span>
-          </label>
+        <Field :data-invalid="!!fieldErrors.username || undefined">
+          <FieldLabel for="reg-user">Username</FieldLabel>
+          <Input
+            id="reg-user"
+            v-model="form.username"
+            class="h-10"
+            type="text"
+            autocomplete="username"
+            placeholder="chiara"
+            :aria-invalid="!!fieldErrors.username || undefined"
+          />
+          <FieldError v-if="fieldErrors.username">{{ fieldErrors.username }}</FieldError>
+        </Field>
+        <Field :data-invalid="!!fieldErrors.email || undefined">
+          <FieldLabel for="reg-email">Email</FieldLabel>
+          <Input
+            id="reg-email"
+            v-model="form.email"
+            class="h-10"
+            type="email"
+            autocomplete="email"
+            placeholder="chiara@example.com"
+            :aria-invalid="!!fieldErrors.email || undefined"
+          />
+          <FieldError v-if="fieldErrors.email">{{ fieldErrors.email }}</FieldError>
+        </Field>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <Field :data-invalid="!!fieldErrors.password || undefined">
+            <FieldLabel for="reg-pw">Password</FieldLabel>
+            <Input
+              id="reg-pw"
+              v-model="form.password"
+              class="h-10"
+              type="password"
+              autocomplete="new-password"
+              :aria-invalid="!!fieldErrors.password || undefined"
+              aria-describedby="reg-pw-hint"
+            />
+            <FieldError v-if="fieldErrors.password">{{ fieldErrors.password }}</FieldError>
+            <FieldDescription v-else id="reg-pw-hint">At least 8 characters.</FieldDescription>
+          </Field>
+          <Field :data-invalid="!!fieldErrors.confirmPassword || undefined">
+            <FieldLabel for="reg-pw2">Confirm password</FieldLabel>
+            <Input
+              id="reg-pw2"
+              v-model="form.confirmPassword"
+              class="h-10"
+              type="password"
+              autocomplete="new-password"
+              :aria-invalid="!!fieldErrors.confirmPassword || undefined"
+            />
+            <FieldError v-if="fieldErrors.confirmPassword">{{ fieldErrors.confirmPassword }}</FieldError>
+          </Field>
         </div>
-      </div>
 
-      <div class="register-view__explainer">
-        <h6 style="margin: 0 0 6px">Sent to the API</h6>
-        <p class="text-muted" style="font-size: 12px; margin: 0">
-          Role travels as <strong>{{ form.role }}</strong> in the register payload. The password
-          leaves as <code>SHA-256(password + salt)</code> with a fresh 16-byte hex salt.
-        </p>
-      </div>
+        <Alert v-if="formError" variant="destructive" role="alert">
+          <CircleAlertIcon />
+          <AlertDescription>{{ formError }}</AlertDescription>
+        </Alert>
 
-      <p v-if="formError" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 0 0 12px">
-        {{ formError }}
-      </p>
-
-      <button class="btn btn-primary btn-block" type="submit" :disabled="submitting">Create account</button>
+        <Button type="submit" size="lg" class="h-10 w-full" :disabled="submitting">
+          <Spinner v-if="submitting" data-icon="inline-start" />
+          Create account
+        </Button>
+      </FieldGroup>
     </form>
 
-    <p style="font-size: 13px; margin-top: 18px">
-      <router-link :to="{ name: 'login' }">Back to sign in</router-link>
-    </p>
+    <template #footer>
+      Already have an account?
+      <RouterLink :to="{ name: 'login' }" class="font-semibold text-primary underline-offset-4 hover:underline">
+        Sign in
+      </RouterLink>
+    </template>
   </AuthLayout>
 </template>
-
-<style scoped>
-.register-view__field-error {
-  font-size: 12px;
-  color: var(--color-accent-700);
-  margin: 4px 0 0;
-}
-
-.register-view__group-label {
-  display: block;
-  font-size: 12px;
-  color: color-mix(in srgb, var(--color-text) 70%, transparent);
-}
-
-.register-view__explainer {
-  border: 1px solid var(--color-divider);
-  padding: 12px;
-  margin-bottom: 16px;
-}
-</style>

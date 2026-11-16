@@ -29,6 +29,9 @@ import kotlinx.serialization.json.Json
  * @param customerName The name of the customer for Takeaway orders (optional).
  * @param tableNumber The table number for DineIn orders (optional).
  * @param numberOfGuests The number of guests for DineIn orders (optional).
+ * @param reservationId The accepted table reservation a DineIn order is placed for (optional).
+ * When given, the table and the number of guests are taken from the reservation, and
+ * [tableNumber] and [numberOfGuests] are ignored.
  */
 @JsExport
 @Serializable
@@ -52,6 +55,7 @@ data class PlaceOrderRequest(
   // DineIn
   val tableNumber: Int? = null,
   val numberOfGuests: Int? = null,
+  val reservationId: String? = null,
 ) : AuthenticatedRequest<PlaceOrderRequest>, JsonEncodable() {
   override fun toJson(): String = wireJson.encodeToString(this)
   override fun addId(userId: String): PlaceOrderRequest = copy(customerId = userId)

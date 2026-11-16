@@ -19,6 +19,10 @@ env:
     value: "http://restaurant-service.restaurant-service.svc.cluster.local:8080"
   - name: ORDER_SERVICE_URL
     value: "http://order-service.order-service.svc.cluster.local:8080"
+  - name: PAYMENT_SERVICE_URL
+    value: "http://payment-service.payment-service.svc.cluster.local:8080"
+  - name: TABLE_RESERVATION_SERVICE_URL
+    value: "http://table-reservation-service.table-reservation-service.svc.cluster.local:8080"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://tempo.observability.svc.cluster.local:4318"
 

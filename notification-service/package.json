@@ -30,6 +30,7 @@
     "munchies-notification-service-shared": "file:./build/libs/munchies-notification-shared.tgz",
     "munchies-order-service-shared": "file:./build/libs/munchies-order-shared.tgz",
     "munchies-payment-service-shared": "file:./build/libs/munchies-payment-shared.tgz",
+    "munchies-table-reservation-service-shared": "file:./build/libs/munchies-table-reservation-shared.tgz",
     "munchies-user-service-shared": "file:./build/libs/munchies-user-shared.tgz",
     "pino": "^10.4.0",
     "prom-client": "^15.1.3"

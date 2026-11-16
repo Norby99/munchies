@@ -27,15 +27,15 @@ The system recognizes two distinct registered roles with hierarchical access lev
    - Standard end-user of the platform.
    - Can register, authenticate, manage profile credentials, and verify email via one-time keys (OTK).
    - Can browse the closest restaurants _(planned)_, and view restaurant menus, categories, dish items, and variations.
-   - Can place orders (Delivery, Takeaway, or Dine-In) choosing when they are fulfilled, review carts, update or cancel pending orders, and follow their status.
-   - Can pay for orders and receive notifications _(planned)_.
+   - Can place orders (Delivery, Takeaway, or Dine-In) choosing when they are fulfilled, review carts, update or cancel pending orders, and follow their status. Following the status is only available through the API, while its view in the interface is _(planned)_.
+   - Can pay for orders _(planned)_ and receive notifications _(planned)_.
    - Can reserve tables for dining in _(planned)_.
 
 2. **Manager (`MANAGER`)**:
    - Administrative restaurant owner/operator (a superset of the Customer role).
    - Can create, update, and manage one or more restaurant profiles (name, address, phone, email), including business hours _(planned)_.
-   - Can design and organize menus, define hierarchical categories, customize menu item options and prices, and configure complex temporal availability/validity rules (e.g., seasonal, weekly, daily hours).
-   - Can list the orders of their restaurants and advance their status across fulfillment cycles.
+   - Can design and organize menus, group items into categories, customize menu item options and prices, and configure complex temporal availability/validity rules (e.g., seasonal, weekly, daily hours).
+   - Can list the orders of their restaurants and advance their status across fulfillment cycles. These features are only available through the API, while their views in the interface are _(planned)_.
    - Can inspect kitchen load and manage capacity _(planned)_.
 
 ---

@@ -19,7 +19,9 @@ class UnauthorizedExceptionHandler :
     exception: UnauthorizedException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.UNAUTHORIZED)
-      .body(ErrorResponse(exception.message ?: "Unauthorized"))
+      .body(
+        ErrorResponse(exception.message ?: "Unauthorized", HttpStatus.UNAUTHORIZED.code),
+      )
   }
 }
 
@@ -31,7 +33,9 @@ class NotFoundExceptionHandler :
     exception: NotFoundException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.NOT_FOUND)
-      .body(ErrorResponse(exception.message ?: "Resource not found"))
+      .body(
+        ErrorResponse(exception.message ?: "Resource not found", HttpStatus.NOT_FOUND.code),
+      )
   }
 }
 
@@ -43,7 +47,12 @@ class ValidationExceptionHandler :
     exception: ValidationException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
-      .body(ErrorResponse(exception.message ?: "Validation error"))
+      .body(
+        ErrorResponse(
+          exception.message ?: "Validation error",
+          HttpStatus.UNPROCESSABLE_ENTITY.code,
+        ),
+      )
   }
 }
 
@@ -55,6 +64,8 @@ class ConflictExceptionHandler :
     exception: ConflictException,
   ): HttpResponse<ErrorResponse> {
     return HttpResponse.status<ErrorResponse>(HttpStatus.CONFLICT)
-      .body(ErrorResponse(exception.message ?: "Conflict error"))
+      .body(
+        ErrorResponse(exception.message ?: "Conflict error", HttpStatus.CONFLICT.code),
+      )
   }
 }

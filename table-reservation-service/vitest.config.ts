@@ -6,12 +6,13 @@ export default defineConfig({
 
   test: {
     include: ["src/test/ts/**/*.test.ts"],
+    // Keeps the application logger quiet during test runs.
+    env: { LOG_LEVEL: "silent" },
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/main/ts/domain/external-modules.{ts,tsx}"],
       all: true,
-      // thresholds: { lines: 80, functions: 80, branches: 75, statements: 80},
+      thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
     },
   },
 });

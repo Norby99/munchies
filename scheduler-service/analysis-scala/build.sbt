@@ -1,5 +1,5 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.4.0" // matches ../../asmd-public-models
+ThisBuild / scalaVersion := "3.4.3" // matches ../../asmd-public-models
 
 lazy val root = (project in file("."))
   .enablePlugins(ScalaJSPlugin)
