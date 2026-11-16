@@ -9,12 +9,45 @@ export interface TripStop {
   location: GeoPoint;
 }
 
+/**
+ * The route a departed trip follows, fixed when the driver leaves: restaurant -> stops in
+ * order -> restaurant. Never modified afterwards, so it may be shared between copies of a trip.
+ */
+export interface TripRoute {
+  /** The polyline the driver moves along. */
+  path: GeoPoint[];
+  /** Km along `path` at which each stop is reached; same order as the trip's stops. */
+  stopKm: number[];
+  /** Length of `path`, km. */
+  totalKm: number;
+}
+
+/**
+ * Where the driver of a departed trip is. Written by the driver simulation (see
+ * tripProgress.ts), which stands in for the position a real driver's device would report.
+ */
+export interface TripProgress {
+  departedAtEpochMs: number;
+  /** Km driven along the closed route since departure. */
+  travelledKm: number;
+  /** Last reported driver position. */
+  position: GeoPoint;
+  updatedAtEpochMs: number;
+  /** True once the driver is back at the restaurant: the trip is over. */
+  finished: boolean;
+  route: TripRoute;
+}
+
 export interface Trip {
   id: string;
   restaurantId: string;
   slotStartEpochMs: number;
+  /** The restaurant's position when the trip was opened: both ends of the route. */
+  origin: GeoPoint;
   stops: TripStop[];
   totalKm: number;
+  /** Null until the driver leaves the restaurant. */
+  progress: TripProgress | null;
 }
 
 export function routeKm(restaurant: GeoPoint, stops: GeoPoint[]): number {
@@ -57,6 +90,8 @@ export type TripPlan =
 /**
  * Greedy, append-only insertion. Joins the eligible trip with the smallest detour;
  * otherwise opens a new trip if the slot still has one free. No reshuffling.
+ * A trip whose driver has already left cannot be joined, but still counts against
+ * maxTripsPerSlot.
  */
 export function planDeliveryPlacement(
   restaurant: GeoPoint,
@@ -67,6 +102,7 @@ export function planDeliveryPlacement(
   let best: (TripPlan & { kind: "join" }) | null = null;
   let bestDetour = Infinity;
   for (const trip of trips) {
+    if (trip.progress) continue;
     const { position, detourKm } = cheapestInsertion(
       restaurant,
       trip.stops.map((s) => s.location),

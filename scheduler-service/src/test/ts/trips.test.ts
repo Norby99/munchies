@@ -10,8 +10,10 @@ const trip = (id: string, stops: { lat: number; lng: number }[]): Trip => ({
   id,
   restaurantId: "r1",
   slotStartEpochMs: 0,
+  origin: R,
   stops: stops.map((location, i) => ({ bookingId: `b${id}${i}`, location })),
   totalKm: routeKm(R, stops),
+  progress: null,
 });
 
 describe("geo", () => {

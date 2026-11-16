@@ -44,4 +44,6 @@ export class OrderServiceError extends Error {
 export interface OrderClient {
   place(input: PlaceOrderInput): Promise<PlacedOrder>;
   advance(orderId: string): Promise<void>;
+  /** Current order-service status of the order (e.g. "READY", "ON_THE_WAY"). */
+  getStatus(orderId: string): Promise<string>;
 }

@@ -36,6 +36,9 @@ const orders: OrderClient = {
     return { orderId: "o", status: "PENDING" };
   },
   async advance() {},
+  async getStatus() {
+    return "PENDING";
+  },
 };
 
 function setup(location: GeoPoint | null = RESTAURANT) {

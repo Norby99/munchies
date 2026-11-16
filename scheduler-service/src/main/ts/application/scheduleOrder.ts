@@ -142,7 +142,9 @@ export class ScheduleOrder {
     booking.orderId = placed.orderId;
     booking.updatedAtEpochMs = this.now();
     await this.bookings.update(booking);
-    if (plan && delivery) await this.applyTripPlan(plan, delivery, bookingId, input, newTripId);
+    if (plan && delivery && origin) {
+      await this.applyTripPlan(plan, delivery, bookingId, input, newTripId, origin);
+    }
 
     return {
       bookingId,
@@ -162,6 +164,7 @@ export class ScheduleOrder {
     bookingId: string,
     input: ScheduleOrderInput,
     newTripId: string,
+    origin: GeoPoint,
   ): Promise<void> {
     if (plan.kind === "join") {
       const trip: Trip = plan.trip;
@@ -173,8 +176,10 @@ export class ScheduleOrder {
         id: newTripId,
         restaurantId: input.restaurantId,
         slotStartEpochMs: input.slotStartEpochMs,
+        origin,
         stops: [{ bookingId, location: delivery.location }],
         totalKm: plan.costKm,
+        progress: null,
       });
     }
   }
