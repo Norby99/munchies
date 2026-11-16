@@ -33,5 +33,15 @@ class KafkaOrderNotificationPublisherUnitTest {
     notification.restaurant_id_key shouldBeEqual defaultRestaurantId.value
     notification.customer_id_key shouldBeEqual defaultCustomerId.value
     notification.status_key shouldBeEqual OrderStatus.PREPARING.name
+    notification.payed_key shouldBeEqual order.payed
+  }
+
+  @Test
+  fun `publishStatusChanged should not throw when the broker is unavailable`() {
+    every { client.publish(any()) } throws IllegalStateException("broker down")
+
+    publisher.publishStatusChanged(createDeliveryOrder(status = OrderStatus.PREPARING))
+
+    verify(exactly = 1) { client.publish(any()) }
   }
 }

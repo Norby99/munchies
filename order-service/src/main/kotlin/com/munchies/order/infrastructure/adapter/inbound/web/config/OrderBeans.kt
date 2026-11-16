@@ -29,17 +29,29 @@ class OrderBeans {
   ): AdvanceOrderStatus = AdvanceOrderStatusUseCase(eventStore, notificationPublisher)
 
   @Singleton
-  fun discardOrder(eventStore: OrderEventStore): DiscardOrder = DiscardOrderUseCase(eventStore)
+  fun discardOrder(
+    eventStore: OrderEventStore,
+    notificationPublisher: OrderNotificationPublisher,
+  ): DiscardOrder = DiscardOrderUseCase(eventStore, notificationPublisher)
 
   @Singleton
-  fun payOrder(eventStore: OrderEventStore): PayOrder = PayOrderUseCase(eventStore)
+  fun payOrder(
+    eventStore: OrderEventStore,
+    notificationPublisher: OrderNotificationPublisher,
+  ): PayOrder = PayOrderUseCase(eventStore, notificationPublisher)
 
   @Singleton
   fun placeOrder(
     eventStore: OrderEventStore,
     menuCatalog: MenuCatalog,
     tableReservations: TableReservations,
-  ): PlaceOrder = PlaceOrderUseCase(eventStore, menuCatalog, tableReservations)
+    notificationPublisher: OrderNotificationPublisher,
+  ): PlaceOrder = PlaceOrderUseCase(
+    eventStore,
+    menuCatalog,
+    tableReservations,
+    notificationPublisher,
+  )
 
   @Singleton
   fun updateDeliveryOrderInfo(eventStore: OrderEventStore): UpdateDeliveryOrderInfo =
