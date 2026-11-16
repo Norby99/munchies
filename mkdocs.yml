@@ -110,19 +110,23 @@ nav:
               - Business: "saap/01-Domain Driven Design/business-requirements.md"
               - Functional: "saap/01-Domain Driven Design/functional-requirements.md"
               - Non-functional: "saap/01-Domain Driven Design/non-functional-requirements.md"
+              - Quality Attribute Scenarios: "saap/01-Domain Driven Design/quality-attribute-scenarios.md"
           - User Stories: "saap/01-Domain Driven Design/User Stories.md"
           - Glossary: "saap/01-Domain Driven Design/glossary.md"
           - Domain Model: "saap/01-Domain Driven Design/domain-model.md"
       - Architecture and Implementation:
-          - Hexagonal Architecture: "saap/03-Architecture and Implementation/hexagonal-architecture.md"
-          - Microservices Patterns: "saap/03-Architecture and Implementation/microservices-patterns.md"
-          - Testing: saap/02-Implementation/testing.md
+          - Hexagonal Architecture: "saap/02-Architecture and Implementation/hexagonal-architecture.md"
+          - Microservices Patterns: "saap/02-Architecture and Implementation/microservices-patterns.md"
+          - Interactions: "saap/02-Architecture and Implementation/interactions.md"
+          - Architecture Decisions: "saap/02-Architecture and Implementation/architecture-decisions.md"
+          - Testing: "saap/02-Architecture and Implementation/testing.md"
       - Deployment:
           - Docker Compose: saap/03-Deployment/docker-compose.md
           - Kubernetes: saap/03-Deployment/kubernetes.md
           - Scaling Benchmark: saap/03-Deployment/scaling-benchmark.md
       - Agent-Based Architecture:
           - Capacity Agent: "saap/04-Agent-Based Architecture/capacity-agent.md"
+      - Conclusions: saap/05-conclusions.md
   - ASMD:
       - Overview: asmd/index.md
   - Other Munchies Docs:

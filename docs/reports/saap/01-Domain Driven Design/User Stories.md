@@ -24,7 +24,7 @@ Feature: Authentication and Account Management
 
 Feature: Restaurant Browsing
 
-  Scenario: Client browses a restaurant menu
+  Scenario: Customer browses a restaurant menu
     Given I am a logged user
     And there is a restaurant with a menu
     When I open the restaurant menu
@@ -33,29 +33,29 @@ Feature: Restaurant Browsing
 
 Feature: Menu Management
 
-  Scenario: Restaurant staff marks a dish as unavailable
-    Given I am a logged restaurant staff member
+  Scenario: Manager marks a dish as unavailable
+    Given I am a logged manager
     And my restaurant has an available dish
     When I mark the dish as unavailable
     Then the dish should be shown as unavailable in the menu
-    And clients should not be able to order the dish
+    And customers should not be able to order the dish
 
 Feature: Order Management
 
-  Scenario: Client places a delivery order
+  Scenario: Customer places a delivery order
     Given I am a logged user
     And I have a valid delivery order
     When I place the order
     Then the order should be created
 
-  Scenario: Client pays for an order
+  Scenario: Customer pays for an order
     Given I am a logged user
     And I have placed a delivery order
     When I pay for the order
     Then the payment should be completed
     And the order should be confirmed
 
-  Scenario: Client tracks the order status
+  Scenario: Customer tracks the order status
     Given I am a logged user
     And I have placed a delivery order
     When the order status advances
@@ -63,7 +63,7 @@ Feature: Order Management
 
 Feature: Notifications
 
-  Scenario: Client is notified of a successful payment
+  Scenario: Customer is notified of a successful payment
     Given I am a logged user
     And I have placed a delivery order
     When I pay for the order
@@ -72,7 +72,7 @@ Feature: Notifications
 
 Feature: Table Reservations
 
-  Scenario: Client reserves a table
+  Scenario: Customer reserves a table
     Given I am a logged user
     And there is a restaurant with a free table
     When I reserve a table at the restaurant
