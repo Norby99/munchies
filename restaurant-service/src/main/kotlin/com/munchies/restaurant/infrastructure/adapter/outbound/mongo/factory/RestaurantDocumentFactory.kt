@@ -6,15 +6,20 @@ import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
 import com.munchies.restaurant.domain.valueobject.restaurant.Address
 import com.munchies.restaurant.domain.valueobject.restaurant.CapacityPolicy
+import com.munchies.restaurant.domain.valueobject.restaurant.CookStation
 import com.munchies.restaurant.domain.valueobject.restaurant.DeliveryZone
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
+import com.munchies.restaurant.domain.valueobject.restaurant.KitchenRoute
+import com.munchies.restaurant.domain.valueobject.restaurant.KitchenSetup
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import com.munchies.restaurant.domain.valueobject.restaurant.Table
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.CapacityPolicyData
+import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.CookStationData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.DeliveryZoneData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.GeoPointData
+import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.KitchenSetupData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.RestaurantDocument
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.TableData
 import java.time.LocalTime
@@ -37,6 +42,7 @@ object RestaurantDocumentFactory {
     location = location?.toData(),
     tables = tables.map { TableData(number = it.number, seats = it.seats) },
     deliveryZones = deliveryZones.map { it.toData() },
+    kitchenSetup = kitchenSetup?.toData(),
   )
 
   fun RestaurantDocument.toDomain(): Restaurant = Restaurant.fromDatabase(
@@ -54,6 +60,7 @@ object RestaurantDocumentFactory {
     location = location?.toDomain(),
     tables = tables.map { Table(number = it.number, seats = it.seats) },
     deliveryZones = deliveryZones.map { it.toDomain() },
+    kitchenSetup = kitchenSetup?.toDomain(),
   )
 
   private fun CapacityPolicy.toData(): CapacityPolicyData = CapacityPolicyData(
@@ -94,5 +101,23 @@ object RestaurantDocumentFactory {
     id = id,
     name = name,
     boundary = boundary.map { it.toDomain() },
+  )
+
+  private fun KitchenSetup.toData(): KitchenSetupData = KitchenSetupData(
+    route = route.name,
+    prepWorkers = prepWorkers,
+    cookStations = cookStations.map { CookStationData(name = it.name, places = it.places) },
+    prepMinutes = prepMinutes,
+    loadingMinutes = loadingMinutes,
+    cookMinutes = cookMinutes,
+  )
+
+  private fun KitchenSetupData.toDomain(): KitchenSetup = KitchenSetup(
+    route = KitchenRoute.valueOf(route),
+    prepWorkers = prepWorkers,
+    cookStations = cookStations.map { CookStation(name = it.name, places = it.places) },
+    prepMinutes = prepMinutes,
+    loadingMinutes = loadingMinutes,
+    cookMinutes = cookMinutes,
   )
 }
