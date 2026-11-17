@@ -74,6 +74,13 @@ const routes = [
     props: true,
   },
   {
+    path: '/manager/restaurants/:restaurantId/delivery',
+    name: 'manager-delivery',
+    component: () => import('@/views/ManagerDeliveryView.vue'),
+    meta: { role: 'MANAGER' as Role },
+    props: true,
+  },
+  {
     // Customer restaurant search. Not "/restaurants": that prefix is proxied to the gateway.
     path: '/explore',
     name: 'explore',
