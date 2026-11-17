@@ -2,9 +2,10 @@
 // Manager: my restaurants, as cards with their menu count and quick links to orders and menus.
 // Creating and editing happen in a dialog, and so do the scheduling settings (opening hours, slots,
 // kitchen units) and the dining room tables that enable reservations. Delivery (restaurant
-// position, drivers, zones) has its own page around a map (ManagerDeliveryView). Menu counts are
-// not part of RestaurantDto, so they are derived by fetching each restaurant's menu summaries
-// through the menus store.
+// position, drivers, zones) has its own page around a map (ManagerDeliveryView), and so does the
+// kitchen description the capacity agent reads (ManagerKitchenView). Menu counts are not part of
+// RestaurantDto, so they are derived by fetching each restaurant's menu summaries through the
+// menus store.
 
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -12,6 +13,7 @@ import {
   ArmchairIcon,
   BikeIcon,
   CalendarClockIcon,
+  ChefHatIcon,
   CircleAlertIcon,
   ClipboardListIcon,
   EllipsisVerticalIcon,
@@ -134,6 +136,11 @@ function goToDelivery(restaurantId: string): void {
   router.push({ name: 'manager-delivery', params: { restaurantId } })
 }
 
+function goToKitchen(restaurantId: string): void {
+  restaurants.setActive(restaurantId)
+  router.push({ name: 'manager-kitchen', params: { restaurantId } })
+}
+
 function goToOrders(restaurantId: string): void {
   restaurants.setActive(restaurantId)
   router.push({ name: 'manager-orders', query: { restaurant: restaurantId } })
@@ -201,6 +208,7 @@ function cancelDelete(): void {
                       <DropdownMenuItem @select="openEdit(restaurant)"><PencilIcon /> Edit details</DropdownMenuItem>
                       <DropdownMenuItem @select="schedulingTarget = restaurant"><CalendarClockIcon /> Scheduling</DropdownMenuItem>
                       <DropdownMenuItem @select="goToDelivery(restaurant.id)"><BikeIcon /> Delivery</DropdownMenuItem>
+                      <DropdownMenuItem @select="goToKitchen(restaurant.id)"><ChefHatIcon /> Kitchen</DropdownMenuItem>
                       <DropdownMenuItem @select="tablesTarget = restaurant"><ArmchairIcon /> Tables</DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />

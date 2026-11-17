@@ -134,3 +134,38 @@ export async function getDeliveryZones(restaurantId: string): Promise<DeliveryZo
 export async function updateDeliveryZones(restaurantId: string, zones: DeliveryZone[]): Promise<DeliveryZone[]> {
   return unwrap(http.put(`${BASE}${restaurantId}/delivery-zones/`, { managerId: '', zones }))
 }
+
+// The kitchen as its staff describe it: input for scheduler-service's capacity agent, which will
+// simulate the kitchen to choose how many items one time slot accepts (the agent is not connected
+// yet: the scheduler still uses a temporary limit). Times are mean minutes for one item. Answers
+// 404 until the manager describes the kitchen. Mirrors KitchenSetupDto in restaurant-shared.
+// Manager-only, replaced always as a whole.
+
+/** The order of the two stages: a pizza is topped, then baked; a burger is grilled, then built. */
+export type KitchenRoute = 'PREP_THEN_COOK' | 'COOK_THEN_PREP'
+
+/** An oven, a grill...: `places` items cook in it at the same time, each independently. */
+export interface CookStation {
+  name: string
+  places: number
+}
+
+export interface KitchenSetup {
+  route: KitchenRoute
+  /** People preparing items, one item each at a time. */
+  prepWorkers: number
+  /** At least one. */
+  cookStations: CookStation[]
+  prepMinutes: number
+  /** A worker putting one item into a cook station. */
+  loadingMinutes: number
+  cookMinutes: number
+}
+
+export async function getKitchenSetup(restaurantId: string): Promise<KitchenSetup | null> {
+  return orNullOn404(unwrap(http.get(`${BASE}${restaurantId}/kitchen-setup/`)))
+}
+
+export async function updateKitchenSetup(restaurantId: string, setup: KitchenSetup): Promise<KitchenSetup> {
+  return unwrap(http.put(`${BASE}${restaurantId}/kitchen-setup/`, { managerId: '', ...setup }))
+}
