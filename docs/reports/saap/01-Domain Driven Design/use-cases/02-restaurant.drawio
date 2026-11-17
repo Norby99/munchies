@@ -17,7 +17,7 @@
           <mxGeometry height="60" width="230" x="560" y="180" as="geometry" />
         </mxCell>
         <mxCell id="updateR" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Update restaurant details" vertex="1">
-          <mxGeometry height="60" width="230" x="260" y="270" as="geometry" />
+          <mxGeometry height="60" width="230" x="260" y="250" as="geometry" />
         </mxCell>
         <mxCell id="removeR" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Remove a restaurant" vertex="1">
           <mxGeometry height="60" width="230" x="600" y="270" as="geometry" />
@@ -46,7 +46,7 @@
         <mxCell id="output" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Set kitchen output per slot" vertex="1">
           <mxGeometry height="60" width="230" x="600" y="750" as="geometry" />
         </mxCell>
-        <mxCell id="drivers" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Set delivery trips and range" vertex="1">
+        <mxCell id="drivers" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Configure deliveries" vertex="1">
           <mxGeometry height="60" width="230" x="584" y="840" as="geometry" />
         </mxCell>
         <mxCell id="customer" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Customer" vertex="1">

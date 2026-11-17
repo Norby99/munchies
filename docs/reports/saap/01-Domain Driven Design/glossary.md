@@ -127,6 +127,7 @@ language every team member uses for the same concept.
 | Booking Window                  | How many days ahead customers can order                                            |
 | Kitchen Output                  | How many items the kitchen can take on in each slot                                |
 | Delivery Capacity               | How many trips can leave per slot, how far a trip may go and how long a detour a new stop may add |
+| Delivery Zones                  | The areas, drawn by the manager, within which deliveries may share a driver       |
 | Creating a restaurant           | Registering a new restaurant                                                       |
 | Updating restaurant details     | Changing a restaurant's name, address, phone or email                              |
 | Removing a restaurant           | Permanently removing a restaurant                                                  |
@@ -175,6 +176,7 @@ language every team member uses for the same concept.
 | Delivery Trip | A run from the restaurant through the stops of one slot and back, carried by one driver                      |
 | Stop          | The address of one delivery order on a trip                                                                 |
 | Detour        | The extra kilometres a new stop adds to a trip; a stop that adds too much starts a new trip instead          |
+| Delivery Zone | An area the manager draws on the map; deliveries share a trip only if all their addresses lie in a common zone. An address outside every zone is still delivered, on a trip of its own |
 | Route         | The path of a trip along real streets, fixed when the driver leaves                                         |
 | Departure     | The moment the driver leaves, with the first order of the trip that goes `ON_THE_WAY`                       |
 | Driver Position | Where the driver is along the route; simulated, since no real driver device reports it                  |
