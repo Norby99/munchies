@@ -16,6 +16,7 @@ const { mockApp } = vi.hoisted(() => {
     patch: vi.fn(),
     listen: vi.fn((port: number, cb: () => void) => {
       cb();
+      return { close: vi.fn(), closeAllConnections: vi.fn() };
     }),
   };
   return { mockApp: app };

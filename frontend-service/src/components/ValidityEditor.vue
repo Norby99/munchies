@@ -20,10 +20,6 @@
 // downgrades it to FROM/UNTIL when only one side is filled, or drops it
 // entirely (emits nothing) when both are empty.
 //
-// Rows render as a single line — type select, a small inline label + input
-// per field, remove button — rather than the stacked <label> above <input>
-// layout that kept an earlier version two lines tall.
-//
 // Every row starts empty — PRESETS holds no real defaults, just the type's
 // shape with blank/sentinel field values (empty string for text fields, 0
 // for Yearly's day/month, since 0 is never a valid day or month) — and
@@ -35,7 +31,12 @@
 // instead of one PUT per field.
 
 import { computed, onBeforeUnmount, ref } from 'vue'
-import { Plus, X } from 'lucide-vue-next'
+import { CalendarClockIcon, PlusIcon, XIcon } from '@lucide/vue'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 import { describe } from '@/utils/validity'
 import type { Validity } from '@/types'
@@ -103,7 +104,11 @@ let pendingSyncTimer: ReturnType<typeof setTimeout> | undefined
 function syncNow(): void {
   clearTimeout(pendingSyncTimer)
   pendingSyncTimer = undefined
-  model.value = emitted.value
+  // No complete rule means no restriction: send "always" rather than an empty list, which
+  // restaurant-service rejects. Skip the update entirely when nothing would change (e.g. switching
+  // to Custom before any rule is filled in), so no needless PUT reaches the backend.
+  const next: Validity[] = emitted.value.length > 0 ? emitted.value : [{ type: 'always' }]
+  if (JSON.stringify(next) !== JSON.stringify(model.value)) model.value = next
 }
 
 function flush(): void {
@@ -114,7 +119,9 @@ defineExpose({ flush })
 
 onBeforeUnmount(flush)
 
-function setMode(next: Mode): void {
+function setMode(next: unknown): void {
+  // The toggle group emits an empty value when the active item is clicked again: ignore it.
+  if (next !== 'always' && next !== 'custom') return
   mode.value = next
   if (next === 'always') {
     clearTimeout(pendingSyncTimer)
@@ -145,12 +152,22 @@ function patchRule(index: number, patch: Partial<Validity>): void {
   pendingSyncTimer = setTimeout(syncNow, 3000)
 }
 
-function onWeeklyDaysInput(index: number, event: Event): void {
-  const raw = (event.target as HTMLInputElement).value
-  const days = raw
-    .split(',')
-    .map((part) => Number(part.trim()))
+const WEEKDAYS = [
+  { day: 1, short: 'Mon', long: 'Monday' },
+  { day: 2, short: 'Tue', long: 'Tuesday' },
+  { day: 3, short: 'Wed', long: 'Wednesday' },
+  { day: 4, short: 'Thu', long: 'Thursday' },
+  { day: 5, short: 'Fri', long: 'Friday' },
+  { day: 6, short: 'Sat', long: 'Saturday' },
+  { day: 7, short: 'Sun', long: 'Sunday' },
+]
+
+// Weekly rule days (ISO numbers, Monday = 1) picked with a multi-select toggle group.
+function onWeeklyDays(index: number, values: unknown): void {
+  const days = (Array.isArray(values) ? values : [])
+    .map((value) => Number(value))
     .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+    .sort((a, b) => a - b)
   patchRule(index, { days })
 }
 
@@ -167,182 +184,114 @@ function onYearlyInput(index: number, field: 'start' | 'end', event: Event): voi
 </script>
 
 <template>
-  <div class="validity-editor">
-    <h6 style="margin: 0 0 10px">Validity</h6>
-
-    <div class="seg" style="margin-bottom: 12px">
-      <label class="seg-opt">
-        <input type="radio" name="validity-mode" :checked="mode === 'always'" @change="setMode('always')" />
-        <span>Always</span>
-      </label>
-      <label class="seg-opt">
-        <input type="radio" name="validity-mode" :checked="mode === 'custom'" @change="setMode('custom')" />
-        <span>Custom</span>
-      </label>
+  <section aria-labelledby="validity-title" class="flex flex-col gap-3 rounded-xl border bg-muted/40 p-4">
+    <div class="flex flex-wrap items-center gap-3">
+      <h3 id="validity-title" class="flex items-center gap-2 text-base font-bold">
+        <CalendarClockIcon class="size-4 text-muted-foreground" aria-hidden="true" /> Availability
+      </h3>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        :model-value="mode"
+        class="ml-auto bg-card"
+        aria-label="Availability mode"
+        @update:model-value="setMode"
+      >
+        <ToggleGroupItem value="always" class="px-3">Always</ToggleGroupItem>
+        <ToggleGroupItem value="custom" class="px-3">Custom</ToggleGroupItem>
+      </ToggleGroup>
     </div>
 
+    <p class="text-sm text-muted-foreground">
+      {{ mode === 'always' ? 'Customers can order from this menu at any time.' : `Currently: ${describe(model)}.` }}
+    </p>
+
     <template v-if="mode === 'custom'">
-      <p v-if="rows.length === 0" class="text-muted" style="font-size: 13px; margin: 0 0 10px">
-        No rules yet — add one below.
+      <p v-if="rows.length === 0" class="text-sm text-muted-foreground">
+        No rules yet. Add one: all rules must hold for the menu to be open.
       </p>
 
-      <div v-for="(rule, index) in rows" :key="index" class="validity-rule">
-        <div class="validity-rule__row">
-          <select
-            class="input validity-rule__type"
-            aria-label="Rule type"
-            :value="rule.type"
-            @change="changeType(index, ($event.target as HTMLSelectElement).value as CustomType)"
+      <div v-for="(rule, index) in rows" :key="index" class="flex flex-col gap-2 rounded-xl border bg-card p-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <NativeSelect
+            :model-value="rule.type"
+            class="w-36"
+            :aria-label="`Rule ${index + 1} type`"
+            @update:model-value="(value: unknown) => changeType(index, value as CustomType)"
           >
-            <option v-for="type in RULE_TYPES" :key="type" :value="type">{{ RULE_LABELS[type] }}</option>
-          </select>
+            <NativeSelectOption v-for="type in RULE_TYPES" :key="type" :value="type">{{ RULE_LABELS[type] }}</NativeSelectOption>
+          </NativeSelect>
 
-          <template v-if="rule.type === 'period'">
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-start`">Start</label>
-            <input
+          <template v-if="rule.type === 'period' || rule.type === 'hours'">
+            <label class="sr-only" :for="`validity-${index}-start`">From</label>
+            <Input
               :id="`validity-${index}-start`"
-              class="input"
-              type="date"
-              :value="rule.start"
+              class="h-8 w-auto min-w-32 flex-1"
+              :type="rule.type === 'period' ? 'date' : 'time'"
+              :model-value="rule.start"
               @change="patchRule(index, { start: ($event.target as HTMLInputElement).value })"
             />
-            <span class="text-muted" style="flex: none">–</span>
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-end`">End</label>
-            <input
+            <span class="text-sm text-muted-foreground" aria-hidden="true">to</span>
+            <label class="sr-only" :for="`validity-${index}-end`">To</label>
+            <Input
               :id="`validity-${index}-end`"
-              class="input"
-              type="date"
-              :value="rule.end"
+              class="h-8 w-auto min-w-32 flex-1"
+              :type="rule.type === 'period' ? 'date' : 'time'"
+              :model-value="rule.end"
               @change="patchRule(index, { end: ($event.target as HTMLInputElement).value })"
             />
           </template>
 
           <template v-else-if="rule.type === 'yearly'">
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-start`">Start</label>
-            <input
+            <label class="sr-only" :for="`validity-${index}-start`">From (day/month)</label>
+            <Input
               :id="`validity-${index}-start`"
-              class="input validity-rule__narrow"
+              class="h-8 w-24"
               type="text"
               placeholder="dd/mm"
-              :value="formatDayMonth(rule.startDay, rule.startMonth)"
+              :model-value="formatDayMonth(rule.startDay, rule.startMonth)"
               @change="onYearlyInput(index, 'start', $event)"
             />
-            <span class="text-muted" style="flex: none">–</span>
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-end`">End</label>
-            <input
+            <span class="text-sm text-muted-foreground" aria-hidden="true">to</span>
+            <label class="sr-only" :for="`validity-${index}-end`">To (day/month)</label>
+            <Input
               :id="`validity-${index}-end`"
-              class="input validity-rule__narrow"
+              class="h-8 w-24"
               type="text"
               placeholder="dd/mm"
-              :value="formatDayMonth(rule.endDay, rule.endMonth)"
+              :model-value="formatDayMonth(rule.endDay, rule.endMonth)"
               @change="onYearlyInput(index, 'end', $event)"
             />
           </template>
 
-          <template v-else-if="rule.type === 'weekly'">
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-days`">Days</label>
-            <input
-              :id="`validity-${index}-days`"
-              class="input"
-              type="text"
-              placeholder="1,2,3,4,5 (ISO, Mon–Sun)"
-              :value="rule.days.join(',')"
-              @change="onWeeklyDaysInput(index, $event)"
-            />
-          </template>
-
-          <template v-else-if="rule.type === 'hours'">
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-start`">Start</label>
-            <input
-              :id="`validity-${index}-start`"
-              class="input"
-              type="time"
-              :value="rule.start"
-              @change="patchRule(index, { start: ($event.target as HTMLInputElement).value })"
-            />
-            <span class="text-muted" style="flex: none">–</span>
-            <label class="validity-rule__field-label text-muted" :for="`validity-${index}-end`">End</label>
-            <input
-              :id="`validity-${index}-end`"
-              class="input"
-              type="time"
-              :value="rule.end"
-              @change="patchRule(index, { end: ($event.target as HTMLInputElement).value })"
-            />
-          </template>
-
-          <button
-            class="btn btn-ghost btn-icon"
-            type="button"
-            aria-label="Remove rule"
-            style="margin-left: auto; flex: none"
-            @click="removeRule(index)"
+          <ToggleGroup
+            v-else-if="rule.type === 'weekly'"
+            type="multiple"
+            variant="outline"
+            size="sm"
+            :model-value="rule.days.map(String)"
+            class="flex-wrap"
+            :aria-label="`Rule ${index + 1} days of the week`"
+            @update:model-value="(values) => onWeeklyDays(index, values)"
           >
-            <X :size="16" />
-          </button>
+            <ToggleGroupItem v-for="weekday in WEEKDAYS" :key="weekday.day" :value="String(weekday.day)" :aria-label="weekday.long">
+              {{ weekday.short }}
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <Button type="button" variant="ghost" size="icon-sm" class="ml-auto" :aria-label="`Remove rule ${index + 1}`" @click="removeRule(index)">
+            <XIcon />
+          </Button>
         </div>
 
-        <p v-if="rule.type === 'period'" class="text-muted validity-rule__hint">
-          Leave Start empty for "until", leave End empty for "from", fill both for a fixed range.
+        <p v-if="rule.type === 'period'" class="text-xs text-muted-foreground">
+          Leave one side empty for an open-ended range.
         </p>
       </div>
 
-      <button class="btn btn-secondary" type="button" @click="addRule">
-        <Plus :size="14" /> Add rule
-      </button>
+      <Button type="button" variant="outline" size="sm" class="self-start bg-card" @click="addRule">
+        <PlusIcon data-icon="inline-start" /> Add rule
+      </Button>
     </template>
-
-    <p class="text-muted" style="font-size: 11px; margin: 12px 0 0">
-      The server stores each rule but never evaluates it. "{{ describe(model) }}" is computed
-      client-side from this list by <code>utils/validity.ts</code>.
-    </p>
-  </div>
+  </section>
 </template>
-
-<style scoped>
-.validity-editor {
-  border: 1px solid var(--color-divider);
-  padding: 14px;
-  margin-bottom: 20px;
-}
-
-.validity-rule {
-  border: 1px solid var(--color-divider);
-  padding: 8px 10px;
-  margin-bottom: 8px;
-}
-
-.validity-rule__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.validity-rule__row .input {
-  width: auto;
-  flex: 1 1 130px;
-  min-width: 110px;
-}
-
-.validity-rule__type {
-  flex: 0 1 130px;
-  min-width: 110px;
-}
-
-.validity-rule__narrow {
-  flex: 0 1 72px;
-  min-width: 64px;
-}
-
-.validity-rule__field-label {
-  font-size: 12px;
-  flex: none;
-  white-space: nowrap;
-}
-
-.validity-rule__hint {
-  font-size: 11px;
-  margin: 6px 0 0;
-}
-</style>

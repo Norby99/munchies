@@ -1,15 +1,32 @@
 <script setup lang="ts">
-// Manager — menu builder (README screen 5). Three columns: menu list,
-// selected menu (validity + categories), selected item inspector.
+// Manager menu builder. Three columns from the xl breakpoint (stacked below): the menu list, the
+// selected menu (availability rules and categories), and the selected item's editor.
 
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+
+import { ArrowLeftIcon, MousePointerClickIcon, PlusIcon, SquareMenuIcon, TrashIcon } from '@lucide/vue'
 
 import CategoryTree from '@/components/CategoryTree.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ItemInspector from '@/components/ItemInspector.vue'
 import MenuList from '@/components/MenuList.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import ValidityEditor from '@/components/ValidityEditor.vue'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import * as restaurantsApi from '@/api/restaurants'
 import { ApiError } from '@/api/client'
 import { useMenusStore } from '@/stores/menus'
@@ -25,6 +42,8 @@ const menus = useMenusStore()
 const router = useRouter()
 
 const restaurantName = ref('')
+// Set once the menu list has been fetched, so the empty state does not flash while loading.
+const loaded = ref(false)
 const newMenuOpen = ref(false)
 const newMenuName = ref('')
 const deleteTarget = ref<Menu | null>(null)
@@ -55,6 +74,7 @@ async function load(): Promise<void> {
   }
 
   await menus.fetchSummaries(props.restaurantId)
+  loaded.value = true
   const first = summaries.value[0]
   if (first) await selectMenu(first.id)
 }
@@ -129,85 +149,52 @@ async function onDeleteItem(): Promise<void> {
   await menus.removeItem(props.restaurantId, activeMenu.value.id, category.id, menus.activeItemId)
 }
 
-const emptyCopy = {
-  title: 'This menu has no categories',
-  body: 'Categories hold both items and the variation groups that apply to all of them. Add one before adding items.',
-  action: 'Add category',
-}
 </script>
 
 <template>
   <div>
-    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end">
-      <div style="margin-right: auto">
-        <h6 style="color: var(--color-accent)">Menu builder</h6>
-        <h2 style="margin: 0">{{ restaurantName }}</h2>
-      </div>
-      <button
-        class="btn btn-secondary"
-        type="button"
-        style="flex: none; white-space: nowrap"
-        @click="router.push({ name: 'manager-restaurants' })"
-      >
-        All restaurants
-      </button>
-      <button
-        class="btn btn-primary"
-        type="button"
-        style="flex: none; white-space: nowrap"
-        @click="newMenuOpen = true"
-      >
-        New menu
-      </button>
-    </div>
+    <Button variant="ghost" class="mb-4 -ml-2.5" @click="router.push({ name: 'manager-restaurants' })">
+      <ArrowLeftIcon data-icon="inline-start" /> All restaurants
+    </Button>
+    <PageHeader eyebrow="Menus" :title="restaurantName" description="Organize menus, categories and dishes. Changes are visible to customers right away.">
+      <template #actions>
+        <Button @click="newMenuOpen = true"><PlusIcon data-icon="inline-start" /> New menu</Button>
+      </template>
+    </PageHeader>
 
-    <div v-if="newMenuOpen" class="menu-builder__new-menu">
-      <div class="field" style="margin-bottom: 10px">
-        <label for="new-menu-name">Menu name</label>
-        <input id="new-menu-name" class="input" type="text" v-model="newMenuName" />
-      </div>
-      <div style="display: flex; gap: 8px">
-        <button class="btn btn-primary" type="button" @click="createMenu">Create menu</button>
-        <button class="btn btn-secondary" type="button" @click="newMenuOpen = false">Cancel</button>
-      </div>
-    </div>
+    <Empty v-if="loaded && summaries.length === 0" class="border border-dashed bg-card">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><SquareMenuIcon /></EmptyMedia>
+        <EmptyTitle>No menus yet</EmptyTitle>
+        <EmptyDescription>Create a menu (for example "Lunch" or "Dinner"), then fill it with categories and dishes.</EmptyDescription>
+      </EmptyHeader>
+      <Button @click="newMenuOpen = true"><PlusIcon data-icon="inline-start" /> New menu</Button>
+    </Empty>
 
-    <div class="hr"></div>
-
-    <div class="menu-builder__grid">
+    <div v-else class="grid items-start gap-6 xl:grid-cols-[220px_minmax(0,1fr)_340px]">
       <MenuList :menus="summaries" :cache="menus.cache" :active-id="menus.activeMenuId" @select="selectMenu" />
 
-      <div class="menu-builder__middle">
-        <template v-if="activeMenu">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px">
-            <h4 style="margin: 0">{{ activeMenu.name }}</h4>
-            <span
-              class="tag"
-              :class="isValid(activeMenu.validity) ? 'tag-accent' : 'tag-neutral'"
-              style="flex: none; white-space: nowrap"
-            >
-              {{ isValid(activeMenu.validity) ? 'Available now' : 'Closed now' }}
-            </span>
-            <button
-              class="btn btn-ghost"
-              type="button"
-              style="flex: none; white-space: nowrap; margin-left: auto"
-              @click="deleteTarget = activeMenu"
-            >
-              Delete menu
-            </button>
-          </div>
-
+      <Card v-if="activeMenu">
+        <CardHeader>
+          <CardTitle class="flex flex-wrap items-center gap-2 text-xl font-bold">
+            {{ activeMenu.name }}
+            <Badge v-if="isValid(activeMenu.validity)" variant="outline" class="text-success">Open now</Badge>
+            <Badge v-else variant="outline" class="text-muted-foreground">Closed now</Badge>
+          </CardTitle>
+          <CardDescription>Set when the menu is available, then add its categories and dishes.</CardDescription>
+          <CardAction>
+            <Button variant="ghost" size="icon" :aria-label="`Delete menu ${activeMenu.name}`" @click="deleteTarget = activeMenu">
+              <TrashIcon />
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent class="flex flex-col gap-6">
           <ValidityEditor
             ref="validityEditorRef"
             :key="activeMenu.id"
             :model-value="activeMenu.validity"
             @update:model-value="saveValidity"
           />
-
-          <p v-if="activeMenu.categories.length === 0" class="text-muted" style="font-size: 13px">
-            {{ emptyCopy.body }}
-          </p>
 
           <CategoryTree
             :categories="activeMenu.categories"
@@ -227,22 +214,50 @@ const emptyCopy = {
                 menus.updateCategory(props.restaurantId, activeMenu!.id, categoryId, input.name, input.variations)
             "
           />
-        </template>
-        <p v-else class="text-muted" style="font-size: 13px">Select a menu to see its categories.</p>
-      </div>
+        </CardContent>
+      </Card>
+      <p v-else class="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+        Select a menu to edit it.
+      </p>
 
-      <div class="menu-builder__inspector">
-        <ItemInspector
-          v-if="activeItem"
-          :item="activeItem"
-          :save-error="saveItemError"
-          @save="onSaveItem"
-          @delete="onDeleteItem"
-          @clear-save-error="saveItemError = null"
-        />
-        <p v-else class="text-muted" style="font-size: 13px">Select an item to edit it.</p>
-      </div>
+      <Card class="xl:sticky xl:top-24">
+        <CardContent v-if="activeItem">
+          <ItemInspector
+            :item="activeItem"
+            :save-error="saveItemError"
+            @save="onSaveItem"
+            @delete="onDeleteItem"
+            @clear-save-error="saveItemError = null"
+          />
+        </CardContent>
+        <CardContent v-else class="flex flex-col items-center gap-2 py-8 text-center">
+          <span class="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
+            <MousePointerClickIcon class="size-5" aria-hidden="true" />
+          </span>
+          <p class="font-semibold">No dish selected</p>
+          <p class="text-sm text-muted-foreground">Select a dish in a category to edit its details.</p>
+        </CardContent>
+      </Card>
     </div>
+
+    <Dialog v-model:open="newMenuOpen">
+      <DialogContent class="sm:max-w-sm">
+        <form class="contents" @submit.prevent="createMenu">
+          <DialogHeader>
+            <DialogTitle>New menu</DialogTitle>
+            <DialogDescription>You can set its availability after creating it.</DialogDescription>
+          </DialogHeader>
+          <Field>
+            <FieldLabel for="new-menu-name">Menu name</FieldLabel>
+            <Input id="new-menu-name" v-model="newMenuName" class="h-10" type="text" placeholder="Lunch" required />
+          </Field>
+          <DialogFooter>
+            <Button type="button" variant="outline" @click="newMenuOpen = false">Cancel</Button>
+            <Button type="submit" :disabled="!newMenuName.trim()">Create menu</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
 
     <ConfirmDialog
       :open="deleteTarget !== null"
@@ -260,60 +275,3 @@ const emptyCopy = {
     />
   </div>
 </template>
-
-<style scoped>
-.menu-builder__new-menu {
-  border: 1px solid var(--color-divider);
-  padding: 14px;
-  margin-top: 16px;
-  max-width: 360px;
-}
-
-.menu-builder__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-
-.menu-builder__middle {
-  border-top: 2px solid var(--color-divider);
-  padding-top: 16px;
-}
-
-.menu-builder__inspector {
-  border-top: 2px solid var(--color-divider);
-  padding-top: 16px;
-}
-
-@media (min-width: 1150px) {
-  .menu-builder__grid {
-    grid-template-columns: minmax(170px, 200px) minmax(360px, 1fr) minmax(280px, 320px);
-  }
-
-  .menu-builder__middle {
-    border-top: none;
-    padding-top: 0;
-    border-left: 2px solid var(--color-divider);
-    border-right: 2px solid var(--color-divider);
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .menu-builder__inspector {
-    border-top: none;
-    padding-top: 0;
-  }
-}
-
-@media (min-width: 1440px) {
-  .menu-builder__grid {
-    gap: 32px;
-  }
-
-  .menu-builder__middle {
-    padding-left: 28px;
-    padding-right: 28px;
-  }
-}
-</style>

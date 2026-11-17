@@ -11,7 +11,8 @@ import kotlin.js.JsExport
 class ProcessPaymentRequestValidator : InputValidator<ProcessPaymentRequest>() {
   override fun validate(input: ProcessPaymentRequest): InputValidatorResult {
     if (input.orderId.isEmpty()) return InvalidInput("Missing Order Id")
-    if (input.paymentDetails.amount < 0) return InvalidInput("Negative owed amount")
+    // Filled by the gateway from the auth token: only that customer's orders can be paid.
+    if (input.customerId.isEmpty()) return InvalidInput("Missing Customer Id")
     return ValidInput
   }
 }

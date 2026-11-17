@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import { Kafka } from "kafkajs";
 import { KafkaPaymentSuccessNotificationConsumer } from "@main/infrastructure/adapter/inbound/kafka/KafkaPaymentSuccessNotificationConsumer";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import { fakeNotifier } from "@test/fixtures/liveNotifier";
 import { PaymentSuccessNotification, paymentSuccessNotificationFromJson } from "@main/domain/external-modules";
 import { Currency } from "munchies-payment-service-shared/kotlin/payment-modules";
 import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
@@ -25,10 +26,10 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
 
   it("forwards received events to the notification controller via update()", () => {
     const { fakeKafka } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handlePaymentSuccess")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(
       fakeKafka,
@@ -50,7 +51,7 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
 
   it("connect() calls consumer.connect() and subscribes to the topic", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(
       fakeKafka,
@@ -70,7 +71,7 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
 
   it("disconnect() calls consumer.disconnect()", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(
       fakeKafka,
@@ -86,10 +87,10 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
 
   it("run() registers eachMessage handler that parses and forwards a valid message", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handlePaymentSuccess")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(
       fakeKafka,
@@ -111,10 +112,10 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
 
   it("run() eachMessage handler skips messages with null value", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handlePaymentSuccess")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(
       fakeKafka,
@@ -133,7 +134,7 @@ describe("KafkaPaymentSuccessNotificationConsumer", () => {
 
   it("run() eachMessage handler logs an error when message parsing fails", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const consoleErrorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
 
     const consumer = new KafkaPaymentSuccessNotificationConsumer(

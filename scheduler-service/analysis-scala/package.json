@@ -1,0 +1,10 @@
+{
+  "name": "scheduler-analysis",
+  "version": "0.1.0",
+  "description": "Offline kitchen capacity analysis, compiled from Scala via ScalaJS",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "target/scala-3.4.0/scheduler-analysis-fastopt/main.js",
+  "types": "index.d.ts"
+}

@@ -1,16 +1,28 @@
 <script setup lang="ts">
-// Builder's middle column category list: each category is a disclosure
-// holding its items, with an inline add/edit form reusing
-// VariationGroupsEditor — the same group editor the item inspector uses.
-// No position field exists on categories or items, so order is whatever the
-// server returns; there are no drag handles until the backend adds one.
+// Menu builder's category list: each category is a disclosure holding its dishes, with inline
+// add/edit forms reusing VariationGroupsEditor (the same group editor the item inspector uses).
+// Categories and items have no position field, so their order is the one the server returns.
 
 import { reactive, ref, watch } from 'vue'
-import { ChevronDown, ChevronRight } from 'lucide-vue-next'
+import { ChevronRightIcon, EllipsisVerticalIcon, FolderPlusIcon, PencilIcon, PlusIcon, TrashIcon } from '@lucide/vue'
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import MenuItemFieldsForm from '@/components/MenuItemFieldsForm.vue'
 import VariationGroupsEditor from '@/components/VariationGroupsEditor.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { formatEUR } from '@/utils/money'
 import type { MenuItemInput } from '@/api/menus'
 import type { Category, Variation } from '@/types'
@@ -112,173 +124,147 @@ watch(
 </script>
 
 <template>
-  <div>
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
-      <h6 style="margin: 0">Categories</h6>
-      <button
-        v-if="formMode !== 'add'"
-        class="btn btn-secondary"
-        type="button"
-        style="flex: none; white-space: nowrap; margin-left: auto"
-        @click="openAddForm"
-      >
-        Add category
-      </button>
+  <section aria-labelledby="categories-title" class="flex flex-col gap-3">
+    <div class="flex items-center gap-2">
+      <h3 id="categories-title" class="text-base font-bold">Categories</h3>
+      <Button v-if="formMode !== 'add'" variant="outline" size="sm" class="ml-auto" @click="openAddForm">
+        <FolderPlusIcon data-icon="inline-start" /> Add category
+      </Button>
     </div>
 
-    <div v-if="formMode === 'add'" class="category-tree__form" style="margin: 0 0 16px">
-      <div class="field" style="margin-bottom: 10px">
-        <label for="new-category-name">Category name</label>
-        <input id="new-category-name" class="input" type="text" v-model="formDraft.name" />
-      </div>
+    <form
+      v-if="formMode === 'add'"
+      class="flex flex-col gap-4 rounded-xl border border-dashed bg-muted/40 p-4"
+      @submit.prevent="submitForm"
+    >
+      <Field>
+        <FieldLabel for="new-category-name">Category name</FieldLabel>
+        <Input id="new-category-name" v-model="formDraft.name" class="h-10 bg-card" type="text" placeholder="Pasta" required />
+      </Field>
       <VariationGroupsEditor v-model="formDraft.variations" />
-      <div style="display: flex; gap: 8px; margin-top: 10px">
-        <button class="btn btn-primary" type="button" @click="submitForm">Save category</button>
-        <button class="btn btn-secondary" type="button" @click="cancelForm">Cancel</button>
+      <div class="flex justify-end gap-2">
+        <Button type="button" variant="outline" @click="cancelForm">Cancel</Button>
+        <Button type="submit">Save category</Button>
       </div>
-    </div>
+    </form>
 
-    <div v-for="category in props.categories" :key="category.id" class="category-tree__row">
-      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-        <button
-          class="btn btn-ghost btn-icon"
-          type="button"
+    <p
+      v-if="props.categories.length === 0 && formMode !== 'add'"
+      class="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground"
+    >
+      No categories yet. Categories group your dishes (for example "Starters" or "Pizzas") and can hold
+      options shared by all of them.
+    </p>
+
+    <div v-for="category in props.categories" :key="category.id" class="rounded-xl border bg-card">
+      <div class="flex items-center gap-2 p-2 pr-3">
+        <Button
+          variant="ghost"
+          class="h-10 min-w-0 flex-1 justify-start gap-2 px-2"
           :aria-expanded="props.expanded.has(category.id)"
-          :aria-label="props.expanded.has(category.id) ? 'Collapse category' : 'Expand category'"
           @click="onToggle(category)"
         >
-          <ChevronDown v-if="props.expanded.has(category.id)" :size="18" />
-          <ChevronRight v-else :size="18" />
-        </button>
-        <strong
-          style="font-size: 16px; margin-right: auto; cursor: pointer"
-          @click="onToggle(category)"
-        >
-          {{ category.name }}
-        </strong>
-        <span class="tag tag-neutral" style="flex: none; white-space: nowrap">
-          {{ category.items.length }} {{ category.items.length === 1 ? 'item' : 'items' }}
-        </span>
-        <span class="tag tag-accent" style="flex: none; white-space: nowrap">
-          {{ category.variations.length }} {{ category.variations.length === 1 ? 'group' : 'groups' }}
-        </span>
-        <button
-          class="btn btn-ghost"
-          type="button"
-          style="flex: none; white-space: nowrap"
-          @click="openAddItemForm(category.id)"
-        >
-          Add item
-        </button>
-        <button class="btn btn-ghost" type="button" style="flex: none; white-space: nowrap" @click="openEditForm(category)">
-          Edit
-        </button>
-        <button
-          class="btn btn-ghost"
-          type="button"
-          style="flex: none; white-space: nowrap"
-          @click="deleteTarget = category"
-        >
-          Delete
-        </button>
+          <ChevronRightIcon
+            :class="cn('transition-transform', props.expanded.has(category.id) && 'rotate-90')"
+            aria-hidden="true"
+          />
+          <span class="truncate text-base font-semibold">{{ category.name }}</span>
+          <Badge variant="secondary" class="tabular-nums">
+            {{ category.items.length }} {{ category.items.length === 1 ? 'dish' : 'dishes' }}
+          </Badge>
+          <Badge v-if="category.variations.length" variant="outline" class="hidden sm:inline-flex">
+            {{ category.variations.length }} {{ category.variations.length === 1 ? 'option' : 'options' }}
+          </Badge>
+        </Button>
+        <Button variant="ghost" size="sm" @click="openAddItemForm(category.id)">
+          <PlusIcon data-icon="inline-start" /> Dish
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="ghost" size="icon" :aria-label="`More actions for ${category.name}`">
+              <EllipsisVerticalIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuGroup>
+              <DropdownMenuItem @select="openEditForm(category)"><PencilIcon /> Edit category</DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem variant="destructive" @select="deleteTarget = category">
+                <TrashIcon /> Delete category
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <div v-if="formMode === category.id" class="category-tree__form">
-        <div class="field" style="margin-bottom: 10px">
-          <label :for="`category-name-${category.id}`">Category name</label>
-          <input :id="`category-name-${category.id}`" class="input" type="text" v-model="formDraft.name" />
-        </div>
+      <form
+        v-if="formMode === category.id"
+        class="mx-3 mb-3 flex flex-col gap-4 rounded-xl border border-dashed bg-muted/40 p-4"
+        @submit.prevent="submitForm"
+      >
+        <Field>
+          <FieldLabel :for="`category-name-${category.id}`">Category name</FieldLabel>
+          <Input :id="`category-name-${category.id}`" v-model="formDraft.name" class="h-10 bg-card" type="text" required />
+        </Field>
         <VariationGroupsEditor v-model="formDraft.variations" />
-        <div style="display: flex; gap: 8px; margin-top: 10px">
-          <button class="btn btn-primary" type="button" @click="submitForm">Save category</button>
-          <button class="btn btn-secondary" type="button" @click="cancelForm">Cancel</button>
+        <div class="flex justify-end gap-2">
+          <Button type="button" variant="outline" @click="cancelForm">Cancel</Button>
+          <Button type="submit">Save category</Button>
         </div>
-      </div>
+      </form>
 
-      <div v-if="props.expanded.has(category.id)" class="category-tree__items">
+      <div v-if="props.expanded.has(category.id)" class="flex flex-col gap-1 border-t p-2">
+        <p v-if="category.items.length === 0 && itemFormOpenFor !== category.id" class="px-2 py-3 text-sm text-muted-foreground">
+          No dishes in this category yet.
+        </p>
         <button
           v-for="item in category.items"
           :key="item.id"
           type="button"
-          class="category-tree__item"
-          :class="{ 'category-tree__item--active': item.id === props.activeItemId }"
           :aria-pressed="item.id === props.activeItemId"
+          :class="
+            cn(
+              'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+              item.id === props.activeItemId ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
+            )
+          "
           @click="emit('selectItem', item.id === props.activeItemId ? null : item.id)"
         >
-          <span style="margin-right: auto">{{ item.name }}</span>
-          <span class="text-muted" style="font-size: 12px">
+          <span class="min-w-0 flex-1 truncate font-medium">{{ item.name }}</span>
+          <span v-if="item.variations.length" class="hidden truncate text-xs opacity-80 sm:inline">
             {{ item.variations.map((v) => v.name).join(' · ') }}
           </span>
-          <strong style="font-variant-numeric: tabular-nums; flex: none; white-space: nowrap">
-            {{ formatEUR(item.price) }}
-          </strong>
+          <span class="shrink-0 font-semibold tabular-nums">{{ formatEUR(item.price) }}</span>
         </button>
-        <div v-if="itemFormOpenFor === category.id" style="margin-top: 8px">
+
+        <form
+          v-if="itemFormOpenFor === category.id"
+          class="m-1 flex flex-col gap-4 rounded-xl border border-dashed bg-muted/40 p-4"
+          @submit.prevent="submitItemForm(category.id)"
+        >
+          <p class="font-semibold">New dish in {{ category.name }}</p>
           <MenuItemFieldsForm :id-prefix="`item-${category.id}`" v-model="itemDraft" />
-          <p v-if="addItemError" role="alert" style="font-size: 13px; color: var(--color-accent-700); margin: 10px 0 0">
-            {{ addItemError }}
-          </p>
-          <div style="display: flex; gap: 8px; margin-top: 10px">
-            <button class="btn btn-primary" type="button" @click="submitItemForm(category.id)">Create item</button>
-            <button class="btn btn-secondary" type="button" @click="cancelItemForm">Cancel</button>
+          <Alert v-if="addItemError" variant="destructive" role="alert">
+            <AlertDescription>{{ addItemError }}</AlertDescription>
+          </Alert>
+          <div class="flex justify-end gap-2">
+            <Button type="button" variant="outline" @click="cancelItemForm">Cancel</Button>
+            <Button type="submit">Add dish</Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
-
-    <p class="text-muted" style="font-size: 11px; margin-top: 14px">
-      No position field exists — order is whatever the server returns. No drag handles until the
-      backend adds one.
-    </p>
 
     <ConfirmDialog
       :open="deleteTarget !== null"
       title="Delete this category?"
-      :body="`${deleteTarget?.name ?? ''} and its items will be removed permanently.`"
+      :body="`${deleteTarget?.name ?? ''} and its dishes will be removed permanently.`"
       confirm-label="Delete permanently"
       cancel-label="Keep category"
       @cancel="deleteTarget = null"
       @confirm="confirmDelete"
     />
-  </div>
+  </section>
 </template>
-
-<style scoped>
-.category-tree__row {
-  border-top: 2px solid var(--color-divider);
-  padding: 12px 0;
-}
-
-.category-tree__form {
-  margin: 10px 0 0 34px;
-}
-
-.category-tree__items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 10px 0 0 34px;
-}
-
-.category-tree__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 10px 12px;
-  border: 0;
-  border-left: 2px solid transparent;
-  background: transparent;
-  color: inherit;
-  justify-content: space-between;
-}
-
-.category-tree__item--active {
-  border-left-color: var(--color-accent);
-  background: var(--color-neutral-200);
-}
-</style>

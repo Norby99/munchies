@@ -1,38 +1,35 @@
 <script setup lang="ts">
-// The auth screens (login/register/verify) render without AppShell — no
-// header, no nav, no offline banner — everything else gets the full shell.
+// Routes flagged `bare` (login/register/verify) render without AppShell: no header, no nav, no
+// offline banner. Every other route gets the full shell.
+//
+// The live-notification connection follows the session: opened once the user is signed in,
+// closed when they sign out or the session expires. (A manager's connection is subscribed to the
+// restaurants they own when it opens: stores/restaurants reopens it when one is created or
+// deleted.)
 
+import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import AppShell from '@/components/AppShell.vue'
+import LiveToasts from '@/components/LiveToasts.vue'
+import { useLiveStore } from '@/stores/live'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
+const session = useSessionStore()
+const live = useLiveStore()
+
+watch(
+  () => session.isAuthenticated,
+  (signedIn) => (signedIn ? live.connect() : live.disconnect()),
+  { immediate: true },
+)
 </script>
 
 <template>
-  <AppShell v-if="!route.meta.public">
-    <router-view />
+  <AppShell v-if="!route.meta.bare">
+    <RouterView />
   </AppShell>
-  <main v-else class="app-auth-main">
-    <router-view />
-  </main>
+  <RouterView v-else />
+  <LiveToasts />
 </template>
-
-<style scoped>
-.app-auth-main {
-  min-height: 100vh;
-  padding: 32px 24px 56px;
-}
-
-@media (min-width: 1440px) {
-  .app-auth-main {
-    padding: 32px 40px 56px;
-  }
-}
-
-@media (max-width: 767px) {
-  .app-auth-main {
-    padding: 20px 16px 8px;
-  }
-}
-</style>

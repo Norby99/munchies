@@ -6,80 +6,90 @@ metadata:
 data:
   test.js: |
     import http from 'k6/http';
-    import { check } from 'k6';
+    import { check, fail } from 'k6';
 
-    // Override at apply time via the Job's env (TARGET_URL / PEAK_VUS / SUSTAIN / etc).
+    // Set through the Job's env by run.sh.
     const URL = __ENV.TARGET_URL
-      || 'http://gateway-service.gateway-service.svc.cluster.local.:8080/health';
-    const PEAK_VUS = Number(__ENV.PEAK_VUS || 150);
-    const WARMUP = __ENV.WARMUP || '1m';
-    const BASELINE = __ENV.BASELINE || '1m';
-    const RAMP = __ENV.RAMP || '1m';
-    const SUSTAIN = __ENV.SUSTAIN || '3m';
-    const RAMPDOWN = __ENV.RAMPDOWN || '2m';
+      || 'http://gateway-service.gateway-service.svc.cluster.local.:8080/auth/verify';
+    const PEAK_RATE = Number(__ENV.PEAK_RATE || 1000);
 
-    const AUTH_TOKEN = __ENV.AUTH_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW5jaG1hcmstdXNlciIsImlkIjoiYmVuY2htYXJrLXVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJpYXQiOjE3OTI2MTI1NjAsImV4cCI6MTc5MzIxNzM2MH0.GWkgbCSOi2R9Y6fXQdU2WVj57KSRBkgwYi4n9E6JRRs';
+    // The load, in requests per second: a baseline below the HPA target, a peak that drives the
+    // scale-up, then a low rate held long enough for the service to scale back in while requests
+    // are still being served. Edit this list for a different profile.
+    const STAGES = [
+      { duration: '30s', target: 20 },
+      { duration: '90s', target: 20 },
+      { duration: '1m', target: PEAK_RATE },
+      { duration: '4m', target: PEAK_RATE },
+      { duration: '30s', target: 20 },
+      { duration: '6m', target: 20 },
+      { duration: '30s', target: 0 },
+    ];
 
     export const options = {
       discardResponseBodies: true,
       scenarios: {
-        ramp: {
-          executor: 'ramping-vus',
-          startVUs: 0,
-          gracefulRampDown: '10s',
-          stages: [
-            { duration: WARMUP, target: Math.round(PEAK_VUS / 3) }, // warm up
-            { duration: BASELINE, target: Math.round(PEAK_VUS / 3) }, // baseline hold
-            { duration: RAMP, target: PEAK_VUS },                 // ramp to peak
-            { duration: SUSTAIN, target: PEAK_VUS },              // sustain — HPA scales out here
-            { duration: RAMPDOWN, target: 0 },                    // ramp down — watch scale-in
-          ],
+        load: {
+          // Open model: k6 starts requests at the set rate whatever the response time. VUs are
+          // only the pool that sends them; when all 400 are waiting, k6 counts the requests it
+          // could not start as dropped_iterations.
+          executor: 'ramping-arrival-rate',
+          startRate: 0,
+          timeUnit: '1s',
+          preAllocatedVUs: 50,
+          maxVUs: 400,
+          stages: STAGES,
         },
       },
+      // The project's service level objectives (docs/reports/saap/03-Deployment/kubernetes.md),
+      // so that k6 itself passes or fails the run on them.
       thresholds: {
-        http_req_failed: ['rate<0.05'],
-        http_req_duration: ['p(95)<1500'],
+        http_req_failed: ['rate<0.01'],
+        http_req_duration: ['p(95)<800'],
       },
       summaryTrendStats: ['avg', 'min', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
     };
 
-    export default function () {
-      const res = http.get(URL, {
-        headers: {
-          Authorization: `Bearer ${AUTH_TOKEN}`,
-        },
-      });
+    // /auth/verify needs a bearer token: get a fresh one from the gateway before the load starts,
+    // so a run never fails on an expired token. Other targets get none.
+    export function setup() {
+      if (!URL.includes('/auth/verify')) {
+        return { token: '' };
+      }
+      const origin = URL.match(/^https?:\/\/[^/]+/)[0];
+      // discardResponseBodies is on for the load itself; this one body is needed.
+      const res = http.get(`${origin}/auth/token`, { responseType: 'text' });
+      if (res.status !== 200) {
+        fail(`could not get a token from ${origin}/auth/token: status ${res.status}`);
+      }
+      return { token: res.json('token') };
+    }
+
+    export default function (data) {
+      const res = http.get(URL, { headers: { Authorization: `Bearer ${data.token}` } });
       check(res, { 'status is 200': (r) => r.status === 200 });
     }
 
-    // Overriding handleSummary() replaces k6's default end-of-test table. We print a short
-    // human-readable summary AND the full summary object as a single JSON line prefixed with
-    // K6_JSON: — run.sh greps that prefix out of `kubectl logs` to save a machine-readable
-    // summary.json, since the Job's own filesystem disappears once the pod is cleaned up.
+    // Replaces k6's default end-of-test table with a short summary, followed by the full summary
+    // object on one line prefixed with K6_JSON:, which run.sh extracts from the log into
+    // summary.json (the Job's filesystem disappears with its pod).
     export function handleSummary(data) {
-      const val = (name, key) => {
-        const v = data.metrics[name] && data.metrics[name].values;
-        return v ? v[key] : undefined;
-      };
-      const num = (n, d = 1) => (typeof n === 'number' ? n.toFixed(d) : 'n/a');
-      const pct = (n) => (typeof n === 'number' ? (n * 100).toFixed(2) + '%' : 'n/a');
+      const val = (name, key) => data.metrics[name] && data.metrics[name].values[key];
+      const ms = (key) => `${(val('http_req_duration', key) || 0).toFixed(1)}ms`;
 
       const text = [
         '',
         '=== k6 summary ===',
         `target ............. ${URL}`,
-        `peak VUs ............ ${PEAK_VUS}`,
-        `iterations (reqs) ... ${val('iterations', 'count') ?? 'n/a'}`,
-        `throughput .......... ${num(val('http_reqs', 'rate'), 2)} req/s`,
-        `latency avg/p95/p99 . ${num(val('http_req_duration', 'avg'))}ms / ` +
-          `${num(val('http_req_duration', 'p(95)'))}ms / ${num(val('http_req_duration', 'p(99)'))}ms`,
-        `latency max ......... ${num(val('http_req_duration', 'max'))}ms`,
-        `error rate .......... ${pct(val('http_req_failed', 'rate'))}`,
-        '===================',
+        `peak rate .......... ${PEAK_RATE} req/s`,
+        `requests ........... ${val('http_reqs', 'count')}`,
+        `latency med/p95/p99  ${ms('med')} / ${ms('p(95)')} / ${ms('p(99)')}`,
+        `latency max ........ ${ms('max')}`,
+        `error rate ......... ${((val('http_req_failed', 'rate') || 0) * 100).toFixed(2)}%`,
+        `dropped iterations . ${val('dropped_iterations', 'count') || 0}`,
+        '==================',
         '',
       ].join('\n');
 
-      return {
-        stdout: text + '\nK6_JSON:' + JSON.stringify(data) + '\n',
-      };
+      return { stdout: text + '\nK6_JSON:' + JSON.stringify(data) + '\n' };
     }

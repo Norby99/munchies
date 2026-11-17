@@ -1,6 +1,7 @@
 package com.munchies.order.application.port.inbound
 
 import com.munchies.order.application.port.inbound.command.UpdateOrderItemsCommand
+import com.munchies.order.domain.model.MenuItemId
 
 /**
  * Use case for updating the items in an existing order. This is typically used when a customer
@@ -24,6 +25,10 @@ interface UpdateOrderItems {
    *  - `OrderNotFound`: No order exists with the provided identifier.
    *  - `Unauthorized`: The user does not have permission to update the order items.
    *  - `EmptyItems`: The provided list of items is empty, which is not allowed for an order.
+   *  - `OrderNotModifiable`: The order has left the `PENDING` status, so its items can no longer
+   *  change.
+   *  - `UnknownItems`: One or more items are not on any menu of the order's restaurant.
+   *  - `MenuUnavailable`: restaurant-service could not be asked for the prices.
    */
   sealed interface Result {
     data object Success : Result
@@ -31,6 +36,9 @@ interface UpdateOrderItems {
       data object OrderNotFound : Failure
       data object Unauthorized : Failure
       data object EmptyItems : Failure
+      data object OrderNotModifiable : Failure
+      data class UnknownItems(val menuItemIds: Set<MenuItemId>) : Failure
+      data object MenuUnavailable : Failure
     }
   }
 }

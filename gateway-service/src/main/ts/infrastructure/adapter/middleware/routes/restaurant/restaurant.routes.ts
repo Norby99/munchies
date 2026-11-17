@@ -6,22 +6,36 @@ import { CreateRestaurantRoute } from "./create-restaurant.route";
 import { DeleteCategoryRoute } from "./delete-category.route";
 import { DeleteMenuRoute } from "./delete-menu.route";
 import { DeleteRestaurantRoute } from "./delete-restaurant.route";
+import { GetCapacityPolicyRoute } from "./get-capacity-policy.route";
 import { GetManagerRestaurantsRoute } from "./get-manager-restaurants.route";
 import { GetMenuRoute } from "./get-menu.route";
+import { GetRestaurantLocationRoute } from "./get-restaurant-location.route";
 import { GetRestaurantMenusRoute } from "./get-restaurant-menus.route";
 import { GetRestaurantRoute } from "./get-restaurant.route";
+import { GetTablesRoute } from "./get-tables.route";
 import { RemoveMenuItemRoute } from "./remove-menu-item.route";
+import { SearchRestaurantsRoute } from "./search-restaurants.route";
+import { UpdateCapacityPolicyRoute } from "./update-capacity-policy.route";
 import { UpdateCategoryRoute } from "./update-category.route";
 import { UpdateMenuItemRoute } from "./update-menu-item.route";
 import { UpdateMenuRoute } from "./update-menu.route";
+import { UpdateRestaurantLocationRoute } from "./update-restaurant-location.route";
 import { UpdateRestaurantRoute } from "./update-restaurant.route";
+import { UpdateTablesRoute } from "./update-tables.route";
 
 export const restaurantRoutes: SimpleRoute<any>[] = [
   new CreateRestaurantRoute(),
+  new SearchRestaurantsRoute(),
   new GetManagerRestaurantsRoute(),
   new GetRestaurantRoute(),
   new UpdateRestaurantRoute(),
   new DeleteRestaurantRoute(),
+  new GetCapacityPolicyRoute(),
+  new UpdateCapacityPolicyRoute(),
+  new GetRestaurantLocationRoute(),
+  new UpdateRestaurantLocationRoute(),
+  new GetTablesRoute(),
+  new UpdateTablesRoute(),
   new CreateMenuRoute(),
   new GetMenuRoute(),
   new GetRestaurantMenusRoute(),

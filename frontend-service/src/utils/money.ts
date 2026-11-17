@@ -14,3 +14,9 @@ export function addDecimalStrings(a: string, b: string): string {
 export function multiplyDecimalString(decimalString: string, quantity: number): string {
   return (Number(decimalString) * quantity).toFixed(2)
 }
+
+// Orders carry integer euro cents (OrderDto.totalCents, OrderItemDto.unitPriceCents), set by
+// order-service from the menu prices.
+export function formatCents(cents: number): string {
+  return formatter.format(cents / 100)
+}

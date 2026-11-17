@@ -6,6 +6,9 @@ metadata:
   labels:
     app: notification-service
 spec:
+  # A single replica on purpose: the live-notification rooms (Socket.io) live in the process's
+  # memory, and with several replicas a user's connection and the Kafka partition carrying their
+  # events could land on different pods. Scaling out needs a shared Socket.io adapter first.
   replicas: 1
   selector:
     matchLabels:
@@ -29,8 +32,6 @@ spec:
           env:
             - name: MICRONAUT_ENVIRONMENTS
               value: "k8s,prod"
-            - name: MONGODB_URI
-              value: "mongodb://notification-mongodb:27017/notification-service"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
@@ -60,4 +61,6 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
-  type: NodePort
+  # Internal only: the live-notification WebSocket trusts the identity headers set by
+  # gateway-service, so it must not be reachable from outside the cluster.
+  type: ClusterIP

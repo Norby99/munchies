@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import {
+  PaymentController,
+  PaymentError,
+} from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import { ProcessPaymentUseCase } from "@main/application/usecase/ProcessPaymentUseCase";
 import { InMemoryPaymentRepository } from "@main/infrastructure/adapter/outbound/memory/InMemoryPaymentRepository";
 import { FakePaymentGateway } from "@main/infrastructure/adapter/outbound/payment/FakePaymentGateway";
@@ -16,12 +19,20 @@ import { ProcessPayment } from "@main/application/port/inbound/ProcessPayment";
  * The controller only translates HTTP to and from the use case: the follow-up steps of a
  * payment (order-service and notification-service) are covered by the use case tests.
  */
+const CUSTOMER = "customer-1";
+
 describe("PaymentController", () => {
   const useCaseWithStubbedPorts = (): ProcessPayment =>
     new ProcessPaymentUseCase(
       new InMemoryPaymentRepository(),
       new FakePaymentGateway(),
-      { markOrderAsPaid: vi.fn().mockResolvedValue({ success: true }) },
+      {
+        getOrder: vi.fn().mockResolvedValue({
+          type: "FOUND",
+          order: { customerId: CUSTOMER, payed: false, totalCents: 250 },
+        }),
+        markOrderAsPaid: vi.fn().mockResolvedValue({ success: true }),
+      },
       { publishPaymentSuccess: vi.fn().mockResolvedValue(undefined) },
       { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     );
@@ -31,14 +42,15 @@ describe("PaymentController", () => {
 
     const request = new ProcessPaymentRequest(
       "order-test-123",
-      new PaymentDetails(250, PaymentMethod.CARD, Currency.AUD)
+      CUSTOMER,
+      new PaymentDetails(PaymentMethod.CARD)
     );
 
     const response = await controller.processPayment(request);
 
     expect(response.status).toBe(PaymentStatus.COMPLETED);
     expect(response.amount).toBe(250);
-    expect(response.currency).toBe(Currency.AUD);
+    expect(response.currency).toBe(Currency.EUR);
     expect(response.paymentId).toBeTruthy();
   });
 
@@ -53,7 +65,8 @@ describe("PaymentController", () => {
     const controller = new PaymentController(mockUseCase);
     const request = new ProcessPaymentRequest(
       "",
-      new PaymentDetails(100, PaymentMethod.CARD, Currency.AUD)
+      CUSTOMER,
+      new PaymentDetails(PaymentMethod.CARD)
     );
 
     await expect(controller.processPayment(request)).rejects.toThrow(
@@ -72,11 +85,33 @@ describe("PaymentController", () => {
     const controller = new PaymentController(mockUseCase);
     const request = new ProcessPaymentRequest(
       "order-test-999",
-      new PaymentDetails(100, PaymentMethod.CARD, Currency.AUD)
+      CUSTOMER,
+      new PaymentDetails(PaymentMethod.CARD)
     );
 
     await expect(controller.processPayment(request)).rejects.toThrow(
       "Card declined"
     );
+  });
+
+  it.each([
+    ["FORBIDDEN", 403],
+    ["ORDER_NOT_FOUND", 404],
+    ["ALREADY_PAID", 409],
+    ["NOTHING_TO_PAY", 409],
+    ["ORDER_UNAVAILABLE", 503],
+  ] as const)("maps %s to HTTP %i", async (type, status) => {
+    const controller = new PaymentController({
+      execute: async () => ({ type, reason: "refused" }),
+    });
+
+    const error = await controller
+      .processPayment(
+        new ProcessPaymentRequest("order-1", CUSTOMER, new PaymentDetails(PaymentMethod.CARD))
+      )
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PaymentError);
+    expect((error as PaymentError).status).toBe(status);
   });
 });

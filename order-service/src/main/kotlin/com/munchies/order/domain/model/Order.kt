@@ -37,6 +37,12 @@ sealed class Order(
   open val payed: Boolean,
 ) : Entity<OrderId>(id) {
 
+  /**
+   * What the customer owes for this order: the sum of the line subtotals, at the prices frozen
+   * when the items were ordered. Derived, not stored, so it can never disagree with [items].
+   */
+  val total: Price get() = items.fold(Price.ZERO) { sum, item -> sum + item.subtotal }
+
   // ---------------------------------------------------------------------------------------------
   // Process (command) methods: validate and return events.
   // ---------------------------------------------------------------------------------------------
@@ -62,26 +68,38 @@ sealed class Order(
   }
 
   /**
-   * Cancels the order if it is in a cancellable state.
+   * Cancels the order if it is in a cancellable state: still [OrderStatus.PENDING] and not paid.
+   * A paid order cannot be cancelled because there are no refunds: the money would be kept for an
+   * order that is never prepared.
    *
    * @return A [CancelResult] carrying an [OrderCancelled] event on success.
    */
   fun cancel(): CancelResult {
     if (status != OrderStatus.PENDING) return CancelResult.Failure.InvalidTransition
+    if (payed) return CancelResult.Failure.AlreadyPaid
     return CancelResult.Success(listOf(OrderCancelled(id)))
   }
 
   /**
-   * Replaces the items in the order after validating them.
+   * Replaces the items in the order after validating them. Items can only change while the
+   * order is [OrderStatus.PENDING]: once it has left that status, the restaurant may already be
+   * working on it.
    *
    * @param newItems The new list of [OrderItem] for the order.
    * @return An [UpdateResult] carrying an [OrderItemsUpdated] event on success.
    */
   fun updateItems(newItems: List<OrderItem>): UpdateResult {
+    if (!areItemsModifiable) return UpdateResult.Failure.NotModifiable
     val validationError = validateItems(newItems)
     if (validationError != null) return UpdateResult.Failure.InvalidItems(validationError)
     return UpdateResult.Success(listOf(OrderItemsUpdated(id, newItems)))
   }
+
+  /**
+   * Whether the items can still change. Exposed so a caller can skip expensive preparation
+   * (e.g. pricing the new items) for a change [updateItems] would refuse anyway.
+   */
+  val areItemsModifiable: Boolean get() = status == OrderStatus.PENDING
 
   /**
    * Returns the status following [status] in this order type's workflow, or `null` if the
@@ -202,6 +220,7 @@ sealed class Order(
     data class Success(val events: List<OrderEvent>) : UpdateResult
     sealed interface Failure : UpdateResult {
       data class InvalidItems(val error: ItemsValidationError) : Failure
+      data object NotModifiable : Failure
     }
   }
 
@@ -212,6 +231,7 @@ sealed class Order(
     data class Success(val events: List<OrderEvent>) : CancelResult
     sealed interface Failure : CancelResult {
       data object InvalidTransition : Failure
+      data object AlreadyPaid : Failure
     }
   }
 

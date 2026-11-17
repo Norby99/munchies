@@ -23,20 +23,11 @@ spec:
           image: grafana/k6:latest # pin a version (e.g. grafana/k6:0.55.0) for reproducible runs
           args: ["run", "/scripts/test.js"] # summary rendering is fully handled by handleSummary() in the script
           env:
+            # Set by run.sh; see the script for the load profile.
             - name: TARGET_URL
-              value: "http://gateway-service.gateway-service.svc.cluster.local.:8080/health"
-            - name: PEAK_VUS
-              value: "150"
-            - name: SUSTAIN
-              value: "3m"
-            - name: WARMUP
-              value: "1m"
-            - name: BASELINE
-              value: "1m"
-            - name: RAMP
-              value: "1m"
-            - name: RAMPDOWN
-              value: "2m"
+              value: "http://gateway-service.gateway-service.svc.cluster.local.:8080/auth/verify"
+            - name: PEAK_RATE
+              value: "1000"
           volumeMounts:
             - name: script
               mountPath: /scripts

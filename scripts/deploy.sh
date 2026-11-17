@@ -53,6 +53,7 @@ check_service_health "User Service" "http://localhost:8082/health" "200"
 check_service_health "Payment Service" "http://localhost:8083/health" "200"
 check_service_health "Restaurant Service" "http://localhost:8087/health" "200"
 check_service_health "Gateway Service" "http://localhost:8086/health" "200"
+check_service_health "Frontend Service" "http://localhost:5173/health" "200"
 
 echo ""
 echo "[INFO] Deployment completed successfully. All services are up."

@@ -41,7 +41,9 @@ fun configureSpotlessForKotlin(project: Project) {
 fun configureSpotlessForJs(project: Project) {
   project.configure<SpotlessExtension> {
     typescript {
-      target("src/**/*.ts")
+      // Walking only src/: a target pattern scans the whole project directory, racing with the
+      // parallel npmSetup and npmInstall tasks that rewrite .gradle/ and node_modules/.
+      target(project.fileTree("src") { include("**/*.ts") })
       targetExclude(
         "**/node_modules/**/*.ts",
         "**/dist/**/*.ts",
@@ -51,7 +53,7 @@ fun configureSpotlessForJs(project: Project) {
       // prettier()
     }
     javascript {
-      target("src/**/*.js")
+      target(project.fileTree("src") { include("**/*.js") })
       targetExclude(
         "**/node_modules/**/*.js",
         "**/dist/**/*.js",
@@ -75,4 +77,5 @@ apply<SpotlessPlugin>()
 when (project.getProjectLanguage()) {
   ProjectLanguage.KOTLIN -> configureSpotlessForKotlin(project)
   ProjectLanguage.JS -> configureSpotlessForJs(project)
+  ProjectLanguage.VUE -> Unit
 }

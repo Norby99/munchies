@@ -3,6 +3,8 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createDeliveryOrder
+import com.munchies.order.fixtures.createSampleOrder
+import com.munchies.order.fixtures.defaultCustomerId
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.fixtures.secondaryOrderId
 import com.munchies.order.infrastructure.adapter.outbound.response.DiscardOrderResponse
@@ -68,5 +70,44 @@ class DiscardOrderControllerComponentTest : BaseOrderController() {
     response.status shouldBe HttpStatus.BAD_REQUEST
     response.bd<ErrorResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
     response.bd<ErrorResponse>().result shouldBe "Order cannot be cancelled"
+  }
+
+  @Test
+  fun `DELETE discard order should return 400 Bad Request and keep a paid order`() {
+    orderRepository.save(createSampleOrder(OrderStatus.PENDING, payed = true))
+
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpDelete<DiscardOrderResponse>(
+        "${defaultOrderId.value}?customerId=${defaultCustomerId.value}",
+      )
+    }.response
+
+    response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<ErrorResponse>().result shouldBe "A paid order cannot be cancelled"
+    orderViews.findById(defaultOrderId)?.status shouldBe OrderStatus.PENDING
+  }
+
+  @Test
+  fun `DELETE discard order should answer 404 and keep another customer's order`() {
+    orderRepository.save(createDeliveryOrder())
+
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpDelete<DiscardOrderResponse>("${defaultOrderId.value}?customerId=someone-else")
+    }.response
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+    orderRepository.findById(defaultOrderId)?.status shouldBe OrderStatus.PENDING
+  }
+
+  @Test
+  fun `DELETE discard order should cancel the order of the customer in the query`() {
+    orderRepository.save(createDeliveryOrder())
+
+    val response = httpCalls.httpDelete<String>(
+      "${defaultOrderId.value}?customerId=${defaultCustomerId.value}",
+    )
+
+    response.status shouldBe HttpStatus.OK
+    orderRepository.findById(defaultOrderId)?.status shouldBe OrderStatus.CANCELLED
   }
 }

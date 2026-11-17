@@ -22,7 +22,7 @@ abstract class JsGetOrderDetailsAPI<E : WebResponse<Any>> :
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun getOrderDetails(id: String): Promise<E>
+  abstract override fun getOrderDetails(id: String, customerId: String?): Promise<E>
 
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
   override fun parseResponse(json: String): GetOrderDetailsResponse =
@@ -35,8 +35,11 @@ abstract class JsGetOrderDetailsAPI<E : WebResponse<Any>> :
 abstract class JsGetOrdersAPI<E : WebResponse<Any>> :
   OrderAPI.GetOrdersAPI<Promise<E>>,
   SimpleAPI<Nothing, GetOrdersResponse>() {
-  override fun getPath(): String =
-    OrderServiceConfig.SERVICE_PATH + OrderServiceConfig.GET_ORDER_PATH
+  // The list lives on the collection root ("/orders/", filters as query parameters), which is
+  // where order-service maps GET_ORDERS_PATH ("/") under its controller. GET_ORDERS_PATH is not
+  // appended here because it would yield "/orders//"; GET_ORDER_PATH must not be used either,
+  // since "/orders/{id}" is the order-details route and would shadow this one in the gateway.
+  override fun getPath(): String = OrderServiceConfig.SERVICE_PATH
 
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.GET
@@ -120,7 +123,7 @@ abstract class JsDiscardOrderAPI<E : WebResponse<Any>> :
   override fun getPort(): Int = OrderServiceConfig.SERVICE_PORT
   override fun getMethod(): HttpMethod = HttpMethod.DELETE
   override fun getRequiredAuthRole(): AuthRole = AuthRole.CUSTOMER
-  abstract override fun discardOrder(id: String): Promise<E>
+  abstract override fun discardOrder(id: String, customerId: String?): Promise<E>
 
   override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
   override fun parseResponse(json: String): DiscardOrderResponse =

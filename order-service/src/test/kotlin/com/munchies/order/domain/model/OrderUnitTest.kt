@@ -13,6 +13,7 @@ import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createInvalidItemsNegativeCount
 import com.munchies.order.fixtures.createInvalidItemsZeroCount
 import com.munchies.order.fixtures.createNewItems
+import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.createTakeawayInfo
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.defaultCustomerId
@@ -46,6 +47,13 @@ class OrderUnitTest {
     val orderCompleted = createDeliveryOrder(OrderStatus.COMPLETED)
     val cancelResultCompleted = orderCompleted.cancel()
     cancelResultCompleted shouldBeEqual Order.CancelResult.Failure.InvalidTransition
+  }
+
+  @Test
+  fun `cancel should be refused for a pending order that is already paid`() {
+    val order = createSampleOrder(OrderStatus.PENDING, payed = true)
+
+    order.cancel() shouldBeEqual Order.CancelResult.Failure.AlreadyPaid
   }
 
   @Test
@@ -99,6 +107,24 @@ class OrderUnitTest {
 
     result.shouldBeInstanceOf<UpdateResult.Failure.InvalidItems>()
     result.error shouldBeEqual Order.ItemsValidationError.InvalidItemQuantity
+  }
+
+  @Test
+  fun `order should update items only when in pending status`() {
+    OrderStatus.entries.filter { it != OrderStatus.PENDING }.forEach { status ->
+      val result = createDeliveryOrder(status).updateItems(createNewItems())
+
+      result shouldBeEqual UpdateResult.Failure.NotModifiable
+    }
+  }
+
+  @Test
+  fun `order should report not modifiable before validating items`() {
+    val order = createDeliveryOrder(OrderStatus.PREPARING)
+
+    val result = order.updateItems(createEmptyItems())
+
+    result shouldBeEqual UpdateResult.Failure.NotModifiable
   }
 
   // ---------- Event sourcing: process never mutates, apply never fails ----------

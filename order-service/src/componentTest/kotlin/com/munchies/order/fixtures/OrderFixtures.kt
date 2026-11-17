@@ -6,9 +6,8 @@ import com.munchies.order.infrastructure.adapter.dto.OrderType
 
 // ---------- Time helpers ----------
 
-private val fixedNow: Long = System.currentTimeMillis()
-val pastTime: Long get() = fixedNow - 60_000
-val futureTime: Long get() = fixedNow + 60_000
+val pastTime: Long get() = System.currentTimeMillis() - 60_000
+val futureTime: Long get() = System.currentTimeMillis() + 60_000
 
 // ---------- IDs ----------
 
@@ -130,14 +129,18 @@ fun createDineInOrder(
  * Creates a default Order with valid items, using [Address1] by default.
  * @param status The status of the order. Defaults to PENDING.
  * @param items The items of the order. Defaults to a valid non-empty list.
+ * @param payed Whether the order is paid. Defaults to false.
  */
-fun createSampleOrder(status: OrderStatus = OrderStatus.PENDING): TakeawayOrder = TakeawayOrder(
+fun createSampleOrder(
+  status: OrderStatus = OrderStatus.PENDING,
+  payed: Boolean = false,
+): TakeawayOrder = TakeawayOrder(
   id = defaultOrderId,
   restaurantId = defaultRestaurantId,
   customerId = defaultCustomerId,
   status = status,
   items = createNewItems(),
-  payed = false,
+  payed = payed,
   takeawayInfo = createTakeawayInfo(),
 )
 

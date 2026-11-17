@@ -1,14 +1,13 @@
 // Menu / category / item CRUD. Routes are singular (`/restaurant/...`),
 // unlike the restaurant family above — a real inconsistency in the API, kept
-// as-is rather than "fixed" client-side (see ui_specification.md §7.1).
+// as-is rather than "fixed" client-side (see ui_specification.md §11.1).
 //
 // There is no GET for a single category or item — both only come back as
 // part of the full menu fetch (getMenu).
 
 import { http, unwrap } from '@/api/client'
 import { decodeValidity, encodeValidity } from '@/utils/validity'
-import type { Category, Menu, MenuSummary, MenuItem, Validity, Variation } from '@/types'
-import type { MenuDto } from 'munchies-wire-types/kotlin/restaurant-wire-types'
+import type { Category, Menu, MenuDto, MenuSummary, MenuItem, Validity, Variation } from '@/types'
 
 const base = (restaurantId: string) => `/restaurant/${restaurantId}/menus`
 

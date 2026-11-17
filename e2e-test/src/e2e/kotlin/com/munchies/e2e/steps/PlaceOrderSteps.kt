@@ -18,7 +18,14 @@ class PlaceOrderSteps(private val world: WordResult) {
 
   @Given("a valid delivery order")
   fun aValidDeliveryOrder() {
-    requestBody = OrderFixtures.deliveryOrderJson
+    requestBody = OrderFixtures.deliveryOrderJson(
+      restaurantId = world.restaurantId ?: error(
+        "No restaurant: add 'a restaurant with a dish on its menu' first",
+      ),
+      menuItemId = world.menuItemId ?: error(
+        "No dish: add 'a restaurant with a dish on its menu' first",
+      ),
+    )
   }
 
   @When("the client places the order")

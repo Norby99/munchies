@@ -15,4 +15,7 @@ data class RestaurantDocument(
   val email: String,
   val createdAt: LocalDateTime,
   val updatedAt: LocalDateTime,
+  val capacityPolicy: CapacityPolicyData? = null,
+  val location: GeoPointData? = null,
+  val tables: List<TableData> = emptyList(),
 )

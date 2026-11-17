@@ -1,96 +1,78 @@
-Feature: Munchies user stories
-  Acceptance scenarios derived from docs/user-stories/user-stories.md.
-  Steps follow the vocabulary of the e2e-test module: "an authenticated client"
-  is a client that already registered and holds a valid personal auth token.
+# Note Cucumber accepts only a feature per file, so don't just copy paste this file into tests
 
-  # ---------------------------------------------------------------
-  # Authentication and Account Management
-  # ---------------------------------------------------------------
+Feature: Authentication and Account Management
 
-  Scenario: User registration
-    Given a user which doesnt exist yet
-    When the user registers its info
-    Then the user receives a personal auth token
-    And the user can query its info
+  Scenario: User registers to the system
+    Given I am not registered
+    When I register with valid credentials
+    Then I should receive a personal auth token
+    And I should be able to query my info
 
-  Scenario: User login
-    Given a user which is registered
-    When the user logs in with its credentials
-    Then the user receives a personal auth token
-    And the user can access the protected features
+  Scenario: User logs in to the system
+    Given I am registered
+    And I am not logged in
+    When I log in with valid credentials
+    Then I should receive a personal auth token
+    And I should be able to access the protected features
 
-  Scenario: Update user profile
-    Given a user which is registered
-    When the user updates its profile
-    Then only the correct changes are allowed
-    And the user has its profile updated
+  Scenario: User updates its profile
+    Given I am a logged user
+    When I update my profile
+    Then my profile should be updated
+    And only the allowed fields should be changed
 
-  # ---------------------------------------------------------------
-  # Restaurant Browsing
-  # ---------------------------------------------------------------
+Feature: Restaurant Browsing
 
-  Scenario: Browse restaurant menu
-    Given an authenticated client
-    And a restaurant with a menu exists
-    When the client browses the restaurants
-    And the client opens the restaurant menu
-    Then the client sees the restaurant and its dishes
-    And each dish shows its details and availability
+  Scenario: Client browses a restaurant menu
+    Given I am a logged user
+    And there is a restaurant with a menu
+    When I open the restaurant menu
+    Then I should see the restaurant and its dishes
+    And each dish should show its details and availability
 
-  # ---------------------------------------------------------------
-  # Menu Management
-  # ---------------------------------------------------------------
+Feature: Menu Management
 
   Scenario: Restaurant staff marks a dish as unavailable
-    Given an authenticated restaurant staff member
-    And a restaurant with an available dish
-    When the staff member marks the dish as unavailable
-    Then the dish is shown as unavailable in the menu
-    And clients cannot order the dish
+    Given I am a logged restaurant staff member
+    And my restaurant has an available dish
+    When I mark the dish as unavailable
+    Then the dish should be shown as unavailable in the menu
+    And clients should not be able to order the dish
 
-  # ---------------------------------------------------------------
-  # Order Management
-  # ---------------------------------------------------------------
+Feature: Order Management
 
-  Scenario: Place order
-    Given an authenticated client
-    And a valid delivery order
-    When the client places the order
-    Then order is created successfully
+  Scenario: Client places a delivery order
+    Given I am a logged user
+    And I have a valid delivery order
+    When I place the order
+    Then the order should be created
 
-  Scenario: Pay order
-    Given an authenticated client
-    And a valid delivery order
-    And the client places the order
-    When the client pays for the order
-    Then the payment is completed successfully
-    And the order is confirmed
+  Scenario: Client pays for an order
+    Given I am a logged user
+    And I have placed a delivery order
+    When I pay for the order
+    Then the payment should be completed
+    And the order should be confirmed
 
-  Scenario: Track order status
-    Given an authenticated client
-    And a valid delivery order
-    When the client places the order
-    And the client advances the order status
-    Then order status is advanced successfully
+  Scenario: Client tracks the order status
+    Given I am a logged user
+    And I have placed a delivery order
+    When the order status advances
+    Then I should see the updated order status
 
-  # ---------------------------------------------------------------
-  # Notifications
-  # ---------------------------------------------------------------
+Feature: Notifications
 
-  Scenario: Payment success notification
-    Given an authenticated client
-    And a valid delivery order
-    And the client places the order
-    When the client pays for the order
-    Then the payment is completed successfully
-    And notification-service should have logged the payment confirmation
+  Scenario: Client is notified of a successful payment
+    Given I am a logged user
+    And I have placed a delivery order
+    When I pay for the order
+    Then the payment should be completed
+    And I should receive a payment confirmation notification
 
-  # ---------------------------------------------------------------
-  # Table Reservations
-  # ---------------------------------------------------------------
+Feature: Table Reservations
 
-  Scenario: Reserve a table
-    Given an authenticated client
-    And a restaurant with a free table
-    When the client reserves a table at the restaurant
-    Then the reservation is created successfully
+  Scenario: Client reserves a table
+    Given I am a logged user
+    And there is a restaurant with a free table
+    When I reserve a table at the restaurant
+    Then the reservation should be created

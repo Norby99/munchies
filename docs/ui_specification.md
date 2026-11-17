@@ -1,41 +1,58 @@
 # Munchies — Frontend UI Specification
 
-Source of truth for building a Vue 3 client against the current backend. Reflects the system **as implemented**, not as intended — gaps and inconsistencies are called out explicitly so they aren't accidentally designed around as if they were real features.
+Reference for the Vue 3 client (`frontend-service`) and the backend it talks to. It describes the system **as
+implemented**: remaining gaps and inconsistencies are called out explicitly, so they are not designed around as if
+they were real features. How the frontend code is organized is described in `frontend-service/CLAUDE.md`.
 
 ## 1. System architecture
 
 ```
-Browser (Vue app)
-   │  HTTPS, cookies
+Browser (Vue SPA, served by nginx in frontend-service)
+   │  same origin: REST over HTTPS + one WebSocket, session cookie
    ▼
 gateway-service (Express/TS, port 8086 external / 8080 internal)
-   │  proxies to, no shared auth forwarded — gateway resolves identity itself
-   ├── user-service        (Micronaut/Kotlin, Mongo)
-   ├── restaurant-service   (Micronaut/Kotlin, Mongo)
-   ├── order-service        (Micronaut/Kotlin, Mongo)
-   └── scheduler-service    (Express/TS, in-memory) ──▶ order-service + restaurant-service
+   │  authenticates the cookie, injects the caller's identity, proxies
+   ├── user-service               (Micronaut/Kotlin, Mongo)
+   ├── restaurant-service         (Micronaut/Kotlin, Mongo)        menus, tables, scheduling settings
+   ├── order-service              (Micronaut/Kotlin, Mongo)        event-sourced Order aggregate
+   ├── payment-service            (Express/TS, Mongo)
+   ├── table-reservation-service  (Express/TS, Mongo)
+   ├── scheduler-service          (Express/TS, in-memory) ──▶ order-service + restaurant-service
+   └── notification-service       (Express/TS, Kafka consumer) ◀── Kafka ◀── order / payment / reservation / user
+          ▲ WebSocket (Socket.io) proxied by the gateway: live notifications to the browser
 ```
 
-- **Single base URL**, no version prefix (`/users/...`, `/restaurants/...`, `/orders/...` directly — not `/api/v1/...`).
-- **user, restaurant, order and scheduler are reachable from the frontend.** `scheduler-service` is routed through the gateway under `/schedule/*` (see §9). `payment-service`, `notification-service` and `table-reservation-service` exist in the repo but are not routed through the gateway — do not design screens that call them directly.
-- No CORS configuration and no rate limiting exist on the gateway today; if the Vue app is served from a different origin, this will need to be added on the backend first.
+- **Single base URL**, no version prefix (`/users/...`, `/restaurants/...`, `/orders/...`). The frontend's nginx
+  (and the Vite dev server) proxies these prefixes to the gateway, so the SPA and the API share one origin.
+- Every backend service the UI needs is routed through the gateway; the frontend never calls a service directly.
+- No CORS configuration and no rate limiting on the gateway: the same-origin setup makes CORS unnecessary.
 
 ## 2. Auth model
 
-- Session is an **httpOnly cookie** named `authToken` (JWT, HS256), set by the gateway on successful `login` or `register`. The Vue app never reads or stores the token itself — just needs `credentials: 'include'` (or equivalent) on every request.
-- Cookie attributes: `Secure`, `SameSite=Lax`, `maxAge = 1h`. The JWT payload itself is valid for 7 days, but the browser will drop the cookie after 1 hour — **build silent-session-expiry handling into the app** (a 401/expired request should bounce to login, not surface as a generic error).
-- Two roles, hierarchical: `CUSTOMER` (visibility 1), `MANAGER` (visibility 2 — satisfies customer-gated routes too). There is no `ADMIN` role and no staff/kitchen role.
-- **No logout endpoint exists.** "Log out" in the UI must clear client state and can at best call a non-existent endpoint — flag this to backend, or implement logout as "clear cookie client-side" (only works if the cookie isn't httpOnly-enforced against JS clearing — confirm with backend; the honest interim UX is "close browser" or a backend fix).
-- **No password-reset-via-email flow.** Only email *verification* (post-registration OTK) exists. Don't design a "Forgot password" link that has anywhere to go yet.
-- Register requires a **client-computed password hash** (`SHA-256(password + salt)`, salt = 16 random bytes hex-encoded) sent as `hashedPassword` + `saltValue`. Login, by contrast, sends the **plaintext** password. The Vue app needs a small crypto util for the register form only.
+- Session is an **httpOnly cookie** named `authToken` (JWT, HS256), set by the gateway on successful `register`
+  (auto-login) or `login`.
+  `Secure`, `SameSite=Lax`, `maxAge` 7 days, aligned with the JWT expiry. The SPA never reads or stores the token;
+  it sends credentials on every request (`withCredentials`).
+- The gateway injects the caller's id (and, where relevant, `customerId` / `managerId`) from the cookie: request
+  bodies still carry those fields because the shared DTOs declare them, but they are sent empty and ignored.
+- Two roles, hierarchical: `CUSTOMER`, `MANAGER` (a manager also satisfies customer-gated routes). No admin role.
+- **Logout** is `POST /users/logout/`, handled by the gateway, which clears the httpOnly cookie.
+- A `401` anywhere means "session expired": the client clears its session state and returns to login.
+- **No password reset by email.** Only email verification (one-time key sent after registration) exists.
+- Register sends a **client-computed password hash** (`SHA-256(password + salt)`, salt = 16 random bytes,
+  hex) as `hashedPassword` + `saltValue`; login sends the plaintext password.
 
 ## 3. Cross-cutting conventions
 
-- **Success envelope:** `{ "result": <payload>, "code": <httpStatus> }`
-- **Error envelope:** `{ "result": "<message>", "code": <httpStatus> }` — same shape, so a single response interceptor can branch on `code`.
-- **Money** is always a **decimal string** (e.g. `"5.80"`), never a float — format/parse as `Intl.NumberFormat`, never `Number()` arithmetic before display.
-- **Timestamps** (`estimatedDeliveryTime`, `pickupTime`) are **epoch-milliseconds encoded as strings** (e.g. `"1743500000000"`), not ISO dates. Parse with `new Date(Number(value))`.
+- **Envelope:** success `{ "result": <payload>, "code": <httpStatus> }`, error `{ "result": "<message>", "code" }`
+  — same shape, so one interceptor unwraps it and branches on `code` (`api/client.ts`).
+- **Menu money** is a **decimal string** (e.g. `"5.80"`). **Order money** is an integer number of **euro cents**
+  (`unitPriceCents`, `totalCents`), frozen by order-service when the items are ordered.
+- **Time:** order times (`estimatedDeliveryTime`, `pickupTime`) are epoch milliseconds as **strings**; scheduler
+  times are epoch milliseconds as **numbers** plus restaurant-local `"HH:MM"`; reservation `start` / `end` are
+  ISO-8601 UTC instants.
 - IDs are UUID strings everywhere.
+- A `404` on a list endpoint (orders, unset scheduling settings) means "nothing there", not an error.
 
 ---
 
@@ -44,44 +61,28 @@ gateway-service (Express/TS, port 8086 external / 8080 internal)
 ### 4.1 Entity
 
 ```ts
-User {
-  id: string
-  username: string
-  email: string
-  role: "CUSTOMER" | "MANAGER"
-}
+User { id, username, email, role: "CUSTOMER" | "MANAGER", isEmailVerified: boolean }
 ```
-`email.isVerified` and all credential/lockout state exist server-side but are **never returned** in any response — the UI cannot show a "verified" badge or lockout status from data alone; it can only infer lockout from a specific error code during login/password-change.
 
-### 4.2 Endpoints (via gateway, all cookie-authenticated except register/login)
+### 4.2 Endpoints
 
 | Action | Method & path | Body | Notes |
 |---|---|---|---|
-| Register | `POST /users/register/` | `{ user: {username, email, role}, hashedPassword, saltValue }` | Sets session cookie on success (auto-login). |
-| Login | `POST /users/login/` | `{ email? , username?, password }` | Sets session cookie. `email` or `username`, plaintext password. |
-| Get own profile | `GET /users/` | — | id comes from the session, not a param. |
-| Update profile | `PATCH /users/update-info/` | `{ user: {username, email, role} }` | id injected server-side. Role is technically editable via this payload — lock it in the UI. |
-| Change password | `PATCH /users/update-password/` | `{ email?, username?, oldHashedPassword /* actually plaintext */, newPassword }` | Field name is misleading — send the current password in plaintext. |
-| Verify email | `GET /users/verify-email/` | `{ otk }` | GET-with-body; id injected server-side. |
-| Delete account | `DELETE /users/` | — | Deletes own account, no confirmation mechanism server-side. |
+| Register | `POST /users/register/` | `{ username, email, role, hashedPassword, saltValue }` | Sets the session cookie; the email is verified afterwards. |
+| Login | `POST /users/login/` | `{ email? , username?, password }` | Sets the session cookie. |
+| Logout | `POST /users/logout/` | `{ userId: "" }` | Gateway clears the cookie. |
+| Verify email | `POST /users/verify-email/` | `{ id: "", otk }` | |
+| Get own profile | `GET /users/` | — | id from the session. |
+| Update profile | `PATCH /users/update-info/` | `{ user: { id: "", username, email, role } }` | Role is technically editable: the UI locks it. |
+| Change password | `PATCH /users/update-password/` | `{ email?, username?, oldHashedPassword, newPassword }` | `oldHashedPassword` is actually the current password in plaintext. |
+| Delete account | `DELETE /users/` | — | Confirmation is a UI concern. |
 
-### 4.3 Error/result states to design for
+**Lockout rule:** one wrong current password during a password change locks the account for **1 hour**. The
+change-password form warns about it before submitting.
 
-- Login: wrong credentials, account not found, **account locked** (see below).
-- Register: email/username already registered.
-- Change password: wrong current password, locked account, mismatched identity.
-- **Lockout rule:** one wrong "current password" attempt during a password-change locks the account for **1 hour**, immediately (no multi-strike grace). Copy should warn about this before the user submits, not just after.
+### 4.3 Screens
 
-### 4.4 Screens implied
-
-1. **Register** — username, email, password (+ confirm), role fixed to `CUSTOMER` for self-serve signup.
-2. **Login** — email-or-username, password.
-3. **Verify email** — single OTK input, reachable post-registration.
-4. **Profile (view/edit)** — username, email; no avatar/address/preferences fields exist in the domain, don't invent them.
-5. **Change password** — current + new password, with lockout warning copy.
-6. **Delete account** — confirmation dialog is a pure frontend concern (backend takes no confirmation token).
-
-No admin/user-management UI is possible — there is no list/search/ban/role-change endpoint.
+Login, Register, Verify email (bare layout, no app shell); Account (profile, password, delete).
 
 ---
 
@@ -90,87 +91,77 @@ No admin/user-management UI is possible — there is no list/search/ban/role-cha
 ### 5.1 Entities
 
 ```ts
-Restaurant { id, name, address, phone, email }        // managerId owns it but is not exposed in the DTO
-
-Menu { id, name, categories: Category[], validity: Validity }
-MenuSummary { id, name }                                // list view — no categories/validity
-
+Restaurant { id, name, address, phone, email }      // managerId owns it but is not exposed
+Menu { id, name, categories: Category[], validity: Validity[] }
+MenuSummary { id, name }
 Category { id, name, items: MenuItem[], variations: Variation[] }
-
 MenuItem { id, name, description, price: string, variations: Variation[] }
-// MenuItem has no validity field exposed via API even though the domain model supports one — don't build a per-item schedule UI yet.
-
-Variation { name, options: VariationOption[] }
-VariationOption { name, additionalPrice: string }
+Variation { name, options: { name, additionalPrice: string }[] }
+DiningTable { number, seats }                        // number unique within the restaurant
+CapacityPolicy { slotMinutes, maxCapacityUnits, opening, closing, prepLeadMinutes, maxAdvanceDays,
+                 maxTripsPerSlot, maxTripKmBudget, maxDetourKm }
+GeoLocation { lat, lng }
 ```
 
-`Variation` is a modifier group (e.g. "Dough" → "Normal" / "Gluten-free", each with a price delta). It's attached at category level (applies to all items in it) and separately at item level. Build one reusable "variation group editor" component and reuse it in both places.
+`Variation` is a modifier group (e.g. "Dough" → "Normal" / "Gluten-free", each with a price delta), attached at
+category level (applies to all its items) and at item level.
 
-### 5.2 Validity — the availability rule engine
+### 5.2 Validity — menu availability rules
 
-Menus (not individual items) carry a `Validity`, one of:
+A menu's `validity` is a **list** of rules that must all hold (an empty list or `always` means no restriction):
 
 | Type | Shape | Meaning |
 |---|---|---|
-| `always` | `{}` | Default — no restriction |
-| `period` | `{ start, end }` (ISO dates, inclusive) | Available within a date range |
-| `yearly` | `{ startMonth, startDay, endMonth, endDay }` | Recurring yearly window (supports wraparound, e.g. Dec→Feb) |
-| `weekly` | `{ days: number[] }` (ISO 1=Mon..7=Sun) | Available only on listed weekdays |
-| `hours` | `{ start, end }` (`HH:MM[:SS]`) | Daily time window (supports overnight wraparound) |
+| `always` | `{}` | No restriction |
+| `period` | `{ start, end }` (ISO dates, inclusive) | Date range |
+| `yearly` | `{ startMonth, startDay, endMonth, endDay }` | Recurring yearly window (wraps, e.g. Dec→Feb) |
+| `weekly` | `{ days: number[] }` (ISO 1=Mon..7=Sun) | Listed weekdays |
+| `hours` | `{ start, end }` (`HH:MM[:SS]`) | Daily window (wraps overnight) |
 | `from` / `until` | `{ start }` / `{ end }` | Open-ended range |
-| `and` | `{ first, second }` (recursive) | Compound rule, e.g. weekly AND hours |
 
-**The server never evaluates this** — no endpoint filters "available now." If the UI wants an "open now" indicator on a menu, it must replicate the `isValid(now)` logic client-side from the returned rule. Build this as one shared utility, since it's the only scheduling concept in the whole system (there's no restaurant-level opening-hours field at all — only menus have a schedule).
+On the wire each rule is a flat `ValidityDto { type, value: Record<string,string> }`; `api/menus.ts` decodes it.
+**The server never evaluates validity**: "available now" is computed client-side (`utils/validity.ts`).
 
-### 5.3 Endpoints (via gateway)
+### 5.3 Endpoints
 
 | Action | Method & path | Role | Notes |
 |---|---|---|---|
-| Create restaurant | `POST /restaurants/` | MANAGER | managerId injected server-side |
-| Get restaurant | `GET /restaurants/:restaurantId/` | CUSTOMER | Single restaurant by known id only |
-| List my restaurants | `GET /restaurants/manager/:managerId/` | MANAGER | ⚠️ Gateway route currently mismatches the backend controller (see §7) — verify against a live server before wiring |
-| Update restaurant | `PUT /restaurants/:restaurantId/` | MANAGER | Owner-only (401 otherwise) |
-| Delete restaurant | `DELETE /restaurants/:restaurantId/` | MANAGER | ⚠️ Gateway currently doesn't send the required body — verify before wiring |
-| Create menu | `POST /restaurant/:restaurantId/menus` | MANAGER | Note: singular `/restaurant/...` for menu routes vs plural `/restaurants/...` for restaurant routes — this is a real inconsistency in the API, not a typo here |
-| Get menu | `GET /restaurant/:restaurantId/menus/:menuId` | CUSTOMER | Full menu with nested categories/items |
-| List menus | `GET /restaurant/:restaurantId/menus` | CUSTOMER | Returns `MenuSummary[]` only — id+name, no items |
-| Update menu | `PUT /restaurant/:restaurantId/menus/:menuId` | MANAGER | Full replace of name + validity |
-| Delete menu | `DELETE /restaurant/:restaurantId/menus/:menuId` | MANAGER | |
-| Create category | `POST /restaurant/:restaurantId/menus/:menuId/categories` | MANAGER | |
-| Update category | `PUT .../categories/:categoryId` | MANAGER | Full replace of name + variations |
-| Delete category | `DELETE .../categories/:categoryId` | MANAGER | |
-| Create item | `POST .../categories/:categoryId/items` | MANAGER | |
-| Update item | `PUT .../categories/:categoryId/items/:itemId` | MANAGER | Full replace |
-| Delete item | `DELETE .../categories/:categoryId/items/:itemId` | MANAGER | |
+| Search restaurants | `GET /restaurants/?q=` | CUSTOMER | Name or address, case-insensitive; empty `q` lists all. Capped server-side. |
+| Get restaurant | `GET /restaurants/:restaurantId/` | CUSTOMER | |
+| List my restaurants | `GET /restaurants/manager/` | MANAGER | GET with an empty JSON body; manager id from the session. |
+| Create / update / delete | `POST /restaurants/`, `PUT` / `DELETE /restaurants/:restaurantId/` | MANAGER | Owner-only. |
+| Get / set tables | `GET` / `PUT /restaurants/:restaurantId/tables/` | CUSTOMER / MANAGER | `PUT { tables: DiningTable[] }` replaces the layout; duplicate numbers → `422`. |
+| Get / set capacity policy | `GET` / `PUT /restaurants/:restaurantId/capacity-policy/` | CUSTOMER / MANAGER | `404` = not configured. |
+| Get / set location | `GET` / `PUT /restaurants/:restaurantId/location/` | MANAGER | `404` = not configured. Delivery needs both policy and location. |
+| Menus | `GET` / `POST /restaurant/:restaurantId/menus`, `GET` / `PUT` / `DELETE .../menus/:menuId` | read CUSTOMER, write MANAGER | Note the singular `/restaurant/` (see §11). `PUT` replaces name + validity. |
+| Categories | `POST .../menus/:menuId/categories`, `PUT` / `DELETE .../categories/:categoryId` | MANAGER | `PUT` replaces name + variations. |
+| Items | `POST .../categories/:categoryId/items`, `PUT` / `DELETE .../items/:itemId` | MANAGER | `PUT` replaces the whole item. |
 
-There is no `GET` for a single category or single item — both are only retrievable as part of the full menu fetch.
+There is no `GET` for a single category or item: both come with the full menu.
 
-### 5.4 Validation to mirror client-side
+### 5.4 Validation mirrored client-side
 
 | Field | Rule |
 |---|---|
 | Restaurant name / address | required, ≤255 / ≤500 chars |
 | Phone | required, ≤20 chars, `^[+]?[0-9\s\-()]+$` |
 | Email | required, ≤255 chars, standard email pattern |
-| Menu name | required, ≤50 chars |
-| Category name | required, ≤100 chars |
-| Item name | required, ≤150 chars |
+| Menu / category / item name | required, ≤50 / ≤100 / ≤150 chars |
 | Item description | required, ≤500 chars |
 | Variation name | required, ≤100 chars |
 | Price / additional price | ≥ 0 |
-| Restaurant name uniqueness | unique **per manager**, not global |
+| Restaurant name uniqueness | unique **per manager** |
 
-### 5.5 Gaps to flag before scoping screens
+### 5.5 Gaps
 
-- **No restaurant discovery for customers.** There is no list/search/browse-all-restaurants endpoint — only fetch-by-known-id or a manager's own list. A customer-facing "browse restaurants near me" screen has nothing to call yet; raise this before committing to that screen in the design.
-- No open/closed status, no item "out of stock" flag, no approval/moderation state, no images anywhere in the domain — don't design badges or fields for these.
-- No reordering (categories/items have no position field) and no bulk operations (no duplicate-menu, no bulk item import).
+- No images, open/closed flag, "out of stock" flag or moderation state anywhere in the domain.
+- No ordering of categories/items and no bulk operations (duplicate menu, import).
 
-### 5.6 Screens implied
+### 5.6 Screens
 
-1. **Manager: My Restaurants** — list, create, edit, delete.
-2. **Manager: Menu Builder** — per restaurant: menus → categories → items → variations, each level full-CRUD with the validity editor on menus.
-3. **Customer: Restaurant Detail** — single restaurant (reached via a direct link/QR/id for now, since there's no browse screen) showing its menus/categories/items with variation pickers.
+- **Customer:** Explore (search), Restaurant detail (menus, variation picker, order draft, table booking).
+- **Manager:** My restaurants (CRUD, scheduling settings, tables), Menu builder (menus → categories → items →
+  variations, validity editor on menus).
 
 ---
 
@@ -178,154 +169,150 @@ There is no `GET` for a single category or single item — both are only retriev
 
 ### 6.1 Entity
 
-Sealed by `orderType`, unified on the wire:
-
 ```ts
 Order {
-  orderId: string
-  restaurantId: string
-  customerId: string
+  orderId, restaurantId, customerId: string
   status: "PENDING" | "PREPARING" | "READY" | "ON_THE_WAY" | "COMPLETED" | "CANCELLED"
-  items: { menuItemId: string, quantity: number }[]
   orderType: "DELIVERY" | "TAKEAWAY" | "DINE_IN"
-
-  // DELIVERY only
-  estimatedDeliveryTime?: string   // epoch ms as string
-  deliveryAddress?: string
-  bellName?: string
-  customerPhone?: string
-
-  // TAKEAWAY only
-  pickupTime?: string              // epoch ms as string
-  customerName?: string
-
-  // DINE_IN only
-  tableNumber?: number
-  numberOfGuests?: number
+  items: { menuItemId: string, quantity: number, unitPriceCents: number }[]
+  payed: boolean                 // spelled like this on the wire
+  totalCents: number
+  // DELIVERY: estimatedDeliveryTime (epoch ms string), deliveryAddress, bellName, customerPhone
+  // TAKEAWAY: pickupTime (epoch ms string), customerName
+  // DINE_IN:  tableNumber, numberOfGuests
 }
 ```
 
-**No price, name, or total is stored on order items or the order itself.** The order domain only knows `menuItemId` + `quantity`. Any cart subtotal, line-item price, or order total shown in the UI must be computed client-side by joining against the restaurant's menu data fetched separately (§5). Fetch and cache the relevant menu before building the order review screen.
+Prices are **frozen by order-service** from the menu when items are ordered, so totals stay right if the menu
+changes later; the client never sends prices. The cart is pure frontend state until checkout. The `Order` aggregate
+is **event-sourced**: nothing is deleted, a cancelled order stays readable with status `CANCELLED`.
 
-**No cart exists server-side.** "Add to cart," quantity adjustments, and the running order draft are pure frontend state (e.g. a Pinia store) until the user checks out and calls `place` once with the full item list.
-
-### 6.2 Endpoints (via gateway, all CUSTOMER, all cookie-authenticated)
+### 6.2 Endpoints
 
 | Action | Method & path | Body | Notes |
 |---|---|---|---|
-| Get order | `GET /orders/:id` | — | ⚠️ No ownership check server-side — any logged-in customer who knows the id can view it. Don't put raw order ids in shareable/guessable URLs. |
-| Place order | `POST /orders/place` | Full order payload per type (see below) | `customerId` injected server-side |
-| Advance status | `POST /orders/advance` | `{ orderId }` | Moves one step forward in the type's chain. ⚠️ Also has no ownership check. |
-| Cancel order | `DELETE /orders/:id` | — | Only works while `status === PENDING`. **Deletes the record** — a cancelled order will 404 on subsequent `GET`, it will not show as `CANCELLED`. Design order history accordingly (see §6.4). |
-| Update items | `PATCH /orders/items` | `{ orderId, items }` | Full replace of item list. Ownership-checked (401 if not yours). |
-| Update delivery info | `PATCH /orders/delivery` | `{ orderId, estimatedDeliveryTime, deliveryAddress, bellName, customerPhone }` | Delivery orders only |
-| Update takeaway info | `PATCH /orders/takeaway` | `{ orderId, pickupTime, customerName }` | Takeaway orders only |
+| List orders | `GET /orders/?restaurantId=&status=` | — | A customer always gets **only their own** (gateway forces `customerId`); a manager filters by restaurant. `404` = empty. |
+| Get order | `GET /orders/:id` | — | A customer only gets their own: the gateway forwards their id and anyone else's order is a `404`. Managers are not filtered (see §11). |
+| Place order | `POST /orders/place` | per type, see below | Used directly only for **dine-in**; delivery and takeaway go through the scheduler (§9). |
+| Advance status | `POST /orders/advance` | `{ orderId }` | Managers advance scheduled orders through `/schedule/orders/:id/advance` instead (§9). |
+| Cancel order | `DELETE /orders/:id` | — | Only the caller's own order (`404` otherwise), only while `PENDING` and **unpaid**: a paid order is refused with `400` (no refunds). Enforced by order-service. |
+| Update items | `PATCH /orders/items` | `{ orderId, customerId: "", items }` | Full replace; owner-only. |
+| Update delivery / takeaway info | `PATCH /orders/delivery`, `PATCH /orders/takeaway` | type-specific fields | |
 
-There is **no update for dine-in table/guest info** after creation, and **no list/history endpoint** — a customer cannot fetch "my past orders" from this API today. Any order-history screen needs the frontend to track order ids itself (e.g. store placed order ids client-side) or needs a backend addition — flag this rather than designing around a call that doesn't exist.
+Dine-in payload: `{ orderType: "DINE_IN", restaurantId, items, reservationId, tableNumber, numberOfGuests }` — the
+order must reference one of the customer's active reservations at that restaurant; table and guests are taken from
+the reservation.
 
-### 6.3 Place-order payload by type
+### 6.3 Status chains
+
+```
+DELIVERY:           PENDING → PREPARING → READY → ON_THE_WAY → COMPLETED
+TAKEAWAY / DINE_IN: PENDING → PREPARING → READY → COMPLETED
+Cancel:             PENDING (unpaid) → CANCELLED, by the customer who owns the order
+```
+
+### 6.4 Screens
+
+Checkout (type choice, details, slot or table), My orders (list), Order detail (stepper per chain, lines and total,
+pay, cancel), Manager order board (columns per status, advance, kitchen load).
+
+---
+
+## 7. Payment domain
+
+| Action | Method & path | Body | Notes |
+|---|---|---|---|
+| Pay an order | `POST /payments/` | `{ orderId, customerId: "", paymentDetails: { method } }` | `method` is `CARD` or `MOBILE_PAYMENT` in the UI. payment-service checks the order is the caller's and unpaid, and charges `totalCents` as priced by order-service. |
+
+Result: `{ id, orderId, status, amount (cents), currency }`. Payment is simulated (no real gateway).
+
+---
+
+## 8. Table reservation domain
 
 ```ts
-// DELIVERY
-{ orderType: "DELIVERY", restaurantId, items, estimatedDeliveryTime, deliveryAddress, bellName, customerPhone }
-// TAKEAWAY
-{ orderType: "TAKEAWAY", restaurantId, items, pickupTime, customerName }
-// DINE_IN
-{ orderType: "DINE_IN", restaurantId, items, tableNumber, numberOfGuests }
-```
-`estimatedDeliveryTime` / `pickupTime` must be strictly in the future (validated server-side, returns `400` otherwise). `items` must be non-empty with every `quantity > 0`.
-
-### 6.4 Status state machine
-
-```
-DELIVERY:          PENDING → PREPARING → READY → ON_THE_WAY → COMPLETED
-TAKEAWAY / DINE_IN: PENDING → PREPARING → READY → COMPLETED
-
-Cancel: PENDING → CANCELLED, only from PENDING, only customer-initiated,
-        record is deleted rather than kept in a CANCELLED state.
-```
-Design the order-tracking screen as a stepper matching the type's chain (delivery gets 4 steps, the other two get 3). "Cancel" should only be enabled while `status === PENDING`. After a successful cancel, treat the order as gone (404 on refetch) rather than showing a "Cancelled" badge sourced from the server.
-
-### 6.5 Screens implied
-
-1. **Checkout / Place Order** — cart review (client-computed totals) → delivery/takeaway/dine-in details form (conditional fields per type) → submit.
-2. **Order Tracking** — single order by id, status stepper per §6.4, edit items/delivery/takeaway while still editable, cancel button gated on `PENDING`.
-3. **Order history** — not buildable against the current API; needs either a new backend endpoint or client-side tracking of placed order ids as an interim measure. Flag explicitly rather than silently omitting.
-
----
-
-## 7. Known backend inconsistencies to verify before wiring (don't silently design around them)
-
-1. Restaurant routes are plural (`/restaurants/...`); menu/category/item routes are singular (`/restaurant/...`). Real inconsistency, not a typo — the Vue API client should hardcode both forms as given, not "fix" the mismatch client-side.
-2. Gateway's "list my restaurants" route builds `GET /restaurants/manager/:managerId/`, but the backend controller expects `GET /restaurants` with the manager id in the body — these do not currently match. Test live before finalizing the API client method.
-3. Gateway's "delete restaurant" doesn't send the body the backend controller requires. Test live.
-4. `GET /orders/:id` and `DELETE /orders/:id` have no ownership check — treat order ids as sensitive, don't expose them in shareable links.
-5. Session cookie expires in 1h; the underlying JWT is valid 7 days — expect users to get silently logged out mid-session sooner than "remember me" language would imply.
-
----
-
-## 8. Suggested Vue 3 application structure
-
-```
-src/
-  api/
-    client.ts            # axios/fetch wrapper, withCredentials, response envelope unwrap, 401 → redirect to /login
-    users.ts              # register, login, getProfile, updateProfile, changePassword, verifyEmail, deleteAccount
-    restaurants.ts         # CRUD + menu/category/item CRUD
-    orders.ts               # place, get, advance, cancel, updateItems, updateDelivery, updateTakeaway
-  stores/                    # Pinia
-    auth.ts                   # session state, role, login/logout actions
-    cart.ts                     # client-only draft order (items, orderType, type-specific fields) until place() is called
-    restaurantCatalog.ts          # cached restaurant + menu data, exposes computed "isMenuAvailableNow(validity)"
-  utils/
-    validity.ts                    # client-side evaluator mirroring backend Validity.isValid(now)
-    money.ts                        # decimal-string formatting/parsing (never float arithmetic)
-    passwordHash.ts                  # SHA-256(password+salt) for registration only
-  views/
-    auth/{Login,Register,VerifyEmail}.vue
-    account/{Profile,ChangePassword,DeleteAccount}.vue
-    restaurant/{RestaurantDetail}.vue                 # customer-facing, id-based (no browse view — flag with product)
-    manager/{MyRestaurants,MenuBuilder}.vue
-    order/{Checkout,OrderTracking}.vue
-  router/
-    index.ts   # role-gated routes: manager/* requires role===MANAGER, everything else requires an active session except /login and /register
+Reservation { id, restaurantId, customerId, start, end /* ISO UTC */, numberOfGuests, tableNumber,
+              status: "ACCEPTED" | "CANCELED" }
 ```
 
-Route guards should redirect to `/login` on any `401`/`code: 401` response from the API interceptor, and gate `/manager/*` on `auth.role === 'MANAGER'` client-side (the backend enforces it regardless, but the UI shouldn't offer entry points a customer role will just get rejected from).
+Rules (enforced by table-reservation-service): arrival on a quarter of an hour and in the future; fixed length of
+**120 minutes**; one table per party, the smallest free one that fits. A restaurant is bookable only after its
+manager configures tables (§5.3).
+
+| Action | Method & path | Notes |
+|---|---|---|
+| Book | `POST /reservations/` `{ restaurantId, customerId: "", start, numberOfGuests }` | `409` = no free table. |
+| List | `GET /reservations/?restaurantId=` | Customer: own reservations (optionally at one restaurant). Manager: one of their restaurants (`restaurantId` required). Sorted by start. |
+| Get one | `GET /reservations/:id/` | A customer only gets their own. |
+| Change | `PUT /reservations/:id/` `{ customerId: "", start, numberOfGuests }` | Until it starts; may move to another table. |
+| Cancel | `PATCH /reservations/:id/cancel/` `{ customerId: "" }` | Until it starts; stays visible as `CANCELED`. |
+
+Screens: booking dialog on the restaurant page, My reservations (customer), Reservations by day (manager,
+read-only), Tables dialog (manager).
 
 ---
 
 ## 9. Scheduling domain (scheduler-service)
 
-Standalone Express service behind the gateway under `/schedule/*`. It computes bookable time slots from a restaurant's capacity config and its own booking ledger, then places the chosen order in `order-service`. A background timer moves each order to `PREPARING` when its prep lead time is reached.
-
-### 9.1 Entities (wire shapes)
+Sits between the customer and order-service for **delivery and takeaway**: it offers the time slots the kitchen can
+still take, books one, and only then places the order. A background timer moves each order to `PREPARING` when its
+prep lead time is reached.
 
 ```ts
-AvailableRange { start: string /* "HH:MM" */, end: string, startEpochMs: number, endEpochMs: number, remaining: number }
-
-ScheduleOrderResult { bookingId: string, orderId: string, restaurantId: string, orderType: OrderType, slotStartEpochMs: number, prepareAtEpochMs: number, status: "CONFIRMED" }
+AvailableSlot { start, end /* "HH:MM" local */, startEpochMs, endEpochMs, remaining /* kitchen units */ }
+Availability { restaurantId, date, orderType, slotMinutes /* 0 = type not offered */, maxCapacityUnits,
+               ranges: AvailableSlot[] }
 ```
-
-Unlike the rest of the platform, scheduler timestamps are **epoch-millisecond numbers**, not strings. `orderType` is `"DELIVERY" | "TAKEAWAY" | "DINE_IN"` as in the order domain.
-
-### 9.2 Endpoints (via gateway)
 
 | Action | Method & path | Role | Notes |
 |---|---|---|---|
-| Get bookable hours | `GET /schedule/:restaurantId/availability?date=YYYY-MM-DD&orderType=` | CUSTOMER | `date` required, `orderType` optional. Returns `{ result: { slotMinutes, maxOrdersPerSlot, ranges: AvailableRange[] } }`. Empty `ranges` = nothing bookable that day. |
-| Kitchen load | `GET /schedule/:restaurantId/load?date=YYYY-MM-DD` | MANAGER | occupancy vs capacity per slot |
-| Schedule + place order | `POST /schedule/:restaurantId/orders` | CUSTOMER | body `{ items:[{menuItemId,quantity}], orderType, slotStartEpochMs, deliveryAddress?, bellName?, customerPhone?, customerName?, tableNumber?, numberOfGuests? }`. `customerId` injected from the session. `201` + `ScheduleOrderResult`. `409` if the slot filled up between availability and submit — re-fetch availability and let the user re-pick. |
-| Advance a scheduled order | `POST /schedule/orders/:orderId/advance` | MANAGER | forwards to `order-service` `advance` and reflects it on the booking |
+| Availability | `GET /schedule/:restaurantId/availability?date=YYYY-MM-DD&orderType=&lat=&lng=` | CUSTOMER | `lat`/`lng` required for `DELIVERY`: a slot is offered only if a delivery trip can still reach the address. |
+| Kitchen load | `GET /schedule/:restaurantId/load?date=` | MANAGER | Units booked against the admission quota, per slot. |
+| Schedule + place | `POST /schedule/:restaurantId/orders` | CUSTOMER | `{ items, orderType, slotStartEpochMs, ...type fields }`. `409` = slot just taken: re-fetch availability. |
+| Advance | `POST /schedule/orders/:orderId/advance` | MANAGER | Advances in order-service and keeps the booking in step. |
 
-### 9.3 Screens implied
+Gaps:
 
-1. **Slot picker** — after cart review, call availability for the target date, render `ranges` as selectable chips (dim/omit `remaining === 0`), submit the chosen `slotStartEpochMs` to `POST /schedule/:restaurantId/orders` instead of calling `order-service` `place` directly.
-2. **Manager: kitchen load** — `load` per day as a capacity bar per slot.
+- The **booking ledger is in memory**: a scheduler restart forgets bookings (orders survive in order-service).
+- The per-slot **admission quota is random** for now (`RandomAdmissionQuotaAgent`), pending the real capacity agent.
+- Only the first transition (→ `PREPARING`) is automated; `READY` onward is a manual advance.
 
-### 9.4 Gaps to flag
+---
 
-- The capacity/output config (`slotMinutes`, `maxOrdersPerSlot`, opening/closing, prep lead, max-advance) is meant to live in `restaurant-service` (`GET /restaurants/:id/fulfillment-policy`) but that endpoint is **not implemented yet** — the scheduler uses a fixed default for every restaurant. No manager UI to edit it exists.
-- Booking ledger is in-memory: a scheduler restart forgets confirmed bookings (the orders themselves survive in `order-service`).
-- Only the first transition (→ `PREPARING`) is automated; `READY` onward is still a manual `advance`.
-- `DINE_IN` orders carry no time in `order-service`, so a scheduled dine-in slot is only recorded on the booking.
+## 10. Live notifications
+
+One **WebSocket (Socket.io)** per signed-in browser at `/notifications`, opened after login and closed on logout.
+The gateway authenticates the upgrade with the session cookie (`401` otherwise), strips any client-sent identity
+headers, adds the user's id, role and (for a manager) owned restaurants, and proxies it to notification-service,
+which pushes to the rooms `user:<id>` and `restaurant:<id>`. It is receive-only; actions still go through REST.
+
+```ts
+OrderChangedNotification       { type: "ORDER_CHANGED", orderId, restaurantId, customerId, status, payed }
+ReservationChangedNotification { type: "RESERVATION_CHANGED", change: "ACCEPTED" | "MODIFIED" | "CANCELED",
+                                 reservationId, restaurantId, customerId, start, end, numberOfGuests, tableNumber }
+```
+
+- Order changes (placed, paid, advanced, cancelled) go to the customer and the restaurant; reservation changes to
+  both as well. Payment and email events are not pushed.
+- Nothing is stored: notifications sent while a browser is offline are lost, so screens refetch after a
+  reconnection and the REST API stays the source of truth. The header bell lists the current page session only.
+- notification-service runs as a single replica (rooms are in memory).
+
+UI: screens showing the affected data refresh; a toast (`aria-live="polite"`) is shown only for what the user did
+not do themselves (customer: order progress; manager: new / paid / cancelled orders and bookings).
+
+---
+
+## 11. Known inconsistencies
+
+1. Restaurant routes are plural (`/restaurants/...`), menu/category/item routes singular (`/restaurant/...`). Real
+   inconsistency; the client uses both forms as they are.
+2. **Managers are not scoped to their restaurants** when reading one order (`GET /orders/:id`), listing orders
+   (`GET /orders/?restaurantId=`) or reading one reservation: a manager who knows the id of another restaurant's
+   order can read it. Customers are scoped (the gateway forwards their id and services answer `404` for anything
+   else). Closing it needs the gateway to check the restaurant against the manager's own list, an extra call
+   per request.
+3. **Managers cannot cancel or reject orders.** There is no such feature: cancelling is the customer's, and a
+   restaurant-side rejection would need its own event, a check on the restaurant, and refunds, which do not exist.
+4. Listing a manager's restaurants is a `GET` with a JSON body, as is the gateway's internal call.
+5. `PATCH /users/update-password/` names the current plaintext password `oldHashedPassword`.

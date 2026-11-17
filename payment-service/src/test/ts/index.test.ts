@@ -1,7 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import http from "node:http";
 import { createApp, parseBodyToString } from "@main/index";
-import { PaymentController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import {
+  PaymentController,
+  PaymentError,
+} from "@main/infrastructure/adapter/inbound/web/controller/controller";
 import {
   Currency,
   PaymentMethod,
@@ -119,12 +122,30 @@ describe("createApp", () => {
 
       const body = JSON.stringify({
         orderId: "order-bad",
-        paymentDetails: { amount: -1, method: "CARD", currency: "EUR" },
+        customerId: "customer-1",
+        paymentDetails: { method: "CARD" },
       });
       const res = await httpPost(server, "/payments", body);
 
       expect(res.status).toBe(400);
       expect(res.body).toContain("Payment rejected");
+    });
+
+    it("answers with the status carried by a PaymentError", async () => {
+      vi.mocked(mockController.processPayment).mockRejectedValue(
+        new PaymentError("Order already paid", 409)
+      );
+      server = await startServer(mockController);
+
+      const body = JSON.stringify({
+        orderId: "order-paid",
+        customerId: "customer-1",
+        paymentDetails: { method: "CARD" },
+      });
+      const res = await httpPost(server, "/payments", body);
+
+      expect(res.status).toBe(409);
+      expect(res.body).toContain("Order already paid");
     });
 
     it("returns 400 with stringified error when a non-Error is thrown", async () => {

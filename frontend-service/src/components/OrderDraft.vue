@@ -1,11 +1,14 @@
 <script setup lang="ts">
-// Order draft sidebar. The cart lives entirely in the Pinia store — there is
-// no server-side cart — and stores only menuItemId + quantity; every price
-// and total shown here is computed by joining against the loaded menu.
+// The customer's cart for the current restaurant. The cart lives only in the Pinia store (there is
+// no server-side cart) and holds menuItemId + quantity; prices shown here are joined from the
+// loaded menu, and the final total is computed by order-service when the order is placed.
 
 import { computed } from 'vue'
-import { Minus, Plus } from 'lucide-vue-next'
+import { ShoppingBagIcon } from '@lucide/vue'
 
+import QuantityStepper from '@/components/QuantityStepper.vue'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { useCartStore } from '@/stores/cart'
 import type { Menu } from '@/types'
 
@@ -18,89 +21,40 @@ const totalLabel = computed(() => cart.totalLabel(props.menu))
 </script>
 
 <template>
-  <aside class="order-draft">
-    <h6 style="margin-bottom: 12px">Order draft</h6>
+  <div class="flex flex-col gap-4">
+    <div v-if="lines.length === 0" class="flex flex-col items-center gap-2 py-6 text-center">
+      <span class="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
+        <ShoppingBagIcon class="size-5" aria-hidden="true" />
+      </span>
+      <p class="font-semibold">Your bag is empty</p>
+      <p class="text-sm text-muted-foreground">Add a dish from the menu to start an order.</p>
+    </div>
 
-    <p v-if="cart.isEmpty" class="text-muted" style="font-size: 13px">
-      Nothing added yet. The cart lives entirely in the Pinia store — there is no server-side cart.
-    </p>
+    <ul v-else class="flex flex-col divide-y">
+      <li v-for="line in lines" :key="line.itemId" class="flex items-center gap-3 py-3 first:pt-0">
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold">{{ line.item.name }}</p>
+          <p class="text-xs text-muted-foreground tabular-nums">{{ line.unitLabel }} each</p>
+        </div>
+        <QuantityStepper
+          :quantity="line.quantity"
+          :label="line.item.name"
+          @increment="cart.increment(line.itemId)"
+          @decrement="cart.decrement(line.itemId)"
+        />
+        <span class="w-16 text-right text-sm font-semibold tabular-nums">{{ line.totalLabel }}</span>
+      </li>
+    </ul>
 
-    <div v-for="line in lines" :key="line.itemId" class="order-draft__line">
-      <div style="flex: 1">
-        <div style="font-size: 13px; font-weight: 800">{{ line.item.name }}</div>
-        <div class="text-muted" style="font-size: 11px">{{ line.unitLabel }} each</div>
+    <template v-if="lines.length">
+      <Separator />
+      <div class="flex items-baseline justify-between">
+        <span class="text-sm text-muted-foreground">Subtotal</span>
+        <strong class="text-xl tabular-nums">{{ totalLabel }}</strong>
       </div>
-      <button
-        class="btn btn-ghost"
-        type="button"
-        aria-label="Decrease quantity"
-        style="min-width: 32px"
-        @click="cart.decrement(line.itemId)"
-      >
-        <Minus :size="14" />
-      </button>
-      <span style="font-variant-numeric: tabular-nums; min-width: 16px; text-align: center">
-        {{ line.quantity }}
-      </span>
-      <button
-        class="btn btn-ghost"
-        type="button"
-        aria-label="Increase quantity"
-        style="min-width: 32px"
-        @click="cart.increment(line.itemId)"
-      >
-        <Plus :size="14" />
-      </button>
-      <strong style="font-variant-numeric: tabular-nums; min-width: 56px; text-align: right">
-        {{ line.totalLabel }}
-      </strong>
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px">
-      <span class="text-muted" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em">
-        Total
-      </span>
-      <strong style="font-size: 22px; font-variant-numeric: tabular-nums">{{ totalLabel }}</strong>
-    </div>
-    <p class="text-muted" style="font-size: 11px; margin: 6px 0 0">
-      Computed client-side. The order domain stores only menuItemId and quantity — no prices, no
-      total.
-    </p>
-    <button
-      class="btn btn-primary btn-block"
-      type="button"
-      :disabled="props.checkoutDisabled"
-      style="min-height: 44px"
-      @click="emit('checkout')"
-    >
-      Checkout
-    </button>
-  </aside>
+    </template>
+    <Button size="lg" class="h-11 w-full" :disabled="props.checkoutDisabled" @click="emit('checkout')">
+      Go to checkout
+    </Button>
+  </div>
 </template>
-
-<style scoped>
-.order-draft {
-  border-left: 2px solid var(--color-divider);
-  padding-left: 24px;
-  position: sticky;
-  top: 24px;
-}
-
-.order-draft__line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-divider);
-}
-
-@media (max-width: 1149px) {
-  .order-draft {
-    border-left: none;
-    border-top: 2px solid var(--color-divider);
-    padding-left: 0;
-    padding-top: 16px;
-    position: static;
-  }
-}
-</style>

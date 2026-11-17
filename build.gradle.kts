@@ -36,7 +36,10 @@ dokka {
 }
 
 tasks.register("prepareOpenApiSpecs") {
-  val serviceProjects = subprojects.filter { it.getProjectType() == ProjectType.SERVICE }
+  // The frontend is a service with no REST API, hence with no OpenAPI description.
+  val serviceProjects = subprojects
+    .filter { it.getProjectType() == ProjectType.SERVICE }
+    .filter { it.getProjectLanguage() != ProjectLanguage.VUE }
   dependsOn(serviceProjects.map { "${it.path}:build" })
 
   val specSources = serviceProjects.map { subproject ->

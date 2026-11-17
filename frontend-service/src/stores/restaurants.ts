@@ -7,6 +7,7 @@ import { ref } from 'vue'
 import { ApiError } from '@/api/client'
 import * as restaurantsApi from '@/api/restaurants'
 import type { RestaurantInput } from '@/api/restaurants'
+import { useLiveStore } from '@/stores/live'
 import type { LoadStatus, Restaurant } from '@/types'
 
 export const useRestaurantsStore = defineStore('restaurants', () => {
@@ -31,6 +32,8 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
     const id = await restaurantsApi.createRestaurant(input)
     items.value.push({ id, ...input })
     status.value = 'ready'
+    // The live connection is subscribed to the manager's restaurants when it opens.
+    useLiveStore().reconnect()
     return id
   }
 
@@ -44,6 +47,7 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
     await restaurantsApi.deleteRestaurant(restaurantId)
     items.value = items.value.filter((r) => r.id !== restaurantId)
     if (items.value.length === 0) status.value = 'empty'
+    useLiveStore().reconnect()
   }
 
   function setActive(restaurantId: string): void {

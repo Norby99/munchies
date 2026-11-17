@@ -4,6 +4,7 @@ import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.domain.model.DeliveryOrder
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderItem
+import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.fixtures.createDeliveryOrder
 import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createItemsDto
@@ -122,5 +123,29 @@ class UpdateOrderItemsControllerComponentTest : BaseOrderController() {
 
     val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
     updatedOrder.items shouldNotBe emptyList<OrderItem>()
+  }
+
+  @Test
+  fun `PATCH update order items should return 400 Bad Request when order is not pending`() {
+    val initialOrder = createDeliveryOrder(status = OrderStatus.PREPARING, items = createNewItems())
+
+    orderRepository.save(initialOrder)
+
+    val requestBody =
+      createUpdateOrderItemsRequest(initialOrder, createItemsDto(createNewItemsBigger()))
+
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpPatch<UpdateOrderItemsResponse>(
+        mapper.writeValueAsString(requestBody),
+        OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH,
+      )
+    }.response
+
+    response.status shouldBe HttpStatus.BAD_REQUEST
+    response.bd<ErrorResponse>().code shouldBe HttpStatus.BAD_REQUEST.code
+    response.bd<ErrorResponse>().result shouldBe "Order cannot be modified"
+
+    val updatedOrder = orderRepository.findById(defaultOrderId) as DeliveryOrder
+    updatedOrder.items shouldBe createNewItems()
   }
 }

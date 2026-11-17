@@ -20,6 +20,7 @@ fun Project.libs() = the<org.gradle.accessors.dm.LibrariesForLibs>()
 enum class ProjectLanguage {
   KOTLIN,
   JS,
+  VUE,
 }
 
 fun Project.getProjectLanguage(): ProjectLanguage {
@@ -50,6 +51,7 @@ fun Project.getProjectLanguage(): ProjectLanguage {
   ) {
     in stringKotlinProjects -> ProjectLanguage.KOTLIN
     in stringExpressProjects -> ProjectLanguage.JS
+    "frontend" -> ProjectLanguage.VUE
     else -> throw IllegalArgumentException("Unknown project language for project ${this.name}")
   }
 }

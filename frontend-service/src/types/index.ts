@@ -8,6 +8,7 @@ export interface User {
   username: string
   email: string
   role: Role
+  isEmailVerified: boolean
 }
 
 export interface Restaurant {
@@ -92,12 +93,21 @@ export type Validity =
 
 export type ValidityType = Validity['type']
 
+// Wire shape of a validity rule, from restaurant-shared's ValidityDto.kt: flat and string-only.
+export interface ValidityDto {
+  type: 'PERIOD' | 'YEARLY' | 'WEEKLY' | 'HOURS' | 'FROM' | 'UNTIL' | 'ALWAYS'
+  value: Record<string, string>
+}
+
 export interface Menu {
   id: string
   name: string
   categories: Category[]
   validity: Validity[]
 }
+
+// A menu as sent on the wire, before its validity is decoded (see utils/validity.ts).
+export type MenuDto = Omit<Menu, 'validity'> & { validity: ValidityDto[] }
 
 export interface MenuSummary {
   id: string
@@ -111,6 +121,9 @@ export type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'ON_THE_WAY' | 'CO
 export interface OrderLineItem {
   menuItemId: string
   quantity: number
+  // Price of one unit in euro cents, frozen by order-service from the menu when the item was
+  // ordered. Ignored in requests: the server always prices items itself.
+  unitPriceCents?: number
 }
 
 export interface Order {
@@ -120,6 +133,11 @@ export interface Order {
   status: OrderStatus
   items: OrderLineItem[]
   orderType: OrderType
+  // Spelled `payed` on the wire (OrderDto in order-shared).
+  payed: boolean
+  // What the customer owes, in euro cents (sum of the line subtotals). payment-service charges
+  // exactly this amount.
+  totalCents: number
 
   estimatedDeliveryTime?: string
   deliveryAddress?: string
@@ -140,3 +158,60 @@ export interface ApiEnvelope<T> {
 }
 
 export type LoadStatus = 'ready' | 'loading' | 'empty' | 'error'
+
+// A table of a restaurant's dining room, as configured by its manager (restaurant-service).
+export interface DiningTable {
+  // The number the staff uses for the table, unique within the restaurant.
+  number: number
+  seats: number
+}
+
+// ACCEPTED: the table is booked. CANCELED: freed by the customer (spelled with one L, as on the wire).
+export type ReservationStatus = 'ACCEPTED' | 'CANCELED'
+
+// A table reservation (table-reservation-service). `start` and `end` are ISO-8601 UTC instants;
+// the length is fixed by the service, the customer only picks the arrival time.
+export interface Reservation {
+  id: string
+  restaurantId: string
+  customerId: string
+  start: string
+  end: string
+  numberOfGuests: number
+  tableNumber: number
+  status: ReservationStatus
+}
+
+// ---- Live notifications ----
+// Pushed by notification-service over the WebSocket (see stores/live.ts). Mirrors
+// notification-service/src/main/ts/domain/model/LiveNotification.ts: keep both in step.
+
+/**
+ * An order was placed, paid, advanced or cancelled. `status` and `payed` are its current ones:
+ * PENDING and not paid means just placed, PENDING and paid means just paid.
+ */
+export interface OrderChangedNotification {
+  type: 'ORDER_CHANGED'
+  orderId: string
+  restaurantId: string
+  customerId: string
+  status: OrderStatus
+  payed: boolean
+}
+
+export type ReservationChange = 'ACCEPTED' | 'MODIFIED' | 'CANCELED'
+
+/** A table reservation was booked, changed or canceled; carries the reservation as it is now. */
+export interface ReservationChangedNotification {
+  type: 'RESERVATION_CHANGED'
+  change: ReservationChange
+  reservationId: string
+  restaurantId: string
+  customerId: string
+  start: string
+  end: string
+  numberOfGuests: number
+  tableNumber: number
+}
+
+export type LiveNotification = OrderChangedNotification | ReservationChangedNotification

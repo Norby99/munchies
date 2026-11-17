@@ -8,6 +8,7 @@ import com.munchies.order.application.port.inbound.command.GetOrderDetailsComman
 import com.munchies.order.application.port.inbound.command.GetOrdersCommand
 import com.munchies.order.application.port.inbound.command.PayOrderCommand
 import com.munchies.order.domain.model.CustomerId
+import com.munchies.order.domain.model.MenuItemId
 import com.munchies.order.domain.model.OrderId
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.RestaurantId
@@ -17,15 +18,19 @@ import com.munchies.order.infrastructure.adapter.dto.OrderType
 import com.munchies.order.infrastructure.adapter.dto.factory.CommandFactory.toCommand
 import com.munchies.order.infrastructure.adapter.inbound.OrderAPI
 import com.munchies.order.infrastructure.adapter.inbound.request.*
+import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderItemDtoSerdeMixin
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig
 import com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServices
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.NotFoundException
+import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.ServiceUnavailableException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnauthorizedException
 import com.munchies.order.infrastructure.adapter.inbound.web.controller.exception.UnexpectedException
 import com.munchies.order.infrastructure.adapter.outbound.response.*
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
+import io.micronaut.scheduling.TaskExecutors
+import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.SerdeImport
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -44,7 +49,7 @@ import jakarta.inject.Inject
  * layers remain independent from transport concerns.
  */
 @SerdeImport(OrderDto::class)
-@SerdeImport(OrderItemDto::class)
+@SerdeImport(value = OrderItemDto::class, mixin = OrderItemDtoSerdeMixin::class)
 @SerdeImport(OrderType::class)
 @SerdeImport(PlaceOrderRequest::class)
 @SerdeImport(AdvanceOrderStatusRequest::class)
@@ -65,6 +70,10 @@ import jakarta.inject.Inject
 @SerdeImport(UnauthorizedException::class)
 @SerdeImport(UnexpectedException::class)
 @SerdeImport(ValidationException::class)
+@SerdeImport(ServiceUnavailableException::class)
+// Use cases block on MongoDB and on restaurant-service (menu prices): run them off the Netty
+// event loop, where Micronaut's blocking HTTP client refuses to run.
+@ExecuteOn(TaskExecutors.BLOCKING)
 @Controller(
   value = OrderServiceConfig.SERVICE_PATH,
 )
@@ -100,9 +109,11 @@ class MicronautOrderController(
    *
    * Translates the application-layer result into an HTTP response:
    * - `200 OK` with the order DTO if the order is found
-   * - `404 Not Found` if the order does not exist
+   * - `404 Not Found` if the order does not exist, or belongs to another customer than
+   *   `customerId`
    *
    * @param id The order identifier received from the path.
+   * @param customerId Set by the gateway when the caller is a customer: the order must be theirs.
    * @return An HTTP response containing the order DTO or a not-found status.
    */
   @Get(OrderServiceConfig.GET_ORDER_PATH)
@@ -112,9 +123,14 @@ class MicronautOrderController(
   )
   @ApiResponse(responseCode = "200", description = "Found")
   @ApiResponse(responseCode = "404", description = "Order not found")
-  override fun getOrderDetails(@PathVariable id: String): HttpResponse<GetOrderDetailsResponse> {
+  override fun getOrderDetails(
+    @PathVariable id: String,
+    @QueryValue(OrderServiceConfig.CUSTOMER_ID_QUERY) customerId: String?,
+  ): HttpResponse<GetOrderDetailsResponse> {
     return when (
-      val res = getOrderDetails.execute(GetOrderDetailsCommand(OrderId(id)))
+      val res = getOrderDetails.execute(
+        GetOrderDetailsCommand(OrderId(id), customerId?.let { CustomerId(it) }),
+      )
     ) {
       is GetOrderDetails.Result.Success -> HttpResponse.ok(
         GetOrderDetailsResponse(
@@ -218,7 +234,15 @@ class MicronautOrderController(
     description = "Places a new order with the provided order type and details.",
   )
   @ApiResponse(responseCode = "200", description = "Order placed successfully")
-  @ApiResponse(responseCode = "400", description = "Invalid order data")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid order data, items not on the menu, or reservation not usable",
+  )
+  @ApiResponse(responseCode = "404", description = "Restaurant or reservation not found")
+  @ApiResponse(
+    responseCode = "503",
+    description = "Menu prices or reservation unavailable, retry later",
+  )
   override fun placeOrder(@Body request: PlaceOrderRequest): HttpResponse<PlaceOrderResponse> {
     return when (val res = placeOrder.execute(request.toCommand())) {
       is PlaceOrder.Result.Success -> HttpResponse.ok(
@@ -231,6 +255,22 @@ class MicronautOrderController(
       is PlaceOrder.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
       is PlaceOrder.Result.Failure.InvalidItemQuantity -> throw ValidationException(
         "Invalid item quantity",
+      )
+      is PlaceOrder.Result.Failure.UnknownItems -> throw ValidationException(
+        unknownItemsMessage(res.menuItemIds),
+      )
+      is PlaceOrder.Result.Failure.RestaurantNotFound -> throw NotFoundException(
+        "Restaurant not found",
+      )
+      is PlaceOrder.Result.Failure.MenuUnavailable -> throw ServiceUnavailableException(
+        MENU_UNAVAILABLE,
+      )
+      is PlaceOrder.Result.Failure.ReservationNotFound -> throw NotFoundException(
+        "Reservation not found",
+      )
+      is PlaceOrder.Result.Failure.ReservationNotUsable -> throw ValidationException(res.reason)
+      is PlaceOrder.Result.Failure.ReservationUnavailable -> throw ServiceUnavailableException(
+        RESERVATION_UNAVAILABLE,
       )
     }
   }
@@ -283,10 +323,11 @@ class MicronautOrderController(
    *
    * Response mapping:
    * - `200 OK` when order is discarded successfully
-   * - `404 Not Found` when order does not exist
-   * - `400 Bad Request` when order cannot be canceled
+   * - `404 Not Found` when order does not exist, or belongs to another customer than `customerId`
+   * - `400 Bad Request` when order cannot be canceled (no longer pending, or already paid)
    *
    * @param id Request containing order identifiers.
+   * @param customerId The caller, set by the gateway from the session: the order must be theirs.
    * @return An HTTP response representing the discard result.
    */
   @Delete(OrderServiceConfig.DISCARD_ORDER_PATH)
@@ -297,9 +338,12 @@ class MicronautOrderController(
   @ApiResponse(responseCode = "200", description = "Order discarded successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "400", description = "Order cannot be cancelled")
-  override fun discardOrder(@PathVariable id: String): HttpResponse<DiscardOrderResponse> {
+  override fun discardOrder(
+    @PathVariable id: String,
+    @QueryValue(OrderServiceConfig.CUSTOMER_ID_QUERY) customerId: String?,
+  ): HttpResponse<DiscardOrderResponse> {
     return when (
-      discardOrder.execute(DiscardOrderCommand(OrderId(id)))
+      discardOrder.execute(DiscardOrderCommand(OrderId(id), customerId?.let { CustomerId(it) }))
     ) {
       is DiscardOrder.Result.Success -> HttpResponse.ok(
         DiscardOrderResponse(
@@ -309,6 +353,9 @@ class MicronautOrderController(
       is DiscardOrder.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
       is DiscardOrder.Result.Failure.OrderNotCancellable -> throw ValidationException(
         "Order cannot be cancelled",
+      )
+      is DiscardOrder.Result.Failure.OrderAlreadyPaid -> throw ValidationException(
+        "A paid order cannot be cancelled",
       )
     }
   }
@@ -322,7 +369,7 @@ class MicronautOrderController(
    * - `200 OK` when items are updated successfully
    * - `404 Not Found` when order does not exist
    * - `401 Unauthorized` for unauthorized access
-   * - `400 Bad Request` for empty items
+   * - `400 Bad Request` for empty items, or when the order is no longer `PENDING`
    *
    * @param request Request containing order identifier and new items.
    * @return An HTTP response representing the update result.
@@ -330,17 +377,21 @@ class MicronautOrderController(
   @Patch(OrderServiceConfig.UPDATE_ORDER_ITEMS_PATH)
   @Operation(
     summary = "Update order items",
-    description = "Updates the items in an order.",
+    description = "Updates the items in an order, as long as it is still pending.",
   )
   @ApiResponse(responseCode = "200", description = "Order items updated successfully")
   @ApiResponse(responseCode = "404", description = "Order not found")
   @ApiResponse(responseCode = "401", description = "Unauthorized")
-  @ApiResponse(responseCode = "400", description = "Empty items")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Empty items, items not on the menu or order no longer pending",
+  )
+  @ApiResponse(responseCode = "503", description = "Menu prices unavailable, retry later")
   override fun updateOrderItems(
     @Body request: UpdateOrderItemsRequest,
   ): HttpResponse<UpdateOrderItemsResponse> {
     return when (
-      updateOrderItems.execute(request.toCommand())
+      val res = updateOrderItems.execute(request.toCommand())
     ) {
       is UpdateOrderItems.Result.Success -> HttpResponse.ok(
         UpdateOrderItemsResponse(
@@ -350,6 +401,15 @@ class MicronautOrderController(
       is UpdateOrderItems.Result.Failure.OrderNotFound -> throw NotFoundException("Order not found")
       is UpdateOrderItems.Result.Failure.Unauthorized -> throw UnauthorizedException("Unauthorized")
       is UpdateOrderItems.Result.Failure.EmptyItems -> throw ValidationException("Empty items")
+      is UpdateOrderItems.Result.Failure.OrderNotModifiable -> throw ValidationException(
+        "Order cannot be modified",
+      )
+      is UpdateOrderItems.Result.Failure.UnknownItems -> throw ValidationException(
+        unknownItemsMessage(res.menuItemIds),
+      )
+      is UpdateOrderItems.Result.Failure.MenuUnavailable -> throw ServiceUnavailableException(
+        MENU_UNAVAILABLE,
+      )
     }
   }
 
@@ -443,5 +503,14 @@ class MicronautOrderController(
         "Invalid date",
       )
     }
+  }
+
+  private fun unknownItemsMessage(ids: Set<MenuItemId>): String =
+    "Items not on the restaurant's menu: " + ids.joinToString { it.value }
+
+  private companion object {
+    const val MENU_UNAVAILABLE = "Menu prices are temporarily unavailable, please retry"
+    const val RESERVATION_UNAVAILABLE =
+      "The table reservation cannot be checked right now, please retry"
   }
 }

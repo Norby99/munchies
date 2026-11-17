@@ -197,7 +197,7 @@ def main():
         runs = get_runs()
         if not runs:
             print(f"No test results found under {RESULTS_DIR}.")
-            print("Run a load test first with: ./loadtest/run.sh [--fast]")
+            print("Run a load test first with: ./loadtest/run.sh")
             return
         target_run = runs[-1]
 
