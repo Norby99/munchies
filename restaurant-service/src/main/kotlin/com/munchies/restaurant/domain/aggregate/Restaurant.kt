@@ -8,6 +8,7 @@ import com.munchies.restaurant.domain.valueobject.restaurant.CapacityPolicy
 import com.munchies.restaurant.domain.valueobject.restaurant.DeliveryZone
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
+import com.munchies.restaurant.domain.valueobject.restaurant.KitchenSetup
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import com.munchies.restaurant.domain.valueobject.restaurant.Table
@@ -77,6 +78,20 @@ class Restaurant private constructor(
       .filterValues { it > 1 }.keys
     require(duplicatedNames.isEmpty()) { "duplicated zone names: ${duplicatedNames.sorted()}" }
     this.deliveryZones = newZones.toList()
+    this.updatedAt = LocalDateTime.now()
+  }
+
+  /**
+   * The kitchen as its staff describe it (workers, cook stations, stage times), read by the
+   * capacity agent of scheduler-service; null until the manager describes it. Not a constructor
+   * parameter (the constructor is at its size limit): [fromDatabase] sets it after construction.
+   */
+  var kitchenSetup: KitchenSetup? = null
+    private set
+
+  /** Replaces the kitchen description; [KitchenSetup] already checks it as a whole. */
+  fun updateKitchenSetup(newSetup: KitchenSetup) {
+    this.kitchenSetup = newSetup
     this.updatedAt = LocalDateTime.now()
   }
 
@@ -155,6 +170,7 @@ class Restaurant private constructor(
       location: GeoPoint? = null,
       tables: List<Table> = emptyList(),
       deliveryZones: List<DeliveryZone> = emptyList(),
+      kitchenSetup: KitchenSetup? = null,
     ): Restaurant {
       return Restaurant(
         id = id,
@@ -166,7 +182,7 @@ class Restaurant private constructor(
         deliveryZones = deliveryZones,
         createdAt = createdAt,
         updatedAt = updatedAt,
-      )
+      ).also { it.kitchenSetup = kitchenSetup }
     }
   }
 }
