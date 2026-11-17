@@ -5,6 +5,7 @@ import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
 import com.munchies.restaurant.domain.valueobject.restaurant.Address
 import com.munchies.restaurant.domain.valueobject.restaurant.CapacityPolicy
+import com.munchies.restaurant.domain.valueobject.restaurant.DeliveryZone
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
@@ -26,6 +27,7 @@ class Restaurant private constructor(
   var capacityPolicy: CapacityPolicy?,
   var location: GeoPoint?,
   tables: List<Table>,
+  deliveryZones: List<DeliveryZone>,
   val createdAt: LocalDateTime,
   var updatedAt: LocalDateTime,
 ) : AggregateRoot<RestaurantId>(id) {
@@ -48,6 +50,33 @@ class Restaurant private constructor(
     val duplicated = newTables.groupingBy { it.number }.eachCount().filterValues { it > 1 }.keys
     require(duplicated.isEmpty()) { "duplicated table numbers: ${duplicated.sorted()}" }
     this.tables = newTables.sortedBy { it.number }
+    this.updatedAt = LocalDateTime.now()
+  }
+
+  /**
+   * The delivery zones scheduler-service uses to decide which deliveries may share a driver, in
+   * the order the manager listed them; empty until the manager draws them, in which case any two
+   * deliveries may be batched as long as detour and trip budget allow it.
+   */
+  var deliveryZones: List<DeliveryZone> = deliveryZones
+    private set
+
+  /**
+   * Replaces every delivery zone. Zones may overlap, but each must be identifiable on its own.
+   *
+   * @throws IllegalArgumentException if there are more than [MAX_DELIVERY_ZONES] zones, or two
+   * zones share the same id or the same name (ignoring case).
+   */
+  fun updateDeliveryZones(newZones: List<DeliveryZone>) {
+    require(newZones.size <= MAX_DELIVERY_ZONES) {
+      "a restaurant cannot have more than $MAX_DELIVERY_ZONES delivery zones"
+    }
+    val duplicatedIds = newZones.groupingBy { it.id }.eachCount().filterValues { it > 1 }.keys
+    require(duplicatedIds.isEmpty()) { "duplicated zone ids: ${duplicatedIds.sorted()}" }
+    val duplicatedNames = newZones.groupingBy { it.name.trim().lowercase() }.eachCount()
+      .filterValues { it > 1 }.keys
+    require(duplicatedNames.isEmpty()) { "duplicated zone names: ${duplicatedNames.sorted()}" }
+    this.deliveryZones = newZones.toList()
     this.updatedAt = LocalDateTime.now()
   }
 
@@ -87,6 +116,9 @@ class Restaurant private constructor(
   }
 
   companion object {
+    /** Upper bound on the delivery zones of one restaurant. */
+    const val MAX_DELIVERY_ZONES = 50
+
     fun create(managerId: UserId, details: RestaurantDetails): Restaurant {
       val now = LocalDateTime.now()
       return Restaurant(
@@ -96,6 +128,7 @@ class Restaurant private constructor(
         capacityPolicy = null,
         location = null,
         tables = emptyList(),
+        deliveryZones = emptyList(),
         createdAt = now,
         updatedAt = now,
       )
@@ -121,6 +154,7 @@ class Restaurant private constructor(
       capacityPolicy: CapacityPolicy? = null,
       location: GeoPoint? = null,
       tables: List<Table> = emptyList(),
+      deliveryZones: List<DeliveryZone> = emptyList(),
     ): Restaurant {
       return Restaurant(
         id = id,
@@ -129,6 +163,7 @@ class Restaurant private constructor(
         capacityPolicy = capacityPolicy,
         location = location,
         tables = tables,
+        deliveryZones = deliveryZones,
         createdAt = createdAt,
         updatedAt = updatedAt,
       )
