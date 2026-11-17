@@ -1,5 +1,6 @@
 import { AvailableRange, availableRanges, generateSlots } from "../domain/model/availability";
 import { CapacityPolicy } from "../domain/model/capacityPolicy";
+import { DeliveryZone } from "../domain/model/deliveryZone";
 import { OrderType } from "../domain/model/booking";
 import { GeoPoint, isValidGeoPoint } from "../domain/model/geo";
 import { planDeliveryPlacement } from "../domain/model/trip";
@@ -53,6 +54,7 @@ export class GetAvailability {
 
     let policy: CapacityPolicy;
     let origin: GeoPoint | null = null;
+    let zones: DeliveryZone[] = [];
     if (isDelivery) {
       const setup = await this.delivery.resolve(query.restaurantId);
       if (!setup) {
@@ -67,6 +69,7 @@ export class GetAvailability {
       }
       policy = setup.policy;
       origin = setup.origin;
+      zones = setup.zones;
     } else {
       policy = await this.policies.resolve(query.restaurantId);
     }
@@ -83,7 +86,7 @@ export class GetAvailability {
       const feasible: AvailableRange[] = [];
       for (const range of ranges) {
         const trips = await this.trips.findBySlot(query.restaurantId, range.startEpochMs);
-        const plan = planDeliveryPlacement(origin, trips, point, policy);
+        const plan = planDeliveryPlacement(origin, trips, point, policy, zones);
         if (plan.kind !== "rejected") feasible.push(range);
       }
       ranges = feasible;

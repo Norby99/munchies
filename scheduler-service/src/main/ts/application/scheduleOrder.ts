@@ -4,6 +4,7 @@ import { Booking, DeliveryBookingInfo, OrderType } from "../domain/model/booking
 import { GeoPoint, isValidGeoPoint } from "../domain/model/geo";
 import { planDeliveryPlacement, Trip, TripPlan } from "../domain/model/trip";
 import { CapacityPolicy } from "../domain/model/capacityPolicy";
+import { DeliveryZone } from "../domain/model/deliveryZone";
 import { BookingRepository } from "../domain/ports/bookingRepository";
 import { OrderClient, OrderItem, OrderServiceError, PlaceOrderInput } from "../domain/ports/orderClient";
 import { TripRepository } from "../domain/ports/tripRepository";
@@ -61,6 +62,7 @@ export class ScheduleOrder {
     this.validateShape(input);
     let policy: CapacityPolicy;
     let origin: GeoPoint | null = null;
+    let zones: DeliveryZone[] = [];
     if (input.orderType === "DELIVERY") {
       const setup = await this.delivery.resolve(input.restaurantId);
       if (!setup) {
@@ -70,6 +72,7 @@ export class ScheduleOrder {
       }
       policy = setup.policy;
       origin = setup.origin;
+      zones = setup.zones;
     } else {
       policy = await this.policies.resolve(input.restaurantId);
     }
@@ -97,7 +100,7 @@ export class ScheduleOrder {
     if (input.orderType === "DELIVERY") {
       const point = input.deliveryLocation as GeoPoint;
       const trips = await this.trips.findBySlot(input.restaurantId, input.slotStartEpochMs);
-      plan = planDeliveryPlacement(origin as GeoPoint, trips, point, policy);
+      plan = planDeliveryPlacement(origin as GeoPoint, trips, point, policy, zones);
       if (plan.kind === "rejected") {
         throw plan.reason === "too_far"
           ? badRequest("this delivery is too far for a single trip within the restaurant's km budget")
