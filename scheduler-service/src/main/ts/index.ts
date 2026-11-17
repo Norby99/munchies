@@ -9,6 +9,7 @@ import { TransitionScheduler } from "./application/transitionScheduler";
 import { InMemoryBookingRepository } from "./infrastructure/outbound/inMemoryBookingRepository";
 import { InMemoryTripRepository } from "./infrastructure/outbound/inMemoryTripRepository";
 import { HttpRestaurantLocation } from "./infrastructure/outbound/httpRestaurantLocation";
+import { HttpRestaurantZones } from "./infrastructure/outbound/httpRestaurantZones";
 import { DeliveryGate } from "./application/deliveryGate";
 import { GetBooking } from "./application/getBooking";
 import { GetOrderTracking } from "./application/getOrderTracking";
@@ -35,6 +36,7 @@ function main(): void {
     policyClient,
     new HttpRestaurantLocation(config.restaurantServiceUrl),
     agent,
+    new HttpRestaurantZones(config.restaurantServiceUrl),
   );
 
   const routes = config.osrmUrl ? new OsrmRoutePlanner(config.osrmUrl) : new StraightLineRoutePlanner();
