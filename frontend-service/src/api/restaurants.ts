@@ -112,3 +112,25 @@ export async function getTables(restaurantId: string): Promise<DiningTable[]> {
 export async function updateTables(restaurantId: string, tables: DiningTable[]): Promise<DiningTable[]> {
   return unwrap(http.put(`${BASE}${restaurantId}/tables/`, { managerId: '', tables }))
 }
+
+// Delivery zones, read by scheduler-service to decide which deliveries may share a driver: with
+// zones, a delivery joins an existing trip only if all its stops lie in a common zone (detour and
+// trip budget still apply). Zones may overlap; an address outside every zone still gets delivered,
+// on a trip of its own. Without zones, deliveries are batched on detour and trip budget alone.
+// Mirrors DeliveryZoneDto in restaurant-shared. Manager-only, replaced always as a whole.
+
+export interface DeliveryZone {
+  /** Empty for a zone drawn since the last save: restaurant-service assigns the id. */
+  id: string
+  name: string
+  /** Outer ring of the polygon in drawing order, not closed; at least three vertices. */
+  boundary: GeoLocation[]
+}
+
+export async function getDeliveryZones(restaurantId: string): Promise<DeliveryZone[]> {
+  return unwrap(http.get(`${BASE}${restaurantId}/delivery-zones/`))
+}
+
+export async function updateDeliveryZones(restaurantId: string, zones: DeliveryZone[]): Promise<DeliveryZone[]> {
+  return unwrap(http.put(`${BASE}${restaurantId}/delivery-zones/`, { managerId: '', zones }))
+}
