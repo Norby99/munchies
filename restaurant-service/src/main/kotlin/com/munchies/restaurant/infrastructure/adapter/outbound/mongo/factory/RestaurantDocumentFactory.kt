@@ -6,12 +6,14 @@ import com.munchies.restaurant.domain.valueobject.RestaurantId
 import com.munchies.restaurant.domain.valueobject.UserId
 import com.munchies.restaurant.domain.valueobject.restaurant.Address
 import com.munchies.restaurant.domain.valueobject.restaurant.CapacityPolicy
+import com.munchies.restaurant.domain.valueobject.restaurant.DeliveryZone
 import com.munchies.restaurant.domain.valueobject.restaurant.Email
 import com.munchies.restaurant.domain.valueobject.restaurant.GeoPoint
 import com.munchies.restaurant.domain.valueobject.restaurant.Phone
 import com.munchies.restaurant.domain.valueobject.restaurant.RestaurantName
 import com.munchies.restaurant.domain.valueobject.restaurant.Table
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.CapacityPolicyData
+import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.DeliveryZoneData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.GeoPointData
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.RestaurantDocument
 import com.munchies.restaurant.infrastructure.adapter.outbound.mongo.document.TableData
@@ -34,6 +36,7 @@ object RestaurantDocumentFactory {
     capacityPolicy = capacityPolicy?.toData(),
     location = location?.toData(),
     tables = tables.map { TableData(number = it.number, seats = it.seats) },
+    deliveryZones = deliveryZones.map { it.toData() },
   )
 
   fun RestaurantDocument.toDomain(): Restaurant = Restaurant.fromDatabase(
@@ -50,6 +53,7 @@ object RestaurantDocumentFactory {
     capacityPolicy = capacityPolicy?.toDomain(),
     location = location?.toDomain(),
     tables = tables.map { Table(number = it.number, seats = it.seats) },
+    deliveryZones = deliveryZones.map { it.toDomain() },
   )
 
   private fun CapacityPolicy.toData(): CapacityPolicyData = CapacityPolicyData(
@@ -79,4 +83,16 @@ object RestaurantDocumentFactory {
   private fun GeoPoint.toData(): GeoPointData = GeoPointData(lat = lat, lng = lng)
 
   private fun GeoPointData.toDomain(): GeoPoint = GeoPoint(lat = lat, lng = lng)
+
+  private fun DeliveryZone.toData(): DeliveryZoneData = DeliveryZoneData(
+    id = id,
+    name = name,
+    boundary = boundary.map { it.toData() },
+  )
+
+  private fun DeliveryZoneData.toDomain(): DeliveryZone = DeliveryZone(
+    id = id,
+    name = name,
+    boundary = boundary.map { it.toDomain() },
+  )
 }
