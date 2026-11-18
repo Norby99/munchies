@@ -69,7 +69,9 @@ Handles the payment of an order, either online through an external payment gatew
 
 ### Notification
 
-Sends notifications (email/SMS) to customers and restaurant staff. It owns no aggregate and accepts no command: it is
+Notifies customers and restaurant staff of what happens to their orders and table reservations, pushing live
+notifications to the frontend over a WebSocket (email and SMS are not implemented). It owns no aggregate and accepts
+no command: it is
 an event-driven agent that only reacts to the events published by the other contexts, and its model is the set of
 event payloads it consumes.
 
