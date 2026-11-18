@@ -24,64 +24,23 @@ code change only replaces the application layer. The Express image also includes
 `-shared` modules it depends on (e.g. `munchies-order-service-shared`), since they are not published to a registry.
 
 `composeBuild` depends on these tasks for every service module, Kotlin or JavaScript, so starting Compose always runs
-on freshly built images.
+on freshly built images. Two images are instead built by Compose from a `Dockerfile` kept in the service folder: `frontend-service`,
+in two stages (the Vue application is built with Node, then served by `nginx:1.28-alpine`, so the final image holds no
+Node.js), and `scheduler-service`, which is not part of the Gradle build since it depends on no `-shared` module.
 
 ## Container split
 
 The stack is described by three Compose files under `config/`, one per kind of component. They are loaded together as a
 single Compose project, so services in one file can depend on containers defined in another.
 
-```mermaid
-flowchart TB
-    subgraph svc["config/service/docker-compose.yml"]
-        frontend["frontend-service<br/>:5173"]
-        gateway["gateway-service<br/>:8086"]
-        user["user-service<br/>:8082"]
-        restaurant["restaurant-service<br/>:8087"]
-        order["order-service<br/>:8081"]
-        payment["payment-service<br/>:8083"]
-        scheduler["scheduler-service<br/>:8088"]
-        reservation["table-reservation-service<br/>:8085"]
-        notification["notification-service<br/>(no port)"]
-    end
+![Containers of the Compose project](docker-compose/docker-compose.png)
 
-    subgraph db["config/mongodb/docker-compose.yml"]
-        umongo[("munchies-user-mongo")]
-        rmongo[("munchies-restaurant-mongo")]
-        omongo[("munchies-order-mongo")]
-        pmongo[("munchies-payment-mongo")]
-        tmongo[("munchies-table-reservation-mongo")]
-    end
-
-    subgraph kafka_file["config/kafka/docker-compose.yml"]
-        kafka[["munchies-kafka"]]
-    end
-
-    client(["Client"]) --> frontend
-    frontend --> gateway
-    gateway --> user
-    gateway --> restaurant
-    gateway --> order
-    gateway --> payment
-    gateway --> scheduler
-    gateway --> reservation
-    payment --> order
-    scheduler --> order
-    scheduler --> restaurant
-    reservation --> restaurant
-    user --> umongo
-    restaurant --> rmongo
-    order --> omongo
-    payment --> pmongo
-    reservation --> tmongo
-    user -.->|user_email_confirmation_topic| kafka
-    order -.->|order_status_changed_topic| kafka
-    payment -.->|payment_success_topic| kafka
-    reservation -.->|table_reservation_*_topic| kafka
-    kafka -.-> notification
-```
-
-Solid arrows are REST calls or database connections, dashed arrows are Kafka messages.
+Each of the three boxes titled with a file path is one Compose file, and everything runs on the same Docker network. The browser
+reaches only the frontend, which talks to the gateway; the gateway routes REST calls to the business services and
+relays the live notifications from `notification-service` over a WebSocket. Every service with persistent state
+connects to its own MongoDB container, the four producers publish to Kafka, and `notification-service` consumes from
+it. `scheduler-service` is the only container that reaches outside the network, to the public OSRM server for the
+drivers' routes. The calls between services are shown in [General Architecture](../02-Architecture%20and%20Implementation/general-architecture.md).
 
 ### `config/service` — the microservices
 
@@ -91,20 +50,23 @@ container listens on port `8080` internally; only the port needed for local acce
 | Container                       | Host port | Depends on (must be healthy)                          |
 |---------------------------------|-----------|-------------------------------------------------------|
 | `munchies-frontend-service`     | `5173`    | `gateway-service`                                     |
-| `munchies-gateway-service`      | `8086`    | every service it routes to (`payment-service` only has to be started) |
+| `munchies-gateway-service`      | `8086`    | every service it routes to, and `notification-service` for the WebSocket (`payment-service` and `notification-service` only have to be started) |
 | `munchies-user-service`         | `8082`    | Kafka, `munchies-user-mongo`                          |
 | `munchies-restaurant-service`   | `8087`    | Kafka, `munchies-restaurant-mongo`                    |
-| `munchies-order-service`        | `8081`    | Kafka, `munchies-order-mongo`                         |
+| `munchies-order-service`        | `8081`    | Kafka, `munchies-order-mongo`, `restaurant-service`   |
 | `munchies-payment-service`      | `8083`    | Kafka, `munchies-payment-mongo`, `order-service`      |
 | `munchies-scheduler-service`    | `8088`    | `order-service`, `restaurant-service`                 |
 | `munchies-table-reservation-service` | `8085` | Kafka, `munchies-table-reservation-mongo`, `restaurant-service` |
 | `munchies-notification-service` | none      | Kafka                                                 |
 
-`notification-service` publishes no port, since it exposes no API and only receives messages from Kafka.
+`notification-service` publishes no port: it receives its input from Kafka, and its only endpoint, the live-notification
+WebSocket, is reached through `gateway-service`, which authenticates the connection and forwards the user's identity.
 
 The common parts of the definitions are written once as YAML anchors and merged into each service:
 
 - `x-service-common`: the shared network and the `host.docker.internal` host;
+- `x-service-env`: `MICRONAUT_ENVIRONMENTS=prod`, which selects the production adapters of the Micronaut services
+  (e.g. the MongoDB event store of `order-service`);
 - `x-kafka-env` and `x-kafka-dependency`: the broker address (`KAFKA_BOOTSTRAP_SERVERS=munchies-kafka:9092`) and the
   dependency on a healthy broker;
 - `x-micronaut-healthcheck`: the healthcheck of the Micronaut services.
@@ -136,7 +98,13 @@ gateway-service:
     PAYMENT_SERVICE_URL: http://payment-service:8080
     SCHEDULER_SERVICE_URL: http://scheduler-service:8080
     TABLE_RESERVATION_SERVICE_URL: http://table-reservation-service:8080
+    NOTIFICATION_SERVICE_URL: http://notification-service:8080
 ```
+
+`order-service` reads `table-reservation-service` only when a dine-in order is placed for a reservation, so it does not
+wait for it at startup. `scheduler-service` receives `OSRM_URL`, the routing server for the drivers (the public OSRM
+demo server; an empty value makes it use straight lines), and `TZ`, since slots and opening hours are computed in the
+container's local time.
 
 ## Startup order and healthchecks
 
@@ -174,5 +142,6 @@ the three Compose files:
 volumes are removed only when `-Preset` is passed.
 
 For deploying on a host, `scripts/deploy.sh` wraps the same cycle: it pulls the latest code (or clones the repository),
-runs `composeDown` and `composeUp`, and then polls the `/health` endpoint of every published service until it answers
-`200`.
+runs `composeDown` and `composeUp`, and then polls the `/health` endpoint of the published services until each answers
+`200`. It checks `order-service`, `user-service`, `payment-service`, `restaurant-service`, the gateway and the frontend;
+`table-reservation-service` and `scheduler-service` are not checked yet.
