@@ -6,59 +6,29 @@ horizontal autoscaling and an always-on monitoring stack. The cluster used throu
 Minikube.
 
 This page describes the deployment from the architecture side: how the system is laid out in the cluster, how each
-pod is configured, and how scaling is tied to service level objectives. The Gradle automation that builds the images
-and applies the resources is covered in the SPE report ([Deployment](../../spe/04-deployment.md)); the scaling
-behaviour is verified under real load in the [Scaling Benchmark](scaling-benchmark.md).
+pod is configured, and how scaling is tied to service level objectives. The commands that deploy it are listed in
+[Deploying](#deploying), and the scaling behaviour is verified under real load in the
+[Scaling Benchmark](scaling-benchmark.md).
 
 ## Cluster layout
 
 Every microservice runs in its own namespace, named after the service, and every service that stores data has its own
-MongoDB in that namespace (`gateway-service`, which stores nothing, has none). The bounded
+MongoDB in that namespace (`frontend-service`, `gateway-service` and `notification-service` store nothing, and
+`scheduler-service` keeps its bookings in memory, so these four have none). The bounded
 context boundary of the code is therefore also a boundary in the infrastructure: a service's database is reachable
 only through that service, and each one can be deployed, scaled or removed on its own.
 
-```mermaid
-flowchart LR
-    subgraph gw["gateway-service"]
-        gwd["Deployment + HPA"]
-    end
-    subgraph us["user-service"]
-        usd["Deployment + HPA"] --> usm[("MongoDB")]
-    end
-    subgraph rs["restaurant-service"]
-        rsd["Deployment + HPA"] --> rsm[("MongoDB")]
-    end
-    subgraph os["order-service"]
-        osd["Deployment + HPA"] --> osm[("MongoDB")]
-    end
-    subgraph ps["payment-service"]
-        psd["Deployment"] --> psm[("MongoDB")]
-    end
-    subgraph ns["notification-service"]
-        nsd["Deployment"] --> nsm[("MongoDB")]
-    end
-    subgraph ks["kafka"]
-        kafka["StatefulSet kafka-0"]
-    end
-    subgraph obs["observability"]
-        stack["Prometheus, Loki, Tempo,<br/>Alloy, Grafana"]
-    end
+![Layout of the Kubernetes cluster](kubernetes/kubernetes.png)
 
-    gwd -->|HTTP| usd
-    gwd -->|HTTP| rsd
-    gwd -->|HTTP| osd
-    gwd -->|HTTP| psd
-    psd -->|HTTP| osd
-    usd -.->|events| kafka
-    osd -.->|events| kafka
-    psd -.->|events| kafka
-    kafka -.->|events| nsd
-    stack -.->|scrape metrics, collect logs| gw
-```
-
-The diagram leaves out `table-reservation-service`, which is deployed the same way as `payment-service` and calls
-`restaurant-service`, and `frontend-service`, a stateless nginx in front of the gateway. It draws the observability links for one namespace only: the stack scrapes and collects from every application
-namespace.
+Each rounded box is a namespace. The browser reaches the frontend through `kubectl port-forward`, and API clients such
+as the k6 benchmark reach the gateway through its `NodePort`. The gateway routes REST calls to the business services
+and relays the live notifications from `notification-service` over a WebSocket. Each business service with persistent
+state has its own MongoDB, a `StatefulSet` with a persistent volume claim; the four producers publish to Kafka, and
+`notification-service` consumes from it. `scheduler-service` runs as a single pod (see
+[Rollout strategy](#rollout-strategy)) and is the only workload that reaches outside the cluster, to the public OSRM
+server for the drivers' routes. The observability stack collects metrics, logs and traces from every application
+namespace. The calls between services are shown in
+[General Architecture](../02-Architecture%20and%20Implementation/general-architecture.md).
 
 Services find each other through Kubernetes DNS (`<service>.<namespace>.svc.cluster.local`), passed to each pod as an
 environment variable, as described in [Service discovery](#service-discovery) below. The `Service` in front of each
@@ -73,8 +43,9 @@ to know how many there are.
 | `restaurant-service` | Helm chart | yes | yes |
 | `order-service` | Helm chart | yes | yes |
 | `payment-service` | manifests under `k8s/` | yes | no |
-| `notification-service` | manifests under `k8s/` | yes | no |
+| `notification-service` | manifests under `k8s/` | no | no |
 | `table-reservation-service` | manifests under `k8s/` | yes | no |
+| `scheduler-service` | Helm chart | no (state in memory) | no (one replica) |
 | Kafka | manifest under `k8s/kafka/` | n/a | no |
 | Observability stack | community Helm charts, `observability/values/` | n/a | no |
 
@@ -146,14 +117,18 @@ No service registers itself, sends heartbeats or deregisters on shutdown: regist
 
 | Caller | Target | Name | Notes |
 |---|---|---|---|
-| `gateway-service` | `user-service`, `restaurant-service`, `order-service`, `payment-service`, `table-reservation-service` | `<service>.<namespace>.svc.cluster.local:8080` | ClusterIP `Service`, balanced across the replicas |
+| `gateway-service` | `user-service`, `restaurant-service`, `order-service`, `payment-service`, `scheduler-service`, `table-reservation-service`, `notification-service` (WebSocket) | `<service>.<namespace>.svc.cluster.local:8080` | ClusterIP `Service`, balanced across the replicas |
+| `order-service` | `restaurant-service`, `table-reservation-service` | `<service>.<namespace>.svc.cluster.local:8080` | same |
+| `scheduler-service` | `order-service`, `restaurant-service` | `<service>.<namespace>.svc.cluster.local:8080` | same |
+| `scheduler-service` | OSRM routing server | `https://router.project-osrm.org` (`OSRM_URL`) | outside the cluster, not discovery |
 | `payment-service` | `order-service` | `order-service.order-service.svc.cluster.local:8080` | same |
 | `table-reservation-service` | `restaurant-service` | `restaurant-service.restaurant-service.svc.cluster.local:8080` | same |
 | `frontend-service` | `gateway-service` | `gateway-service.gateway-service.svc.cluster.local:8080` | same |
 | each service | its own MongoDB | e.g. `order-mongodb.order-service.svc.cluster.local:27017` | the manifests under `k8s/` use the short form (`payment-mongodb`), which resolves within the caller's own namespace |
 | producers, `notification-service` | Kafka | `kafka-0.kafka-headless.kafka.svc.cluster.local:9092` | headless `Service` (see [Stateful components](#stateful-components)) |
 | Prometheus, Alloy | every application pod | Kubernetes API, `pod` role | see below |
-| clients outside the cluster | `gateway-service` | `NodePort` on the Minikube node | not discovery, only exposure |
+| browser | `frontend-service` | `kubectl port-forward svc/frontend-service 5173:8080` | not discovery, only exposure |
+| clients outside the cluster | `gateway-service` | `NodePort` on the Minikube node | same |
 
 Two cases differ from the ClusterIP path described above:
 
@@ -168,7 +143,7 @@ Two cases differ from the ClusterIP path described above:
 ### Where the names come from
 
 No address is written in the code. Every name above is passed to the pod as an environment variable (`USER_SERVICE_URL`,
-`RESTAURANT_SERVICE_URL`, `ORDER_SERVICE_URL`, `MONGODB_URI`, `KAFKA_BOOTSTRAP_SERVERS`), set in
+`RESTAURANT_SERVICE_URL`, `ORDER_SERVICE_URL`, `SCHEDULER_SERVICE_URL`, `MONGODB_URI`, `KAFKA_BOOTSTRAP_SERVERS`), set in
 `helm/values/<service>.yaml` or in the manifests under `k8s/`. In [Docker Compose](docker-compose.md) the same
 variables point to the Compose service names (`http://order-service:8080`), resolved by Docker's embedded DNS server,
 which plays the same role as CoreDNS. The service code is identical in both environments: for it, another service is
@@ -207,12 +182,14 @@ The generic chart gives every service the same pod configuration, with per-servi
 **Resource requests and limits.** Each service container requests `100m` CPU and `128Mi` of memory and is limited to
 `500m` and `512Mi`. The requests are what the scheduler reserves on the node, and they are also the baseline the
 autoscaler measures against: "60% CPU utilization" means 60% of the `100m` request. The limits stop a single
-misbehaving pod from starving the others on the shared node.
+misbehaving pod from starving the others on the shared node. Two services override them: `frontend-service`, an nginx
+serving static files, needs only `50m` and `32Mi`, and `gateway-service` is limited to one full core (see
+[Autoscaling](#autoscaling-and-service-level-objectives)).
 
 **Readiness probe.** Kubernetes sends traffic to a pod only once `GET /health` succeeds, checked every 5 seconds. This
 is what makes scaling safe: a new replica joins the `Service` only when it can actually answer, and a replica that
 stops answering is taken out of rotation. For the Micronaut services the health endpoint also checks MongoDB, through
-a custom `MongoHealthIndicator` (the default one only covers the reactive driver; see the SPE report), so a pod whose
+a custom `MongoHealthIndicator` (the default one only covers the reactive driver), so a pod whose
 database is unreachable is not considered ready.
 
 **Graceful shutdown.** When a pod is removed, by a rollout or a scale-in, Kubernetes takes it out of the `Service`'s
@@ -223,14 +200,30 @@ stops; the service must then handle `SIGTERM` by finishing the requests in progr
 `gateway-service` does both, with a 10 s sleep; the other services do not yet.
 
 **Metrics annotations.** Pods are annotated with `prometheus.io/scrape`, `path` and `port`, so Prometheus discovers
-them without any service knowing where Prometheus runs (`/prometheus` for Micronaut, `/metrics` for Express). `frontend-service`, an nginx serving
-the built application, exposes no metrics endpoint and is not scraped.
+them without any service knowing where Prometheus runs (`/prometheus` for Micronaut, `/metrics` for Express).
+`frontend-service`, an nginx serving the built application, exposes no metrics endpoint and is not scraped; neither is
+`scheduler-service`, which has no metrics endpoint and no tracing yet. The logs of both are still collected by Alloy,
+like those of every application pod.
+
+### Rollout strategy
+
+The chart's default strategy is `RollingUpdate`: on a new version, Kubernetes starts a new pod, waits for its readiness
+probe, and only then removes an old one, so the service keeps answering throughout the rollout. This is safe because
+every replica of a service is interchangeable, all of them reading and writing the same MongoDB.
+
+`scheduler-service` is the exception. Its bookings and delivery trips live in the pod's memory, so a second pod would
+hold a second, empty ledger: during a rolling update, the old and the new pod would each accept bookings for the same
+slot, and together could exceed its capacity. Its values file therefore sets `strategy.type: Recreate`, which stops the
+old pod before starting the new one, and pins it to one replica with no autoscaler. The price is a few seconds in
+which the gateway's `/schedule` routes cannot be answered, and a new pod that starts with no bookings (see
+[Limitations](#limitations)).
 
 ## Stateful components
 
-**MongoDB**, one per service, runs as a single-replica `StatefulSet` with its own `PersistentVolumeClaim`. The claim is
-annotated with `helm.sh/resource-policy: keep`, so redeploying or uninstalling a service does not delete its data;
-`./gradlew undeploy -PwipeData=true` removes it explicitly. Unlike the services, the database pods also have a liveness
+**MongoDB**, one per service with persistent state, runs as a single-replica `StatefulSet` with its own
+`PersistentVolumeClaim`. Redeploying or undeploying a service does not delete its data: `./gradlew undeploy` keeps the
+claims, and the chart also annotates them with `helm.sh/resource-policy: keep`, so a plain `helm uninstall` keeps them
+too. `./gradlew undeploy -PwipeData=true` removes them explicitly. Unlike the services, the database pods also have a liveness
 probe, so a hung `mongod` is restarted.
 
 **Kafka** runs as a single broker in KRaft mode (no ZooKeeper), a one-replica `StatefulSet` behind a headless `Service`
@@ -238,9 +231,12 @@ probe, so a hung `mongod` is restarted.
 `kafka-0.kafka-headless.kafka.svc.cluster.local:9092`, which is what Kafka clients need: they talk to a specific broker,
 not to a load-balanced address.
 
-The stateful services are not scaled horizontally: while the stateless services can be replicated freely because all their state lives in
-MongoDB, the stateful ones would need a MongoDB replica set and a multi-broker Kafka cluster to do the same, which a
-single-node Minikube cannot meaningfully host, so we decided not to scale them.
+MongoDB and Kafka are not scaled horizontally. The services can be replicated freely because all their state lives in
+MongoDB; the databases and the broker would need a MongoDB replica set and a multi-broker Kafka cluster to do the same,
+which a single-node Minikube cannot meaningfully host.
+
+`scheduler-service` holds state too, but in the pod's memory rather than in a database, which is why it cannot be
+replicated at all (see [Rollout strategy](#rollout-strategy)).
 
 ## Autoscaling and service level objectives
 
@@ -308,14 +304,24 @@ minikube addons enable metrics-server
 ./gradlew k8sInfo                             # pods currently running
 ./gradlew undeploy                            # tear down, keeping the databases' volumes
 ./gradlew undeploy -PwipeData=true            # tear down and delete the volumes too
+
+kubectl -n frontend-service port-forward svc/frontend-service 5173:8080   # open the frontend on localhost:5173
 ```
 
 ## Limitations
 
-- **One service is not deployed.** `scheduler-service` has neither a Helm values file nor manifests; it runs only in
-  Docker Compose.
+- **The scheduler's state lives in one pod.** `scheduler-service` keeps its bookings and delivery trips in memory, so
+  it runs as a single replica, without an autoscaler, and is replaced with `Recreate`. A restart or a rollout forgets
+  every booking and trip, and briefly leaves the `/schedule` routes without an answer. Storing them in a MongoDB of its
+  own would let it use the default rolling update and an autoscaler, like the other services.
+- **Business services are exposed outside the cluster.** Besides the gateway, `user-service`, `restaurant-service`,
+  `order-service`, `payment-service` and `table-reservation-service` use a `NodePort` `Service`, so they can be called
+  from outside the cluster without passing through the gateway's authentication. Only the gateway needs it; the others
+  could be `ClusterIP`, like `frontend-service` and `notification-service`.
 - **Images are local.** The chart uses `:latest` images loaded into Minikube (`pullPolicy: Never`), not the images
-  published by CI, so a deployment is not tied to a released version.
+  published by CI, so a deployment is not tied to a released version. The fixed tag also hides stale images:
+  `minikube image load` does not replace an image already on the node under the same tag, so a redeploy can keep
+  running the previous build with no error. A tag per build, such as the commit hash, would avoid it.
 - **No liveness probe on the services.** A pod that hangs while still answering `/health` is not restarted; only the
   databases have a liveness probe.
 - **Graceful shutdown only on the gateway.** The other services have no `preStop` sleep and do not handle `SIGTERM`,
@@ -327,5 +333,8 @@ minikube addons enable metrics-server
   latency miss its objective. The gateway now closes each client connection after 20 requests, which spreads the load
   onto new replicas within seconds; its own connections to the services behind it are not rebalanced, nor are those
   between other services. Balancing per request with a layer 7 proxy would cover all of them.
-- **Three services are not autoscaled.** `payment-service`, `notification-service` and `table-reservation-service`
-  still use hand-written manifests without an autoscaler.
+- **Four services are not autoscaled.** `payment-service` and `table-reservation-service` still use hand-written
+  manifests without an autoscaler. `notification-service` is kept at one replica on purpose: the live-notification
+  rooms of its WebSocket live in the process's memory, so with several replicas a user's connection and the Kafka
+  partition carrying their events could land on different pods. Scaling it out needs a shared Socket.io adapter
+  first. `scheduler-service` is kept at one replica for the same kind of reason, its in-memory bookings (see above).
