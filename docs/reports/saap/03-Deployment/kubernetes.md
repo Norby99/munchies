@@ -215,8 +215,9 @@ every replica of a service is interchangeable, all of them reading and writing t
 hold a second, empty ledger: during a rolling update, the old and the new pod would each accept bookings for the same
 slot, and together could exceed its capacity. Its values file therefore sets `strategy.type: Recreate`, which stops the
 old pod before starting the new one, and pins it to one replica with no autoscaler. The price is a few seconds in
-which the gateway's `/schedule` routes cannot be answered, and a new pod that starts with no bookings (see
-[Limitations](#limitations)).
+which the gateway's `/schedule` routes cannot be answered, and a new pod that starts with no bookings. Storing the
+bookings in a MongoDB of its own would let the scheduler use the default rolling update and an autoscaler, like the
+other services.
 
 ## Stateful components
 
@@ -310,18 +311,8 @@ kubectl -n frontend-service port-forward svc/frontend-service 5173:8080   # open
 
 ## Limitations
 
-- **The scheduler's state lives in one pod.** `scheduler-service` keeps its bookings and delivery trips in memory, so
-  it runs as a single replica, without an autoscaler, and is replaced with `Recreate`. A restart or a rollout forgets
-  every booking and trip, and briefly leaves the `/schedule` routes without an answer. Storing them in a MongoDB of its
-  own would let it use the default rolling update and an autoscaler, like the other services.
-- **Business services are exposed outside the cluster.** Besides the gateway, `user-service`, `restaurant-service`,
-  `order-service`, `payment-service` and `table-reservation-service` use a `NodePort` `Service`, so they can be called
-  from outside the cluster without passing through the gateway's authentication. Only the gateway needs it; the others
-  could be `ClusterIP`, like `frontend-service` and `notification-service`.
 - **Images are local.** The chart uses `:latest` images loaded into Minikube (`pullPolicy: Never`), not the images
-  published by CI, so a deployment is not tied to a released version. The fixed tag also hides stale images:
-  `minikube image load` does not replace an image already on the node under the same tag, so a redeploy can keep
-  running the previous build with no error. A tag per build, such as the commit hash, would avoid it.
+  published by CI, so a deployment is not tied to a released version.
 - **No liveness probe on the services.** A pod that hangs while still answering `/health` is not restarted; only the
   databases have a liveness probe.
 - **Graceful shutdown only on the gateway.** The other services have no `preStop` sleep and do not handle `SIGTERM`,
@@ -333,8 +324,3 @@ kubectl -n frontend-service port-forward svc/frontend-service 5173:8080   # open
   latency miss its objective. The gateway now closes each client connection after 20 requests, which spreads the load
   onto new replicas within seconds; its own connections to the services behind it are not rebalanced, nor are those
   between other services. Balancing per request with a layer 7 proxy would cover all of them.
-- **Four services are not autoscaled.** `payment-service` and `table-reservation-service` still use hand-written
-  manifests without an autoscaler. `notification-service` is kept at one replica on purpose: the live-notification
-  rooms of its WebSocket live in the process's memory, so with several replicas a user's connection and the Kafka
-  partition carrying their events could land on different pods. Scaling it out needs a shared Socket.io adapter
-  first. `scheduler-service` is kept at one replica for the same kind of reason, its in-memory bookings (see above).
