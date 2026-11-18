@@ -15,7 +15,7 @@ This replaced the duplication in `k8s/` from `k8s/order-service/`, `k8s/user-ser
 The normal path is unchanged from before Helm existed:
 
 ```bash
-./gradlew deploy -Pservice=gateway-service      # or frontend-service / user-service / order-service / restaurant-service
+./gradlew deploy -Pservice=gateway-service      # or frontend-service / user-service / order-service / restaurant-service / scheduler-service
 ./gradlew deploy                                # all services, kafka first (Helm-backed ones included)
 ./gradlew undeploy -Pservice=gateway-service
 ./gradlew undeploy [-PwipeData=true]
@@ -55,13 +55,14 @@ same as for the raw-manifest services, only when you pass `-PwipeData=true`.
 | --- | --- |
 | `munchies-service/Chart.yaml` | chart metadata |
 | `munchies-service/values.yaml` | every knob, documented, with safe defaults |
-| `munchies-service/templates/deployment.yaml` | Deployment (image, env, resources, readiness probe, Prometheus scrape annotations when `metrics.enabled`, `preStop` sleep when `shutdown.preStopSleepSeconds` is set) |
+| `munchies-service/templates/deployment.yaml` | Deployment (image, env, resources, update `strategy.type` (`RollingUpdate` by default), readiness probe, Prometheus scrape annotations when `metrics.enabled`, `preStop` sleep when `shutdown.preStopSleepSeconds` is set) |
 | `munchies-service/templates/service.yaml` | Service (ClusterIP/NodePort, port mapping) |
 | `munchies-service/templates/hpa.yaml` | HorizontalPodAutoscaler, only rendered if `autoscaling.enabled` |
 | `munchies-service/templates/mongodb.yaml` | PVC + StatefulSet + Service for the service's own Mongo, only rendered if `mongodb.enabled` |
 | `munchies-service/templates/_helpers.tpl` | `shortName` — strips the `-service` suffix, mirroring the Gradle `getServiceName()` convention, so Mongo resources keep their existing names (`user-mongodb`, not `user-service-mongodb`) and every already-hardcoded `MONGODB_URI` keeps resolving |
 | `values/gateway-service.yaml` | stateless: no `mongodb`, HPA on |
 | `values/frontend-service.yaml` | stateless: no `mongodb`, no HPA, no metrics |
+| `values/scheduler-service.yaml` | no `mongodb`, no HPA, no metrics; one replica with `strategy.type: Recreate`, because its bookings and trips live in the pod's memory and two pods would hold two separate ledgers |
 | `values/user-service.yaml`, `order-service.yaml`, `restaurant-service.yaml` | HPA on, `mongodb.enabled: true` |
 
 Not templated: the `Namespace` object. `--create-namespace` handles it, which is the more
