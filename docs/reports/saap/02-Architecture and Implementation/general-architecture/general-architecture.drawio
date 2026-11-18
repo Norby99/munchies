@@ -1,0 +1,162 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="general-architecture" name="General Architecture">
+    <mxGraphModel dx="1943" dy="1019" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="940" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="backend" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=none;spacingTop=8;" value="Backend: one microservice per bounded context" vertex="1">
+          <mxGeometry height="749" width="1010" x="560" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;frontend-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Vue.js&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="230" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="gateway" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;gateway-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Express.js, API Gateway&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="230" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="restaurant" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;spacingRight=34;" value="&lt;b&gt;restaurant-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Kotlin + Micronaut&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="940" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="restaurant-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="36" width="26" x="1142" y="77" as="geometry" />
+        </mxCell>
+        <mxCell id="reservation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;spacingRight=34;" value="&lt;b&gt;table-reservation-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Express.js&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="600" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="reservation-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="36" width="26" x="802" y="297" as="geometry" />
+        </mxCell>
+        <mxCell id="order" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;spacingRight=34;" value="&lt;b&gt;order-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Kotlin + Micronaut&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="940" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="order-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="36" width="26" x="1142" y="297" as="geometry" />
+        </mxCell>
+        <mxCell id="scheduler" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;scheduler-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Express.js, state in memory&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="1290" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="payment" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;spacingRight=34;" value="&lt;b&gt;payment-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Express.js&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="1290" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="payment-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="36" width="26" x="1490" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;spacingRight=34;" value="&lt;b&gt;user-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Kotlin + Micronaut&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="600" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="user-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="36" width="26" x="802" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="kafka" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="&lt;b&gt;Kafka&lt;/b&gt;&lt;br&gt;&lt;i&gt;one topic per notification-bound event&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="940" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="notification" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;notification-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;Express.js&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="940" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="osrm" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=none;dashed=1;fontSize=13;" value="&lt;b&gt;Routing service&lt;/b&gt;&lt;br&gt;&lt;i&gt;OSRM, external&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="1640" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="e-fe" edge="1" parent="1" source="frontend" style="endArrow=open;endSize=10;html=1;" target="gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-fe-l" connectable="0" parent="e-fe" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;labelBackgroundColor=default;" value="REST, WebSocket" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-gw" edge="1" parent="1" source="gateway" style="endArrow=open;endSize=10;html=1;" target="backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-gw-l" connectable="0" parent="e-gw" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;labelBackgroundColor=default;" value="REST" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ws" edge="1" parent="1" source="gateway" style="endArrow=open;startArrow=open;endSize=10;startSize=10;dashed=1;dashPattern=1 4;strokeWidth=2;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="notification">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ws-l" connectable="0" parent="e-ws" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;labelBackgroundColor=default;" value="WebSocket: live notifications" vertex="1">
+          <mxGeometry relative="1" x="0.3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-rest0" edge="1" parent="1" source="order" style="endArrow=open;endSize=10;html=1;" target="restaurant">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rest1" edge="1" parent="1" source="reservation" style="endArrow=open;endSize=10;html=1;" target="restaurant">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rest2" edge="1" parent="1" source="scheduler" style="endArrow=open;endSize=10;html=1;" target="restaurant">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rest3" edge="1" parent="1" source="order" style="endArrow=open;endSize=10;html=1;" target="reservation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rest4" edge="1" parent="1" source="scheduler" style="endArrow=open;endSize=10;html=1;" target="order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rest5" edge="1" parent="1" source="payment" style="endArrow=open;endSize=10;html=1;" target="order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-osrm" edge="1" parent="1" source="scheduler" style="endArrow=open;endSize=10;html=1;" target="osrm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-osrm-l" connectable="0" parent="e-osrm" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;labelBackgroundColor=default;" value="driver routes" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ev0" edge="1" parent="1" source="user" style="endArrow=open;endSize=10;dashed=1;html=1;" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ev1" edge="1" parent="1" source="reservation" style="endArrow=open;endSize=10;dashed=1;html=1;" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ev2" edge="1" parent="1" source="order" style="endArrow=open;endSize=10;dashed=1;html=1;" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ev3" edge="1" parent="1" source="payment" style="endArrow=open;endSize=10;dashed=1;html=1;" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ev-n" edge="1" parent="1" source="kafka" style="endArrow=open;endSize=10;dashed=1;html=1;" target="notification">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="&lt;b&gt;Legend&lt;/b&gt;" vertex="1">
+          <mxGeometry height="20" width="200" x="1620" y="584" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line0" edge="1" parent="1" style="endArrow=open;endSize=10;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1620" y="619" as="sourcePoint" />
+            <mxPoint x="1680" y="619" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text0" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="Synchronous REST call" vertex="1">
+          <mxGeometry height="20" width="180" x="1690" y="609" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line1" edge="1" parent="1" style="endArrow=open;endSize=10;dashed=1;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1620" y="649" as="sourcePoint" />
+            <mxPoint x="1680" y="649" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text1" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="Kafka event" vertex="1">
+          <mxGeometry height="20" width="180" x="1690" y="639" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line2" edge="1" parent="1" style="endArrow=open;startArrow=open;endSize=10;startSize=10;dashed=1;dashPattern=1 4;strokeWidth=2;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1620" y="679" as="sourcePoint" />
+            <mxPoint x="1680" y="679" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text2" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="WebSocket" vertex="1">
+          <mxGeometry height="20" width="180" x="1690" y="669" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="36" width="26" x="1637" y="704" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-db-text" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="Own MongoDB database" vertex="1">
+          <mxGeometry height="20" width="180" x="1690" y="712" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
