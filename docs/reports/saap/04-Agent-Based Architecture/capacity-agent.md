@@ -34,7 +34,8 @@ The course defines a rational agent by four elements:
 | Percepts | From the last service: the order log (arrival times) and how late each slot finished.<br>For the coming service: the rota (the staff schedule), the oven report and the stage times the staff declare. |
 
 **The environment** is *inaccessible* (the agent never sees the kitchen's true rates, only logs and reports),
-*nondeterministic* (arrivals and every stage take random time), *dynamic* (staff, equipment and demand change; the
+*nondeterministic* (arrivals and every stage take random time), *sequential* (each Friday's outcome depends on the
+quota chosen, and is what the next decision is calibrated on), *dynamic* (staff, equipment and demand change; the
 prototype changes them only between periods), with *discrete actions* and *continuous percepts*. There is a single
 agent.
 
@@ -64,7 +65,7 @@ flowchart LR
         act["Act<br/>apply or recommend the quota,<br/>advise on the rota"]
         perceive --> revise --> decide --> act
     end
-    env["KitchenEnvironment<br/>(simulated kitchen today,<br/>restaurant-service later)"]
+    env["KitchenEnvironment<br/>(SimulatedKitchen)"]
     manager -->|goal, risk tolerance,<br/>quota bounds, mode| agent
     env -->|perceive| perceive
     act -->|applyQuota| env
@@ -77,8 +78,8 @@ flowchart LR
   period). It lacks what makes BDI worthwhile: several conflicting goals and a plan library to choose from. Its
   deliberation is an optimization over one integer.
 - *Agents and Artifacts.* The `KitchenEnvironment` interface is a boundary artifact representing the kitchen: one
-  observable state (`perceive`) and one operation (`applyQuota`). It lets the same agent run against a simulated
-  kitchen today and against `restaurant-service` later.
+  observable state (`perceive`) and one operation (`applyQuota`). It separates the agent from the kitchen it acts on,
+  so the prototype can run it against a simulated one.
 - *Reactive and hybrid.* Re-tuning a quota has no real-time urgency, so we chose neither. A drone controller would
   need a hybrid, layered design (e.g. InteRRaP): a reactive layer for collision avoidance and a deliberative layer for
   route planning. Our agent corresponds to that deliberative layer only.
@@ -104,8 +105,10 @@ The agent lives in `scheduler-service/analysis-scala`, on top of the ASMD model:
 
 - `AutonomousCapacityAgent.scala`: the perceive, decide, act loop, the internal state, the two modes and the fallbacks.
 - `CapacityAgent.scala`: the decision function.
+- `Statistics.scala`: Wald's sequential test and Hoeffding's bound, used to judge each candidate quota.
 - `RateEstimation.scala` and `Calibration.scala`: perception.
 - `StaffingAdvisor.scala`: the rota advice.
+- `PeakProfile.scala`: the peak-profile variant.
 - `KitchenPipeline.scala`, `ServiceSimulation.scala`, `SpnSimulator.scala`: the model and its simulation.
 - `SimulatedKitchen.scala`: the environment used for the demo.
 
@@ -118,8 +121,7 @@ exactly.
 
 A simulated kitchen could log how long each order spent in every stage; a real one cannot, since nobody stamps each
 pizza in and out of the oven during a busy service. What Munchies does record is each order's **arrival** and its
-**lifecycle** (`order-service` stores `PENDING -> PREPARING -> READY -> COMPLETED`), so it knows when each slot's last
-order was ready. The stage times are better known by the staff. The agent is built on that division. Before each
+**lifecycle** (`order-service` timestamps every status change), so it knows when each slot's last order was ready. The stage times are better known by the staff. The agent is built on that division. Before each
 Friday it:
 
 1. **Perceives.** It receives last Friday's order log, with the arrival time of every order (including those a full
@@ -170,12 +172,13 @@ agent. Each week is also run under the static quota with the same random numbers
 quota:
 
 - Week 0: a normal Friday.
-- Week 1: the topper is absent (announced on the rota).
+- Week 1: one of the two pizza makers is absent (announced on the rota).
 - Week 2: a normal Friday.
 - Weeks 3-5: an oven fault makes bakes last 7 minutes; it is reported, but the staff declare 6.
 - Week 6: the oven is repaired (reported).
-- Weeks 7-8: a slower new pizza maker; nobody updates the declared prep time.
-- Weeks 9-10: a busier season (7 orders per slot), which no report announces.
+- Weeks 7-8: a slower new pizza maker (about 65 s per pizza); nobody updates the declared prep time.
+- Weeks 9-10: a busier season (7 orders per slot), which no report announces; the new pizza maker is now as fast as
+  the others.
 
 ### Results
 
@@ -185,33 +188,38 @@ asked for (222 in the busier season).
 | Week | True conditions | Slowdown measured | Agent quota | Agent breaches | Agent pizzas lost | Static breaches | Static pizzas lost | Rota advice (makers) |
 |---|---|---|---|---|---|---|---|---|
 | 0 | Normal Friday | - | 20 | 6 | 4 | 6 | 4 | 2 |
-| 1 | Topper absent | - | 11 | 8 | 50 | 98 | 5 | 3 |
+| 1 | One pizza maker absent | - | 11 | 8 | 50 | 98 | 5 | 3 |
 | 2 | Normal Friday | - | 17 | 2 | 12 | 11 | 4 | 3 |
 | 3 | Oven fault | - | 16 | 53 | 16 | 76 | 4 | none |
-| 4 | Oven fault | x1.10 | 14 | 12 | 22 | 78 | 5 | none |
-| 5 | Oven fault | x1.19 | 13 | 0 | 31 | 75 | 5 | none |
+| 4 | Oven fault | x1.10 | 14 | 12 | 22 | 78 | 5 | none? |
+| 5 | Oven fault | x1.19 | 13 | 0 | 31 | 75 | 5 | none? |
 | 6 | Oven repaired | - | 24 | 29 | 2 | 18 | 5 | 2 |
 | 7 | New pizza maker | - | 19 | 52 | 6 | 61 | 5 | 3 |
-| 8 | New pizza maker | x1.17 | 14 | 8 | 24 | 58 | 4 | none |
-| 9 | Busier season | x1.15 | 15 | 0 | 51 | 54 | 16 | none |
+| 8 | New pizza maker | x1.17 | 14 | 8 | 24 | 58 | 4 | none? |
+| 9 | Busier season | x1.15 | 15 | 0 | 51 | 54 | 16 | none? |
 | 10 | Busier season | - | 17 | 10 | 34 | 56 | 15 | 4 |
 
 "none" means that no number of pizza makers up to 4 reaches the target: something else, the oven, limits the service.
+"?" marks advice given under a slowdown, which cannot tell slow pizza makers from a slow oven: in weeks 8 and 9 the
+slowdown in fact comes from the new pizza maker.
 
-- **On a normal Friday** the agent chooses the static 20, which holds.
-- **Announced changes are handled before they hurt.** With the topper absent the static quota fails in 98 services of
-  100; the agent reads the rota, cuts the quota to 11 and stays on time. The rota advice gives the better fix: a third
-  pizza maker.
-- **Unannounced changes are corrected one week later.** The first Friday of the oven fault and of the new pizza maker
-  breaches the cap in about half the services, since nothing tells the agent. On the next Friday calibration measures
-  the kitchen 10-17% slower than declared, the agent lowers the quota and returns within the tolerance.
+- **On a normal Friday** (week 0) the agent chooses the static 20, which holds.
+- **Announced changes are handled before they hurt.** With one pizza maker absent the static quota fails in 98
+  services of 100; the agent reads the rota, cuts the quota to 11 and stays on time. The rota advice gives the better
+  fix: a third pizza maker.
+- **Understated changes are corrected one week later.** The oven fault is reported as 6 minutes instead of 7, and the
+  new pizza maker is not reported at all. On the first Friday of each the agent breaches the cap in about half the
+  services; on the next one, calibration measures the kitchen 10-17% slower than declared and the agent lowers the
+  quota back within the tolerance.
 - **Moved orders come back as load.** In the busier season the static 20 fails in more than half the services,
   because orders moved out of full slots crowd the later ones. The agent stays on time.
-- **The goal protects lateness, not customers.** Staying on time costs about 50 pizzas per evening (weeks 1 and 9).
-  That is what a goal that limits only lateness asks for.
-- **Estimates are noisy.** In week 6, by chance, the two Fridays of logs underestimate demand (0.31 orders per minute
-  instead of 0.37); the agent chooses 24 and breaches the cap in 29 services, above the tolerance. Nothing in its
-  percepts can reveal such an error before the service.
+- **The goal protects lateness, not customers.** Staying on time costs up to 50 pizzas per evening (week 1): that is
+  what a goal that limits only lateness asks for. In week 9 the cost also includes calibration's lag: the agent still
+  plans with week 8's slowdown, although the new pizza maker has caught up.
+- **Estimates are noisy.** By chance, the two Fridays of logs overestimate demand in week 2 (0.44 orders per minute
+  instead of 0.37: a quota of 17 and a few more pizzas lost) and underestimate it in week 6 (0.31: a quota of 24 and 29
+  breaches, above the tolerance). Nothing in the agent's percepts can reveal such an error before the service;
+  planning against a pessimistic bound would protect the goal, at the cost of lower quotas.
 
 ### Two variants
 
@@ -224,9 +232,10 @@ Each variant changes one choice of the agent above and keeps everything else:
 
 #### Results of the variants
 
-**Stage-log agent.** `node demo-node.js logs` runs it on the same 11 weeks. It does not do better: it
-matches calibration on the oven fault, and does worse with the new pizza maker (52 breaches in week 8 instead of 8),
-because its fit still mixes in the Friday before the change, while calibration looks only at the last one. Learning
+**Stage-log agent.** `node demo-node.js logs` runs it on the same 11 weeks. It does not do better overall: on
+the oven fault it is close to calibration (23, 12 and 6 breaches against 53, 12 and 0), and with the new pizza maker
+it does worse (52 breaches in week 8 instead of 8), because its fit still mixes in the Friday before the change, while
+calibration looks only at the last one. Learning
 only from what a real system can measure costs nothing here.
 
 **Peak-profile agent.** `demo-peak.js` is a proof of concept, not part of the weekly loop: it plans a Friday
@@ -241,13 +250,7 @@ tolerance (13%), losing 8 more pizzas per evening. A different quota for each sl
   more slowly.
 - **Simplified scenario.** Orders arrive at a constant rate (see the peak variant), the delivery, takeaway and dine-in
   channels share one due time, and the order sizes are not re-estimated.
-- **Parameter uncertainty.** The agent plans as if its estimated rates were exact (week 6 shows the cost). Planning
-  against a pessimistic bound would protect the goal at the cost of lower quotas.
-- **Lost customers are not in the goal.** A goal that also weighs lost demand would let the manager state that
-  trade-off.
 - **A minimal learning element.** Calibration compares the service with the model and corrects one factor, measured
-  afresh each week. It does not remember, and it cannot tell which stage is slow: if the slow pizza maker is not on
-  the next rota, the agent still plans with the stretched times for one week (a quota slightly too low).
-- **No write-back and no reactive layer.** Nothing writes the quota to `restaurant-service` yet (that is an adapter
-  behind `KitchenEnvironment`, not a change to the agent), and the prototype covers only the deliberative half of
-  what a drone would need.
+  afresh each week. It does not remember, and it cannot tell which stage is slow: if the slowdown is gone by the next
+  service, the agent still plans with the stretched times for one week, with a quota slightly too low (week 9).
+- **No reactive layer.** The prototype covers only the deliberative half of what a drone would need.

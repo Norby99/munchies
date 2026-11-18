@@ -49,8 +49,7 @@ The limitations are discussed where they belong; the ones that matter most for t
   itself. The services that wait on MongoDB use the same autoscaler, on a CPU signal that is weaker for them.
 - **Availability is partial.** Only the gateway has more than one replica at rest and a graceful shutdown; the
   services have no liveness probe, and the databases and the broker run as single instances.
-- **The capacity agent is a prototype.** It runs against a simulated kitchen and does not yet write its quota back to
-  the system.
+- **The capacity agent is a prototype.** It runs against a simulated kitchen and is not connected to the system.
 
 ## Lessons learned
 
@@ -69,7 +68,7 @@ The limitations are discussed where they belong; the ones that matter most for t
 
 - Make the payment flow reliable, with an outbox for the events and a retried or compensated update of the order.
 - Deliver notifications, starting from a WebSocket push to the frontend through the gateway.
-- Give the scheduler a database, deploy and instrument it, and connect the capacity agent to it so that the quota it
-  computes is the one the system applies.
+- Give the scheduler a database and instrument it, and connect the capacity agent to it so that the quota it computes
+  is the one the system applies.
 - Balance load per request with a layer 7 proxy, and scale on request rate instead of CPU.
 - Extend the benchmark to the services that depend on MongoDB, and the architecture tests to the Express.js services.
