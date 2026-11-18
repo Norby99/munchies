@@ -21,47 +21,13 @@ Dependencies point only inward. Inbound calls follow that direction (controller 
 domain). Outbound calls (persisting, hashing, sending mail) are inverted: the domain declares the interface, the
 infrastructure implements it, and the adapter is injected into the use case at startup.
 
-```mermaid
-flowchart LR
-    client(["HTTP client / gateway-service"])
+![Hexagonal architecture of user-service](hexagonal-architecture/hexagonal-architecture.png)
 
-    subgraph infra["infrastructure"]
-        direction TB
-        in_adapter["Inbound adapter<br/>MicronautUserController"]
-        out_mongo["Outbound adapter<br/>MongoUserRepository<br/>MongoUserCredentialsRepository"]
-        out_hash["Outbound adapter<br/>KotlinPasswordHasher"]
-        out_mail["Outbound adapter<br/>FakeMailer"]
-    end
-
-    subgraph app["application"]
-        direction TB
-        in_port["Inbound port<br/>RegisterUser"]
-        usecase["RegisterUserUseCase"]
-    end
-
-    subgraph dom["domain"]
-        direction TB
-        model["User, UserCredentials"]
-        p_repo["Outbound ports<br/>UserRepository<br/>UserCredentialsRepository"]
-        p_hash["Outbound port<br/>PasswordHasher"]
-        p_mail["Outbound port<br/>Mailer"]
-    end
-
-    mongo[("MongoDB")]
-    client --> in_adapter
-    in_adapter -->|calls| in_port
-    usecase -.->|implements| in_port
-    usecase --> model
-    usecase -->|uses| p_repo
-    usecase -->|uses| p_hash
-    usecase -->|uses| p_mail
-    out_mongo -.->|implements| p_repo
-    out_hash -.->|implements| p_hash
-    out_mail -.->|implements| p_mail
-    out_mongo --> mongo
-```
-
-Solid arrows are calls, dashed arrows are `implements` relations.
+The nested hexagons are the three layers, with the registration use case as the example. Adapters sit in the
+outer ring, the inbound port and the use case in the application ring, the model and the outbound ports in the
+domain. Solid arrows are calls, dashed arrows with a hollow triangle are `implements` relations. Every arrow that
+crosses a layer boundary points inward, which is the dependency rule above; only the Mongo adapter reaches out,
+to the database.
 
 ## Ports
 
