@@ -204,8 +204,16 @@ describe("ScheduleOrder with zones", () => {
 });
 
 describe("HttpRestaurantZones", () => {
+  // Answers with the raw body, the way the adapter asks axios for it (responseType "text"), and
+  // records the requested path.
+  const urls: string[] = [];
   const fakeHttp = (status: number, data: unknown) =>
-    ({ get: async () => ({ status, data }) }) as unknown as AxiosInstance;
+    ({
+      get: async (url: string) => {
+        urls.push(url);
+        return { status, data: typeof data === "string" ? data : JSON.stringify(data) };
+      },
+    }) as unknown as AxiosInstance;
 
   it("parses the zones and drops malformed ones", async () => {
     const client = new HttpRestaurantZones(
@@ -221,10 +229,21 @@ describe("HttpRestaurantZones", () => {
     const zones = await client.get("r1");
     expect(zones.map((z) => z.id)).toEqual(["west"]);
     expect(zones[0].boundary).toHaveLength(4);
+    expect(urls.at(-1)).toBe("/restaurants/r1/delivery-zones/");
   });
 
   it("returns no zones for an unknown restaurant", async () => {
     expect(await new HttpRestaurantZones("", fakeHttp(404, {})).get("r1")).toEqual([]);
+  });
+
+  it("returns no zones when the restaurant has not drawn any", async () => {
+    expect(await new HttpRestaurantZones("", fakeHttp(200, { result: [], code: 200 })).get("r1")).toEqual([]);
+  });
+
+  it("throws on a payload that does not match the contract rather than ignoring the zones", async () => {
+    await expect(
+      new HttpRestaurantZones("", fakeHttp(200, { result: [{ id: "west" }], code: 200 })).get("r1"),
+    ).rejects.toThrow(/contract/);
   });
 
   it("throws on a server error rather than ignoring the zones", async () => {
