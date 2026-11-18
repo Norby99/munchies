@@ -1,7 +1,9 @@
 # Deployment on Kubernetes
 
-Kubernetes is the production deployment of Munchies. It runs images built by the same Gradle tasks, with the same environment
-variables, as [Docker Compose](docker-compose.md), and adds what Compose cannot provide: per-service isolation, self-healing,
+Kubernetes is the production deployment of Munchies. It runs images built by the same Gradle tasks, with the same
+environment
+variables, as [Docker Compose](docker-compose.md), and adds what Compose cannot provide: per-service isolation,
+self-healing,
 horizontal autoscaling and an always-on monitoring stack. The cluster used throughout the project is a single-node
 Minikube.
 
@@ -35,19 +37,19 @@ environment variable, as described in [Service discovery](#service-discovery) be
 Deployment balances requests across however many replicas the autoscaler is currently running, so callers never need
 to know how many there are.
 
-| Workload | Deployed from | Own MongoDB | Autoscaled |
-|---|---|---|---|
-| `frontend-service` | Helm chart `helm/munchies-service` | no | no |
-| `gateway-service` | Helm chart | no | yes |
-| `user-service` | Helm chart | yes | yes |
-| `restaurant-service` | Helm chart | yes | yes |
-| `order-service` | Helm chart | yes | yes |
-| `payment-service` | manifests under `k8s/` | yes | no |
-| `notification-service` | manifests under `k8s/` | no | no |
-| `table-reservation-service` | manifests under `k8s/` | yes | no |
-| `scheduler-service` | Helm chart | no (state in memory) | no (one replica) |
-| Kafka | manifest under `k8s/kafka/` | n/a | no |
-| Observability stack | community Helm charts, `observability/values/` | n/a | no |
+| Workload                    | Deployed from                                  | Own MongoDB          | Autoscaled       |
+|-----------------------------|------------------------------------------------|----------------------|------------------|
+| `frontend-service`          | Helm chart `helm/munchies-service`             | no                   | no               |
+| `gateway-service`           | Helm chart                                     | no                   | yes              |
+| `user-service`              | Helm chart                                     | yes                  | yes              |
+| `restaurant-service`        | Helm chart                                     | yes                  | yes              |
+| `order-service`             | Helm chart                                     | yes                  | yes              |
+| `payment-service`           | manifests under `k8s/`                         | yes                  | no               |
+| `notification-service`      | manifests under `k8s/`                         | no                   | no               |
+| `table-reservation-service` | manifests under `k8s/`                         | yes                  | no               |
+| `scheduler-service`         | Helm chart                                     | no (state in memory) | no (one replica) |
+| Kafka                       | manifest under `k8s/kafka/`                    | n/a                  | no               |
+| Observability stack         | community Helm charts, `observability/values/` | n/a                  | no               |
 
 Kafka and the observability stack are infrastructure, not services: they keep
 their data in their own storage (messages, metrics, logs, traces), not in MongoDB.
@@ -60,9 +62,7 @@ find, at the moment of the call, an instance that is currently running and healt
 Discovery** pattern solves.
 
 Munchies does not implement this pattern itself: there is no service registry such as Eureka or Consul, and no
-discovery client in any service. It relies on the discovery that Kubernetes provides to every workload, which Chris
-Richardson's catalogue lists as _platform-provided service discovery_. This section describes how that mechanism
-works, and how it maps onto the parts of the pattern.
+discovery client in any service. It relies on the discovery that Kubernetes provides to every workload.
 
 ### How a call reaches a pod
 
@@ -105,30 +105,30 @@ No service registers itself, sends heartbeats or deregisters on shutdown: regist
 
 ### Mapping onto the pattern
 
-| Element of the pattern | Typical dedicated implementation (e.g. Eureka) | Munchies on Kubernetes |
-|---|---|---|
-| Service registry | a registry server the services call | the API server, which stores `Service` and `EndpointSlice` objects; CoreDNS answers name lookups from it |
-| Registration | **self registration**: a client library in each service registers it and sends heartbeats | **third-party registration**: the control plane registers each pod from its readiness probe |
-| Health of an instance | heartbeats sent by the instance | readiness probe on `/health`, the same check used for rollouts and autoscaling |
-| Discovery | **client-side**: the caller queries the registry and picks an instance | **server-side**: the caller uses a DNS name, and the node's networking picks the instance |
-| Load balancing | inside the client library | `kube-proxy` rules, once per connection |
+| Element of the pattern | Typical dedicated implementation (e.g. Eureka)                                            | Munchies on Kubernetes                                                                                   |
+|------------------------|-------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| Service registry       | a registry server the services call                                                       | the API server, which stores `Service` and `EndpointSlice` objects; CoreDNS answers name lookups from it |
+| Registration           | **self registration**: a client library in each service registers it and sends heartbeats | **third-party registration**: the control plane registers each pod from its readiness probe              |
+| Health of an instance  | heartbeats sent by the instance                                                           | readiness probe on `/health`, the same check used for rollouts and autoscaling                           |
+| Discovery              | **client-side**: the caller queries the registry and picks an instance                    | **server-side**: the caller uses a DNS name, and the node's networking picks the instance                |
+| Load balancing         | inside the client library                                                                 | `kube-proxy` rules, once per connection                                                                  |
 
 ### The names used in the cluster
 
-| Caller | Target | Name | Notes |
-|---|---|---|---|
-| `gateway-service` | `user-service`, `restaurant-service`, `order-service`, `payment-service`, `scheduler-service`, `table-reservation-service`, `notification-service` (WebSocket) | `<service>.<namespace>.svc.cluster.local:8080` | ClusterIP `Service`, balanced across the replicas |
-| `order-service` | `restaurant-service`, `table-reservation-service` | `<service>.<namespace>.svc.cluster.local:8080` | same |
-| `scheduler-service` | `order-service`, `restaurant-service` | `<service>.<namespace>.svc.cluster.local:8080` | same |
-| `scheduler-service` | OSRM routing server | `https://router.project-osrm.org` (`OSRM_URL`) | outside the cluster, not discovery |
-| `payment-service` | `order-service` | `order-service.order-service.svc.cluster.local:8080` | same |
-| `table-reservation-service` | `restaurant-service` | `restaurant-service.restaurant-service.svc.cluster.local:8080` | same |
-| `frontend-service` | `gateway-service` | `gateway-service.gateway-service.svc.cluster.local:8080` | same |
-| each service | its own MongoDB | e.g. `order-mongodb.order-service.svc.cluster.local:27017` | the manifests under `k8s/` use the short form (`payment-mongodb`), which resolves within the caller's own namespace |
-| producers, `notification-service` | Kafka | `kafka-0.kafka-headless.kafka.svc.cluster.local:9092` | headless `Service` (see [Stateful components](#stateful-components)) |
-| Prometheus, Alloy | every application pod | Kubernetes API, `pod` role | see below |
-| browser | `frontend-service` | `kubectl port-forward svc/frontend-service 5173:8080` | not discovery, only exposure |
-| clients outside the cluster | `gateway-service` | `NodePort` on the Minikube node | same |
+| Caller                            | Target                                                                                                                                                         | Name                                                           | Notes                                                                                                               |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| `gateway-service`                 | `user-service`, `restaurant-service`, `order-service`, `payment-service`, `scheduler-service`, `table-reservation-service`, `notification-service` (WebSocket) | `<service>.<namespace>.svc.cluster.local:8080`                 | ClusterIP `Service`, balanced across the replicas                                                                   |
+| `order-service`                   | `restaurant-service`, `table-reservation-service`                                                                                                              | `<service>.<namespace>.svc.cluster.local:8080`                 | same                                                                                                                |
+| `scheduler-service`               | `order-service`, `restaurant-service`                                                                                                                          | `<service>.<namespace>.svc.cluster.local:8080`                 | same                                                                                                                |
+| `scheduler-service`               | OSRM routing server                                                                                                                                            | `https://router.project-osrm.org` (`OSRM_URL`)                 | outside the cluster, not discovery                                                                                  |
+| `payment-service`                 | `order-service`                                                                                                                                                | `order-service.order-service.svc.cluster.local:8080`           | same                                                                                                                |
+| `table-reservation-service`       | `restaurant-service`                                                                                                                                           | `restaurant-service.restaurant-service.svc.cluster.local:8080` | same                                                                                                                |
+| `frontend-service`                | `gateway-service`                                                                                                                                              | `gateway-service.gateway-service.svc.cluster.local:8080`       | same                                                                                                                |
+| each service                      | its own MongoDB                                                                                                                                                | e.g. `order-mongodb.order-service.svc.cluster.local:27017`     | the manifests under `k8s/` use the short form (`payment-mongodb`), which resolves within the caller's own namespace |
+| producers, `notification-service` | Kafka                                                                                                                                                          | `kafka-0.kafka-headless.kafka.svc.cluster.local:9092`          | headless `Service` (see [Stateful components](#stateful-components))                                                |
+| Prometheus, Alloy                 | every application pod                                                                                                                                          | Kubernetes API, `pod` role                                     | see below                                                                                                           |
+| browser                           | `frontend-service`                                                                                                                                             | `kubectl port-forward svc/frontend-service 5173:8080`          | not discovery, only exposure                                                                                        |
+| clients outside the cluster       | `gateway-service`                                                                                                                                              | `NodePort` on the Minikube node                                | same                                                                                                                |
 
 Two cases differ from the ClusterIP path described above:
 
@@ -143,36 +143,12 @@ Two cases differ from the ClusterIP path described above:
 ### Where the names come from
 
 No address is written in the code. Every name above is passed to the pod as an environment variable (`USER_SERVICE_URL`,
-`RESTAURANT_SERVICE_URL`, `ORDER_SERVICE_URL`, `SCHEDULER_SERVICE_URL`, `MONGODB_URI`, `KAFKA_BOOTSTRAP_SERVERS`), set in
+`RESTAURANT_SERVICE_URL`, `ORDER_SERVICE_URL`, `SCHEDULER_SERVICE_URL`, `MONGODB_URI`, `KAFKA_BOOTSTRAP_SERVERS`), set
+in
 `helm/values/<service>.yaml` or in the manifests under `k8s/`. In [Docker Compose](docker-compose.md) the same
 variables point to the Compose service names (`http://order-service:8080`), resolved by Docker's embedded DNS server,
 which plays the same role as CoreDNS. The service code is identical in both environments: for it, another service is
 only a URL.
-
-### Why the platform's discovery and not a registry
-
-- **It is already there.** Every Kubernetes cluster runs CoreDNS and `kube-proxy`. A registry would be one more
-  always-on component, with its own availability to look after, on a single-node cluster that is already short of
-  memory.
-- **It is independent of the language.** Munchies has Kotlin and Node.js services. A registry needs a client library
-  in every service, one per stack, while a DNS name works unchanged in both.
-- **It has a single notion of health.** The readiness probe that decides whether a pod receives traffic is the same
-  one that gates rollouts and new replicas created by the autoscaler. With a registry, the registry's heartbeats and
-  Kubernetes' probes could disagree about the same pod.
-- **The code stays unaware of it.** Services contain no discovery code at all, which keeps them consistent with the
-  hexagonal layout: an outbound adapter is configured with a URL and nothing else.
-
-### Trade-offs
-
-- **Tied to the platform.** Discovery works only inside the cluster, or inside the Compose network. Outside them, for
-  example a service started from the IDE, addresses have to be configured by hand.
-- **Simple load balancing.** `kube-proxy` picks a pod at random for each new connection; it does not take the load of
-  the pods into account, and does not retry a failed request on another replica. A client-side discovery library or a
-  service mesh could add these, at the cost of more components.
-- **Removal is not instantaneous.** A pod is taken out of the `Service` only after its readiness probe has failed
-  several times in a row (three by default, checked every 5 seconds), so a pod that stops answering may still receive
-  requests for up to about 15 seconds. Together with the graceful shutdown that most services still lack (see
-  [Limitations](#limitations)), this is where requests can be lost while the set of replicas changes.
 
 ## Pod configuration
 
@@ -224,7 +200,8 @@ other services.
 **MongoDB**, one per service with persistent state, runs as a single-replica `StatefulSet` with its own
 `PersistentVolumeClaim`. Redeploying or undeploying a service does not delete its data: `./gradlew undeploy` keeps the
 claims, and the chart also annotates them with `helm.sh/resource-policy: keep`, so a plain `helm uninstall` keeps them
-too. `./gradlew undeploy -PwipeData=true` removes them explicitly. Unlike the services, the database pods also have a liveness
+too. `./gradlew undeploy -PwipeData=true` removes them explicitly. Unlike the services, the database pods also have a
+liveness
 probe, so a hung `mongod` is restarted.
 
 **Kafka** runs as a single broker in KRaft mode (no ZooKeeper), a one-replica `StatefulSet` behind a headless `Service`
@@ -245,11 +222,11 @@ replicated at all (see [Rollout strategy](#rollout-strategy)).
 
 Scaling is meant to protect what the user experiences, so the objectives are expressed on the user-facing side:
 
-| Service level indicator (SLI) | How it is measured | Service level objective (SLO) |
-|---|---|---|
-| Request latency | 95th percentile of request duration, measured by the client (k6) and server-side by the `http_server_requests_seconds` histogram in Prometheus | p95 below 800 ms |
-| Error rate | Share of failed requests (status 4xx/5xx or no response) | below 1% |
-| Availability during scaling | Requests failed while replicas are added or removed | no loss attributable to scaling |
+| Service level indicator (SLI) | How it is measured                                                                                                                             | Service level objective (SLO)   |
+|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| Request latency               | 95th percentile of request duration, measured by the client (k6) and server-side by the `http_server_requests_seconds` histogram in Prometheus | p95 below 800 ms                |
+| Error rate                    | Share of failed requests (status 4xx/5xx or no response)                                                                                       | below 1%                        |
+| Availability during scaling   | Requests failed while replicas are added or removed                                                                                            | no loss attributable to scaling |
 
 The first two are the thresholds of the k6 load test (`p(95)<800`, error rate below 1%), so a benchmark run passes or
 fails on the SLOs themselves; the third is checked from the run's record of failures against its scaling timeline (see
@@ -258,7 +235,8 @@ the [Scaling Benchmark](scaling-benchmark.md#against-the-service-level-objective
 ### Scaling on CPU as a leading indicator
 
 The autoscaler does not act on latency directly: that would need a custom-metrics adapter feeding Prometheus data back
-to Kubernetes, which the project does not install. It scales on CPU instead, using `metrics-server`. For `gateway-service`
+to Kubernetes, which the project does not install. It scales on CPU instead, using `metrics-server`. For
+`gateway-service`
 CPU is a good leading indicator: its own work (checking tokens, routing) is CPU-bound, and CPU saturates before latency
 degrades, so scaling on CPU adds capacity before the latency SLO is at risk. The
 [Scaling Benchmark](scaling-benchmark.md) checks that this holds in practice. For the Micronaut services, which spend
@@ -268,12 +246,12 @@ the same autoscaler, but the benchmark does not cover them.
 The `HorizontalPodAutoscaler` is a template of the generic chart, enabled for `gateway-service`, `user-service`,
 `restaurant-service` and `order-service`:
 
-| Setting | Value | Reason |
-|---|---|---|
-| Target | 60% average CPU of the request | Leaves headroom: scaling starts while the pods still have spare capacity, since new pods take seconds to become ready |
-| Replicas | 1 to 4 | The floor keeps the service available; the ceiling keeps four replicas plus their databases within the memory of the single-node cluster |
-| Scale-up | up to 2 pods every 30 s, no stabilization window | React fast: under-provisioning is what breaks the latency SLO |
-| Scale-down | 1 pod every 30 s, 30 s stabilization window | Remove capacity gradually, so a short dip in load does not cause the service to flap |
+| Setting    | Value                                            | Reason                                                                                                                                   |
+|------------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| Target     | 60% average CPU of the request                   | Leaves headroom: scaling starts while the pods still have spare capacity, since new pods take seconds to become ready                    |
+| Replicas   | 1 to 4                                           | The floor keeps the service available; the ceiling keeps four replicas plus their databases within the memory of the single-node cluster |
+| Scale-up   | up to 2 pods every 30 s, no stabilization window | React fast: under-provisioning is what breaks the latency SLO                                                                            |
+| Scale-down | 1 pod every 30 s, 30 s stabilization window      | Remove capacity gradually, so a short dip in load does not cause the service to flap                                                     |
 
 The scale-down window is deliberately short: the Kubernetes default is 5 minutes, which is the safer choice in
 production but would make every benchmark take most of an hour.
@@ -308,19 +286,3 @@ minikube addons enable metrics-server
 
 kubectl -n frontend-service port-forward svc/frontend-service 5173:8080   # open the frontend on localhost:5173
 ```
-
-## Limitations
-
-- **Images are local.** The chart uses `:latest` images loaded into Minikube (`pullPolicy: Never`), not the images
-  published by CI, so a deployment is not tied to a released version.
-- **No liveness probe on the services.** A pod that hangs while still answering `/health` is not restarted; only the
-  databases have a liveness probe.
-- **Graceful shutdown only on the gateway.** The other services have no `preStop` sleep and do not handle `SIGTERM`,
-  so a replica removed during scale-in can drop the requests it is answering, and new connections can still be routed
-  to it until its endpoint is removed. Before the gateway had it, the benchmark measured this loss during scale-in.
-- **Load is balanced per connection.** kube-proxy picks a pod when a connection is opened, so keep-alive connections
-  opened before a scale-up stay on the old pods, and the new replicas take load only as clients reconnect. In the
-  benchmark this kept the original replicas overloaded through the peak while the others were ready, and made p95
-  latency miss its objective. The gateway now closes each client connection after 20 requests, which spreads the load
-  onto new replicas within seconds; its own connections to the services behind it are not rebalanced, nor are those
-  between other services. Balancing per request with a layer 7 proxy would cover all of them.
