@@ -17,6 +17,14 @@ image:
 replicaCount: 1
 containerPort: 8080
 
+# Deployment update strategy (spec.strategy.type). RollingUpdate, the Kubernetes default, starts
+# the new pod before stopping the old one, so a rollout causes no downtime. Recreate stops every
+# old pod first: for a service whose state lives in the pod's memory and must never be held by
+# two pods at once (see helm/values/scheduler-service.yaml). Only `type` is templated; the
+# RollingUpdate surge/unavailable limits keep the Kubernetes defaults (25% / 25%).
+strategy:
+  type: RollingUpdate
+
 service:
   type: ClusterIP
   port: 8080
