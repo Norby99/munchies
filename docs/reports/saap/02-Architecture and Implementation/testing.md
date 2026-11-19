@@ -5,8 +5,9 @@ level. Each level has a concrete role in a microservices system: unit tests chec
 isolation, integration tests check the adapters against the real technology, component tests check a single service as
 a black box, and end-to-end tests check the services working together.
 
-The examples below come mainly from `user-service`, the same reference service used in
-[Hexagonal Architecture](hexagonal-architecture.md); `payment-service` shows the same levels on the Express.js stack.
+The examples below come mainly from `user-service`, whose in-memory adapters also allow BDD tests with no database
+(the test pyramid of `order-service` is summarised in [Hexagonal Architecture](hexagonal-architecture.md#test-pyramid));
+`payment-service` shows the same levels on the Express.js stack.
 
 | Level            | What is tested                        | Tools                                 | Location                                |
 |------------------|---------------------------------------|---------------------------------------|-----------------------------------------|

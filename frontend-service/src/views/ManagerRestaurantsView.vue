@@ -1,14 +1,19 @@
 <script setup lang="ts">
 // Manager: my restaurants, as cards with their menu count and quick links to orders and menus.
-// Creating and editing happen in a dialog, and so do the scheduling settings (location and
-// capacity policy) that enable deliveries, and the dining room tables that enable reservations. Menu counts are not part of RestaurantDto, so they are
-// derived by fetching each restaurant's menu summaries through the menus store.
+// Creating and editing happen in a dialog, and so do the scheduling settings (opening hours, slots,
+// kitchen units) and the dining room tables that enable reservations. Delivery (restaurant
+// position, drivers, zones) has its own page around a map (ManagerDeliveryView), and so does the
+// kitchen description the capacity agent reads (ManagerKitchenView). Menu counts are not part of
+// RestaurantDto, so they are derived by fetching each restaurant's menu summaries through the
+// menus store.
 
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ArmchairIcon,
+  BikeIcon,
   CalendarClockIcon,
+  ChefHatIcon,
   CircleAlertIcon,
   ClipboardListIcon,
   EllipsisVerticalIcon,
@@ -67,7 +72,7 @@ const formError = ref<string | null>(null)
 const formSubmitting = ref(false)
 const deleteTarget = ref<Restaurant | null>(null)
 const deleteError = ref<string | null>(null)
-// Restaurant whose scheduling settings (location, capacity policy) are being edited.
+// Restaurant whose scheduling settings (hours, slots, kitchen units) are being edited.
 const schedulingTarget = ref<Restaurant | null>(null)
 // Restaurant whose dining room tables are being edited.
 const tablesTarget = ref<Restaurant | null>(null)
@@ -124,6 +129,16 @@ async function submitForm(): Promise<void> {
 function goToMenus(restaurantId: string): void {
   restaurants.setActive(restaurantId)
   router.push({ name: 'menu-builder', params: { restaurantId } })
+}
+
+function goToDelivery(restaurantId: string): void {
+  restaurants.setActive(restaurantId)
+  router.push({ name: 'manager-delivery', params: { restaurantId } })
+}
+
+function goToKitchen(restaurantId: string): void {
+  restaurants.setActive(restaurantId)
+  router.push({ name: 'manager-kitchen', params: { restaurantId } })
 }
 
 function goToOrders(restaurantId: string): void {
@@ -191,7 +206,9 @@ function cancelDelete(): void {
                   <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
                       <DropdownMenuItem @select="openEdit(restaurant)"><PencilIcon /> Edit details</DropdownMenuItem>
-                      <DropdownMenuItem @select="schedulingTarget = restaurant"><CalendarClockIcon /> Scheduling and delivery</DropdownMenuItem>
+                      <DropdownMenuItem @select="schedulingTarget = restaurant"><CalendarClockIcon /> Scheduling</DropdownMenuItem>
+                      <DropdownMenuItem @select="goToDelivery(restaurant.id)"><BikeIcon /> Delivery</DropdownMenuItem>
+                      <DropdownMenuItem @select="goToKitchen(restaurant.id)"><ChefHatIcon /> Kitchen</DropdownMenuItem>
                       <DropdownMenuItem @select="tablesTarget = restaurant"><ArmchairIcon /> Tables</DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />

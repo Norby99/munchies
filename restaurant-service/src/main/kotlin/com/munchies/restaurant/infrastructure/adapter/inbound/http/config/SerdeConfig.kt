@@ -3,7 +3,10 @@ package com.munchies.restaurant.infrastructure.adapter.inbound.http.config
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.restaurant.infrastructure.adapter.dto.CapacityPolicyDto
 import com.munchies.restaurant.infrastructure.adapter.dto.CategoryDto
+import com.munchies.restaurant.infrastructure.adapter.dto.CookStationDto
+import com.munchies.restaurant.infrastructure.adapter.dto.DeliveryZoneDto
 import com.munchies.restaurant.infrastructure.adapter.dto.GeoPointDto
+import com.munchies.restaurant.infrastructure.adapter.dto.KitchenSetupDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuItemDto
 import com.munchies.restaurant.infrastructure.adapter.dto.MenuSummaryDto
@@ -36,6 +39,8 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Cr
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.DeleteRestaurantResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetCapacityPolicyResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetDeliveryZonesResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetKitchenSetupResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetManagerRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.GetRestaurantLocationResponse
@@ -44,6 +49,10 @@ import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.Ge
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.SearchRestaurantsResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateCapacityPolicyResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateDeliveryZonesRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateDeliveryZonesResponse
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateKitchenSetupRequest
+import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateKitchenSetupResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationRequest
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantLocationResponse
 import com.munchies.restaurant.infrastructure.adapter.inbound.http.restaurant.UpdateRestaurantRequest
@@ -58,6 +67,15 @@ import jakarta.inject.Singleton
 @SerdeImport(GetTablesResponse::class)
 @SerdeImport(UpdateTablesRequest::class)
 @SerdeImport(UpdateTablesResponse::class)
+@SerdeImport(DeliveryZoneDto::class)
+@SerdeImport(GetDeliveryZonesResponse::class)
+@SerdeImport(UpdateDeliveryZonesRequest::class)
+@SerdeImport(UpdateDeliveryZonesResponse::class)
+@SerdeImport(CookStationDto::class)
+@SerdeImport(KitchenSetupDto::class)
+@SerdeImport(GetKitchenSetupResponse::class)
+@SerdeImport(UpdateKitchenSetupRequest::class)
+@SerdeImport(UpdateKitchenSetupResponse::class)
 @SerdeImport(CreateMenuRequest::class)
 @SerdeImport(CreateMenuResponse::class)
 @SerdeImport(ValidityType::class)

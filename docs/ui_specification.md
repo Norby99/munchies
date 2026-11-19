@@ -133,6 +133,8 @@ On the wire each rule is a flat `ValidityDto { type, value: Record<string,string
 | Get / set tables | `GET` / `PUT /restaurants/:restaurantId/tables/` | CUSTOMER / MANAGER | `PUT { tables: DiningTable[] }` replaces the layout; duplicate numbers → `422`. |
 | Get / set capacity policy | `GET` / `PUT /restaurants/:restaurantId/capacity-policy/` | CUSTOMER / MANAGER | `404` = not configured. |
 | Get / set location | `GET` / `PUT /restaurants/:restaurantId/location/` | MANAGER | `404` = not configured. Delivery needs both policy and location. |
+| Get / set delivery zones | `GET` / `PUT /restaurants/:restaurantId/delivery-zones/` | MANAGER | `PUT { zones: DeliveryZone[] }` replaces them all; `[]` = no zones. A new zone is sent with an empty `id` and gets one back. |
+| Get / set kitchen setup | `GET` / `PUT /restaurants/:restaurantId/kitchen-setup/` | MANAGER | `404` = not described. Input for the capacity agent (not connected yet): route, people preparing, cook stations, minutes per item. |
 | Menus | `GET` / `POST /restaurant/:restaurantId/menus`, `GET` / `PUT` / `DELETE .../menus/:menuId` | read CUSTOMER, write MANAGER | Note the singular `/restaurant/` (see §11). `PUT` replaces name + validity. |
 | Categories | `POST .../menus/:menuId/categories`, `PUT` / `DELETE .../categories/:categoryId` | MANAGER | `PUT` replaces name + variations. |
 | Items | `POST .../categories/:categoryId/items`, `PUT` / `DELETE .../items/:itemId` | MANAGER | `PUT` replaces the whole item. |
@@ -274,7 +276,8 @@ Availability { restaurantId, date, orderType, slotMinutes /* 0 = type not offere
 Gaps:
 
 - The **booking ledger is in memory**: a scheduler restart forgets bookings (orders survive in order-service).
-- The per-slot **admission quota is random** for now (`RandomAdmissionQuotaAgent`), pending the real capacity agent.
+- The per-slot **admission quota is random** for now (`RandomAdmissionQuotaAgent`), pending the real capacity agent. The kitchen
+  setup the agent will read is already stored and edited on the Kitchen page.
 - Only the first transition (→ `PREPARING`) is automated; `READY` onward is a manual advance.
 
 ---

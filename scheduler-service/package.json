@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "axios": "^1.7.9",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "munchies-order-service-shared": "file:build/libs/munchies-order-shared.tgz",
+    "munchies-restaurant-service-shared": "file:build/libs/munchies-restaurant-shared.tgz"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -23,6 +25,7 @@
     "@vitest/coverage-v8": "^2.1.8",
     "scheduler-analysis": "file:analysis-scala",
     "tsx": "^4.19.2",
+    "typedoc": "^0.28.20",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

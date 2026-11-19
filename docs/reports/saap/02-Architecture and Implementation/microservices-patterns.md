@@ -113,7 +113,7 @@ services stay REST-based and add a single, narrow Kafka producer for each event 
 |---------------------------------|-------------------|-------------------------------------|--------------------------------------------------|
 | `user_email_confirmation_topic` | `user-service`    | `UserEmailConfirmationNotification` | user id, confirmation key                        |
 | `payment_success_topic`         | `payment-service` | `PaymentSuccessNotification`        | payment id, order id, amount, currency           |
-| `order_status_changed_topic`    | `order-service`   | `OrderStatusChangedNotification`    | order id, restaurant id, customer id, new status |
+| `order_status_changed_topic`    | `order-service`   | `OrderStatusChangedNotification`    | order id, restaurant id, customer id, new status, paid flag |
 | `table_reservation_accepted_topic` | `table-reservation-service` | `TableReservationAcceptedNotification` | reservation id, restaurant id, customer id, start and end of the slot, number of guests, table number |
 | `table_reservation_modified_topic` | `table-reservation-service` | `TableReservationModifiedNotification` | same as above |
 | `table_reservation_canceled_topic` | `table-reservation-service` | `TableReservationCanceledNotification` | same as above |
@@ -137,10 +137,19 @@ implemented by `KafkaOrderNotificationPublisher` in `order-service`, and `Paymen
 `KafkaPaymentNotificationPublisher` in `payment-service`, and `KafkaTableReservationNotificationPublisher` in
 `table-reservation-service`.
 
-At the moment `NotificationController` only logs each event and increments the `notifications_received_total` metric;
-the actual channels (email, SMS, WebSocket push to the frontend) are not implemented yet and will be plugged into its
-`handle*`
-methods.
+**Delivery.** `NotificationController` turns each order and table reservation event into a `LiveNotification` and hands
+it to the `LiveNotifier` outbound port, implemented by `SocketIoLiveNotifier` (`adapter/outbound/websocket/`), which
+pushes it over Socket.io to the customer concerned and to the staff of the restaurant. Every connection joins a room
+for its user and, for a manager, one for each restaurant they own, so a single `emit` reaches all the tabs and devices
+they have open. The frontend never connects to `notification-service` directly: `gateway-service` authenticates the
+`authToken` cookie of the WebSocket upgrade, resolves the restaurants of a manager and forwards the identity in
+headers, so `notification-service` stays internal and never calls another service. The email-confirmation and
+payment-success events are only logged; no email or SMS channel is implemented. Received events, pushed notifications
+and open connections are exported as `notifications_received_total`, `notifications_pushed_total` and
+`live_connections`.
+
+The rooms live in the memory of the process, so `notification-service` runs as a single replica; scaling it out would
+need a shared Socket.io adapter (e.g. Redis).
 
 ### 3. Observability — Health checks, Prometheus, Loki, Tempo, Grafana
 

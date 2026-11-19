@@ -7,6 +7,8 @@ import { DeleteCategoryRoute } from "./delete-category.route";
 import { DeleteMenuRoute } from "./delete-menu.route";
 import { DeleteRestaurantRoute } from "./delete-restaurant.route";
 import { GetCapacityPolicyRoute } from "./get-capacity-policy.route";
+import { GetDeliveryZonesRoute } from "./get-delivery-zones.route";
+import { GetKitchenSetupRoute } from "./get-kitchen-setup.route";
 import { GetManagerRestaurantsRoute } from "./get-manager-restaurants.route";
 import { GetMenuRoute } from "./get-menu.route";
 import { GetRestaurantLocationRoute } from "./get-restaurant-location.route";
@@ -17,6 +19,8 @@ import { RemoveMenuItemRoute } from "./remove-menu-item.route";
 import { SearchRestaurantsRoute } from "./search-restaurants.route";
 import { UpdateCapacityPolicyRoute } from "./update-capacity-policy.route";
 import { UpdateCategoryRoute } from "./update-category.route";
+import { UpdateDeliveryZonesRoute } from "./update-delivery-zones.route";
+import { UpdateKitchenSetupRoute } from "./update-kitchen-setup.route";
 import { UpdateMenuItemRoute } from "./update-menu-item.route";
 import { UpdateMenuRoute } from "./update-menu.route";
 import { UpdateRestaurantLocationRoute } from "./update-restaurant-location.route";
@@ -36,6 +40,10 @@ export const restaurantRoutes: SimpleRoute<any>[] = [
   new UpdateRestaurantLocationRoute(),
   new GetTablesRoute(),
   new UpdateTablesRoute(),
+  new GetDeliveryZonesRoute(),
+  new UpdateDeliveryZonesRoute(),
+  new GetKitchenSetupRoute(),
+  new UpdateKitchenSetupRoute(),
   new CreateMenuRoute(),
   new GetMenuRoute(),
   new GetRestaurantMenusRoute(),

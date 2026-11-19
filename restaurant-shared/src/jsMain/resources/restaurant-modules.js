@@ -12,6 +12,9 @@ const _dto = _adapter.dto;
 module.exports = {
   RestaurantDto: _dto.RestaurantDto,
   TableDto: _dto.TableDto,
+  DeliveryZoneDto: _dto.DeliveryZoneDto,
+  CookStationDto: _dto.CookStationDto,
+  KitchenSetupDto: _dto.KitchenSetupDto,
 
   RestaurantServiceConfig: _inbound.web.config.RestaurantServiceConfig,
   MenuServiceConfig: _inbound.web.config.MenuServiceConfig,
@@ -78,6 +81,26 @@ module.exports = {
   updateTablesRequestFromJson: _httpRestaurant.updateTablesRequestFromJson,
   UpdateTablesResponse: _httpRestaurant.UpdateTablesResponse,
   updateTablesResponseFromJson: _httpRestaurant.updateTablesResponseFromJson,
+
+  GetDeliveryZonesAPI: _inbound.JsGetDeliveryZonesAPI,
+  GetDeliveryZonesResponse: _httpRestaurant.GetDeliveryZonesResponse,
+  getDeliveryZonesResponseFromJson: _httpRestaurant.getDeliveryZonesResponseFromJson,
+
+  UpdateDeliveryZonesAPI: _inbound.JsUpdateDeliveryZonesAPI,
+  UpdateDeliveryZonesRequest: _httpRestaurant.UpdateDeliveryZonesRequest,
+  updateDeliveryZonesRequestFromJson: _httpRestaurant.updateDeliveryZonesRequestFromJson,
+  UpdateDeliveryZonesResponse: _httpRestaurant.UpdateDeliveryZonesResponse,
+  updateDeliveryZonesResponseFromJson: _httpRestaurant.updateDeliveryZonesResponseFromJson,
+
+  GetKitchenSetupAPI: _inbound.JsGetKitchenSetupAPI,
+  GetKitchenSetupResponse: _httpRestaurant.GetKitchenSetupResponse,
+  getKitchenSetupResponseFromJson: _httpRestaurant.getKitchenSetupResponseFromJson,
+
+  UpdateKitchenSetupAPI: _inbound.JsUpdateKitchenSetupAPI,
+  UpdateKitchenSetupRequest: _httpRestaurant.UpdateKitchenSetupRequest,
+  updateKitchenSetupRequestFromJson: _httpRestaurant.updateKitchenSetupRequestFromJson,
+  UpdateKitchenSetupResponse: _httpRestaurant.UpdateKitchenSetupResponse,
+  updateKitchenSetupResponseFromJson: _httpRestaurant.updateKitchenSetupResponseFromJson,
 
   // ---- Menu API ----
   CreateMenuAPI: _inbound.JsCreateMenuAPI,

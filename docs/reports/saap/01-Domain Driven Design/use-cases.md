@@ -33,7 +33,9 @@ confirmation, which the user then uses to verify their address.
 
 Customers search restaurants by name or address and browse their menus; everything else is restaurant configuration, reserved to the
 manager who owns the restaurant. The capacity policy groups the settings that decide how many orders a restaurant can
-take: opening hours and slot length, kitchen output per slot, and the number and range of delivery trips.
+take: opening hours and slot length, kitchen output per slot, and deliveries. Configuring deliveries covers every
+setting that decides which delivery orders can share a driver and how many trips can leave: the trips per slot, their
+range and allowed detour, and the delivery zones drawn on the map.
 
 ## Order and Schedule
 

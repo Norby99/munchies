@@ -1,0 +1,159 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="docker-compose" name="Docker Compose">
+    <mxGraphModel dx="2146" dy="1125" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1820" pageHeight="1110" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="network" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontSize=14;fillColor=none;dashed=1;spacingTop=6;" value="Docker network: one Compose project" vertex="1">
+          <mxGeometry height="960" width="1340" x="200" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="f-service" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=none;spacingTop=6;fontFamily=Courier New;" value="config/service/docker-compose.yml" vertex="1">
+          <mxGeometry height="900" width="600" x="470" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mongo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=none;spacingTop=6;fontFamily=Courier New;" value="config/mongodb/docker-compose.yml" vertex="1">
+          <mxGeometry height="500" width="400" x="1110" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="f-kafka" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=none;spacingTop=6;fontFamily=Courier New;fontSize=12;" value="config/kafka/docker-compose.yml" vertex="1">
+          <mxGeometry height="160" width="250" x="210" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="routed" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=bottom;fontStyle=2;fontSize=11;fillColor=none;dashed=1;spacingBottom=4;" value="routed by the gateway" vertex="1">
+          <mxGeometry height="560" width="330" x="690" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=none;dashed=1;fontSize=12;" value="&lt;b&gt;Browser&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="140" x="20" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="osrm" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=none;dashed=1;fontSize=12;" value="&lt;b&gt;Routing service&lt;/b&gt;&lt;br&gt;&lt;i&gt;OSRM, on the internet&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1600" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-frontend-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 5173&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="250" x="490" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gateway" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-gateway-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8086&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="250" x="810" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-user-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8082&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="710" y="255" as="geometry" />
+        </mxCell>
+        <mxCell id="restaurant" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-restaurant-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8087&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="710" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="order" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-order-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8081&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="710" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="payment" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-payment-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8083&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="710" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="reservation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-table-reservation-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8085&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="710" y="595" as="geometry" />
+        </mxCell>
+        <mxCell id="scheduler" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-scheduler-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 8088&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="290" x="710" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="notification" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-notification-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;no host port&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="260" x="490" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="m-user" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-user-mongo&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 27019&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="1170" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="e-db0" edge="1" parent="1" source="user" style="endArrow=open;endSize=10;html=1;" target="m-user" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-restaurant" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-restaurant-mongo&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 27024&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="1170" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="e-db1" edge="1" parent="1" source="restaurant" style="endArrow=open;endSize=10;html=1;" target="m-restaurant" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-order" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-order-mongo&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 27018&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="1170" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="e-db2" edge="1" parent="1" source="order" style="endArrow=open;endSize=10;html=1;" target="m-order" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-payment" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-payment-mongo&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 27020&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="1170" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="e-db3" edge="1" parent="1" source="payment" style="endArrow=open;endSize=10;html=1;" target="m-payment" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-reservation" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;munchies-table-reservation-mongo&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 27022&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="1170" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="e-db4" edge="1" parent="1" source="reservation" style="endArrow=open;endSize=10;html=1;" target="m-reservation" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kafka" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;munchies-kafka&lt;/b&gt;&lt;br&gt;&lt;i&gt;host port 9092&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="240" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="e-client" edge="1" parent="1" source="client" style="endArrow=open;endSize=10;html=1;fontSize=11;labelBackgroundColor=default;" target="frontend" value="HTTP">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-fe" edge="1" parent="1" source="frontend" style="endArrow=open;endSize=10;html=1;fontSize=11;labelBackgroundColor=default;" target="gateway" value="REST, WebSocket">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-gw" edge="1" parent="1" source="gateway" style="endArrow=open;endSize=10;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=11;labelBackgroundColor=default;" target="routed" value="REST">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ws" edge="1" parent="1" source="gateway" style="endArrow=open;startArrow=open;endSize=10;startSize=10;dashed=1;dashPattern=1 4;strokeWidth=2;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.12;exitY=1;exitDx=0;exitDy=0;entryX=0.423;entryY=0;entryDx=0;entryDy=0;fontSize=11;labelBackgroundColor=default;" target="notification" value="WebSocket">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="205" />
+              <mxPoint x="600" y="205" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-k0" edge="1" parent="1" source="user" style="endArrow=open;endSize=10;dashed=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-k1" edge="1" parent="1" source="order" style="endArrow=open;endSize=10;dashed=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-k2" edge="1" parent="1" source="payment" style="endArrow=open;endSize=10;dashed=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-k3" edge="1" parent="1" source="reservation" style="endArrow=open;endSize=10;dashed=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-kn" edge="1" parent="1" source="kafka" style="endArrow=open;endSize=10;dashed=1;html=1;" target="notification" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-osrm" edge="1" parent="1" source="scheduler" style="endArrow=open;endSize=10;html=1;" target="osrm" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="&lt;b&gt;Legend&lt;/b&gt;" vertex="1">
+          <mxGeometry height="20" width="200" x="20" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line0" edge="1" parent="1" style="endArrow=open;endSize=10;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="1035" as="sourcePoint" />
+            <mxPoint x="80" y="1035" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text0" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="HTTP / REST, or database connection" vertex="1">
+          <mxGeometry height="20" width="260" x="90" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line1" edge="1" parent="1" style="endArrow=open;endSize=10;dashed=1;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="1065" as="sourcePoint" />
+            <mxPoint x="80" y="1065" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text1" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="Kafka message" vertex="1">
+          <mxGeometry height="20" width="260" x="90" y="1055" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line2" edge="1" parent="1" style="endArrow=open;startArrow=open;endSize=10;startSize=10;dashed=1;dashPattern=1 4;strokeWidth=2;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="1095" as="sourcePoint" />
+            <mxPoint x="80" y="1095" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text2" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="WebSocket" vertex="1">
+          <mxGeometry height="20" width="260" x="90" y="1085" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-note" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;verticalAlign=top;" value="&lt;font style=&quot;font-size: 13px;&quot;&gt;Every container listens on 8080 inside the network (MongoDB on 27017, Kafka on 9092); the host port is the one published for local access. Calls between services are shown in General Architecture.&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="520" x="380" y="1025" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,3 +1,4 @@
+import { DeliveryZone, mayShareTrip } from "./deliveryZone";
 import { GeoPoint, haversineKm } from "./geo";
 
 /**
@@ -92,22 +93,29 @@ export type TripPlan =
  * otherwise opens a new trip if the slot still has one free. No reshuffling.
  * A trip whose driver has already left cannot be joined, but still counts against
  * maxTripsPerSlot.
+ *
+ * A trip is eligible when three independent rules agree:
+ * - zones (may these deliveries share a driver?): with the restaurant's zones, every stop and the
+ *   new point must lie in a common zone (see mayShareTrip); without zones this always holds;
+ * - detour (is it worth it?): the stop adds at most maxDetourKm to the route;
+ * - trip budget (can one driver do it?): the whole route stays within maxTripKmBudget.
+ * Zones are evaluated against the current zones each time, so a manager's edit applies to the
+ * next placement in already-open trips too.
  */
 export function planDeliveryPlacement(
   restaurant: GeoPoint,
   trips: Trip[],
   point: GeoPoint,
   limits: PlacementLimits,
+  zones: DeliveryZone[] = [],
 ): TripPlan {
   let best: (TripPlan & { kind: "join" }) | null = null;
   let bestDetour = Infinity;
   for (const trip of trips) {
     if (trip.progress) continue;
-    const { position, detourKm } = cheapestInsertion(
-      restaurant,
-      trip.stops.map((s) => s.location),
-      point,
-    );
+    const stops = trip.stops.map((s) => s.location);
+    if (!mayShareTrip(zones, stops, point)) continue;
+    const { position, detourKm } = cheapestInsertion(restaurant, stops, point);
     const newTotalKm = trip.totalKm + detourKm;
     if (detourKm > limits.maxDetourKm || newTotalKm > limits.maxTripKmBudget) continue;
     if (detourKm < bestDetour) {
