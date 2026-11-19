@@ -26,12 +26,12 @@ oven, and the cooking station is an oven with 7 places.
 
 The course defines a rational agent by four elements:
 
-| Element | For the capacity agent |
-|---|---|
-| Performance measure | Items admitted per slot, as long as the probability that a service breaches the manager's delay caps (average lateness, worst slot's lateness) stays within the manager's risk tolerance |
-| Prior knowledge | The structure of the kitchen as a Stochastic Petri Net (`KitchenPipeline`: prep, loading, oven), the order-size distribution, and the bounds `[minQuota, maxQuota]` of its authority |
-| Actions | Set the quota to an integer in `[minQuota, maxQuota]`, once per period |
-| Percepts | From the last service: the order log (arrival times) and how late each slot finished.<br>For the coming service: the rota (the staff schedule), the oven report and the stage times the staff declare. |
+| Element             | For the capacity agent                                                                                                                                                                                 |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Performance measure | Items admitted per slot, as long as the probability that a service breaches the manager's delay caps (average lateness, worst slot's lateness) stays within the manager's risk tolerance               |
+| Prior knowledge     | The structure of the kitchen as a Stochastic Petri Net (`KitchenPipeline`: prep, loading, oven), the order-size distribution, and the bounds `[minQuota, maxQuota]` of its authority                   |
+| Actions             | Set the quota to an integer in `[minQuota, maxQuota]`, once per period                                                                                                                                 |
+| Percepts            | From the last service: the order log (arrival times) and how late each slot finished.<br>For the coming service: the rota (the staff schedule), the oven report and the stage times the staff declare. |
 
 **The environment** is *inaccessible* (the agent never sees the kitchen's true rates, only logs and reports),
 *nondeterministic* (arrivals and every stage take random time), *sequential* (each Friday's outcome depends on the
@@ -88,12 +88,12 @@ flowchart LR
 
 Each of the course's four capabilities maps onto one part of the agent's cycle (`AutonomousCapacityAgent.Agent.step()`):
 
-| Capability | How the agent realizes it | Where |
-|---|---|---|
-| **Sensing and perception** | Fits the arrival rate from the last 2 order logs; takes the stage times from the staff's declaration, stretched if the last service ran slower than declared | `RateEstimation`, `Calibration` |
-| **Decision-making** | Simulates candidate quotas on the model built from its beliefs and picks the largest one within the risk tolerance | `CapacityAgent` |
-| **Actuation** | In `Auto` mode applies the quota within the manager's bounds; in `Advise` mode only recommends it. Also advises on the rota, which only the manager can change | `KitchenEnvironment.applyQuota`, `StaffingAdvisor` |
-| **Adaptability** | Perception runs every period, so a change moves the decision. When no quota meets the goal, or the data is insufficient, it falls back to a safe choice and raises an alert | `Agent.revise`, `Agent.decide` |
+| Capability                 | How the agent realizes it                                                                                                                                                   | Where                                              |
+|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
+| **Sensing and perception** | Fits the arrival rate from the last 2 order logs; takes the stage times from the staff's declaration, stretched if the last service ran slower than declared                | `RateEstimation`, `Calibration`                    |
+| **Decision-making**        | Simulates candidate quotas on the model built from its beliefs and picks the largest one within the risk tolerance                                                          | `CapacityAgent`                                    |
+| **Actuation**              | In `Auto` mode applies the quota within the manager's bounds; in `Advise` mode only recommends it. Also advises on the rota, which only the manager can change              | `KitchenEnvironment.applyQuota`, `StaffingAdvisor` |
+| **Adaptability**           | Perception runs every period, so a change moves the decision. When no quota meets the goal, or the data is insufficient, it falls back to a safe choice and raises an alert | `Agent.revise`, `Agent.decide`                     |
 
 **Bounded autonomy.** The manager sets the goal (delay caps, risk tolerance) and the bounds of the agent's authority
 (minimum and maximum quota). Within them, `Auto` mode acts alone; `Advise` mode keeps a human in the loop. The
@@ -121,7 +121,8 @@ exactly.
 
 A simulated kitchen could log how long each order spent in every stage; a real one cannot, since nobody stamps each
 pizza in and out of the oven during a busy service. What Munchies does record is each order's **arrival** and its
-**lifecycle** (`order-service` timestamps every status change), so it knows when each slot's last order was ready. The stage times are better known by the staff. The agent is built on that division. Before each
+**lifecycle** (`order-service` timestamps every status change), so it knows when each slot's last order was ready. The
+stage times are better known by the staff. The agent is built on that division. Before each
 Friday it:
 
 1. **Perceives.** It receives last Friday's order log, with the arrival time of every order (including those a full
@@ -158,14 +159,14 @@ confidence) and pass only if their estimated breach rate is at most 15%.
 
 The parameters come from the experience of one of us, who worked in a pizzeria, and from public order data:
 
-| Parameter | Value |
-|---|---|
-| Service | 18:30-21:30, 12 slots of 15 minutes |
-| Demand | 5.5 orders per slot, 2.64 pizzas per order on average (sizes shaped on the [Maven Analytics "Pizza Place Sales"](https://mavenanalytics.io/project/2498) dataset) |
-| Kitchen | 2 pizza makers (about 45 s per pizza), one oven with 7 places (about 5 minutes per bake) |
-| Goal | average lateness at most 3 minutes, worst slot at most 8 minutes, each breached in at most 20% of services |
-| Full slot | the order is offered a later slot, as `scheduler-service` does: 90% of customers accept 15 minutes later, 50% accept 30 minutes later, the rest are lost |
-| Authority | quota between 8 and 24 pizzas per slot; the manager's static setting is 20 |
+| Parameter | Value                                                                                                                                                             |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Service   | 18:30-21:30, 12 slots of 15 minutes                                                                                                                               |
+| Demand    | 5.5 orders per slot, 2.64 pizzas per order on average (sizes shaped on the [Maven Analytics "Pizza Place Sales"](https://mavenanalytics.io/project/2498) dataset) |
+| Kitchen   | 2 pizza makers (about 45 s per pizza), one oven with 7 places (about 5 minutes per bake)                                                                          |
+| Goal      | average lateness at most 3 minutes, worst slot at most 8 minutes, each breached in at most 20% of services                                                        |
+| Full slot | the order is offered a later slot, as `scheduler-service` does: 90% of customers accept 15 minutes later, 50% accept 30 minutes later, the rest are lost          |
+| Authority | quota between 8 and 24 pizzas per slot; the manager's static setting is 20                                                                                        |
 
 `SimulatedKitchen` holds the kitchen's true conditions, which change from week to week and are never shown to the
 agent. Each week is also run under the static quota with the same random numbers, so the two differ only by the
@@ -185,19 +186,19 @@ quota:
 Breaches are of the worst-slot cap, out of 100 simulated services; pizzas lost are per evening, out of about 174
 asked for (222 in the busier season).
 
-| Week | True conditions | Slowdown measured | Agent quota | Agent breaches | Agent pizzas lost | Static breaches | Static pizzas lost | Rota advice (makers) |
-|---|---|---|---|---|---|---|---|---|
-| 0 | Normal Friday | - | 20 | 6 | 4 | 6 | 4 | 2 |
-| 1 | One pizza maker absent | - | 11 | 8 | 50 | 98 | 5 | 3 |
-| 2 | Normal Friday | - | 17 | 2 | 12 | 11 | 4 | 3 |
-| 3 | Oven fault | - | 16 | 53 | 16 | 76 | 4 | none |
-| 4 | Oven fault | x1.10 | 14 | 12 | 22 | 78 | 5 | none? |
-| 5 | Oven fault | x1.19 | 13 | 0 | 31 | 75 | 5 | none? |
-| 6 | Oven repaired | - | 24 | 29 | 2 | 18 | 5 | 2 |
-| 7 | New pizza maker | - | 19 | 52 | 6 | 61 | 5 | 3 |
-| 8 | New pizza maker | x1.17 | 14 | 8 | 24 | 58 | 4 | none? |
-| 9 | Busier season | x1.15 | 15 | 0 | 51 | 54 | 16 | none? |
-| 10 | Busier season | - | 17 | 10 | 34 | 56 | 15 | 4 |
+| Week | True conditions        | Slowdown measured | Agent quota | Agent breaches | Agent pizzas lost | Static breaches | Static pizzas lost | Rota advice (makers) |
+|------|------------------------|-------------------|-------------|----------------|-------------------|-----------------|--------------------|----------------------|
+| 0    | Normal Friday          | -                 | 20          | 6              | 4                 | 6               | 4                  | 2                    |
+| 1    | One pizza maker absent | -                 | 11          | 8              | 50                | 98              | 5                  | 3                    |
+| 2    | Normal Friday          | -                 | 17          | 2              | 12                | 11              | 4                  | 3                    |
+| 3    | Oven fault             | -                 | 16          | 53             | 16                | 76              | 4                  | none                 |
+| 4    | Oven fault             | x1.10             | 14          | 12             | 22                | 78              | 5                  | none?                |
+| 5    | Oven fault             | x1.19             | 13          | 0              | 31                | 75              | 5                  | none?                |
+| 6    | Oven repaired          | -                 | 24          | 29             | 2                 | 18              | 5                  | 2                    |
+| 7    | New pizza maker        | -                 | 19          | 52             | 6                 | 61              | 5                  | 3                    |
+| 8    | New pizza maker        | x1.17             | 14          | 8              | 24                | 58              | 4                  | none?                |
+| 9    | Busier season          | x1.15             | 15          | 0              | 51                | 54              | 16                 | none?                |
+| 10   | Busier season          | -                 | 17          | 10             | 34                | 56              | 15                 | 4                    |
 
 "none" means that no number of pizza makers up to 4 reaches the target: something else, the oven, limits the service.
 "?" marks advice given under a slowdown, which cannot tell slow pizza makers from a slow oven: in weeks 8 and 9 the
@@ -242,15 +243,3 @@ only from what a real system can measure costs nothing here.
 with the same 66 orders, peaking around 20:00. On the evening's average rate the agent chooses 22 pizzas per slot,
 which on the peaked Friday breach the cap in 46% of services. With per-slot rates it chooses 18 and stays within the
 tolerance (13%), losing 8 more pizzas per evening. A different quota for each slot gained nothing on top of that.
-
-## Limitations
-
-- **Simulated environment.** The demo runs against `SimulatedKitchen`. A real kitchen has one service per Friday, a
-  noisier signal than the demo's 100 simulated services, so a deployed agent would pool several Fridays and react
-  more slowly.
-- **Simplified scenario.** Orders arrive at a constant rate (see the peak variant), the delivery, takeaway and dine-in
-  channels share one due time, and the order sizes are not re-estimated.
-- **A minimal learning element.** Calibration compares the service with the model and corrects one factor, measured
-  afresh each week. It does not remember, and it cannot tell which stage is slow: if the slowdown is gone by the next
-  service, the agent still plans with the stretched times for one week, with a quota slightly too low (week 9).
-- **No reactive layer.** The prototype covers only the deliberative half of what a drone would need.
