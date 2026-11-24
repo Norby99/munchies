@@ -9,6 +9,7 @@ import { KafkaTableReservationAcceptedNotificationConsumer } from "@main/infrast
 import { KafkaTableReservationCanceledNotificationConsumer } from "@main/infrastructure/adapter/inbound/kafka/KafkaTableReservationCanceledNotificationConsumer";
 import { KafkaTableReservationModifiedNotificationConsumer } from "@main/infrastructure/adapter/inbound/kafka/KafkaTableReservationModifiedNotificationConsumer";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import { fakeNotifier } from "@test/fixtures/liveNotifier";
 import { logger } from "@main/infrastructure/adapter/outbound/logging/logger";
 
 function buildFakeKafka() {
@@ -60,7 +61,7 @@ describe.each(cases)("table-reservation-$name consumer", ({ Consumer, event, han
 
   function build() {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi.spyOn(controller, handler).mockResolvedValue(undefined);
     const consumer = new Consumer(fakeKafka, "topic", "group", controller);
     return { consumer, fakeConsumer, handleSpy };
@@ -124,7 +125,7 @@ describe("NotificationController table reservation handlers", () => {
   it.each(cases)("logs a $name reservation instead of sending a notification", async ({ event, handler }) => {
     const logSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
 
-    await new NotificationController()[handler](event as never);
+    await new NotificationController(fakeNotifier())[handler](event as never);
 
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(logSpy.mock.calls[0])).toContain("reservation-1");

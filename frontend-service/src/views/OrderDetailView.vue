@@ -2,8 +2,12 @@
 // Customer order detail and tracking: status stepper, ordered lines, per-type details, payment and
 // cancellation.
 //
-// Status updates are not pushed yet: until notification-service delivers them over the gateway
-// WebSocket, the user refreshes explicitly. No polling loop on purpose (see CLAUDE.md).
+// Status updates are pushed: a live notification about this order (it was advanced, paid or
+// cancelled, possibly from another tab) re-reads it, see useLiveUpdates. The Refresh button stays
+// for when the live connection is down. No polling loop on purpose (see CLAUDE.md).
+//
+// The one exception is the driver's position of a delivery that is on the way: it is state the
+// page is looking at, not an event, so the tracking area asks for it (see useDeliveryTracking).
 //
 // Cancelling is allowed only while PENDING and unpaid (there are no refunds yet). The order is not
 // deleted (order-service is event-sourced): it stays visible with status CANCELLED.
@@ -12,7 +16,7 @@
 // ordered), so they stay right even if the menu changes later. Menu data is only used for item
 // names. Paying goes through POST /payments/ (see api/payments.ts), which charges that total.
 
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ArrowLeftIcon,
@@ -41,11 +45,16 @@ import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
 import * as paymentsApi from '@/api/payments'
 import type { OnlinePaymentMethod } from '@/api/payments'
+import { useDeliveryTracking } from '@/composables/useDeliveryTracking'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { formatCents } from '@/utils/money'
 import { STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Order } from '@/types'
+
+// Loaded on demand: it brings Leaflet, which only a delivery on the way needs.
+const DeliveryTracking = defineAsyncComponent(() => import('@/components/DeliveryTracking.vue'))
 
 const props = defineProps<{ orderId: string }>()
 
@@ -62,6 +71,12 @@ const paymentMethod = ref<OnlinePaymentMethod>('CARD')
 const paying = ref(false)
 const paymentError = ref<string | null>(null)
 const paymentMessage = ref<string | null>(null)
+
+// Set only while a delivery is on the way: that is what starts and stops the tracking.
+const trackedOrderId = computed(() =>
+  order.value?.orderType === 'DELIVERY' && order.value.status === 'ON_THE_WAY' ? order.value.orderId : null,
+)
+const { tracking, state: trackingState } = useDeliveryTracking(trackedOrderId)
 
 const canCancel = computed(() => order.value?.status === 'PENDING' && !order.value.payed)
 
@@ -178,6 +193,7 @@ async function pay(): Promise<void> {
 }
 
 onMounted(load)
+useLiveUpdates((n) => n.type === 'ORDER_CHANGED' && n.orderId === props.orderId, refresh)
 watch(() => props.orderId, load)
 </script>
 
@@ -230,6 +246,16 @@ watch(() => props.orderId, load)
               <AlertDescription>It was cancelled before the restaurant started preparing it.</AlertDescription>
             </Alert>
             <OrderProgress v-else :type="order.orderType" :status="order.status" />
+          </CardContent>
+        </Card>
+
+        <Card v-if="trackedOrderId">
+          <CardHeader>
+            <CardTitle class="text-lg">Delivery tracking</CardTitle>
+            <CardDescription>The driver's position, updated every few seconds.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeliveryTracking :tracking="tracking" :state="trackingState" />
           </CardContent>
         </Card>
 

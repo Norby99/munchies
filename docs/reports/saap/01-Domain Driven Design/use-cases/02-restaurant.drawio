@@ -1,0 +1,106 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="02-restaurant" name="restaurant-service">
+    <mxGraphModel dx="1776" dy="931" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=none;spacingTop=8;" value="restaurant-service" vertex="1">
+          <mxGeometry height="900" width="630" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="search" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Search restaurants" vertex="1">
+          <mxGeometry height="60" width="230" x="280" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="menu" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="View a restaurant&#39;s menu" vertex="1">
+          <mxGeometry height="60" width="230" x="280" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="create" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Create a restaurant" vertex="1">
+          <mxGeometry height="60" width="230" x="560" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="updateR" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Update restaurant details" vertex="1">
+          <mxGeometry height="60" width="230" x="260" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="removeR" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Remove a restaurant" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="location" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Set the restaurant&#39;s location" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="menus" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Manage menus" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="items" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Manage categories and menu items" vertex="1">
+          <mxGeometry height="60" width="230" x="290" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="tables" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Configure tables" vertex="1">
+          <mxGeometry height="60" width="230" x="280" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="policy" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Configure the capacity policy" vertex="1">
+          <mxGeometry height="60" width="230" x="280" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="variations" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Define variations" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="hours" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Set opening hours and slot length" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="output" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Set kitchen output per slot" vertex="1">
+          <mxGeometry height="60" width="230" x="600" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="drivers" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Configure deliveries" vertex="1">
+          <mxGeometry height="60" width="230" x="584" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="customer" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Customer" vertex="1">
+          <mxGeometry height="60" width="30" x="80" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="manager" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Manager" vertex="1">
+          <mxGeometry height="60" width="30" x="80" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" edge="1" parent="1" source="variations" style="endArrow=open;endSize=10;dashed=1;html=1;" target="items" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="policy" style="endArrow=open;endSize=10;dashed=1;html=1;" target="hours" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="policy" style="endArrow=open;endSize=10;dashed=1;html=1;" target="output" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="policy" style="endArrow=open;endSize=10;dashed=1;html=1;" target="drivers" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="search" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="customer" style="endArrow=none;html=1;" target="menu" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="create" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="updateR" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="removeR" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="location" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="menus" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="items" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="tables" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="manager" style="endArrow=none;html=1;" target="policy" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="manager" style="endArrow=block;endFill=0;endSize=14;html=1;" target="customer" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

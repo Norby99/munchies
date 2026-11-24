@@ -2,6 +2,7 @@ package com.munchies.order.infrastructure.adapter.inbound.web.controller
 
 import com.munchies.commons.infrastructure.adapter.ErrorResponse
 import com.munchies.order.fixtures.createSampleOrder
+import com.munchies.order.fixtures.defaultCustomerId
 import com.munchies.order.fixtures.defaultOrderId
 import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toDto
 import com.munchies.order.infrastructure.adapter.outbound.response.GetOrderDetailsResponse
@@ -33,6 +34,29 @@ class GetOrderDetailsControllerComponentTest : BaseOrderController() {
 
     response.status shouldBe HttpStatus.OK
     result.code shouldBe HttpStatus.OK.code
+  }
+
+  @Test
+  fun `getOrderDetails should return the order to the customer who owns it`() {
+    orderRepository.save(createSampleOrder())
+
+    val response = httpCalls.httpGet<String>(
+      "${defaultOrderId.value}?customerId=${defaultCustomerId.value}",
+    )
+
+    response.status shouldBe HttpStatus.OK
+  }
+
+  @Test
+  fun `getOrderDetails should answer 404 for another customer's order`() {
+    orderRepository.save(createSampleOrder())
+
+    val response = assertThrows<HttpClientResponseException> {
+      httpCalls.httpGet<GetOrderDetailsResponse>("${defaultOrderId.value}?customerId=someone-else")
+    }.response
+
+    response.status shouldBe HttpStatus.NOT_FOUND
+    response.bd<ErrorResponse>().result shouldBe "Order not found"
   }
 
   @Test

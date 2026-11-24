@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import { Kafka } from "kafkajs";
 import { KafkaOrderStatusChangedNotificationConsumer } from "@main/infrastructure/adapter/inbound/kafka/KafkaOrderStatusChangedNotificationConsumer";
 import { NotificationController } from "@main/infrastructure/adapter/inbound/web/controller/controller";
+import { fakeNotifier } from "@test/fixtures/liveNotifier";
 import {
   OrderStatusChangedNotification,
   orderStatusChangedNotificationFromJson,
@@ -27,10 +28,10 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
 
   it("forwards received events to the notification controller via update()", () => {
     const { fakeKafka } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handleOrderStatusChanged")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(
       fakeKafka,
@@ -43,7 +44,8 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
       "order-1",
       "restaurant-1",
       "customer-1",
-      "PREPARING"
+      "PREPARING",
+      true
     );
     consumer.update(event);
 
@@ -52,7 +54,7 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
 
   it("connect() calls consumer.connect() and subscribes to the topic", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(
       fakeKafka,
@@ -72,7 +74,7 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
 
   it("disconnect() calls consumer.disconnect()", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(
       fakeKafka,
@@ -88,10 +90,10 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
 
   it("run() registers eachMessage handler that parses and forwards a valid message", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handleOrderStatusChanged")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(
       fakeKafka,
@@ -108,7 +110,8 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
       "order-1",
       "restaurant-1",
       "customer-1",
-      "PREPARING"
+      "PREPARING",
+      true
     );
     const messageValue = Buffer.from(event.toJson());
     await runCall.eachMessage({ message: { value: messageValue } });
@@ -118,10 +121,10 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
 
   it("run() eachMessage handler skips messages with null value", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const handleSpy = vi
       .spyOn(controller, "handleOrderStatusChanged")
-      .mockImplementation(() => {});
+      .mockResolvedValue(undefined);
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(
       fakeKafka,
@@ -140,7 +143,7 @@ describe("KafkaOrderStatusChangedNotificationConsumer", () => {
 
   it("run() eachMessage handler logs an error when message parsing fails", async () => {
     const { fakeKafka, fakeConsumer } = buildFakeKafka();
-    const controller = new NotificationController();
+    const controller = new NotificationController(fakeNotifier());
     const consoleErrorSpy = vi.spyOn(logger, "error").mockImplementation(() => {});
 
     const consumer = new KafkaOrderStatusChangedNotificationConsumer(

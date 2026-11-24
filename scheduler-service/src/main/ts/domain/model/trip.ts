@@ -1,3 +1,4 @@
+import { DeliveryZone, mayShareTrip } from "./deliveryZone";
 import { GeoPoint, haversineKm } from "./geo";
 
 /**
@@ -9,12 +10,45 @@ export interface TripStop {
   location: GeoPoint;
 }
 
+/**
+ * The route a departed trip follows, fixed when the driver leaves: restaurant -> stops in
+ * order -> restaurant. Never modified afterwards, so it may be shared between copies of a trip.
+ */
+export interface TripRoute {
+  /** The polyline the driver moves along. */
+  path: GeoPoint[];
+  /** Km along `path` at which each stop is reached; same order as the trip's stops. */
+  stopKm: number[];
+  /** Length of `path`, km. */
+  totalKm: number;
+}
+
+/**
+ * Where the driver of a departed trip is. Written by the driver simulation (see
+ * tripProgress.ts), which stands in for the position a real driver's device would report.
+ */
+export interface TripProgress {
+  departedAtEpochMs: number;
+  /** Km driven along the closed route since departure. */
+  travelledKm: number;
+  /** Last reported driver position. */
+  position: GeoPoint;
+  updatedAtEpochMs: number;
+  /** True once the driver is back at the restaurant: the trip is over. */
+  finished: boolean;
+  route: TripRoute;
+}
+
 export interface Trip {
   id: string;
   restaurantId: string;
   slotStartEpochMs: number;
+  /** The restaurant's position when the trip was opened: both ends of the route. */
+  origin: GeoPoint;
   stops: TripStop[];
   totalKm: number;
+  /** Null until the driver leaves the restaurant. */
+  progress: TripProgress | null;
 }
 
 export function routeKm(restaurant: GeoPoint, stops: GeoPoint[]): number {
@@ -57,21 +91,31 @@ export type TripPlan =
 /**
  * Greedy, append-only insertion. Joins the eligible trip with the smallest detour;
  * otherwise opens a new trip if the slot still has one free. No reshuffling.
+ * A trip whose driver has already left cannot be joined, but still counts against
+ * maxTripsPerSlot.
+ *
+ * A trip is eligible when three independent rules agree:
+ * - zones (may these deliveries share a driver?): with the restaurant's zones, every stop and the
+ *   new point must lie in a common zone (see mayShareTrip); without zones this always holds;
+ * - detour (is it worth it?): the stop adds at most maxDetourKm to the route;
+ * - trip budget (can one driver do it?): the whole route stays within maxTripKmBudget.
+ * Zones are evaluated against the current zones each time, so a manager's edit applies to the
+ * next placement in already-open trips too.
  */
 export function planDeliveryPlacement(
   restaurant: GeoPoint,
   trips: Trip[],
   point: GeoPoint,
   limits: PlacementLimits,
+  zones: DeliveryZone[] = [],
 ): TripPlan {
   let best: (TripPlan & { kind: "join" }) | null = null;
   let bestDetour = Infinity;
   for (const trip of trips) {
-    const { position, detourKm } = cheapestInsertion(
-      restaurant,
-      trip.stops.map((s) => s.location),
-      point,
-    );
+    if (trip.progress) continue;
+    const stops = trip.stops.map((s) => s.location);
+    if (!mayShareTrip(zones, stops, point)) continue;
+    const { position, detourKm } = cheapestInsertion(restaurant, stops, point);
     const newTotalKm = trip.totalKm + detourKm;
     if (detourKm > limits.maxDetourKm || newTotalKm > limits.maxTripKmBudget) continue;
     if (detourKm < bestDetour) {

@@ -2,36 +2,36 @@
 
 ## Unstructured Exploration
 
-![Unstructured exploration](../../../resources/unstructured-exploration.png)
+![Unstructured exploration](event-storming/unstructured-exploration.png)
 
 ## Timeline
 
-![Timeline](../../../resources/timeline.png)
+![Timeline](event-storming/timeline.png)
 
 ## Pain Points
 
-![Pain points](../../../resources/pain-points.png)
+![Pain points](event-storming/pain-points.png)
 
 ## Pivotal Points
 
-![Pivotal points](../../../resources/pivotal-point.png)
+![Pivotal points](event-storming/pivotal-point.png)
 
 ## Commands
 
-![Commands](../../../resources/commands.png)
+![Commands](event-storming/commands.png)
 
 ## Policies
 
-![Policies](../../../resources/policies.png)
+![Policies](event-storming/policies.png)
 
 ## Read Models
 
-![Read models](../../../resources/read-model.png)
+![Read models](event-storming/read-model.png)
 
 ## Aggregates
 
-![Aggregates](../../../resources/aggregates.png)
+![Aggregates](event-storming/aggregates.png)
 
 ## Bounded Contexts
 
-![Bounded contexts](../../../resources/bounded-context.png)
+![Bounded contexts](event-storming/bounded-context.png)

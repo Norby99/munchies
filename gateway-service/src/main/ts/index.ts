@@ -11,6 +11,7 @@ import {
   metricsMiddleware,
 } from "./infrastructure/adapter/middleware/metrics";
 import { httpLogger, logger } from "./infrastructure/adapter/middleware/logger";
+import { attachLiveNotifications } from "./infrastructure/adapter/middleware/live-notifications";
 async function main(): Promise<void> {
   const app = express();
   app.use(express.raw({ type: "application/json", limit: '1mb'}));
@@ -70,6 +71,16 @@ async function main(): Promise<void> {
   // new connection goes to any ready pod. A low value rebalances within seconds under load;
   // the cost is one TCP handshake per that many requests, negligible inside the cluster.
   server.maxRequestsPerSocket = MAX_REQUESTS_PER_SOCKET;
+
+  // The live-notification WebSocket is an HTTP upgrade, which Express does not see: it is
+  // handled on the server itself and proxied to notification-service. Without the URL the gateway
+  // still serves the REST API, and the frontend simply gets no live updates.
+  const notificationServiceUrl = process.env.NOTIFICATION_SERVICE_URL;
+  if (notificationServiceUrl) {
+    attachLiveNotifications(server, { target: notificationServiceUrl });
+  } else {
+    logger.warn("NOTIFICATION_SERVICE_URL is not set: live notifications are disabled");
+  }
 
   handleShutdown(server);
 }

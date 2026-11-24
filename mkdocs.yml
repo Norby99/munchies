@@ -104,13 +104,34 @@ nav:
       - Self evaluation:
           - ds/09-self-evaluation/self-evaluation.md
   - SAAP:
-      - Overview: saap/index.md
-      - Implementation:
-          - Microservices Patterns: saap/02-Implementation/microservices-patterns.md
-          - Hexagonal Architecture: saap/02-Implementation/hexagonal-architecture.md
-          - Testing: saap/02-Implementation/testing.md
+      - Introduction: saap/index.md
+      - Domain Driven Design:
+          - Requirements:
+              - Business: "saap/01-Domain Driven Design/business-requirements.md"
+              - Functional: "saap/01-Domain Driven Design/functional-requirements.md"
+              - Non-functional: "saap/01-Domain Driven Design/non-functional-requirements.md"
+              - Quality Attribute Scenarios: "saap/01-Domain Driven Design/quality-attribute-scenarios.md"
+          - User Stories: "saap/01-Domain Driven Design/User Stories.md"
+          - Use Cases: "saap/01-Domain Driven Design/use-cases.md"
+          - Glossary: "saap/01-Domain Driven Design/glossary.md"
+          - Event Storming: "saap/01-Domain Driven Design/event-storming.md"
+          - Bounded Contexts: "saap/01-Domain Driven Design/bounded-contexts.md"
+          - Context Map: "saap/01-Domain Driven Design/context-map.md"
+          - Domain Model: "saap/01-Domain Driven Design/domain-model.md"
+      - Architecture and Implementation:
+          - General Architecture: "saap/02-Architecture and Implementation/general-architecture.md"
+          - Hexagonal Architecture: "saap/02-Architecture and Implementation/hexagonal-architecture.md"
+          - Microservices Patterns: "saap/02-Architecture and Implementation/microservices-patterns.md"
+          - Interactions: "saap/02-Architecture and Implementation/interactions.md"
+          - Architecture Decisions: "saap/02-Architecture and Implementation/architecture-decisions.md"
+          - Testing: "saap/02-Architecture and Implementation/testing.md"
       - Deployment:
           - Docker Compose: saap/03-Deployment/docker-compose.md
+          - Kubernetes: saap/03-Deployment/kubernetes.md
+          - Scaling Benchmark: saap/03-Deployment/scaling-benchmark.md
+      - Agent-Based Architecture:
+          - Capacity Agent: "saap/04-Agent-Based Architecture/capacity-agent.md"
+      - Conclusions: saap/05-conclusions.md
   - ASMD:
       - Overview: asmd/index.md
   - Other Munchies Docs:

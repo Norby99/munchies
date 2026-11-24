@@ -213,3 +213,75 @@ abstract class JsUpdateTablesAPI<E : WebResponse<Any>> :
   override fun getMethod(): HttpMethod = HttpMethod.PUT
   override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
 }
+
+/**
+ * Delivery zones are read and replaced by the restaurant's manager only: customers never see
+ * them, and scheduler-service reads them from restaurant-service directly, not via the gateway.
+ */
+@JsExport
+abstract class JsGetDeliveryZonesAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, GetDeliveryZonesResponse>() {
+  abstract fun getDeliveryZones(restaurantId: String): Promise<E>
+  override fun parseResponse(json: String): GetDeliveryZonesResponse =
+    getDeliveryZonesResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.DELIVERY_ZONES_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
+@JsExport
+abstract class JsUpdateDeliveryZonesAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateDeliveryZonesRequest, UpdateDeliveryZonesResponse>() {
+  abstract fun updateDeliveryZones(
+    restaurantId: String,
+    request: UpdateDeliveryZonesRequest,
+  ): Promise<E>
+  override fun parseRequest(json: String): UpdateDeliveryZonesRequest =
+    updateDeliveryZonesRequestFromJson(json)
+  override fun parseResponse(json: String): UpdateDeliveryZonesResponse =
+    updateDeliveryZonesResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.DELIVERY_ZONES_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+}
+
+@JsExport
+abstract class JsGetKitchenSetupAPI<E : WebResponse<Any>> :
+  SimpleAPI<Nothing, GetKitchenSetupResponse>() {
+  abstract fun getKitchenSetup(restaurantId: String): Promise<E>
+  override fun parseResponse(json: String): GetKitchenSetupResponse =
+    getKitchenSetupResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.KITCHEN_SETUP_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.GET
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+  override fun parseRequest(json: String): Nothing = throw UnsupportedOperationException()
+}
+
+@JsExport
+abstract class JsUpdateKitchenSetupAPI<E : WebResponse<Any>> :
+  SimpleAPI<UpdateKitchenSetupRequest, UpdateKitchenSetupResponse>() {
+  abstract fun updateKitchenSetup(
+    restaurantId: String,
+    request: UpdateKitchenSetupRequest,
+  ): Promise<E>
+  override fun parseRequest(json: String): UpdateKitchenSetupRequest =
+    updateKitchenSetupRequestFromJson(json)
+  override fun parseResponse(json: String): UpdateKitchenSetupResponse =
+    updateKitchenSetupResponseFromJson(json)
+  override fun parseError(json: String): ErrorResponse = errorResponseFromJson(json)
+  override fun getPath(): String =
+    RestaurantServiceConfig.SERVICE_PATH + RestaurantServiceConfig.KITCHEN_SETUP_PATH
+  override fun getPort(): Int = RestaurantServiceConfig.SERVICE_PORT
+  override fun getMethod(): HttpMethod = HttpMethod.PUT
+  override fun getRequiredAuthRole(): AuthRole = AuthRole.MANAGER
+}

@@ -35,21 +35,35 @@ Features currently backed by gateway routes
     - order to the table (dine-in) while holding an active reservation at that restaurant: checkout offers
       "At my table" and sends the reservation id to `POST /orders/place`, bypassing the scheduler;
     - pay an order;
-    - list own orders and follow the status of each one.
+    - list own orders and follow the status of each one, updated live (see below);
+    - follow the driver of a delivery that is on the way, on a map (`scheduler-service`).
+- **Live notifications (both roles)**: the WebSocket described in
+  [Communication with the gateway](#communication-with-the-gateway) (`api/live.ts`, `stores/live.ts`). Screens
+  showing orders or reservations refresh when a notification concerns them (`composables/useLiveUpdates.ts`), and
+  a toast (`components/LiveToasts.vue`) tells the user about what they did not do themselves: a customer about
+  their order moving on, a manager about new and paid orders, cancellations and table bookings
+  (`utils/liveNotifications.ts`). The header bell (`components/NotificationBell.vue`) lists the same toasts
+  received since the app was opened, with an unread counter, so one that vanished is not lost. It is session-only
+  on purpose (memory, cleared on reload and sign-out): there is no server-side inbox, the screens it links to stay
+  the source of truth, and `notification-service` stays stateless.
 - **Manager (restaurant staff)**:
     - create, update and delete own restaurants;
     - manage menus, categories and menu items;
     - configure each restaurant's tables (number and seats), which makes it bookable;
     - see a restaurant's reservations day by day (read-only: only the customer changes or cancels them);
-    - see incoming orders and advance their status through the order lifecycle.
+    - see incoming orders and advance their status through the order lifecycle;
+    - see where the driver of a delivery on the way is.
 
-Planned, not yet in the UI (design it so they can be added without restructuring):
+Delivery scheduling (`scheduler-service`) is used by the checkout (time slots) and the manager's order board
+(kitchen load, advancing orders). Do not add polling loops: data refreshes on navigation, on user action, and on
+live notifications. See the `event-driven` skill for the backend side of the notifications.
 
-- **Delivery scheduling** (`scheduler-service`).
-- **Real-time notifications**: `notification-service` will push notifications (e.g. order status changes, payment
-  success) to the frontend over a WebSocket proxied by the gateway (see
-  [Communication with the gateway](#communication-with-the-gateway)). Until it exists, refresh data on navigation/user action; do not build a
-  polling loop that would later have to be torn out. See the `event-driven` skill for the backend side.
+**The one polling exception: the driver's position.** Notifications are events and start from the server (the
+WebSocket above). The position of the driver is state that only matters while a user is looking at the tracking
+area, so the UI asks for it: `composables/useDeliveryTracking.ts` re-reads
+`GET /schedule/orders/{orderId}/tracking` every few seconds, only for a delivery that is `ON_THE_WAY`, only while
+the page is visible, and stops once the driver has arrived. Do not copy this for anything that is an event (status
+changes, payments): those wait for the WebSocket.
 
 When a feature needs data the gateway does not expose yet, the fix belongs in `gateway-service` (and the owning
 service), not in a workaround in the frontend.
@@ -65,7 +79,7 @@ service), not in a workaround in the frontend.
 | Routing             | Vue Router (`createWebHistory`), named routes, lazy-loaded views             |
 | Global state        | Pinia, setup-store syntax (`defineStore('id', () => { ... })`)               |
 | HTTP client         | Axios, wrapped in a single API module, always sending cookies (no `fetch`)   |
-| API contracts       | Kotlin Multiplatform `-shared` packages (paths, methods, DTOs, JSON mapping) |
+| API contracts       | Hand-written in `api/` and `types/`, mirroring the `-shared` Kotlin DTOs     |
 | UI components       | shadcn-vue (components copied into `src/components/ui/`, built on Reka UI)   |
 | Styling             | Tailwind CSS only (theme tokens as CSS variables); no SCSS, no Bootstrap     |
 | Unit/component test | Vitest + Vue Test Utils (Vitest is already used by `gateway-service`)        |
@@ -119,7 +133,7 @@ The frontend has exactly two channels towards the backend, both terminated by `g
 
 - **REST over HTTP (Axios)** for every request/response interaction: account, restaurants, menus, orders,
   payments, and any future feature (reservations, scheduling).
-- **One WebSocket, only for receiving notifications.** The frontend opens it on the same origin (e.g.
+- **One WebSocket (Socket.io), only for receiving notifications.** The frontend opens it on the same origin (e.g.
   `wss://<origin>/notifications`); the gateway authenticates the upgrade request with the `authToken` cookie and
   proxies the connection to `notification-service` (which stays internal, with no exposed port), forwarding the
   user identity. Frames are relayed end to end: there is no REST step and no polling. The socket is read-only from
@@ -139,41 +153,27 @@ The frontend has exactly two channels towards the backend, both terminated by `g
     - keep only non-sensitive session info (user id, role) in the session store, taken from the login response or
       from the "get user" endpoint, and rebuild it on page reload by calling that endpoint;
     - treat a `401` from the gateway as "session expired": clear the session store and redirect to login.
-- Errors from the gateway follow the shared `ErrorResponse` shape (`message`, `code`, from `munchies-commons`); map
-  them to user-friendly messages in one place in the `api/` layer.
+- Errors from the gateway come in the same `{ result, code }` envelope as successes (`result` is the message); map
+  them to user-friendly messages in one place in the `api/` layer (`api/client.ts`).
 
 ### Shared API contracts (`-shared` packages)
 
-Like the other Express.js services (`gateway-service`, `payment-service`, `notification-service`), the frontend does
-**not** hand-write endpoint paths or DTOs: it reuses the Kotlin Multiplatform `-shared` modules compiled to JS.
+Unlike the Express.js services, the frontend does **not** import the Kotlin Multiplatform `-shared` packages. Paths,
+request bodies and response types are written by hand in `api/` (one module per backend area) and `types/`, and
+each module's header names the Kotlin DTOs it mirrors (e.g. `PlaceOrderRequest` in `order-shared`). This is a
+deliberate choice:
 
-- **What they provide**: each `<service>-shared` module exposes, per endpoint, a JS API class (e.g. `LoginUserAPI`
-  from `munchies-user-service-shared/kotlin/user-modules`, built on `API`/`SimpleAPI` in `commons`) with
-  `getPath()`, `getMethod()`, request/response classes with `toJson()`, and `parseRequest()` / `parseResponse()` /
-  `parseError()` for JSON mapping, plus the generated `.d.ts` typings. `munchies-commons/kotlin/commons-modules`
-  provides `HttpMethod`, `AuthRole`, `ErrorResponse` and the other cross-service types.
-- **Packages needed**: the ones the gateway routes use: `munchies-commons`, `munchies-user-service-shared`,
-  `munchies-restaurant-service-shared`, `munchies-order-service-shared` (add `munchies-gateway-service-shared` or
-  others only when a feature needs them).
-- **How they get here** (same mechanism as `build-logic/.../express-server.gradle.kts`):
-    1. declare them in `frontend-service/build.gradle.kts` as `jsImplementation(project(":commons"))`,
-       `jsImplementation(project(":user-shared"))`, ...;
-    2. a `moveJsDeps` task runs each module's `pack_<module>` task and copies the resulting tarball to
-       `frontend-service/build/libs/munchies-<module>.tgz`. The `frontend-server` convention plugin does not have
-       this yet: add the `jsImplementation` configuration and `moveJsDeps` to it, reusing the express-server logic
-       rather than duplicating a different mechanism;
-    3. reference them in `package.json` as `"munchies-user-service-shared": "file:./build/libs/munchies-user-shared.tgz"`;
-    4. **remove the `integrity` field** of those entries from `package-lock.json` (the tarballs are rebuilt on every
-       build, see root `CLAUDE.md`);
-    5. since the image is compiled inside Docker (`frontend-service/Dockerfile`), the Docker build must copy
-       `build/libs/*.tgz` into the build stage before `npm install`.
-- **How to use them in `api/`**: Axios is the transport, the shared API class is the contract. Build the URL from
-  `getPath()` (filling `{param}` placeholders), the verb from `getMethod()`, send `request.toJson()` as the body,
-  and turn the raw response text into typed objects with `parseResponse()` / `parseError()`. For these calls,
-  configure Axios to keep the raw body (`responseType: 'text'`, no JSON transform) so that the shared parser does
-  the mapping, exactly as the gateway does.
-- Keep the Kotlin-generated classes inside the `api/` layer: views and stores receive plain, frontend-friendly
-  view models, so the rest of the app does not depend on Kotlin/JS specifics.
+- the frontend's contract is the **gateway's**, not the services': every response comes in the gateway's
+  `{ result, code }` envelope, the gateway injects ids from the session and some routes exist only there (logout,
+  the scheduler pass-through), so the services' parsers would not apply to what the browser receives;
+- the Kotlin/JS bundles would add their runtime to the SPA bundle, and their classes (Kotlin enums, `toJson()`
+  objects) would have to be converted anyway into plain objects for Vue's reactivity and the views;
+- the Docker build of the frontend stays a plain `npm ci` + `vite build`, with no Gradle step or local tarballs.
+
+The cost is that a contract change is not caught by the compiler: when a `-shared` DTO or a gateway route changes,
+update the matching `api/` module and `types/` in the same change. Keep the Kotlin-specific quirks inside `api/`
+(empty `customerId` / `managerId` fields the DTOs require, `payed` spelling, `ValidityDto` decoding), so views and
+stores only see frontend-friendly types. `docs/ui_specification.md` lists every endpoint the UI uses.
 
 ## UI components (shadcn-vue)
 

@@ -6,6 +6,7 @@ import { PolicyResolver } from "../../main/ts/application/policyResolver";
 import { DeliveryGate } from "../../main/ts/application/deliveryGate";
 import { AppError } from "../../main/ts/application/errors";
 import { InMemoryBookingRepository } from "../../main/ts/infrastructure/outbound/inMemoryBookingRepository";
+import { StraightLineRoutePlanner } from "../../main/ts/infrastructure/outbound/straightLineRoutePlanner";
 import { InMemoryTripRepository } from "../../main/ts/infrastructure/outbound/inMemoryTripRepository";
 import { CapacityPolicy } from "../../main/ts/domain/model/capacityPolicy";
 import { GeoPoint } from "../../main/ts/domain/model/geo";
@@ -43,6 +44,10 @@ class FakeOrders implements OrderClient {
 
   async advance(orderId: string): Promise<void> {
     this.advanced.push(orderId);
+  }
+
+  async getStatus(): Promise<string> {
+    return "PREPARING";
   }
 }
 
@@ -184,7 +189,7 @@ describe("TransitionScheduler and AdvanceScheduledOrder", () => {
 
   it("forwards a manual advance and reflects it on the booking", async () => {
     const { orderId } = await schedule.execute(takeaway(1));
-    const result = await new AdvanceScheduledOrder(repo, orders, clock).execute(orderId);
+    const result = await new AdvanceScheduledOrder(repo, orders, trips, new StraightLineRoutePlanner(), clock).execute(orderId);
     expect(result.bookingStatus).toBe("PREPARING");
   });
 });

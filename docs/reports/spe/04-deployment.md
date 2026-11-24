@@ -1,6 +1,7 @@
 # Deployment
 
 For the deployment stage, we structured it by two complementary phases:
+
 - **Containerization**: achieved using Docker and Gradle plugins
 - **Orchestration**: achieved using Kubernetes and Helm for templating configurations
 
@@ -10,6 +11,7 @@ For the deployment stage, we structured it by two complementary phases:
 In the containerization phase, every service builds a Docker image thanks to a process
 defined in the Gradle task `dockerBuild`, regardless of its stack.
 Two ways possible:
+
 - For **Micronaut** services: the `io.micronaut.application` plugin generates it layered,
 by the `BuildLayersTask`, that splits an image into separate layers for dependency jars,
 application classes and resources. This allows to reduce build time by not downloading
@@ -79,6 +81,7 @@ flowchart LR
 ```
 
 Configuration files are defined in the `k8s/` folder and are:
+
 - for `notification`, `payment` and `table-reservation`: *Namespace*, *Deployment*, *Service*,
 *StatefulSet* and a *PersistentVolumeClaim*
 - for `kafka`: *Namespace*, *StatefulSet* and a headless *Service* (`clusterIP: None`), 
@@ -148,4 +151,3 @@ in the service's values file.
 As default values, it is disabled unless a service turns it on, and moves between 1 and 4
 replicas with a 60% average CPU utilization target.
 The scaling `behaviour:` block was restricted in values to be able to run a demo faster.
-

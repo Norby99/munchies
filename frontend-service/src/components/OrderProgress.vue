@@ -37,13 +37,16 @@ function state(index: number): 'done' | 'current' | 'todo' {
       :aria-current="state(index) === 'current' ? 'step' : undefined"
       class="relative flex items-center gap-3 sm:flex-1 sm:flex-col sm:gap-2 sm:text-center"
     >
-      <!-- Connector to the previous step (horizontal layout only). -->
+      <!-- Connector to the previous step (horizontal layout only). Steps share the width equally, so
+           the previous icon is centred at -50% of this step: the line runs from that icon's edge
+           (+1.25rem, half of size-10) to this icon's edge, never under an icon. Done icons have a
+           translucent background, so a line passing under them would show through. -->
       <span
         v-if="index > 0"
         aria-hidden="true"
         :class="
           cn(
-            'absolute top-5 right-1/2 hidden h-0.5 w-full -translate-x-5 sm:block',
+            'absolute top-5 right-[calc(50%+1.25rem)] left-[calc(-50%+1.25rem)] hidden h-0.5 sm:block',
             state(index) === 'todo' ? 'bg-border' : 'bg-primary',
           )
         "

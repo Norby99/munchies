@@ -19,7 +19,7 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
     every { getOrderDetails.execute(any()) } returns
       GetOrderDetails.Result.Success(realDto)
 
-    val response = controller.getOrderDetails(realDto.orderId)
+    val response = controller.getOrderDetails(realDto.orderId, null)
 
     response.status shouldBe HttpStatus.OK
     response.body().code shouldBe HttpStatus.OK.code
@@ -32,7 +32,7 @@ class GetOrderDetailsControllerUnitTest : BaseOrderController() {
       GetOrderDetails.Result.Failure.OrderNotFound
 
     val exception = assertThrows<NotFoundException> {
-      controller.getOrderDetails(defaultOrderId.value)
+      controller.getOrderDetails(defaultOrderId.value, null)
     }
     exception.message shouldBe "Order not found"
   }

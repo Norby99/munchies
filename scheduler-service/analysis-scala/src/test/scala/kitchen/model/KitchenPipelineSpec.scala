@@ -14,10 +14,10 @@ class KitchenPipelineSpec extends AnyFunSuite:
 
   private val prepThenCook =
     Config(Route.PrepThenCook, prepWorkers = 1, cookStationCapacities = List(3), Map(1 -> 1.0))
-  private val prepThenCookCtmc = SPN.toCTMC(KitchenPipeline.spn(prepThenCook, 1.0, 1.0, 1.0, 1.0))
+  private val prepThenCookCtmc = SPN.toCTMC(KitchenPipeline.spn(prepThenCook, KitchenPipeline.Rates(1.0, 1.0, 1.0, 1.0)))
 
   test("admission is not offered once the span's quota is exhausted"):
-    val m = marking(WorkerFree, Room(0), Room(0), Room(0), Load(0, Primary, 0), Load(0, Secondary, 0))
+    val m = marking(WorkerFree, Room(0), Room(0), Room(0))
     prepThenCookCtmc.transitions(m) shouldBe empty
 
   test("admission consumes the quota, routes to the route's first stage, and records Admitted"):
@@ -40,8 +40,9 @@ class KitchenPipelineSpec extends AnyFunSuite:
   test("loading starts only once a worker is free, something is awaiting cook, and this station's own slot and room are free"):
     val m = marking(AwaitingCook, WorkerFree, StationLoadFree(0), Room(0))
     val actions = prepThenCookCtmc.transitions(m)
-    // Starting a session places the first item immediately, as part of the same step.
-    actions.map(_.state) should contain(marking(StationLoading(0), Room(0), ReadyToBake(0)))
+    // Starting a session places the first item immediately, as part of the same step,
+    // and the item takes its place in the oven.
+    actions.map(_.state) should contain(marking(StationLoading(0), Baking(0, 0)))
 
   test("loading never even starts at a station with no room left, however much demand or staffing there is"):
     val m = marking(AwaitingCook, WorkerFree, StationLoadFree(0))
@@ -52,7 +53,7 @@ class KitchenPipelineSpec extends AnyFunSuite:
     val m = marking(StationLoading(0), AwaitingCook, Room(0))
     val actions = prepThenCookCtmc.transitions(m)
     // The worker and the slot are never released here: the session just continues.
-    actions.exists(a => a.rate == 1.0 && a.state == marking(StationLoading(0), Room(0), ReadyToBake(0))) shouldBe true
+    actions.exists(a => a.rate == 1.0 && a.state == marking(StationLoading(0), Baking(0, 0))) shouldBe true
 
   test("a session releases the worker and the slot, instantly, once there's no more demand"):
     val m = marking(StationLoading(0))
@@ -68,14 +69,14 @@ class KitchenPipelineSpec extends AnyFunSuite:
     val m = marking(WorkerPrepping, StationLoading(0), AwaitingCook, Room(0))
     val actions = cookThenPrepCtmc.transitions(m)
     actions.exists(a => a.rate == 1.0 && a.state == marking(StationLoading(0), AwaitingCook, Room(0), WorkerFree, Exit)) shouldBe true
-    actions.exists(a => a.rate == 1.0 && a.state == marking(WorkerPrepping, StationLoading(0), Room(0), ReadyToBake(0))) shouldBe true
+    actions.exists(a => a.rate == 1.0 && a.state == marking(WorkerPrepping, StationLoading(0), Baking(0, 0))) shouldBe true
 
   test("prepping and starting to load race for the same shared worker pool, not separate ones"):
     val m = marking(AwaitingPrep, AwaitingCook, WorkerFree, StationLoadFree(0), Room(0))
     val actions = prepThenCookCtmc.transitions(m)
     // Either duty can claim the single free worker; once it does, the other is left waiting.
     actions.map(_.state) should contain(marking(AwaitingCook, StationLoadFree(0), Room(0), WorkerPrepping))
-    actions.map(_.state) should contain(marking(AwaitingPrep, StationLoading(0), Room(0), ReadyToBake(0)))
+    actions.map(_.state) should contain(marking(AwaitingPrep, StationLoading(0), Baking(0, 0)))
 
   test("a station's loading slot stays exclusive even with spare workers free"):
     // Station 0 already has a load in progress; a second free worker and more demand
@@ -87,71 +88,62 @@ class KitchenPipelineSpec extends AnyFunSuite:
   test("loading at different stations runs independently, so it can happen in parallel"):
     val twoStations =
       Config(Route.PrepThenCook, prepWorkers = 2, cookStationCapacities = List(3, 3), Map(1 -> 1.0))
-    val ctmc = SPN.toCTMC(KitchenPipeline.spn(twoStations, 1.0, 1.0, 1.0, 1.0))
+    val ctmc = SPN.toCTMC(KitchenPipeline.spn(twoStations, KitchenPipeline.Rates(1.0, 1.0, 1.0, 1.0)))
     val m = marking(
       AwaitingCook, AwaitingCook, WorkerFree, WorkerFree, StationLoadFree(0), StationLoadFree(1), Room(0), Room(1),
     )
     val actions = ctmc.transitions(m)
     actions.map(_.state) should contain(
-      marking(AwaitingCook, WorkerFree, StationLoadFree(1), Room(1), StationLoading(0), Room(0), ReadyToBake(0)),
+      marking(AwaitingCook, WorkerFree, StationLoadFree(1), Room(1), StationLoading(0), Baking(0, 0)),
     )
     actions.map(_.state) should contain(
-      marking(AwaitingCook, WorkerFree, StationLoadFree(0), Room(0), StationLoading(1), Room(1), ReadyToBake(1)),
+      marking(AwaitingCook, WorkerFree, StationLoadFree(0), Room(0), StationLoading(1), Baking(1, 0)),
     )
 
-  test("a partially filled cook lane keeps grabbing from ReadyToBake while demand and room remain"):
-    val m = marking(
-      List.fill(5)(ReadyToBake(0)) ++
-        List.fill(2)(Room(0)) ++
-        List(Load(0, Primary, 1), Load(0, Secondary, 0))*
-    )
+  test("every place bakes independently: the completion rate scales with the items in the oven"):
+    val m = marking(Baking(0, 0), Baking(0, 0), Baking(0, 0))
     val actions = prepThenCookCtmc.transitions(m)
-    actions.map(_.state) should contain(
-      marking(List.fill(4)(ReadyToBake(0)) ++ List(Room(0), Load(0, Primary, 2), Load(0, Secondary, 0))*),
-    )
-    actions.map(_.state) should not contain marking(
-      List.fill(5)(ReadyToBake(0)) ++ List.fill(2)(Room(0)) ++ List(Bake(0, Primary, 1), Load(0, Secondary, 0))*,
-    )
+    // One phase (the default): a bake completes in one step, freeing its place.
+    actions.exists(a => a.rate == 3.0 && a.state == marking(Baking(0, 0), Baking(0, 0), Room(0), Exit)) shouldBe true
 
-  test("the secondary cook lane only opens once the primary has committed, capped at the leftover room"):
-    val blockedWhileLoading = marking(
-      List.fill(5)(ReadyToBake(0)) ++ List.fill(1)(Room(0)) ++ List(Load(0, Primary, 2), Load(0, Secondary, 0))*
-    )
-    prepThenCookCtmc.transitions(blockedWhileLoading).map(_.state).exists(_(Load(0, Secondary, 1)) > 0) shouldBe false
+  private val erlangBake =
+    Config(Route.PrepThenCook, prepWorkers = 1, cookStationCapacities = List(3), Map(1 -> 1.0), bakePhases = 3)
+  private val erlangBakeCtmc = SPN.toCTMC(KitchenPipeline.spn(erlangBake, KitchenPipeline.Rates(1.0, 1.0, 1.0, 1.0)))
 
-    val openOnceBaking = marking(
-      List.fill(5)(ReadyToBake(0)) ++ List.fill(1)(Room(0)) ++ List(Bake(0, Primary, 2), Load(0, Secondary, 0))*
-    )
-    prepThenCookCtmc.transitions(openOnceBaking).map(_.state) should contain(
-      marking(List.fill(4)(ReadyToBake(0)) ++ List(Bake(0, Primary, 2), Load(0, Secondary, 1))*),
-    )
+  test("with several phases, a bake moves through each at phases times the cook rate before freeing its place"):
+    erlangBakeCtmc.transitions(marking(Baking(0, 0), Baking(0, 0))).toList.map(a => (a.rate, a.state)) shouldBe
+      List((6.0, marking(Baking(0, 0), Baking(0, 1))))
+    erlangBakeCtmc.transitions(marking(Baking(0, 2))).toList.map(a => (a.rate, a.state)) shouldBe
+      List((3.0, marking(Room(0), Exit)))
 
-  test("cook completion delivers to Exit for a PrepThenCook route (cook is the last stage)"):
-    val m = marking(Bake(0, Primary, 3), Load(0, Secondary, 0))
-    val actions = prepThenCookCtmc.transitions(m)
-    actions.map(_.state) should contain(
-      marking(Load(0, Primary, 0), Load(0, Secondary, 0), Room(0), Room(0), Room(0), Exit, Exit, Exit),
-    )
+  test("an Erlang bake keeps the mean bake time but cuts its spread to 1 / sqrt(phases)"):
+    val phases = 4
+    val cookRate = 0.2
+    val config = Config(Route.PrepThenCook, prepWorkers = 1, cookStationCapacities = List(1), Map(1 -> 1.0), phases)
+    val ctmc = SPN.toCTMC(KitchenPipeline.spn(config, KitchenPipeline.Rates(1.0, 1.0, 1.0, cookRate)))
+    val rnd = new Random(11)
+    val bakes = (1 to 2000).map { _ =>
+      ctmc.newSimulationTrace(marking(Baking(0, 0)), rnd).find(_.state(Exit) == 1).get.time
+    }
+    val mean = bakes.sum / bakes.size
+    val sd = math.sqrt(bakes.map(b => (b - mean) * (b - mean)).sum / (bakes.size - 1))
+    mean shouldBe (5.0 +- 0.2)
+    (sd / mean) shouldBe (0.5 +- 0.05)
 
   private val cookThenPrep =
     Config(Route.CookThenPrep, prepWorkers = 1, cookStationCapacities = List(1), Map(1 -> 1.0))
-  private val cookThenPrepCtmc = SPN.toCTMC(KitchenPipeline.spn(cookThenPrep, 1.0, 1.0, 1.0, 1.0))
+  private val cookThenPrepCtmc = SPN.toCTMC(KitchenPipeline.spn(cookThenPrep, KitchenPipeline.Rates(1.0, 1.0, 1.0, 1.0)))
 
-  test("for a CookThenPrep route, admission routes to AwaitingCook, loading feeds cook via ReadyToBake, cook delivers to AwaitingPrep, prep delivers to Exit"):
+  test("for a CookThenPrep route, admission routes to AwaitingCook, loading puts it in the oven, cook delivers to AwaitingPrep, prep delivers to Exit"):
     val admitted = KitchenPipeline.initialMarking(cookThenPrep, admissionQuota = 1)
     cookThenPrepCtmc.transitions(admitted).map(_.state).exists(_(AwaitingCook) == 1) shouldBe true
 
-    val awaitingCook =
-      marking(AwaitingCook, WorkerFree, StationLoadFree(0), Room(0), Load(0, Primary, 0), Load(0, Secondary, 0))
-    // Starting the session delivers the first item to ReadyToBake immediately, in the same step.
-    cookThenPrepCtmc.transitions(awaitingCook).map(_.state) should contain(
-      marking(StationLoading(0), Room(0), ReadyToBake(0), Load(0, Primary, 0), Load(0, Secondary, 0)),
-    )
+    val awaitingCook = marking(AwaitingCook, WorkerFree, StationLoadFree(0), Room(0))
+    // Starting the session puts the first item in the oven immediately, in the same step.
+    cookThenPrepCtmc.transitions(awaitingCook).map(_.state) should contain(marking(StationLoading(0), Baking(0, 0)))
 
-    val baking = marking(Bake(0, Primary, 1), Load(0, Secondary, 0))
-    cookThenPrepCtmc.transitions(baking).map(_.state) should contain(
-      marking(Load(0, Primary, 0), Load(0, Secondary, 0), Room(0), AwaitingPrep),
-    )
+    val baking = marking(Baking(0, 0))
+    cookThenPrepCtmc.transitions(baking).map(_.state) should contain(marking(Room(0), AwaitingPrep))
 
     val prepping = marking(WorkerPrepping)
     cookThenPrepCtmc.transitions(prepping).map(_.state) should contain(marking(WorkerFree, Exit))
@@ -174,3 +166,9 @@ class KitchenPipelineSpec extends AnyFunSuite:
     reset(Admission) shouldBe 5
     reset(WorkerFree) shouldBe 1
     reset(Room(0)) shouldBe 1
+
+  test("places hash by content, so a seed gives the same simulation in any process"):
+    // An identity hash code would essentially never equal the hash of the case's name.
+    Admission.hashCode shouldBe "Admission".hashCode
+    Baking(0, 1).hashCode shouldBe Baking(0, 1).hashCode
+    Baking(0, 1).hashCode should not be Baking(0, 2).hashCode

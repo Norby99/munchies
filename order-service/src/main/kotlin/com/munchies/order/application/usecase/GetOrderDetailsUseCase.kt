@@ -17,5 +17,9 @@ import com.munchies.order.infrastructure.adapter.dto.factory.OrderDtoFactory.toD
  */
 class GetOrderDetailsUseCase(private val views: OrderViewRepository) : GetOrderDetails {
   override fun execute(command: GetOrderDetailsCommand): GetOrderDetails.Result =
-    views.findById(command.orderId)?.let { Success(it.toDto()) } ?: OrderNotFound
+    views.findById(command.orderId)
+      // Another customer's order is answered as missing, not as forbidden.
+      ?.takeIf { command.customerId == null || it.customerId == command.customerId }
+      ?.let { Success(it.toDto()) }
+      ?: OrderNotFound
 }

@@ -7,10 +7,14 @@
 // demand.
 //
 // The selected restaurant lives in the URL query (?restaurant=<id>), so the board can be
-// bookmarked and the nav can deep-link into it. Like the customer screens, the board refreshes on
-// demand: live updates will come from the notification WebSocket, not from polling.
+// bookmarked and the nav can deep-link into it. The board is live: a notification about an order
+// of this restaurant (new, paid, advanced, cancelled) refreshes it, see useLiveUpdates. Order
+// changes are never polled.
+//
+// A delivery that is on the way has a "Track driver" action: it opens the same tracking area the
+// customer sees, which reads the driver's position while it is open (see useDeliveryTracking).
 
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -20,6 +24,7 @@ import {
   CircleAlertIcon,
   ClipboardListIcon,
   ClockIcon,
+  MapPinnedIcon,
   RotateCwIcon,
   StoreIcon,
   UserRoundIcon,
@@ -32,20 +37,26 @@ import StateBlock from '@/components/StateBlock.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/api/client'
 import * as ordersApi from '@/api/orders'
 import * as scheduleApi from '@/api/schedule'
+import { useDeliveryTracking } from '@/composables/useDeliveryTracking'
 import { useRestaurantCatalog } from '@/composables/useRestaurantCatalog'
 import { useRestaurantsStore } from '@/stores/restaurants'
 import { expectedTime, isActive, nextStatus, STATUS_LABELS, TYPE_LABELS } from '@/utils/orderStatus'
 import { formatEpoch } from '@/utils/time'
+import { useLiveUpdates } from '@/composables/useLiveUpdates'
 import type { LoadStatus, Order, OrderStatus } from '@/types'
 
 // Board columns, in lifecycle order. ON_THE_WAY only ever holds delivery orders.
 const COLUMNS: OrderStatus[] = ['PENDING', 'PREPARING', 'READY', 'ON_THE_WAY']
+
+// Loaded on demand: it brings Leaflet, which the board itself does not need.
+const DeliveryTracking = defineAsyncComponent(() => import('@/components/DeliveryTracking.vue'))
 
 const route = useRoute()
 const router = useRouter()
@@ -63,6 +74,10 @@ const loadRefreshKey = ref(0)
 const cardErrors = ref<Record<string, string>>({})
 // Announced through an aria-live region after every successful advance.
 const announcement = ref('')
+
+// The delivery whose driver is shown in the tracking dialog; null closes it and stops the reads.
+const trackedOrder = ref<Order | null>(null)
+const { tracking, state: trackingState } = useDeliveryTracking(() => trackedOrder.value?.orderId ?? null)
 
 const restaurantId = computed(() => {
   const fromQuery = route.query.restaurant
@@ -138,6 +153,8 @@ async function refresh(): Promise<void> {
     refreshing.value = false
   }
 }
+
+useLiveUpdates((n) => n.type === 'ORDER_CHANGED' && n.restaurantId === restaurantId.value, refresh)
 
 async function advance(order: Order): Promise<void> {
   const target = nextStatus(order)
@@ -278,7 +295,16 @@ watch(restaurantId, (next, previous) => {
                     {{ cardErrors[order.orderId] }}
                   </p>
                 </CardContent>
-                <CardFooter v-if="nextStatus(order)">
+                <CardFooter v-if="nextStatus(order)" class="flex-col gap-2">
+                  <Button
+                    v-if="order.orderType === 'DELIVERY' && order.status === 'ON_THE_WAY'"
+                    variant="outline"
+                    class="w-full"
+                    @click="trackedOrder = order"
+                  >
+                    <MapPinnedIcon data-icon="inline-start" /> Track driver
+                    <span class="sr-only">of order {{ shortId(order) }}</span>
+                  </Button>
                   <Button class="w-full" :disabled="advancing === order.orderId" @click="advance(order)">
                     <Spinner v-if="advancing === order.orderId" data-icon="inline-start" />
                     Mark as {{ STATUS_LABELS[nextStatus(order)!].toLowerCase() }}
@@ -316,5 +342,15 @@ watch(restaurantId, (next, previous) => {
         </ul>
       </section>
     </StateBlock>
+
+    <Dialog :open="trackedOrder !== null" @update:open="(open: boolean) => { if (!open) trackedOrder = null }">
+      <DialogContent class="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Driver of order #{{ trackedOrder ? shortId(trackedOrder) : '' }}</DialogTitle>
+          <DialogDescription>{{ trackedOrder?.deliveryAddress }}</DialogDescription>
+        </DialogHeader>
+        <DeliveryTracking v-if="trackedOrder" :tracking="tracking" :state="trackingState" />
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

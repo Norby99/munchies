@@ -93,7 +93,8 @@ services:
     build:
       context: notification-service/build/docker/main
     image: munchies-notification-service:latest
-    #? no need for port mapping (no API exposed)
+    # No port mapping: its only public endpoint, the live-notification WebSocket, is reached
+    # through gateway-service, which authenticates it and forwards the user's identity.
     depends_on:
       <<: *kafka-dependency
     environment:
@@ -162,13 +163,12 @@ services:
       retries: 12
       start_period: 5s
 
-  # Standalone Node build (no Kotlin-shared modules): its own Dockerfile, no gradle step.
   # Bookings and trips are kept in memory, so a restart forgets them.
   scheduler-service:
     <<: *service-common
     container_name: munchies-scheduler-service
     build:
-      context: scheduler-service
+      context: scheduler-service/build/docker/main
     image: munchies-scheduler-service:latest
     ports: [ "8088:8080" ]
     depends_on:
@@ -183,6 +183,9 @@ services:
       PORT: 8080
       ORDER_SERVICE_URL: http://order-service:8080
       RESTAURANT_SERVICE_URL: http://restaurant-service:8080
+      # Road routes for the mocked drivers. Public OSRM demo server: no SLA, light use only, and
+      # it receives restaurant and delivery coordinates. Empty value: straight lines.
+      OSRM_URL: https://router.project-osrm.org
       # TEMPORARY: range of the random admission quota (see RandomAdmissionQuotaAgent).
       ADMISSION_QUOTA_MIN: 5
       ADMISSION_QUOTA_MAX: 20
@@ -214,6 +217,9 @@ services:
         condition: service_healthy
       table-reservation-service:
         condition: service_healthy
+      # Target of the live-notification WebSocket proxy.
+      notification-service:
+        condition: service_started
     environment:
       JWT_SECRET: blastimus_prime
       USER_SERVICE_URL: http://user-service:8080
@@ -222,6 +228,7 @@ services:
       PAYMENT_SERVICE_URL: http://payment-service:8080
       SCHEDULER_SERVICE_URL: http://scheduler-service:8080
       TABLE_RESERVATION_SERVICE_URL: http://table-reservation-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
     healthcheck:
       # node:*-alpine base image ships busybox wget, not curl
       test: [ "CMD", "wget", "--quiet", "--output-document=/dev/null", "http://localhost:8080/health" ]

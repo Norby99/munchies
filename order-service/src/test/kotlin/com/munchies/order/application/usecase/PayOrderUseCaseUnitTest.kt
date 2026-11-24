@@ -5,6 +5,7 @@ import com.munchies.order.application.port.inbound.command.PayOrderCommand
 import com.munchies.order.domain.model.OrderStatus
 import com.munchies.order.domain.model.event.OrderPaid
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import com.munchies.order.fixtures.asHistory
 import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.defaultOrderId
@@ -20,7 +21,8 @@ import org.junit.jupiter.api.Test
 class PayOrderUseCaseUnitTest {
 
   private val eventStore = mockk<OrderEventStore>(relaxed = false)
-  private val useCase = PayOrderUseCase(eventStore)
+  private val notificationPublisher = mockk<OrderNotificationPublisher>(relaxed = true)
+  private val useCase = PayOrderUseCase(eventStore, notificationPublisher)
 
   private val command = PayOrderCommand(defaultOrderId)
 
@@ -40,6 +42,9 @@ class PayOrderUseCaseUnitTest {
         withArg { events -> events.single().shouldBeInstanceOf<OrderPaid>() },
       )
     }
+    verify(exactly = 1) {
+      notificationPublisher.publishStatusChanged(withArg { it.payed shouldBeEqual true })
+    }
   }
 
   @Test
@@ -51,6 +56,7 @@ class PayOrderUseCaseUnitTest {
 
     result shouldBeEqual PayOrder.Result.Failure.AlreadyPaid
     verify(exactly = 0) { eventStore.append(any(), any(), any()) }
+    verify(exactly = 0) { notificationPublisher.publishStatusChanged(any()) }
   }
 
   @Test

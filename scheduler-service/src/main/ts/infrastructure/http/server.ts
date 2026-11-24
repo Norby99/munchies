@@ -7,6 +7,7 @@ import { OrderType } from "../../domain/model/booking";
 import { GeoPoint } from "../../domain/model/geo";
 import { badRequest, notFound } from "../../application/errors";
 import { GetBooking } from "../../application/getBooking";
+import { GetOrderTracking, TrackingViewer } from "../../application/getOrderTracking";
 import { fail, ok } from "./envelope";
 
 export interface Handlers {
@@ -15,6 +16,7 @@ export interface Handlers {
   scheduleOrder: ScheduleOrder;
   advanceScheduledOrder: AdvanceScheduledOrder;
   getBooking: GetBooking;
+  getOrderTracking: GetOrderTracking;
 }
 
 const asyncRoute =
@@ -25,6 +27,16 @@ const asyncRoute =
 function parseLatLng(lat: unknown, lng: unknown): GeoPoint | undefined {
   if (lat === undefined || lng === undefined) return undefined;
   return { lat: Number(lat), lng: Number(lng) };
+}
+
+/**
+ * The caller's identity, forwarded by the gateway from the verified session (never from the
+ * client). Absent when the scheduler is called from inside the cluster.
+ */
+function viewerOf(req: Request): TrackingViewer | undefined {
+  const id = req.header("x-user-id");
+  const role = req.header("x-user-role");
+  return id && role ? { id, role: role.toUpperCase() } : undefined;
 }
 
 function requireQueryDate(req: Request): string {
@@ -98,6 +110,13 @@ export function buildApp(h: Handlers): Express {
     asyncRoute(async (req, res) => {
       const result = await h.advanceScheduledOrder.execute(req.params.orderId);
       ok(res, result);
+    }),
+  );
+
+  app.get(
+    "/schedule/orders/:orderId/tracking",
+    asyncRoute(async (req, res) => {
+      ok(res, await h.getOrderTracking.execute(req.params.orderId, viewerOf(req)));
     }),
   );
 

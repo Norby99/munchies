@@ -32,7 +32,12 @@ object OrderAPI {
    * @param Response The type of the response object returned after discarding the order.
    */
   interface DiscardOrderAPI<Response> {
-    fun discardOrder(id: String): Response
+    /**
+     * @param id The order to discard.
+     * @param customerId When set, the order must belong to this customer (see
+     * [com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig.CUSTOMER_ID_QUERY]).
+     */
+    fun discardOrder(id: String, customerId: String?): Response
   }
 
   /**
@@ -42,7 +47,12 @@ object OrderAPI {
    * @param Response The type of the response object returned after retrieving the order details.
    */
   interface GetOrderDetailsAPI<Response> {
-    fun getOrderDetails(id: String): Response
+    /**
+     * @param id The order to read.
+     * @param customerId When set, the order must belong to this customer (see
+     * [com.munchies.order.infrastructure.adapter.inbound.web.config.OrderServiceConfig.CUSTOMER_ID_QUERY]).
+     */
+    fun getOrderDetails(id: String, customerId: String?): Response
   }
 
   /**

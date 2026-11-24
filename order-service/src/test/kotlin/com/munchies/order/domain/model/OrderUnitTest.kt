@@ -13,6 +13,7 @@ import com.munchies.order.fixtures.createEmptyItems
 import com.munchies.order.fixtures.createInvalidItemsNegativeCount
 import com.munchies.order.fixtures.createInvalidItemsZeroCount
 import com.munchies.order.fixtures.createNewItems
+import com.munchies.order.fixtures.createSampleOrder
 import com.munchies.order.fixtures.createTakeawayInfo
 import com.munchies.order.fixtures.createTakeawayOrder
 import com.munchies.order.fixtures.defaultCustomerId
@@ -46,6 +47,13 @@ class OrderUnitTest {
     val orderCompleted = createDeliveryOrder(OrderStatus.COMPLETED)
     val cancelResultCompleted = orderCompleted.cancel()
     cancelResultCompleted shouldBeEqual Order.CancelResult.Failure.InvalidTransition
+  }
+
+  @Test
+  fun `cancel should be refused for a pending order that is already paid`() {
+    val order = createSampleOrder(OrderStatus.PENDING, payed = true)
+
+    order.cancel() shouldBeEqual Order.CancelResult.Failure.AlreadyPaid
   }
 
   @Test

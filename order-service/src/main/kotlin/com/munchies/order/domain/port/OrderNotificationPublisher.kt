@@ -10,7 +10,10 @@ import com.munchies.order.domain.model.Order
 interface OrderNotificationPublisher {
 
   /**
-   * Publishes the fact that an order's status has changed.
+   * Publishes the fact that an order has changed in a way its customer or its restaurant can see:
+   * it was placed, paid, advanced to its next status or cancelled. The event carries the order's
+   * current status, so consumers (the live updates of the frontend) only need it as a signal that
+   * this order changed.
    *
    * @param order The order in its new, already persisted state.
    */

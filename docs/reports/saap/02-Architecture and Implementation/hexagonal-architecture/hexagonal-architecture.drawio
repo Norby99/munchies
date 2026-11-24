@@ -1,0 +1,148 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="hexagonal-architecture" name="Hexagonal Architecture">
+    <mxGraphModel dx="1661" dy="871" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="940" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="infra" parent="1" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;size=80;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=6;fillColor=none;strokeColor=#6c8ebf;" value="infrastructure" vertex="1">
+          <mxGeometry height="800" width="1500" x="300" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="app" parent="1" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;size=80;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="application" vertex="1">
+          <mxGeometry height="700" width="970" x="520" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="domain" parent="1" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;size=80;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=6;fillColor=#d5e8d4;strokeColor=#82b366;" value="domain" vertex="1">
+          <mxGeometry height="480" width="680" x="740" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;scheduler-service&lt;/b&gt;&lt;br&gt;&lt;b&gt;gateway-service&lt;/b&gt;&lt;br&gt;&lt;i&gt;HTTP clients&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="170" x="20" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;MongoDB&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="110" x="1869" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="restaurant" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;restaurant-service&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="1854" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="reservation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;table-reservation-service&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="1854" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="kafka" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;Kafka&lt;/b&gt;&lt;br&gt;&lt;i&gt;order_status_changed_topic&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="1854" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="controller" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Inbound adapter&lt;/i&gt;&lt;br&gt;&lt;b&gt;MicronautOrderController&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="325" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="factory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;DTO to Command&lt;/i&gt;&lt;br&gt;&lt;b&gt;CommandFactory&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="325" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="a-store" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound adapter&lt;/i&gt;&lt;br&gt;&lt;b&gt;MongoOrderEventStore&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1526" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="a-menu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound adapter&lt;/i&gt;&lt;br&gt;&lt;b&gt;RestaurantMenuCatalog&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1526" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="a-res" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound adapter&lt;/i&gt;&lt;br&gt;&lt;b&gt;RestTableReservations&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1526" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="a-kafka" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound adapter&lt;/i&gt;&lt;br&gt;&lt;b&gt;KafkaOrderNotificationPublisher&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1526" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="inport" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Inbound port&lt;/i&gt;&lt;br&gt;&lt;b&gt;PlaceOrder&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="160" x="555" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="usecase" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Use case&lt;/i&gt;&lt;br&gt;&lt;b&gt;PlaceOrderUseCase&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="900" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="model" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Model&lt;/i&gt;&lt;br&gt;&lt;b&gt;Order (Delivery, Takeaway, DineIn)&lt;/b&gt;&lt;br&gt;&lt;b&gt;OrderFactory&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="235" x="775" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="p-store" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound port&lt;/i&gt;&lt;br&gt;&lt;b&gt;OrderEventStore&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1150" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="p-menu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound port&lt;/i&gt;&lt;br&gt;&lt;b&gt;MenuCatalog&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1150" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="p-res" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound port&lt;/i&gt;&lt;br&gt;&lt;b&gt;TableReservations&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1150" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="p-kafka" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=default;strokeColor=#6c8ebf;fontSize=11;" value="&lt;i&gt;Outbound port&lt;/i&gt;&lt;br&gt;&lt;b&gt;OrderNotificationPublisher&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="1150" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" edge="1" parent="1" source="client" style="endArrow=open;endSize=10;html=1;fontSize=10;labelBackgroundColor=default;" target="controller" value="PlaceOrderRequest&lt;br&gt;(DTO)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" edge="1" parent="1" source="controller" style="endArrow=open;endSize=10;html=1;fontSize=10;labelBackgroundColor=default;" target="factory" value="toCommand()">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" edge="1" parent="1" source="controller" style="endArrow=open;endSize=10;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;fontSize=10;labelBackgroundColor=default;" target="inport" value="PlaceOrderCommand">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i1" edge="1" parent="1" source="usecase" style="endArrow=block;endFill=0;endSize=12;dashed=1;html=1;" target="inport" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" edge="1" parent="1" source="usecase" style="endArrow=open;endSize=10;html=1;" target="model" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-uses0" edge="1" parent="1" source="usecase" style="endArrow=open;endSize=10;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="p-store" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-uses1" edge="1" parent="1" source="usecase" style="endArrow=open;endSize=10;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="p-menu" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-uses2" edge="1" parent="1" source="usecase" style="endArrow=open;endSize=10;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="p-res" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-uses3" edge="1" parent="1" source="usecase" style="endArrow=open;endSize=10;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="p-kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i-impl0" edge="1" parent="1" source="a-store" style="endArrow=block;endFill=0;endSize=12;dashed=1;html=1;" target="p-store" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i-impl1" edge="1" parent="1" source="a-menu" style="endArrow=block;endFill=0;endSize=12;dashed=1;html=1;" target="p-menu" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i-impl2" edge="1" parent="1" source="a-res" style="endArrow=block;endFill=0;endSize=12;dashed=1;html=1;" target="p-res" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i-impl3" edge="1" parent="1" source="a-kafka" style="endArrow=block;endFill=0;endSize=12;dashed=1;html=1;" target="p-kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-out0" edge="1" parent="1" source="a-store" style="endArrow=open;endSize=10;html=1;" target="mongo" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-out1" edge="1" parent="1" source="a-menu" style="endArrow=open;endSize=10;html=1;" target="restaurant" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-out2" edge="1" parent="1" source="a-res" style="endArrow=open;endSize=10;html=1;" target="reservation" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c-out3" edge="1" parent="1" source="a-kafka" style="endArrow=open;endSize=10;html=1;" target="kafka" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="&lt;b&gt;Legend&lt;/b&gt;" vertex="1">
+          <mxGeometry height="20" width="200" x="20" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line0" edge="1" parent="1" style="endArrow=open;endSize=10;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="775" as="sourcePoint" />
+            <mxPoint x="80" y="775" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text0" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="Calls or uses" vertex="1">
+          <mxGeometry height="20" width="180" x="90" y="765" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line1" edge="1" parent="1" style="endArrow=block;endFill=0;endSize=12;dashed=1;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="805" as="sourcePoint" />
+            <mxPoint x="80" y="805" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-text1" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" value="Implements" vertex="1">
+          <mxGeometry height="20" width="180" x="90" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-note" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;verticalAlign=top;" value="Dependencies point inward: from infrastructure to application to domain." vertex="1">
+          <mxGeometry height="40" width="260" x="20" y="840" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

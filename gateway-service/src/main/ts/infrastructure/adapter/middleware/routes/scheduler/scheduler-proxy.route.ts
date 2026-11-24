@@ -11,6 +11,11 @@ import { SimpleRoute } from "../simple-route";
  *
  * `injectCustomer` mirrors what the order routes do — the customer id comes from the
  * verified JWT, never from the client body.
+ *
+ * `forwardIdentity` does the same for routes without a body: the verified user id and
+ * role travel as X-User-Id / X-User-Role, so the scheduler can restrict what a customer
+ * reads to their own data. Any such header sent by the client is not relayed: the proxy
+ * builds its request from scratch.
  */
 export type SchedulerBodyMode = "none" | "passthrough" | "injectCustomer";
 
@@ -37,6 +42,7 @@ export class SchedulerProxyRoute implements SimpleRoute<RawResult> {
     public readonly method: HttpMethod,
     public readonly authRole: AuthRole | null,
     private readonly bodyMode: SchedulerBodyMode = "none",
+    private readonly forwardIdentity: boolean = false,
   ) {}
 
   private targetUrl(req: Request): string | null {
@@ -76,6 +82,9 @@ export class SchedulerProxyRoute implements SimpleRoute<RawResult> {
       method: this.method.name.toLowerCase() as AxiosRequestConfig["method"],
       data,
     };
+    if (this.forwardIdentity && req.user) {
+      config.headers = { "X-User-Id": req.user.id, "X-User-Role": req.user.role.name };
+    }
     try {
       const res = await proxy.request(config);
       return new RawResult(

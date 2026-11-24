@@ -7,6 +7,7 @@ import com.munchies.order.application.port.inbound.DiscardOrder.Result.Failure.*
 import com.munchies.order.application.port.inbound.command.DiscardOrderCommand
 import com.munchies.order.domain.model.Order
 import com.munchies.order.domain.port.OrderEventStore
+import com.munchies.order.domain.port.OrderNotificationPublisher
 import org.slf4j.LoggerFactory
 
 /**
@@ -14,21 +15,33 @@ import org.slf4j.LoggerFactory
  *
  * The order can only be discarded if it is in a cancellable state. An
  * [com.munchies.order.domain.model.event.OrderCancelled] event is appended and the order ends up in
- * the CANCELLED status, keeping its full history.
+ * the CANCELLED status, keeping its full history. Once the event is durable, downstream consumers
+ * are notified (the order leaves the restaurant's board).
  *
  * @property eventStore The event store holding the order streams.
+ * @property notificationPublisher Publisher used to notify downstream consumers of the change.
  */
-class DiscardOrderUseCase(private val eventStore: OrderEventStore) : DiscardOrder {
+class DiscardOrderUseCase(
+  private val eventStore: OrderEventStore,
+  private val notificationPublisher: OrderNotificationPublisher,
+) : DiscardOrder {
   override fun execute(command: DiscardOrderCommand): DiscardOrder.Result {
     val (order, version) = eventStore.loadOrder(command.orderId) ?: return OrderNotFound
+    // Another customer's order is answered as missing, not as forbidden.
+    if (command.customerId != null && order.customerId != command.customerId) return OrderNotFound
 
     return when (val result = order.cancel()) {
       is Order.CancelResult.Failure.InvalidTransition -> {
         logger.warn("Order {} cannot be cancelled in status {}", order.id.value, order.status)
         OrderNotCancellable
       }
+      is Order.CancelResult.Failure.AlreadyPaid -> {
+        logger.warn("Order {} cannot be cancelled: already paid", order.id.value)
+        OrderAlreadyPaid
+      }
       is Order.CancelResult.Success -> {
         eventStore.append(order.id, version, result.events)
+        notificationPublisher.publishStatusChanged(order.applyAll(result.events))
         logger.info("Order {} cancelled", order.id.value)
         Success
       }

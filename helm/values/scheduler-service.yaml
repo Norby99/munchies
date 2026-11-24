@@ -1,0 +1,51 @@
+# Express scheduler: slots, bookings and delivery trips for the restaurants. No Mongo, no Kafka:
+# it calls order-service and restaurant-service over REST, and is reached through the gateway.
+serviceName: scheduler-service
+namespace: scheduler-service
+
+image:
+  repository: scheduler-service
+
+# Bookings and trips are kept in memory, so two pods, even briefly during a rolling update, would
+# hold two separate ledgers and could overbook a slot: one replica, never autoscaled, replaced
+# with Recreate (the old pod stops before the new one starts), until the bookings are persisted.
+# A rollout therefore has a short downtime, and a restart forgets the bookings, as in Compose.
+replicaCount: 1
+
+strategy:
+  type: Recreate
+
+autoscaling:
+  enabled: false
+
+mongodb:
+  enabled: false
+
+service:
+  type: ClusterIP
+
+# The scheduler exposes no Prometheus endpoint, only /health (the readiness probe, chart default).
+metrics:
+  enabled: false
+
+env:
+  - name: PORT
+    value: "8080"
+  - name: ORDER_SERVICE_URL
+    value: "http://order-service.order-service.svc.cluster.local:8080"
+  - name: RESTAURANT_SERVICE_URL
+    value: "http://restaurant-service.restaurant-service.svc.cluster.local:8080"
+  # Slots and opening hours are computed in the container's local time: pin it to the
+  # restaurants' zone, or "11:00" would mean 11:00 UTC.
+  - name: TZ
+    value: "Europe/Rome"
+  # Road routes for the mocked drivers. Public OSRM demo server: no SLA, light use only, and
+  # it receives restaurant and delivery coordinates. Empty value: straight lines.
+  - name: OSRM_URL
+    value: "https://router.project-osrm.org"
+  # TEMPORARY: range of the random admission quota (see RandomAdmissionQuotaAgent).
+  - name: ADMISSION_QUOTA_MIN
+    value: "5"
+  - name: ADMISSION_QUOTA_MAX
+    value: "20"
+  # No OTEL_EXPORTER_OTLP_ENDPOINT: the scheduler has no OpenTelemetry instrumentation yet.

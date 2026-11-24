@@ -106,7 +106,7 @@ them: not for every machine, so here's a light version of the deploy.
    ```bash
    minikube start
    ./gradlew deploy -PskipBuild=true \
-     -Pexclude=order-service,payment-service,notification-service,table-reservation-service
+     -Pexclude=order-service,payment-service,notification-service,table-reservation-service,scheduler-service
    ```
 
 To open the application, forward the port of the frontend and go to `http://localhost:5173`:
